@@ -6,13 +6,13 @@
   <p>
     <a href="https://tongyi-mai.github.io/MAI-Gym/"><img src="https://img.shields.io/badge/Website-Interactive_Demos-7457D6?style=flat-square" alt="Website and interactive demos"></a>
     <a href="https://arxiv.org/abs/2610.20939"><img src="https://img.shields.io/badge/arXiv-2610.20939-B31B1B?style=flat-square" alt="Paper on arXiv"></a>
-    <a href="https://huggingface.co/Tongyi-MAI/MAI-Gym-9B"><img src="https://img.shields.io/badge/MAI--Gym--9B-Coming_Soon-FFD21E?style=flat-square&amp;logo=huggingface&amp;logoColor=000" alt="MAI-Gym-9B checkpoint coming soon"></a>
+    <a href="https://huggingface.co/Tongyi-MAI/MAI-Gym-9B"><img src="https://img.shields.io/badge/MAI--Gym--9B-Available-FFD21E?style=flat-square&amp;logo=huggingface&amp;logoColor=000" alt="MAI-Gym-9B weights available on Hugging Face"></a>
   </p>
   <p><strong>MAI-UI Team · Alibaba Group</strong></p>
 </div>
 
 > [!IMPORTANT]
-> **Source code is coming soon.** This initial release presents the project overview and research results. Explore the [interactive demos](https://tongyi-mai.github.io/MAI-Gym/) and read the [paper](https://arxiv.org/abs/2610.20939). The **MAI-Gym-9B checkpoint** will be available upon release on [Hugging Face](https://huggingface.co/Tongyi-MAI/MAI-Gym-9B).
+> **Model weights are available.** Download **MAI-Gym-9B** from [Hugging Face](https://huggingface.co/Tongyi-MAI/MAI-Gym-9B), explore the [interactive demos](https://tongyi-mai.github.io/MAI-Gym/), and read the [paper](https://arxiv.org/abs/2610.20939). **Source code is coming soon.**
 
 **MAI-Gym** brings evaluation, trajectory collection, and online reinforcement learning into one platform for **mobile, computer, and web agents**. The same interaction and verification pipeline carries an agent from benchmark evaluation to training at scale.
 
