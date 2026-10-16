@@ -16,6 +16,11 @@
 
 MAI-Gym provides a shared infrastructure for evaluating GUI agents, collecting trajectories, and running online reinforcement learning across mobile, computer, and web environments. Framework source code will be released soon.
 
+## 🔥 News
+
+<!-- Add new entries at the top, newest first. -->
+- **[2026-10]** 🚀 MAI-Gym is released with the [paper](https://arxiv.org/abs/2610.20939), [project website](https://tongyi-mai.github.io/MAI-Gym/), and [MAI-Gym-9B model weights](https://huggingface.co/Tongyi-MAI/MAI-Gym-9B). Framework source code is coming soon.
+
 ## Framework
 
 <p align="center">
@@ -59,10 +64,6 @@ Results use each benchmark's native evaluation metric. MobileGym reports partial
 
 <a name="news"></a>
 
-## 🔥 News
-
-<!-- Add new entries at the top, newest first. -->
-- **[2026-10]** 🚀 MAI-Gym is released with the [paper](https://arxiv.org/abs/2610.20939), [project website](https://tongyi-mai.github.io/MAI-Gym/), and [MAI-Gym-9B model weights](https://huggingface.co/Tongyi-MAI/MAI-Gym-9B). Framework source code is coming soon.
 
 <a name="citation"></a>
 
