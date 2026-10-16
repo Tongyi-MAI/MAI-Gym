@@ -88,7 +88,7 @@ Training in a mocked Railway12306 app transfers to the real app on a physical ph
 
 ## Citation
 
-If you use MAI-Gym in your research, please cite our [paper](https://arxiv.org/abs/2610.20939):
+If you find MAI-Gym useful, please kindly cite our [paper](https://arxiv.org/abs/2610.20939):
 
 ```bibtex
 @article{maigym2026,
