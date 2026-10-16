@@ -1,6 +1,5 @@
 <div align="center">
-  <img src="docs/assets/mai-gym-logo.png" width="112" alt="MAI-Gym logo">
-  <h1>MAI-Gym</h1>
+  <h1><img src="docs/assets/mai-gym-logo.png" width="56" align="middle" alt="MAI-Gym logo"> MAI-Gym</h1>
   <p><strong>An Open All-in-One Platform for GUI Agent Evaluation and RL Training<br>across Mobile and Computer Environments</strong></p>
   <p>Evaluate agents. Build verifiable worlds. Train across devices.</p>
   <p>
