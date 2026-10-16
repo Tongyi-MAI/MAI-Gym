@@ -1,0 +1,28 @@
+{
+  "id": "gavel_auction",
+  "name": "Gavel",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "viewport": {"width": 390, "height": 844},
+  "description": "A single-file H5 auction app whose world model is the rules of bidding. You never name a price, you name a maximum, and the house bids for you in the smallest step the increment ladder allows — a pound under twenty, two under a hundred, five under two hundred and fifty, and so on. Beat the other bidder's hidden maximum and you lead at their figure plus one step, not at yours; fall short and you are outbid before the screen redraws. Over the top of that sits a reserve you are never shown, only told whether it is met — so a lot can be yours on the screen and still not be sold. 6 screens, 8 lots, nothing random.",
+  "tasks_file": "tasks.json",
+  "oracle_file": "oracle.json",
+  "action_space": {
+    "tap":    {"id": "test-id of the element"},
+    "type":   {"id": "test-id of a text field", "text": "replaces the whole value"},
+    "back":   {}, "home": {}, "wait": {},
+    "finish": {"answer": "final answer for question tasks; optional for action tasks"},
+    "tap_xy": {"x": "screen pixel x", "y": "screen pixel y", "note": "browser backend only"}
+  },
+  "observation": {
+    "text": "engine.a11y(state) — the current bid, the minimum next bid, the ladder and whether the reserve is met all serialise; the rival's maximum never does.",
+    "pixels": "390x844 screenshot (browser backend); __ENV__.bounds() maps every test-id to a pixel box",
+    "state": "engine.snapshot(state) — canonical state plus a derived view keyed by lot title. For the verifier only."
+  },
+  "world": {
+    "ladder": "£1 under £20, £2 under £100, £5 under £250, £10 under £500, £20 under £1000, £50 above",
+    "proxy": "a bid is a maximum; if it beats the rival's you lead at rival + one step, otherwise you are outbid at your maximum + one step, capped at theirs",
+    "reserve": "hidden; the app says met or not met and nothing else",
+    "money": "integers in pence, so every resulting price is exact"
+  }
+}

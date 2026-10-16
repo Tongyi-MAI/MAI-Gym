@@ -1,0 +1,731 @@
+{
+  "env": "foxglove_reader",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_look",
+      "name": "Sepia and wide margins",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "settings"
+      ],
+      "instruction": "Set the reader to the sepia colour and wide margins.",
+      "goal": [
+        {
+          "name": "Sepia",
+          "path": "derived.settings.theme",
+          "op": "eq",
+          "value": "sepia",
+          "weight": 2
+        },
+        {
+          "name": "Wide margins",
+          "path": "derived.settings.margin",
+          "op": "eq",
+          "value": "wide",
+          "weight": 2
+        },
+        {
+          "name": "The type size is untouched",
+          "path": "derived.settings.font",
+          "op": "eq",
+          "value": "m"
+        }
+      ]
+    },
+    {
+      "id": "T02_query_pages",
+      "name": "Question: how long is it",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "answer_expected": true,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "How many pages is \"The Keeper at Fell Point\" at the type size it is set to now? Answer with just the number.",
+      "goal": [
+        {
+          "name": "Four",
+          "source": "answer",
+          "op": "eq",
+          "value": 4,
+          "extract": "number",
+          "weight": 3
+        },
+        {
+          "name": "The setting was not changed",
+          "path": "derived.charsPerPage",
+          "op": "eq",
+          "value": 800
+        }
+      ]
+    },
+    {
+      "id": "T03_turn",
+      "name": "Turn two pages",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "reader"
+      ],
+      "instruction": "Open the book you were reading and turn forward two pages.",
+      "goal": [
+        {
+          "name": "On page three",
+          "path": "derived.page",
+          "op": "eq",
+          "value": 3,
+          "weight": 3
+        },
+        {
+          "name": "In the reader",
+          "path": "derived.route",
+          "op": "eq",
+          "value": "reader"
+        }
+      ]
+    },
+    {
+      "id": "T04_bigger",
+      "name": "Bigger type, longer book",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "answer_expected": true,
+      "tags": [
+        "pagination",
+        "settings",
+        "query"
+      ],
+      "instruction": "Put the type size up to Huge, then tell me how many pages the book has become. Answer with just the number.",
+      "goal": [
+        {
+          "name": "Huge type",
+          "path": "derived.settings.font",
+          "op": "eq",
+          "value": "xl",
+          "weight": 2
+        },
+        {
+          "name": "Eight pages",
+          "source": "answer",
+          "op": "eq",
+          "value": 8,
+          "extract": "number",
+          "weight": 3,
+          "hint": "the same words, 420 characters to a page instead of 800"
+        },
+        {
+          "name": "And the app agrees",
+          "path": "derived.pageCount",
+          "op": "eq",
+          "value": 8,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T05_chapter_bookmark",
+      "name": "Bookmark the third chapter",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "reader",
+        "marks",
+        "contents"
+      ],
+      "instruction": "Go to the start of chapter three and bookmark it.",
+      "goal": [
+        {
+          "name": "Two bookmarks now",
+          "path": "derived.bookmarkCount",
+          "op": "eq",
+          "value": 2,
+          "weight": 2
+        },
+        {
+          "name": "One of them is at the chapter three opening",
+          "path": "derived.bookmarkOffsets",
+          "op": "contains",
+          "value": 1649,
+          "weight": 3,
+          "hint": "chapter three starts at character 1649"
+        },
+        {
+          "name": "You are there yourself",
+          "path": "derived.chapter",
+          "op": "eq",
+          "value": "Chapter three"
+        }
+      ]
+    },
+    {
+      "id": "T06_anchor",
+      "name": "The bookmark that moves page but not place",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 22,
+      "answer_expected": true,
+      "tags": [
+        "pagination",
+        "marks",
+        "query"
+      ],
+      "instruction": "Bookmark the start of chapter three, then set the type size to Huge and tell me what page that bookmark is on now.",
+      "goal": [
+        {
+          "name": "Page four",
+          "source": "answer",
+          "op": "eq",
+          "value": 4,
+          "extract": "number",
+          "weight": 3,
+          "hint": "it was page three at Medium; the words did not move, the page numbering did"
+        },
+        {
+          "name": "The bookmark is still on the same words",
+          "path": "derived.bookmarkQuotes",
+          "op": "contains",
+          "value": "Chapter three The box held paper, which…",
+          "weight": 3
+        },
+        {
+          "name": "Huge type",
+          "path": "derived.settings.font",
+          "op": "eq",
+          "value": "xl",
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T07_highlight",
+      "name": "Highlight a page",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "reader",
+        "marks"
+      ],
+      "instruction": "Turn to page two and highlight it.",
+      "goal": [
+        {
+          "name": "One highlight",
+          "path": "derived.highlightCount",
+          "op": "eq",
+          "value": 1,
+          "weight": 3
+        },
+        {
+          "name": "Made on page two",
+          "path": "derived.page",
+          "op": "eq",
+          "value": 2,
+          "weight": 2
+        },
+        {
+          "name": "The bookmark you already had is untouched",
+          "path": "derived.bookmarkCount",
+          "op": "eq",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "T08_search",
+      "name": "Find the lantern",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "search",
+        "navigation"
+      ],
+      "instruction": "Search the book for the word \"lantern\" and jump to where it appears.",
+      "goal": [
+        {
+          "name": "You are at the lantern",
+          "path": "derived.offset",
+          "op": "eq",
+          "value": 925,
+          "weight": 3
+        },
+        {
+          "name": "Which is in chapter two",
+          "path": "derived.chapter",
+          "op": "eq",
+          "value": "Chapter two",
+          "weight": 2
+        },
+        {
+          "name": "You used the search box",
+          "source": "trajectory",
+          "path": "ids",
+          "op": "contains",
+          "value": "q_book",
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T09_halfway",
+      "name": "A quarter in, and marked",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "navigation"
+      ],
+      "instruction": "Jump to a quarter of the way through the book and bookmark the spot you land on.",
+      "goal": [
+        {
+          "name": "A quarter in",
+          "path": "derived.percent",
+          "op": "eq",
+          "value": 25,
+          "weight": 3
+        },
+        {
+          "name": "Bookmarked there",
+          "path": "derived.bookmarkOffsets",
+          "op": "contains",
+          "value": 773,
+          "weight": 3,
+          "hint": "a quarter of 3093 characters"
+        },
+        {
+          "name": "Two bookmarks now",
+          "path": "derived.bookmarkCount",
+          "op": "eq",
+          "value": 2,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T10_other_book",
+      "name": "Open something else",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "library",
+        "navigation"
+      ],
+      "instruction": "Open \"The Orchard Accounts\" and start reading it.",
+      "goal": [
+        {
+          "name": "You are in the orchard book",
+          "path": "derived.book",
+          "op": "eq",
+          "value": "The Orchard Accounts",
+          "weight": 3
+        },
+        {
+          "name": "In the reader",
+          "path": "derived.route",
+          "op": "eq",
+          "value": "reader",
+          "weight": 2
+        },
+        {
+          "name": "At the beginning",
+          "path": "derived.offset",
+          "op": "eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T11_query_cpp",
+      "name": "Question: characters to a page",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "answer_expected": true,
+      "tags": [
+        "pagination",
+        "query"
+      ],
+      "instruction": "Set the type to Large and the margins to Wide, then tell me how many characters fit on a page. Answer with just the number.",
+      "goal": [
+        {
+          "name": "492",
+          "source": "answer",
+          "op": "eq",
+          "value": 492,
+          "extract": "number",
+          "weight": 3,
+          "hint": "600 for Large, and wide margins take it to 82 per cent of that"
+        },
+        {
+          "name": "The app says the same",
+          "path": "derived.charsPerPage",
+          "op": "eq",
+          "value": 492,
+          "weight": 2
+        },
+        {
+          "name": "Seven pages at that size",
+          "path": "derived.pageCount",
+          "op": "eq",
+          "value": 7
+        }
+      ]
+    },
+    {
+      "id": "T12_delete_mark",
+      "name": "Swap one bookmark for another",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 22,
+      "tags": [
+        "marks",
+        "delete"
+      ],
+      "instruction": "The bookmark on the very first page is no use to you. Remove it, and put one at the start of chapter two instead.",
+      "goal": [
+        {
+          "name": "Exactly one bookmark",
+          "path": "derived.bookmarkCount",
+          "op": "eq",
+          "value": 1,
+          "weight": 3
+        },
+        {
+          "name": "And it is at chapter two",
+          "path": "derived.bookmarkOffsets",
+          "op": "contains",
+          "value": 847,
+          "weight": 3,
+          "hint": "chapter two starts at character 847"
+        },
+        {
+          "name": "The old one is gone",
+          "path": "derived.bookmarkOffsets",
+          "op": "not_contains",
+          "value": 0,
+          "weight": 2
+        },
+        {
+          "name": "Nothing was highlighted",
+          "path": "derived.highlightCount",
+          "op": "eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T13_flagship",
+      "name": "Large, chapter four, and prove it holds (flagship)",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "answer_expected": true,
+      "tags": [
+        "pagination",
+        "marks",
+        "query",
+        "long-horizon"
+      ],
+      "instruction": "Set the type size to Large, go to the start of chapter four and bookmark it. Then switch to Huge and tell me which page that bookmark has moved to.",
+      "goal": [
+        {
+          "name": "Huge in the end",
+          "path": "derived.settings.font",
+          "op": "eq",
+          "value": "xl",
+          "weight": 2
+        },
+        {
+          "name": "The bookmark is at the chapter four opening",
+          "path": "derived.bookmarkOffsets",
+          "op": "contains",
+          "value": 2413,
+          "weight": 3
+        },
+        {
+          "name": "It reads the same words as before",
+          "path": "derived.bookmarkQuotes",
+          "op": "contains",
+          "value": "Chapter four By the fourth morning she…",
+          "weight": 3
+        },
+        {
+          "name": "Page six",
+          "source": "answer",
+          "op": "eq",
+          "value": 6,
+          "extract": "number",
+          "weight": 3,
+          "hint": "page five at Large, page six at Huge, same sentence"
+        },
+        {
+          "name": "Efficiency: 12 steps or fewer",
+          "source": "trajectory",
+          "path": "steps",
+          "op": "lte",
+          "value": 12,
+          "critical": false,
+          "weight": 0.5
+        }
+      ]
+    },
+    {
+      "id": "T14_night",
+      "name": "Night reading",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "settings"
+      ],
+      "instruction": "Switch to the night colour and turn the progress line off.",
+      "goal": [
+        {
+          "name": "Night",
+          "path": "derived.settings.theme",
+          "op": "eq",
+          "value": "night",
+          "weight": 3
+        },
+        {
+          "name": "No progress line",
+          "path": "derived.settings.showProgress",
+          "op": "eq",
+          "value": false,
+          "weight": 3
+        },
+        {
+          "name": "Tap to turn still on",
+          "path": "derived.settings.tapToTurn",
+          "op": "eq",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "T15_query_chapter",
+      "name": "Question: where does halfway land",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "answer_expected": true,
+      "tags": [
+        "navigation",
+        "query"
+      ],
+      "instruction": "If you jump to the halfway mark of the book, which chapter do you land in?",
+      "goal": [
+        {
+          "name": "Chapter two",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Cc]hapter two|chapter 2",
+          "weight": 3
+        },
+        {
+          "name": "You actually went there",
+          "path": "derived.percent",
+          "op": "eq",
+          "value": 50,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T16_three_quarters",
+      "name": "Three quarters in, and mark it (many valid answers)",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 24,
+      "unique_solution": false,
+      "tags": [
+        "navigation",
+        "constraint",
+        "multi-solution"
+      ],
+      "instruction": "Get at least three quarters of the way through the book and highlight the page you end up on. Turning pages, jumping by percentage or going to a chapter all count.",
+      "goal": [
+        {
+          "name": "75% or more",
+          "path": "derived.percent",
+          "op": "gte",
+          "value": 75,
+          "weight": 3
+        },
+        {
+          "name": "With a highlight there",
+          "path": "derived.highlightCount",
+          "op": "eq",
+          "value": 1,
+          "weight": 3
+        },
+        {
+          "name": "Still in the same book",
+          "path": "derived.book",
+          "op": "eq",
+          "value": "The Keeper at Fell Point",
+          "weight": 2
+        },
+        {
+          "name": "Nothing extra was bookmarked",
+          "path": "derived.bookmarkCount",
+          "op": "eq",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "T17_taps",
+      "name": "Two reading settings",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "settings"
+      ],
+      "instruction": "Turn off tapping the page to turn it — you keep doing it by accident — and set the margins to narrow while you are there.",
+      "goal": [
+        {
+          "name": "Tap to turn is off",
+          "path": "derived.settings.tapToTurn",
+          "op": "eq",
+          "value": false,
+          "weight": 3
+        },
+        {
+          "name": "Narrow margins",
+          "path": "derived.settings.margin",
+          "op": "eq",
+          "value": "narrow",
+          "weight": 3
+        },
+        {
+          "name": "The progress line is still on",
+          "path": "derived.settings.showProgress",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "The type size is untouched",
+          "path": "derived.settings.font",
+          "op": "eq",
+          "value": "m"
+        }
+      ]
+    },
+    {
+      "id": "T18_query_other",
+      "name": "Question: how long is the orchard book",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "answer_expected": true,
+      "tags": [
+        "library",
+        "query",
+        "read-only"
+      ],
+      "instruction": "At the current type size, how many pages is \"The Orchard Accounts\"? Answer with just the number.",
+      "goal": [
+        {
+          "name": "One",
+          "source": "answer",
+          "op": "eq",
+          "value": 1,
+          "extract": "number",
+          "weight": 3,
+          "hint": "it is only a sample"
+        },
+        {
+          "name": "You did not change the size to find out",
+          "path": "derived.charsPerPage",
+          "op": "eq",
+          "value": 800,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T19_three_marks",
+      "name": "Bookmark three chapters",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "marks",
+        "contents",
+        "long-horizon"
+      ],
+      "instruction": "Put a bookmark at the start of chapters two, three and four.",
+      "goal": [
+        {
+          "name": "Four bookmarks in total",
+          "path": "derived.bookmarkCount",
+          "op": "eq",
+          "value": 4,
+          "weight": 2,
+          "hint": "there was one on page one already"
+        },
+        {
+          "name": "Chapter two",
+          "path": "derived.bookmarkOffsets",
+          "op": "contains",
+          "value": 847,
+          "weight": 2
+        },
+        {
+          "name": "Chapter three",
+          "path": "derived.bookmarkOffsets",
+          "op": "contains",
+          "value": 1649,
+          "weight": 2
+        },
+        {
+          "name": "Chapter four",
+          "path": "derived.bookmarkOffsets",
+          "op": "contains",
+          "value": 2413,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T20_search_highlight",
+      "name": "Find it and mark it",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 22,
+      "tags": [
+        "search",
+        "marks"
+      ],
+      "instruction": "Find where the ledger is first mentioned, go there, and highlight that page.",
+      "goal": [
+        {
+          "name": "You went to the first mention",
+          "path": "derived.offset",
+          "op": "eq",
+          "value": 2168,
+          "weight": 3,
+          "hint": "there are two mentions; the first one is the one asked for"
+        },
+        {
+          "name": "And highlighted it",
+          "path": "derived.highlightCount",
+          "op": "eq",
+          "value": 1,
+          "weight": 3
+        }
+      ]
+    }
+  ]
+}

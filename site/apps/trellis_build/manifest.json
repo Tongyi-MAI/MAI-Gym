@@ -1,0 +1,31 @@
+{
+  "id": "trellis_build",
+  "name": "Trellis",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "viewport": {"width": 390, "height": 844},
+  "description": "A single-file H5 build planner drawn as a blueprint. Twelve jobs, each with a duration and a list of jobs that must finish first; every figure on screen — earliest start, latest start, float, finish date, which jobs are critical — is a forward and backward pass over that graph, recomputed on every action. Two levers act on it: a job can be paid to go faster at its own price per day, and three of the dependencies are preferences rather than physics and can be dropped for nothing. Both are traps as often as answers, because money spent on a job with float buys nothing and shortening the critical path moves it somewhere else. 5 screens, a laid-out dependency graph, a Gantt with float drawn on it.",
+  "tasks_file": "tasks.json",
+  "oracle_file": "oracle.json",
+  "action_space": {
+    "tap":    {"id": "test-id of the element"},
+    "type":   {"id": "test-id of a text field", "text": "replaces the whole value"},
+    "back":   {}, "home": {}, "wait": {},
+    "finish": {"answer": "final answer for question tasks; optional for action tasks"},
+    "tap_xy": {"x": "screen pixel x", "y": "screen pixel y", "note": "browser backend only"}
+  },
+  "observation": {
+    "text": "engine.a11y(state) — the graph serialises stage by stage and every bar prints its start day, its length and its float, so the whole critical-path calculation is legible without pixels.",
+    "pixels": "390x844 screenshot (browser backend); __ENV__.bounds() maps every test-id to a pixel box",
+    "state": "engine.snapshot(state) — canonical state plus a derived view keyed by job name. For the verifier only."
+  },
+  "world": {
+    "clock": "07:45",
+    "graph": "12 jobs, 15 dependencies, 3 of them soft; durations are integer days and money is integer pence",
+    "schedule": "earliest start = max of predecessors' earliest finish; latest finish = min of successors' latest start; float = latest start - earliest start; critical = zero float",
+    "seeded": "23 working days, finishing Wed 6 May, with six jobs on the critical path and £0 spent",
+    "crashing": "a job can be bought forward up to its own limit at its own price; the cheapest price on the board (£110 painting) belongs to a job with float and buys nothing",
+    "floor": "no combination of money and dropped preferences takes the build below 15 working days",
+    "calendar": "day 0 is Monday 6 April; on five-day weeks working day k lands on calendar day floor(k/5)*7 + k%5"
+  }
+}

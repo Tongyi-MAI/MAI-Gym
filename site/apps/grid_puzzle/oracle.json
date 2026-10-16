@@ -1,0 +1,726 @@
+{
+  "env": "grid_puzzle",
+  "note": "Golden action sequences replayed by CI.",
+  "solutions": {
+    "T01_settings": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_showCandidates"
+      },
+      {
+        "action": "tap",
+        "id": "set_highlightSame"
+      }
+    ],
+    "T02_count": [
+      {
+        "action": "finish",
+        "answer": "36 格里填了 14 格，其中 3 格撞上了。"
+      }
+    ],
+    "T03_clues": [
+      {
+        "action": "tap",
+        "id": "tab_rules"
+      },
+      {
+        "action": "finish",
+        "answer": "12 个。"
+      }
+    ],
+    "T04_cell_cands": [
+      {
+        "action": "tap",
+        "id": "cell_r3c3"
+      },
+      {
+        "action": "finish",
+        "answer": "只能填 1。"
+      }
+    ],
+    "T05_row_missing": [
+      {
+        "action": "tap",
+        "id": "tab_think"
+      },
+      {
+        "action": "finish",
+        "answer": "缺 4、5、6。"
+      }
+    ],
+    "T06_clue_locked": [
+      {
+        "action": "tap",
+        "id": "cell_r1c2"
+      },
+      {
+        "action": "tap",
+        "id": "key_5"
+      },
+      {
+        "action": "finish",
+        "answer": "改不了 —— r1c2 是题目给的 2。"
+      }
+    ],
+    "T07_find_wrong": [
+      {
+        "action": "tap",
+        "id": "tool_check"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r2c2"
+      },
+      {
+        "action": "tap",
+        "id": "tool_erase"
+      }
+    ],
+    "T08_fix_it": [
+      {
+        "action": "tap",
+        "id": "cell_r2c2"
+      },
+      {
+        "action": "tap",
+        "id": "tool_erase"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r2c2"
+      },
+      {
+        "action": "tap",
+        "id": "key_5"
+      }
+    ],
+    "T09_hint": [
+      {
+        "action": "tap",
+        "id": "cell_r2c2"
+      },
+      {
+        "action": "tap",
+        "id": "tool_erase"
+      },
+      {
+        "action": "tap",
+        "id": "tool_hint"
+      },
+      {
+        "action": "tap",
+        "id": "key_6"
+      }
+    ],
+    "T10_notes": [
+      {
+        "action": "tap",
+        "id": "cell_r2c2"
+      },
+      {
+        "action": "tap",
+        "id": "tool_erase"
+      },
+      {
+        "action": "tap",
+        "id": "tool_note"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r2c2"
+      },
+      {
+        "action": "tap",
+        "id": "key_5"
+      },
+      {
+        "action": "tap",
+        "id": "key_6"
+      }
+    ],
+    "T11_check": [
+      {
+        "action": "tap",
+        "id": "tool_check"
+      },
+      {
+        "action": "finish",
+        "answer": "3 处撞了：r1c3、r2c2、r2c6 —— 都是因为 r2c2 那个 3。"
+      }
+    ],
+    "T12_singles_count": [
+      {
+        "action": "tap",
+        "id": "cell_r2c2"
+      },
+      {
+        "action": "tap",
+        "id": "tool_erase"
+      },
+      {
+        "action": "tap",
+        "id": "tab_think"
+      },
+      {
+        "action": "finish",
+        "answer": "3 个：r2c3 只能填 6，r3c3 只能填 1，r5c1 只能填 3。"
+      }
+    ],
+    "T13_reset": [
+      {
+        "action": "tap",
+        "id": "reset_board"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r1c1"
+      },
+      {
+        "action": "tap",
+        "id": "key_1"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r2c2"
+      },
+      {
+        "action": "tap",
+        "id": "key_5"
+      }
+    ],
+    "T14_hidden_row": [
+      {
+        "action": "tap",
+        "id": "cell_r2c2"
+      },
+      {
+        "action": "tap",
+        "id": "tool_erase"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r3c1"
+      },
+      {
+        "action": "tap",
+        "id": "key_2"
+      }
+    ],
+    "T15_three_singles": [
+      {
+        "action": "tap",
+        "id": "cell_r2c2"
+      },
+      {
+        "action": "tap",
+        "id": "tool_erase"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r2c3"
+      },
+      {
+        "action": "tap",
+        "id": "key_6"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r3c3"
+      },
+      {
+        "action": "tap",
+        "id": "key_1"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r5c1"
+      },
+      {
+        "action": "tap",
+        "id": "key_3"
+      }
+    ],
+    "T16_hidden_single": [
+      {
+        "action": "tap",
+        "id": "cell_r2c2"
+      },
+      {
+        "action": "tap",
+        "id": "tool_erase"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r1c4"
+      },
+      {
+        "action": "tap",
+        "id": "key_4"
+      },
+      {
+        "action": "finish",
+        "answer": "r1c4 的候选是 4 和 5，但第 4 列的另外五格里没有一格还放得下 4 —— r4c4 已经是 2，r5c4 已经是 6，剩下的三格所在的宫里都已经有 4 了。所以第 4 列的 4 只能在 r1c4，那它就不能是 5。"
+      }
+    ],
+    "T17_row_one": [
+      {
+        "action": "tap",
+        "id": "cell_r2c2"
+      },
+      {
+        "action": "tap",
+        "id": "tool_erase"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r1c4"
+      },
+      {
+        "action": "tap",
+        "id": "key_4"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r1c5"
+      },
+      {
+        "action": "tap",
+        "id": "key_5"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r1c6"
+      },
+      {
+        "action": "tap",
+        "id": "key_6"
+      }
+    ],
+    "T18_first_box": [
+      {
+        "action": "tap",
+        "id": "cell_r2c2"
+      },
+      {
+        "action": "tap",
+        "id": "tool_erase"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r2c2"
+      },
+      {
+        "action": "tap",
+        "id": "key_5"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r2c3"
+      },
+      {
+        "action": "tap",
+        "id": "key_6"
+      }
+    ],
+    "T19_solve": [
+      {
+        "action": "tap",
+        "id": "cell_r2c2"
+      },
+      {
+        "action": "tap",
+        "id": "tool_erase"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r1c4"
+      },
+      {
+        "action": "tap",
+        "id": "key_4"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r1c5"
+      },
+      {
+        "action": "tap",
+        "id": "key_5"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r1c6"
+      },
+      {
+        "action": "tap",
+        "id": "key_6"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r2c2"
+      },
+      {
+        "action": "tap",
+        "id": "key_5"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r2c3"
+      },
+      {
+        "action": "tap",
+        "id": "key_6"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r2c4"
+      },
+      {
+        "action": "tap",
+        "id": "key_1"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r2c5"
+      },
+      {
+        "action": "tap",
+        "id": "key_2"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r3c1"
+      },
+      {
+        "action": "tap",
+        "id": "key_2"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r3c2"
+      },
+      {
+        "action": "tap",
+        "id": "key_3"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r3c3"
+      },
+      {
+        "action": "tap",
+        "id": "key_1"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r3c4"
+      },
+      {
+        "action": "tap",
+        "id": "key_5"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r4c1"
+      },
+      {
+        "action": "tap",
+        "id": "key_5"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r4c2"
+      },
+      {
+        "action": "tap",
+        "id": "key_6"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r4c3"
+      },
+      {
+        "action": "tap",
+        "id": "key_4"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r4c6"
+      },
+      {
+        "action": "tap",
+        "id": "key_1"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r5c1"
+      },
+      {
+        "action": "tap",
+        "id": "key_3"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r5c2"
+      },
+      {
+        "action": "tap",
+        "id": "key_1"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r5c5"
+      },
+      {
+        "action": "tap",
+        "id": "key_4"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r5c6"
+      },
+      {
+        "action": "tap",
+        "id": "key_5"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r6c1"
+      },
+      {
+        "action": "tap",
+        "id": "key_6"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r6c4"
+      },
+      {
+        "action": "tap",
+        "id": "key_3"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r6c5"
+      },
+      {
+        "action": "tap",
+        "id": "key_1"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r6c6"
+      },
+      {
+        "action": "tap",
+        "id": "key_2"
+      }
+    ],
+    "T20_solve_and_report": [
+      {
+        "action": "tap",
+        "id": "cell_r2c2"
+      },
+      {
+        "action": "tap",
+        "id": "tool_erase"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r1c4"
+      },
+      {
+        "action": "tap",
+        "id": "key_4"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r1c5"
+      },
+      {
+        "action": "tap",
+        "id": "key_5"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r1c6"
+      },
+      {
+        "action": "tap",
+        "id": "key_6"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r2c2"
+      },
+      {
+        "action": "tap",
+        "id": "key_5"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r2c3"
+      },
+      {
+        "action": "tap",
+        "id": "key_6"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r2c4"
+      },
+      {
+        "action": "tap",
+        "id": "key_1"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r2c5"
+      },
+      {
+        "action": "tap",
+        "id": "key_2"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r3c1"
+      },
+      {
+        "action": "tap",
+        "id": "key_2"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r3c2"
+      },
+      {
+        "action": "tap",
+        "id": "key_3"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r3c3"
+      },
+      {
+        "action": "tap",
+        "id": "key_1"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r3c4"
+      },
+      {
+        "action": "tap",
+        "id": "key_5"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r4c1"
+      },
+      {
+        "action": "tap",
+        "id": "key_5"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r4c2"
+      },
+      {
+        "action": "tap",
+        "id": "key_6"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r4c3"
+      },
+      {
+        "action": "tap",
+        "id": "key_4"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r4c6"
+      },
+      {
+        "action": "tap",
+        "id": "key_1"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r5c1"
+      },
+      {
+        "action": "tap",
+        "id": "key_3"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r5c2"
+      },
+      {
+        "action": "tap",
+        "id": "key_1"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r5c5"
+      },
+      {
+        "action": "tap",
+        "id": "key_4"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r5c6"
+      },
+      {
+        "action": "tap",
+        "id": "key_5"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r6c1"
+      },
+      {
+        "action": "tap",
+        "id": "key_6"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r6c4"
+      },
+      {
+        "action": "tap",
+        "id": "key_3"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r6c5"
+      },
+      {
+        "action": "tap",
+        "id": "key_1"
+      },
+      {
+        "action": "tap",
+        "id": "cell_r6c6"
+      },
+      {
+        "action": "tap",
+        "id": "key_2"
+      },
+      {
+        "action": "finish",
+        "answer": "r6c6 是 2。"
+      }
+    ]
+  }
+}

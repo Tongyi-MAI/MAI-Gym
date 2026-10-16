@@ -1,0 +1,1688 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Marlin Mail (mocked GUI env)</title>
+<!--
+  ============================================================================
+  Marlin Mail — a single-file H5 email client for agent research.
+
+  Same two-block contract as every environment here (script#engine is a pure,
+  DOM-free state machine exported as globalThis.GUI_ENGINE; script#ui renders
+  engine.screen(state) and exposes __ENV__).
+
+  What is new here: the core loop is triage, not purchase. That brings
+  multi-select with a bulk action bar, folders vs labels (a message lives in
+  one folder but carries many labels), read/unread state, snoozing, a compose
+  form with three fields, and search with field operators (from: / has:).
+  ============================================================================
+-->
+<style>
+:root{
+  --bg:#f4f6f9; --card:#fff; --line:#e7ecf2; --line2:#dde5ee;
+  --ink:#131a24; --ink2:#5a6675; --muted:#8e9aab;
+  --accent:#1f6feb; --accent-d:#1558c0; --accent-s:#e8f1fe;
+  --unread:#0b57d0; --star:#f0a92b; --red:#d3402f; --green:#1a7f52; --violet:#7b5cf0;
+  --r:14px; --r2:10px;
+  --shadow:0 1px 2px rgba(19,26,36,.06),0 8px 24px rgba(19,26,36,.06);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;height:100%}
+body{background:#dfe5ec;color:var(--ink);
+  font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  display:flex;align-items:center;justify-content:center;overflow:hidden}
+
+#device{position:relative;width:390px;height:844px;background:#0f1319;border-radius:46px;padding:5px;
+  box-shadow:0 30px 70px rgba(0,0,0,.34);flex:0 0 auto}
+#screen{position:relative;width:100%;height:100%;background:var(--bg);border-radius:41px;
+  overflow:hidden;display:flex;flex-direction:column}
+#notch{position:absolute;top:5px;left:50%;transform:translateX(-50%);width:118px;height:30px;
+  background:#0f1319;border-radius:0 0 18px 18px;z-index:60}
+body.bare{background:var(--bg)}
+body.bare #device{width:390px;height:844px;padding:0;border-radius:0;box-shadow:none;background:var(--bg)}
+body.bare #screen{border-radius:0}
+body.bare #notch{display:none}
+body.bare .n-sheet{animation:none}
+
+.statusbar{height:44px;flex:0 0 44px;display:flex;align-items:flex-end;justify-content:space-between;
+  padding:0 22px 6px;font-size:13px;font-weight:600;z-index:50}
+.statusbar .sb-r{display:flex;gap:5px;align-items:center}
+.sb-bat{width:22px;height:11px;border:1.3px solid currentColor;border-radius:3px;position:relative;opacity:.9}
+.sb-bat:after{content:"";position:absolute;right:-3px;top:3px;width:2px;height:5px;background:currentColor;border-radius:0 1px 1px 0}
+.sb-bat i{position:absolute;left:1.3px;top:1.3px;bottom:1.3px;width:66%;background:currentColor;border-radius:1px}
+
+#app{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;position:relative}
+
+/* ---------------- chrome ---------------- */
+.n-appbar{flex:0 0 auto;min-height:52px;display:flex;align-items:center;gap:8px;padding:6px 10px;
+  background:var(--card);border-bottom:1px solid var(--line);z-index:20}
+.n-appbar.select{background:var(--accent-s);border-bottom-color:#cbdffb}
+.n-appbar .ab-title{flex:1 1 auto;font:650 18px/1.3 -apple-system,sans-serif;letter-spacing:-.3px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-left:4px}
+.n-appbar .ab-side{flex:0 0 auto;display:flex;align-items:center;gap:4px}
+.iconbtn{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  color:var(--ink2);cursor:pointer}
+.iconbtn:active{background:#eef2f7}
+.iconbtn.on{color:var(--accent)}
+.iconbtn.star.on{color:var(--star)}
+
+.n-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding-bottom:10px}
+.n-scroll::-webkit-scrollbar{width:0}
+
+/* ---------------- type ---------------- */
+.n-text{padding:2px 16px;color:var(--ink2)}
+.n-text.h1{font:700 24px/1.2 -apple-system,sans-serif;color:var(--ink);padding:14px 16px 4px;letter-spacing:-.5px}
+.n-text.h2{font:650 17px/1.3 -apple-system,sans-serif;color:var(--ink);padding:14px 16px 4px}
+.n-text.body{font-size:14px;padding:6px 16px;line-height:1.65}
+.n-text.muted{font-size:12.5px;color:var(--muted);padding:6px 16px}
+.n-text.empty{padding:8px 16px 40px;text-align:center;color:var(--muted);font-size:13.5px}
+.n-sec{padding:16px 16px 6px;font:600 12px/1 -apple-system,sans-serif;color:var(--muted);
+  letter-spacing:1.1px;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center}
+.n-space{height:14px}
+.n-divider{height:1px;background:var(--line);margin:6px 0}
+
+/* ---------------- message row ---------------- */
+.msg{display:flex;gap:12px;padding:12px 14px;background:var(--card);border-bottom:1px solid var(--line);
+  cursor:pointer;align-items:flex-start}
+.msg:active{background:#f6f9fd}
+.msg.unread{background:#fbfcff}
+.msg.sel{background:var(--accent-s)}
+.m-av{flex:0 0 auto;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font:650 15px/1 -apple-system,sans-serif;color:#fff}
+.msg .m-check{flex:0 0 auto;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;background:var(--accent);color:#fff}
+.msg .m-body{flex:1 1 auto;min-width:0}
+.msg .m-top{display:flex;align-items:baseline;gap:8px}
+.msg .m-from{flex:1 1 auto;font-size:14.5px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.msg.unread .m-from{color:var(--ink);font-weight:700}
+.msg .m-at{flex:0 0 auto;font-size:11.5px;color:var(--muted)}
+.msg.unread .m-at{color:var(--unread);font-weight:650}
+.msg .m-subj{font-size:13.5px;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.msg.unread .m-subj{font-weight:650}
+.msg .m-prev{font-size:12.5px;color:var(--muted);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.msg .m-meta{display:flex;gap:6px;align-items:center;margin-top:7px;flex-wrap:wrap}
+.msg .m-side{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:8px;padding-top:2px}
+.msg .m-dot{width:8px;height:8px;border-radius:50%;background:var(--unread)}
+
+.chip{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:20px;font-size:11px;
+  font-weight:650;background:#eef2f7;color:var(--ink2)}
+.chip .cd{width:7px;height:7px;border-radius:50%}
+.chip.attach{background:#f0f3f7;color:var(--muted)}
+
+/* ---------------- rows / cards ---------------- */
+.n-card{background:var(--card);border-radius:var(--r);margin:10px 16px;overflow:hidden;
+  border:1px solid var(--line)}
+.n-card.pad{padding:14px}
+.n-card.flush{padding:0}
+.n-card.tap{cursor:pointer}
+.n-card.tap:active{background:#f6f9fd}
+.n-row{display:flex;align-items:center;gap:13px;padding:13px 14px;border-bottom:1px solid var(--line);
+  min-height:52px;background:var(--card)}
+.n-row:last-child{border-bottom:none}
+.n-row.tap{cursor:pointer}
+.n-row.tap:active{background:#f6f9fd}
+.n-row .r-lead{flex:0 0 auto;width:26px;color:var(--ink2);display:flex;align-items:center;justify-content:center}
+.n-row .r-main{flex:1 1 auto;min-width:0}
+.n-row .r-label{font-size:14.5px}
+.n-row .r-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.n-row .r-value{flex:0 0 auto;font-size:13.5px;color:var(--ink2);max-width:150px;text-align:right;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.n-row .r-value.strong{color:var(--ink);font-weight:650}
+.n-row .r-value.accent{color:var(--accent);font-weight:700}
+.n-row .r-arrow{flex:0 0 auto;color:#c2ccd8;display:flex}
+
+.n-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 20px;
+  border-radius:12px;font:650 15px/1 -apple-system,sans-serif;background:#eef2f7;color:var(--ink);
+  border:none;cursor:pointer;user-select:none}
+.n-btn:active{filter:brightness(.96)}
+.n-btn.primary{background:var(--accent);color:#fff}
+.n-btn.primary.off{background:#c4d2e2;cursor:not-allowed}
+.n-btn.ghost{background:transparent;border:1px solid var(--line2);height:34px;font-size:13px;padding:0 13px;color:var(--ink2)}
+.n-btn.danger{background:transparent;border:1px solid #f0c6bf;color:var(--red);height:34px;font-size:13px;padding:0 13px}
+.n-btn.block{display:flex;width:100%}
+.n-btnrow{display:flex;gap:9px;padding:12px 14px;justify-content:flex-end;align-items:center}
+
+.n-chips{display:flex;gap:8px;padding:9px 16px;overflow-x:auto}
+.n-chips::-webkit-scrollbar{height:0}
+.n-chip{flex:0 0 auto;height:32px;padding:0 13px;border-radius:16px;background:var(--card);
+  border:1px solid var(--line2);display:flex;align-items:center;gap:6px;font-size:13px;
+  color:var(--ink2);cursor:pointer;white-space:nowrap;font-weight:550}
+.n-chip.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:650}
+
+.searchbar{margin:8px 16px;background:var(--card);border:1px solid var(--line2);border-radius:24px;
+  display:flex;align-items:center;gap:10px;padding:10px 14px;box-shadow:var(--shadow)}
+.searchbar input{flex:1 1 auto;border:none;outline:none;background:transparent;font-size:14.5px;
+  font-family:inherit;color:var(--ink);min-width:0}
+.searchbar input::placeholder{color:var(--muted)}
+.searchbar .sb-clear{flex:0 0 auto;width:22px;height:22px;border-radius:50%;background:#e9eef4;
+  color:var(--ink2);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.searchbar .sb-go{flex:0 0 auto;width:30px;height:30px;border-radius:50%;background:var(--accent);
+  color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer}
+
+.n-input{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line);
+  background:var(--card)}
+.n-input .i-label{flex:0 0 66px;font-size:13px;color:var(--muted);padding-top:3px}
+.n-input input,.n-input textarea{flex:1 1 auto;border:none;outline:none;background:transparent;
+  font-size:14.5px;font-family:inherit;color:var(--ink);resize:none;min-width:0;line-height:1.6}
+.n-input textarea{height:150px}
+.n-input input::placeholder,.n-input textarea::placeholder{color:var(--muted)}
+
+.n-switch{flex:0 0 auto;width:46px;height:27px;border-radius:14px;background:#cfd8e3;position:relative;
+  cursor:pointer;transition:background .16s}
+.n-switch.on{background:var(--green)}
+.n-switch i{position:absolute;top:2.5px;left:2.5px;width:22px;height:22px;border-radius:50%;background:#fff;
+  transition:transform .16s;box-shadow:0 1px 3px rgba(0,0,0,.22)}
+.n-switch.on i{transform:translateX(19px)}
+.n-radio{flex:0 0 auto;width:21px;height:21px;border-radius:50%;border:1.8px solid #c9d3e0;position:relative}
+.n-radio.on{border-color:var(--accent);background:var(--accent)}
+.n-radio.on:after{content:"";position:absolute;left:6.5px;top:3.5px;width:5px;height:9px;
+  border:2px solid #fff;border-top:0;border-left:0;transform:rotate(42deg)}
+.n-check{flex:0 0 auto;width:22px;height:22px;border-radius:6px;border:1.8px solid #c9d3e0;position:relative;background:#fff}
+.n-check.on{border-color:var(--accent);background:var(--accent)}
+.n-check.on:after{content:"";position:absolute;left:7px;top:3.5px;width:5px;height:10px;
+  border:2px solid #fff;border-top:0;border-left:0;transform:rotate(42deg)}
+
+/* ---------------- bulk action bar ---------------- */
+.bulkbar{flex:0 0 auto;background:var(--card);border-top:1px solid var(--line);display:flex;
+  padding:8px 6px calc(10px + env(safe-area-inset-bottom));z-index:30;box-shadow:0 -4px 18px rgba(19,26,36,.07)}
+.bulkbar .bb{flex:1 1 0;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 2px;
+  color:var(--ink2);font-size:10.5px;font-weight:600;cursor:pointer;border-radius:10px}
+.bulkbar .bb:active{background:#eef2f7}
+.bulkbar .bb.danger{color:var(--red)}
+.bulkbar .bb.off{opacity:.35;cursor:not-allowed}
+
+.n-tabbar{flex:0 0 auto;height:58px;background:var(--card);border-top:1px solid var(--line);display:flex;z-index:30}
+.n-tabbar .tb{flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  color:var(--muted);font-size:10.5px;cursor:pointer;font-weight:600;position:relative}
+.n-tabbar .tb i{display:flex}
+.n-tabbar .tb.on{color:var(--accent)}
+.n-tabbar .tb .badge{position:absolute;top:6px;left:50%;margin-left:6px;min-width:16px;height:16px;
+  border-radius:8px;background:var(--red);color:#fff;font-size:10px;line-height:16px;text-align:center;padding:0 4px}
+
+.fab{position:absolute;right:18px;bottom:74px;width:56px;height:56px;border-radius:18px;background:var(--accent);
+  color:#fff;display:flex;align-items:center;justify-content:center;z-index:40;cursor:pointer;
+  box-shadow:0 6px 20px rgba(31,111,235,.4)}
+.fab:active{filter:brightness(.94)}
+
+/* ---------------- message detail ---------------- */
+.mhead{padding:16px 16px 12px;background:var(--card);border-bottom:1px solid var(--line)}
+.mhead .mh-subj{font:700 20px/1.3 -apple-system,sans-serif;letter-spacing:-.3px}
+.mhead .mh-labels{margin-top:10px;display:flex;gap:6px;flex-wrap:wrap}
+.mhead .mh-from{display:flex;gap:11px;align-items:center;margin-top:14px}
+.mhead .mh-name{font-size:14.5px;font-weight:650}
+.mhead .mh-mail{font-size:12px;color:var(--muted);margin-top:2px}
+.mhead .mh-at{flex:0 0 auto;font-size:11.5px;color:var(--muted)}
+.mbody{background:var(--card);padding:16px;font-size:14.5px;line-height:1.72;color:#22303f;white-space:pre-wrap}
+.attach{display:flex;gap:9px;padding:0 16px 16px;background:var(--card);flex-wrap:wrap}
+.attach .at{display:flex;align-items:center;gap:8px;border:1px solid var(--line2);border-radius:10px;
+  padding:8px 12px;font-size:12.5px;color:var(--ink2);cursor:pointer;background:#fbfcfe}
+.attach .at:active{background:#eef2f7}
+
+.folderrow{display:flex;align-items:center;gap:13px;padding:13px 14px;border-bottom:1px solid var(--line);
+  cursor:pointer;background:var(--card)}
+.folderrow:active{background:#f6f9fd}
+.folderrow:last-child{border-bottom:none}
+.folderrow .f-ico{flex:0 0 auto;width:32px;height:32px;border-radius:9px;display:flex;align-items:center;
+  justify-content:center;background:#eef2f7;color:var(--ink2)}
+.folderrow.on .f-ico{background:var(--accent-s);color:var(--accent)}
+.folderrow .f-name{flex:1 1 auto;font-size:14.5px}
+.folderrow.on .f-name{font-weight:700;color:var(--accent)}
+.folderrow .f-count{flex:0 0 auto;font-size:12.5px;color:var(--muted);font-weight:650}
+
+.n-toast{position:absolute;left:50%;bottom:112px;transform:translateX(-50%);background:#1b2531;color:#fff;
+  padding:11px 18px;border-radius:11px;font-size:13px;z-index:90;max-width:82%;text-align:center;
+  display:flex;align-items:center;gap:12px}
+.n-toast .undo{color:#8fc0ff;font-weight:700;cursor:pointer}
+.n-mask{position:absolute;inset:0;background:rgba(15,20,28,.44);z-index:70;display:flex;align-items:flex-end}
+.n-sheet{width:100%;max-height:80%;background:var(--card);border-radius:20px 20px 0 0;display:flex;
+  flex-direction:column;overflow:hidden;animation:up .18s ease-out}
+@keyframes up{from{transform:translateY(24px)}to{transform:none}}
+.n-sheet .sh-hd{padding:16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
+.n-sheet .sh-hd .t{font:650 17px/1.2 -apple-system,sans-serif}
+.n-sheet .sh-bd{flex:1 1 auto;overflow-y:auto;min-height:0}
+.n-sheet .sh-bd::-webkit-scrollbar{width:0}
+.n-sheet .sh-ft{flex:0 0 auto;border-top:1px solid var(--line);padding:12px 16px 16px}
+.dialog{margin:auto;width:80%;background:#fff;border-radius:16px;overflow:hidden}
+
+#hud{position:fixed;top:14px;left:14px;width:310px;max-height:calc(100% - 28px);overflow:auto;
+  background:#0f141b;color:#c9d4e1;border-radius:12px;padding:12px;
+  font:11.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;z-index:200;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+#hud h4{margin:0 0 8px;font-size:12px;color:#fff}
+#hud .k{color:#7d8b9c}
+#hud pre{margin:6px 0 0;white-space:pre-wrap;word-break:break-word;color:#8fd6b0;max-height:250px;overflow:auto}
+#hud button{background:#1c2531;border:none;color:#c9d4e1;border-radius:6px;padding:5px 9px;margin:2px 4px 2px 0;font:inherit;cursor:pointer}
+#hud.off{display:none}
+</style>
+</head>
+<body>
+<div id="device">
+  <div id="notch"></div>
+  <div id="screen">
+    <div class="statusbar" id="sb">
+      <div id="sb-clock">08:12</div>
+      <div class="sb-r">
+        <svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="4.6" y="5.5" width="3" height="6.5" rx="1"/><rect x="9.2" y="3" width="3" height="9" rx="1"/><rect x="13.8" y="0" width="3" height="12" rx="1"/></svg>
+        <svg width="15" height="12" viewBox="0 0 15 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 4.2a9 9 0 0 1 13 0"/><path d="M3.4 6.9a5.6 5.6 0 0 1 8.2 0"/><circle cx="7.5" cy="10" r=".9" fill="currentColor" stroke="none"/></svg>
+        <span class="sb-bat"><i></i></span>
+      </div>
+    </div>
+    <div id="app"></div>
+  </div>
+</div>
+<div id="hud" class="off"></div>
+
+<script id="engine">
+/* ===========================================================================
+ * ENGINE — pure, deterministic, DOM-free.
+ * ======================================================================== */
+(function (root) {
+'use strict';
+
+var VERSION = '1.0.0';
+var ENV_ID  = 'marlin_mail';
+
+/* ------------------------------------------------------------- catalog */
+var FOLDERS = [
+  {key:'inbox',   name:'Inbox',    icon:'inbox',   real:true},
+  {key:'starred', name:'Starred',  icon:'star',    real:false},
+  {key:'snoozed', name:'Snoozed',  icon:'clock',   real:false},
+  {key:'sent',    name:'Sent',     icon:'send',    real:true},
+  {key:'drafts',  name:'Drafts',   icon:'draft',   real:true},
+  {key:'archive', name:'Archive',  icon:'archive', real:true},
+  {key:'spam',    name:'Spam',     icon:'spam',    real:true},
+  {key:'trash',   name:'Trash',    icon:'trash',   real:true}
+];
+
+var LABELS = [
+  {key:'work',        name:'Work',        color:'#1f6feb'},
+  {key:'personal',    name:'Personal',    color:'#1a7f52'},
+  {key:'receipts',    name:'Receipts',    color:'#c98a1b'},
+  {key:'travel',      name:'Travel',      color:'#7b5cf0'},
+  {key:'newsletters', name:'Newsletters', color:'#7a8697'}
+];
+
+var MESSAGES = [
+  {id:'m_01', name:'Priya Raghavan', email:'priya@northwind.io', at:'07:58', day:'Today',
+   subject:'Q3 roadmap review — moved to Thursday',
+   preview:'Sorry for the churn. The review is now Thursday 14:00 in Kilkenny room.',
+   body:'Hi Sam,\n\nSorry for the churn — the roadmap review has moved to Thursday at 14:00, Kilkenny room.\n\nCould you bring the latency numbers for the ingest path? Daniel has the deploy story covered, so you only need slides 4 to 9.\n\nThanks,\nPriya'},
+  {id:'m_02', name:'Stripe', email:'receipts@stripe.com', at:'07:12', day:'Today',
+   subject:'Your receipt for August',
+   preview:'Receipt #4471-0912 · €89.00 charged to Visa ending 4242.',
+   body:'Receipt #4471-0912\n\nAmount: €89.00\nCard: Visa ending 4242\nDate: 1 August 2026\n\nThis is an automated message. The invoice is attached as a PDF.',
+   attachments:[{name:'invoice-aug.pdf', size:'84 KB'}]},
+  {id:'m_03', name:'Daniel Okafor', email:'daniel@northwind.io', at:'06:41', day:'Today',
+   subject:'Re: staging deploy is red',
+   preview:'Found it — the migration ran twice. Rolling back now, should be green in ten.',
+   body:'Found it. The migration ran twice because the job retried after a timeout, so the unique index was already there the second time round.\n\nRolling back now. Should be green in about ten minutes.\n\nD'},
+  {id:'m_04', name:'Aer Lingus', email:'no-reply@aerlingus.com', at:'21:30', day:'Yesterday',
+   subject:'Check-in opens for EI 154',
+   preview:'Check-in for your flight to Porto opens 30 hours before departure.',
+   body:'Your flight EI 154 to Porto departs on 3 September at 09:40.\n\nOnline check-in opens 30 hours before departure. Reference: XKQP2.'},
+  {id:'m_05', name:'Mum', email:'maura.b@gmail.com', at:'19:04', day:'Yesterday',
+   subject:'Sunday lunch?',
+   preview:'Your father is doing the roast. 1pm. Bring nothing but yourself.',
+   body:'Are you around on Sunday? Your father has decided he is doing a roast, which means I am doing a roast.\n\n1pm. Bring nothing but yourself.\n\nMum x'},
+  {id:'m_06', name:'The Overflow', email:'weekly@overflow.dev', at:'16:22', day:'Yesterday',
+   subject:'Issue #211: the death of the sidecar',
+   preview:'Plus: why your p99 is lying to you, and a very long argument about tabs.',
+   body:'Issue #211\n\n— The death of the sidecar\n— Why your p99 is lying to you\n— A very long argument about tabs\n\nUnsubscribe at the bottom, as always.'},
+  {id:'m_07', name:'Ines Duarte', email:'ines@lumenlabs.co', at:'14:10', day:'Yesterday',
+   subject:'Contract for signature',
+   preview:'Legal signed off this morning. Countersigned copy attached — needs you by Friday.',
+   body:'Hi Sam,\n\nLegal signed off this morning. The countersigned copy is attached; we need your signature by Friday to keep the start date.\n\nShout if anything looks off.\n\nInes',
+   attachments:[{name:'lumen-contract-v4.pdf', size:'312 KB'}, {name:'schedule-a.pdf', size:'48 KB'}]},
+  {id:'m_08', name:'Booking.com', email:'noreply@booking.com', at:'11:45', day:'Yesterday',
+   subject:'Your stay in Porto is confirmed',
+   preview:'Casa do Rio, 3–6 September, 2 guests. Free cancellation until 1 September.',
+   body:'Confirmation 8842-1190\n\nCasa do Rio, Porto\n3 September to 6 September, 2 guests\nTotal €412.00 · free cancellation until 1 September.'},
+  {id:'m_09', name:'Tomas Silva', email:'tomas@northwind.io', at:'10:02', day:'Yesterday',
+   subject:'Lunch Friday?',
+   preview:'That Georgian place near the canal finally reopened. 12:30?',
+   body:'That Georgian place near the canal finally reopened after the fire.\n\n12:30 on Friday? I will book if you are in.'},
+  {id:'m_10', name:'GitHub', email:'notifications@github.com', at:'09:15', day:'Yesterday',
+   subject:'[marlin/core] PR #482 needs your review',
+   preview:'daniel-ok opened a pull request: "Retry ingest with jitter".',
+   body:'daniel-ok opened a pull request in marlin/core\n\n#482 Retry ingest with jitter\n\n14 files changed, +422 −118. Review requested from sam-b.'},
+  {id:'m_11', name:'Nadia Hassan', email:'nadia@brightpath.org', at:'17:40', day:'Tuesday',
+   subject:'Volunteer rota for September',
+   preview:'You are down for the 12th and the 26th. Let me know if that clashes.',
+   body:'Hi all,\n\nSeptember rota attached in the usual place. Sam, you are down for the 12th and the 26th.\n\nLet me know by Friday if either clashes.\n\nNadia'},
+  {id:'m_12', name:'Vodafone', email:'billing@vodafone.ie', at:'08:00', day:'Tuesday',
+   subject:'Your bill is ready — €42.60',
+   preview:'Your August bill is €42.60 and will be collected on 8 September.',
+   body:'Your August bill is ready.\n\nAmount: €42.60\nCollection date: 8 September\nAccount: 0871234567'},
+  {id:'m_13', name:'Design Weekly', email:'hi@designweekly.co', at:'12:30', day:'Monday',
+   subject:'10 interfaces worth stealing',
+   preview:'Airline seat maps, a very good thermostat, and the worst calendar ever shipped.',
+   body:'This week: airline seat maps that actually work, a very good thermostat, and the worst calendar ever shipped.'},
+  {id:'m_14', name:'FastGrowth Talent', email:'talent@fastgrowthai.xyz', at:'08:44', day:'Monday',
+   subject:'Your dream role awaits!!!',
+   preview:'ACT NOW — 12 unicorn startups are looking at your profile RIGHT NOW.',
+   body:'ACT NOW!!!\n\n12 unicorn startups are looking at your profile RIGHT NOW. Reply with your CV and salary expectations to be fast-tracked.\n\nThis is a limited time opportunity.'},
+
+  {id:'m_15', name:'Ines Duarte', email:'ines@lumenlabs.co', at:'15:20', day:'Last week',
+   subject:'Kickoff notes', preview:'Notes from the kickoff, plus the two open questions on scope.',
+   body:'Notes from the kickoff are below, plus the two open questions on scope that we parked.'},
+  {id:'m_16', name:'Ryanair', email:'no-reply@ryanair.com', at:'09:05', day:'Last week',
+   subject:'Booking reference XKQP2', preview:'Your booking is confirmed. Do not reply to this address.',
+   body:'Booking reference XKQP2 is confirmed. Do not reply to this address.'},
+  {id:'m_17', name:'Priya Raghavan', email:'priya@northwind.io', at:'11:11', day:'Last week',
+   subject:'Welcome to Northwind', preview:'Laptop is at the front desk, and the wifi password is on the fridge.',
+   body:'Welcome aboard. Your laptop is at the front desk and the wifi password is, inexplicably, on the fridge.'},
+
+  {id:'m_18', name:'Daniel Okafor', email:'daniel@northwind.io', at:'06:52', day:'Today',
+   subject:'Re: staging deploy is red', preview:'Nice find. I will keep an eye on the retry metric today.',
+   body:'Nice find. I will keep an eye on the retry metric today and shout if it spikes again.'},
+  {id:'m_19', name:'Ines Duarte', email:'ines@lumenlabs.co', at:'18:30', day:'Yesterday',
+   subject:'Re: Contract for signature', preview:'Got it — reading tonight, signature with you tomorrow.',
+   body:'Got it, thanks Ines. Reading tonight, signature with you tomorrow morning.'},
+
+  {id:'m_20', name:'', email:'', at:'22:14', day:'Yesterday',
+   subject:'Notes for Thursday', preview:'latency p99 on ingest — pull the numbers from grafana',
+   body:'latency p99 on ingest — pull the numbers from grafana'},
+
+  {id:'m_21', name:'Crypto Returns', email:'admin@x9-returns.top', at:'03:20', day:'Yesterday',
+   subject:'You have won', preview:'Claim your allocation within 24 hours.',
+   body:'Claim your allocation within 24 hours or it will be redistributed.'},
+  {id:'m_22', name:'Design Weekly', email:'hi@designweekly.co', at:'12:30', day:'Last week',
+   subject:'Nine gradients and a funeral', preview:'The gradient is back, and it has brought friends.',
+   body:'The gradient is back, and it has brought friends.'}
+];
+
+var SNOOZE_OPTIONS = [
+  {key:'later',    label:'Later today',  at:'18:00 today'},
+  {key:'tomorrow', label:'Tomorrow',     at:'08:00 tomorrow'},
+  {key:'weekend',  label:'This weekend', at:'Saturday 09:00'},
+  {key:'week',     label:'Next week',    at:'Monday 08:00'}
+];
+
+var CATALOG = {folders:FOLDERS, labels:LABELS, messages:MESSAGES, snooze:SNOOZE_OPTIONS};
+
+/* ------------------------------------------------------------- helpers */
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+function msg(id){ for (var i=0;i<MESSAGES.length;i++) if (MESSAGES[i].id===id) return MESSAGES[i]; return null; }
+function label(k){ for (var i=0;i<LABELS.length;i++) if (LABELS[i].key===k) return LABELS[i]; return null; }
+function folder(k){ for (var i=0;i<FOLDERS.length;i++) if (FOLDERS[i].key===k) return FOLDERS[i]; return null; }
+function snoozeOpt(k){ for (var i=0;i<SNOOZE_OPTIONS.length;i++) if (SNOOZE_OPTIONS[i].key===k) return SNOOZE_OPTIONS[i]; return null; }
+function hashHue(s){ var h=0; s=String(s); for (var i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))>>>0; return h%360; }
+function lcg(seed){ var s=(seed>>>0)||1; return function(){ s=(s*1664525+1013904223)>>>0; return s/4294967296; }; }
+function shuffled(list, seed){
+  if (!seed) return list.slice();
+  var r=lcg(seed), a=list.slice();
+  for (var i=a.length-1;i>0;i--){ var j=Math.floor(r()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; }
+  return a;
+}
+function getPath(obj, path){
+  var parts = String(path).replace(/\[(\w+|last|-1)\]/g,'.$1').split('.').filter(Boolean), cur = obj;
+  for (var i=0;i<parts.length;i++){
+    if (cur == null) return undefined;
+    var k = parts[i];
+    if (Array.isArray(cur) && (k==='last'||k==='-1')) cur = cur[cur.length-1]; else cur = cur[k];
+  }
+  return cur;
+}
+function setPath(obj, path, value){
+  var parts = String(path).replace(/\[(\w+)\]/g,'.$1').split('.').filter(Boolean), cur = obj;
+  for (var i=0;i<parts.length-1;i++){
+    var k = parts[i];
+    if (cur[k] == null) cur[k] = /^\d+$/.test(parts[i+1]) ? [] : {};
+    cur = cur[k];
+  }
+  cur[parts[parts.length-1]] = value;
+  return obj;
+}
+
+/* --------------------------------------------------------- world clock */
+var CLOCK0 = {h:8, mi:12, s:0};
+var SECONDS_PER_STEP = 4;
+function tick(c, n){
+  var t=c.s+n; c.s=t%60;
+  var m=c.mi+Math.floor(t/60); c.mi=m%60;
+  c.h=(c.h+Math.floor(m/60))%24;
+  return c;
+}
+function clockStr(c){ return (c.h<10?'0':'')+c.h+':'+(c.mi<10?'0':'')+c.mi; }
+
+/* ------------------------------------------------------ initial state */
+function M(folder, read, starred, labels){
+  return {folder:folder, read:!!read, starred:!!starred, labels:labels||[], snoozed:null};
+}
+function createInitialState(seed){
+  seed = seed || 0;
+  return {
+    meta:{ env:ENV_ID, version:VERSION, seed:seed, clock:clone(CLOCK0), steps:0,
+           sentSeq:1, labelSeq:1, answer:null, finished:false },
+    ui:{ stack:[{name:'inbox', params:{}}], tab:'inbox', sheet:null, confirm:null, toast:null,
+         inputs:{}, query:'', unreadOnly:false, select:{on:false, ids:[]} },
+    account:{ name:'Sam Byrne', email:'sam@northwind.io',
+              settings:{ signature:true, threadView:true, notifyImportant:true, autoArchiveNews:false } },
+    mail:{
+      m_01:M('inbox', false, false, ['work']),
+      m_02:M('inbox', true,  false, ['receipts']),
+      m_03:M('inbox', false, false, ['work']),
+      m_04:M('inbox', false, false, ['travel']),
+      m_05:M('inbox', true,  true,  ['personal']),
+      m_06:M('inbox', true,  false, ['newsletters']),
+      m_07:M('inbox', false, false, ['work']),
+      m_08:M('inbox', true,  false, ['travel','receipts']),
+      m_09:M('inbox', false, false, ['work','personal']),
+      m_10:M('inbox', false, false, ['work']),
+      m_11:M('inbox', true,  false, ['personal']),
+      m_12:M('inbox', true,  false, ['receipts']),
+      m_13:M('inbox', true,  false, ['newsletters']),
+      m_14:M('inbox', false, false, []),
+      m_15:M('archive', true, false, ['work']),
+      m_16:M('archive', true, false, ['travel']),
+      m_17:M('archive', true, false, ['work']),
+      m_18:M('sent',   true, false, ['work']),
+      m_19:M('sent',   true, false, ['work']),
+      m_20:M('drafts', true, false, []),
+      m_21:M('spam',   true, false, []),
+      m_22:M('trash',  true, false, ['newsletters'])
+    },
+    extraLabels:[],
+    sentMessages:[],
+    compose:{ to:'', subject:'', body:'' },
+    lastAction:null
+  };
+}
+
+/* ------------------------------------------------------------ selectors */
+function allLabels(st){ return LABELS.concat(st.extraLabels || []); }
+function labelOf(st, k){
+  var all = allLabels(st);
+  for (var i=0;i<all.length;i++) if (all[i].key===k) return all[i];
+  return {key:k, name:k, color:'#7a8697'};
+}
+function mstate(st, id){ return st.mail[id] || {}; }
+function inFolder(st, key){
+  var ids = MESSAGES.map(function(m){ return m.id; }).concat(st.sentMessages.map(function(m){ return m.id; }));
+  return ids.filter(function(id){
+    var s = st.mail[id]; if (!s) return false;
+    if (key === 'starred') return s.starred && s.folder !== 'trash';
+    if (key === 'snoozed') return !!s.snoozed;
+    return s.folder === key;
+  });
+}
+function unreadCount(st, key){
+  return inFolder(st, key).filter(function(id){ return !st.mail[id].read; }).length;
+}
+function labelCount(st, k){
+  return Object.keys(st.mail).filter(function(id){
+    var s = st.mail[id];
+    return s.labels.indexOf(k) >= 0 && s.folder !== 'trash';
+  }).length;
+}
+function messageOf(st, id){
+  var m = msg(id);
+  if (m) return m;
+  for (var i=0;i<st.sentMessages.length;i++) if (st.sentMessages[i].id===id) return st.sentMessages[i];
+  return null;
+}
+function listFor(st, key){
+  var ids = inFolder(st, key);
+  if (st.ui.unreadOnly) ids = ids.filter(function(id){ return !st.mail[id].read; });
+  return shuffled(ids, st.meta.seed);
+}
+/* search understands `from:name` and `has:attachment` alongside plain words */
+function searchIds(st){
+  var q = st.ui.query.trim().toLowerCase();
+  if (!q) return [];
+  var terms = q.split(/\s+/);
+  return Object.keys(st.mail).filter(function(id){
+    var s = st.mail[id], m = messageOf(st, id);
+    if (!m || s.folder === 'trash') return false;
+    return terms.every(function(t){
+      if (t.indexOf('from:') === 0)
+        return (m.name + ' ' + m.email).toLowerCase().indexOf(t.slice(5)) >= 0;
+      if (t.indexOf('label:') === 0) return s.labels.indexOf(t.slice(6)) >= 0;
+      if (t === 'has:attachment') return !!(m.attachments && m.attachments.length);
+      if (t === 'is:unread') return !s.read;
+      if (t === 'is:starred') return !!s.starred;
+      return (m.name + ' ' + m.email + ' ' + m.subject + ' ' + m.body).toLowerCase().indexOf(t) >= 0;
+    });
+  });
+}
+function selected(st){ return st.ui.select.ids.slice(); }
+function route(st){ return st.ui.stack[st.ui.stack.length-1]; }
+
+var SELECT = { inFolder:inFolder, unreadCount:unreadCount, labelCount:labelCount, listFor:listFor,
+               searchIds:searchIds, messageOf:messageOf, mstate:mstate, allLabels:allLabels,
+               labelOf:labelOf, selected:selected, route:route, clockStr:clockStr, hashHue:hashHue };
+
+/* ------------------------------------------------------------- reducer */
+function push(st, name, params){ st.ui.stack.push({name:name, params:params||{}}); st.ui.sheet=null; }
+function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
+function toast(st, t, undo){ st.ui.toast = {text:t, undo:undo || null}; }
+function targets(st, id){
+  /* a bulk action applies to the selection when one is active, else to one message */
+  if (st.ui.select.on && st.ui.select.ids.length) return st.ui.select.ids.slice();
+  return id ? [id] : [];
+}
+function clearSelect(st){ st.ui.select = {on:false, ids:[]}; }
+
+function reduce(prev, action){
+  var st = clone(prev), A = action || {};
+  st.ui.toast = null;
+  st.meta.steps += 1;
+  tick(st.meta.clock, SECONDS_PER_STEP);
+
+  switch (A.type) {
+
+  case 'NAV':  push(st, A.to, A.params); break;
+  case 'BACK':
+    if (st.ui.confirm) st.ui.confirm = null;
+    else if (st.ui.sheet) st.ui.sheet = null;
+    else if (st.ui.select.on) clearSelect(st);
+    else pop(st);
+    break;
+  case 'TAB':
+    st.ui.tab = A.tab; st.ui.sheet = null; st.ui.confirm = null; clearSelect(st);
+    st.ui.stack = [{name:A.tab, params:{}}];
+    break;
+  case 'HOME':
+    st.ui.tab = 'inbox'; st.ui.stack = [{name:'inbox', params:{}}];
+    st.ui.sheet = null; st.ui.confirm = null; clearSelect(st);
+    break;
+
+  /* ---- search & filters ---- */
+  case 'SET_INPUT': st.ui.inputs[A.field] = A.value; break;
+  case 'SUBMIT_SEARCH':
+    st.ui.query = String(st.ui.inputs.search || '').trim();
+    if (route(st).name !== 'search') push(st, 'search', {});
+    break;
+  case 'CLEAR_SEARCH': st.ui.query=''; st.ui.inputs.search=''; toast(st, 'Search cleared'); break;
+  case 'TOGGLE_UNREAD_ONLY': st.ui.unreadOnly = !st.ui.unreadOnly; break;
+
+  /* ---- selection ---- */
+  case 'SELECT_START':
+    st.ui.select = {on:true, ids: A.id ? [A.id] : []};
+    break;
+  case 'SELECT_TOGGLE': {
+    var ids = st.ui.select.ids, i = ids.indexOf(A.id);
+    if (i >= 0) ids.splice(i, 1); else ids.push(A.id);
+    st.ui.select.on = true;
+    break;
+  }
+  case 'SELECT_ALL': st.ui.select = {on:true, ids: listFor(st, A.folder || 'inbox').slice()}; break;
+  case 'SELECT_NONE': clearSelect(st); break;
+
+  /* ---- per-message and bulk operations ---- */
+  case 'OPEN_MSG': {
+    if (st.ui.select.on) { var j = st.ui.select.ids.indexOf(A.id);
+      if (j >= 0) st.ui.select.ids.splice(j, 1); else st.ui.select.ids.push(A.id);
+      break; }
+    if (st.mail[A.id]) st.mail[A.id].read = true;
+    push(st, 'message', {id:A.id});
+    break;
+  }
+  case 'TOGGLE_STAR': {
+    var t1 = targets(st, A.id), n1 = 0;
+    t1.forEach(function(id){ if (st.mail[id]) { st.mail[id].starred = !st.mail[id].starred; n1++; } });
+    if (t1.length > 1) { clearSelect(st); toast(st, n1 + ' conversations updated'); }
+    break;
+  }
+  case 'SET_STAR': {
+    targets(st, A.id).forEach(function(id){ if (st.mail[id]) st.mail[id].starred = !!A.on; });
+    if (st.ui.select.on) { clearSelect(st); toast(st, A.on ? 'Starred' : 'Unstarred'); }
+    break;
+  }
+  case 'SET_READ': {
+    var t2 = targets(st, A.id);
+    t2.forEach(function(id){ if (st.mail[id]) st.mail[id].read = !!A.read; });
+    if (st.ui.select.on) { clearSelect(st); toast(st, t2.length + ' marked as ' + (A.read ? 'read' : 'unread')); }
+    break;
+  }
+  case 'MOVE': {
+    var t3 = targets(st, A.id), moved = [];
+    t3.forEach(function(id){
+      if (!st.mail[id]) return;
+      moved.push({id:id, from:st.mail[id].folder});
+      st.mail[id].folder = A.folder;
+      if (A.folder === 'trash' || A.folder === 'spam') st.mail[id].snoozed = null;
+    });
+    st.lastAction = {type:'MOVE', moved:moved};
+    var fname = (folder(A.folder) || {}).name || A.folder;
+    if (st.ui.select.on) clearSelect(st);
+    if (route(st).name === 'message') pop(st);
+    toast(st, moved.length + ' moved to ' + fname, 'UNDO_MOVE');
+    break;
+  }
+  case 'UNDO_MOVE': {
+    var la = st.lastAction;
+    if (!la || la.type !== 'MOVE') { toast(st, 'Nothing to undo'); break; }
+    la.moved.forEach(function(m){ if (st.mail[m.id]) st.mail[m.id].folder = m.from; });
+    st.lastAction = null;
+    toast(st, 'Move undone');
+    break;
+  }
+  case 'LABEL_TOGGLE': {
+    var t4 = targets(st, A.id);
+    t4.forEach(function(id){
+      var s = st.mail[id]; if (!s) return;
+      var k = s.labels.indexOf(A.label);
+      if (k >= 0) s.labels.splice(k, 1); else s.labels.push(A.label);
+      s.labels.sort();
+    });
+    break;
+  }
+  case 'LABEL_APPLY_DONE':
+    if (st.ui.select.on) { var c = st.ui.select.ids.length; clearSelect(st); toast(st, 'Labels updated on ' + c); }
+    st.ui.sheet = null;
+    break;
+  case 'SNOOZE': {
+    var t5 = targets(st, A.id), o = snoozeOpt(A.key);
+    t5.forEach(function(id){ if (st.mail[id]) st.mail[id].snoozed = o ? o.key : null; });
+    if (st.ui.select.on) clearSelect(st);
+    st.ui.sheet = null;
+    if (route(st).name === 'message') pop(st);
+    toast(st, 'Snoozed until ' + (o ? o.at : '?'));
+    break;
+  }
+  case 'UNSNOOZE': {
+    targets(st, A.id).forEach(function(id){ if (st.mail[id]) st.mail[id].snoozed = null; });
+    if (st.ui.select.on) clearSelect(st);
+    toast(st, 'Back in the inbox');
+    break;
+  }
+
+  /* ---- compose ---- */
+  case 'COMPOSE_NEW':
+    st.compose = {to:'', subject:'', body:''};
+    st.ui.inputs.c_to = ''; st.ui.inputs.c_subject = ''; st.ui.inputs.c_body = '';
+    push(st, 'compose', {});
+    break;
+  case 'COMPOSE_REPLY': {
+    var m2 = messageOf(st, A.id); if (!m2) break;
+    st.compose = {to:m2.email,
+                  subject:(m2.subject.indexOf('Re: ') === 0 ? m2.subject : 'Re: ' + m2.subject),
+                  body:''};
+    st.ui.inputs.c_to = st.compose.to;
+    st.ui.inputs.c_subject = st.compose.subject;
+    st.ui.inputs.c_body = '';
+    push(st, 'compose', {replyTo:A.id});
+    break;
+  }
+  case 'COMPOSE_SET': st.compose[A.field] = A.value; break;
+  case 'COMPOSE_SEND': {
+    var c2 = st.compose;
+    if (!String(c2.to).trim())      { toast(st, 'Add a recipient first'); break; }
+    if (!String(c2.subject).trim()) { toast(st, 'Add a subject first'); break; }
+    var sid = 'm_sent' + st.meta.sentSeq; st.meta.sentSeq += 1;
+    st.sentMessages.push({id:sid, name:c2.to, email:c2.to, at:clockStr(st.meta.clock), day:'Today',
+                          subject:c2.subject, preview:String(c2.body).slice(0, 70), body:c2.body, sentByMe:true});
+    st.mail[sid] = {folder:'sent', read:true, starred:false, labels:[], snoozed:null};
+    st.compose = {to:'', subject:'', body:''};
+    pop(st);
+    toast(st, 'Message sent');
+    break;
+  }
+  case 'COMPOSE_DISCARD':
+    st.compose = {to:'', subject:'', body:''};
+    pop(st); toast(st, 'Draft discarded');
+    break;
+
+  /* ---- labels ---- */
+  case 'LABEL_NEW':
+    st.ui.inputs.label_name = '';
+    push(st, 'labelNew', {});
+    break;
+  case 'LABEL_CREATE': {
+    var nm = String(st.ui.inputs.label_name || '').trim();
+    if (!nm) { toast(st, 'Give the label a name'); break; }
+    var key = 'lb_' + st.meta.labelSeq; st.meta.labelSeq += 1;
+    var palette = ['#1f6feb','#1a7f52','#c98a1b','#7b5cf0','#d3402f','#0f8fa8'];
+    st.extraLabels.push({key:key, name:nm, color:palette[(st.extraLabels.length) % palette.length]});
+    pop(st); toast(st, 'Label "' + nm + '" created');
+    break;
+  }
+
+  /* ---- overlays & settings ---- */
+  case 'OPEN_SHEET':  st.ui.sheet = {type:A.sheet, id:A.id || null}; break;
+  case 'CLOSE_SHEET': st.ui.sheet = null; break;
+  case 'CONFIRM_NO':  st.ui.confirm = null; break;
+  case 'CONFIRM_YES': {
+    var yes = st.ui.confirm && st.ui.confirm.yes; st.ui.confirm = null;
+    if (yes) { var keep = st.meta.steps, kc = clone(st.meta.clock);
+               var out = reduce(st, yes); out.meta.steps = keep; out.meta.clock = kc; return out; }
+    break;
+  }
+  case 'EMPTY_TRASH':
+    st.ui.confirm = {title:'Empty the trash?', text:'This permanently deletes everything in Trash.',
+                     okText:'Empty trash', yes:{type:'EMPTY_TRASH_OK'}};
+    break;
+  case 'EMPTY_TRASH_OK': {
+    var gone = inFolder(st, 'trash');
+    gone.forEach(function(id){ delete st.mail[id]; });
+    toast(st, gone.length + ' deleted for good');
+    break;
+  }
+  case 'TOGGLE_SETTING': st.account.settings[A.key] = !st.account.settings[A.key]; break;
+  case 'SET_SETTING':    st.account.settings[A.key] = A.value; break;
+
+  case 'FINISH':
+    st.meta.answer = (A.answer === undefined ? null : A.answer);
+    st.meta.finished = true;
+    break;
+  case 'NOOP': default: break;
+  }
+  return st;
+}
+
+/* =======================================================================
+ * SCREEN TREE
+ * ==================================================================== */
+function N(t, o){ o = o || {}; o.t = t; return o; }
+function appbar(title, o){
+  o = o || {};
+  return N('appbar', {id:'appbar', title:title, back:!!o.back, cls:o.cls||'',
+                      right:o.right||[], left:o.left||[]});
+}
+function row(id, text, o){
+  o = o || {};
+  return N('row', {id:id, text:text, sub:o.sub, val:o.val, valCls:o.valCls, lead:o.lead,
+                   arrow:o.arrow !== false, act:o.act, c:o.c});
+}
+function btn(id, text, act, cls, disabled){
+  return N('btn', {id:id, text:text, act:act, cls:cls||'', disabled:!!disabled});
+}
+function txt(text, cls){ return N('text', {text:text, cls:cls||'body'}); }
+function iconbtn(id, ic, act, cls){ return N('iconbtn', {id:id, icon:ic, act:act, cls:cls||''}); }
+
+function tabbar(st){
+  var items = [
+    {id:'tab_inbox',    text:'Inbox',    icon:'inbox',  tab:'inbox',    badge:unreadCount(st, 'inbox')},
+    {id:'tab_folders',  text:'Folders',  icon:'folder', tab:'folders'},
+    {id:'tab_labels',   text:'Labels',   icon:'tag',    tab:'labels'},
+    {id:'tab_settings', text:'Settings', icon:'gear',   tab:'settings'}
+  ].map(function(i){
+    return {id:i.id, text:i.text, icon:i.icon, badge:i.badge || 0,
+            on:(st.ui.tab===i.tab), act:{type:'TAB', tab:i.tab}};
+  });
+  return N('tabbar', {id:'tabbar', items:items});
+}
+
+function labelsOn(st, id){
+  return mstate(st, id).labels.map(function(k){
+    var l = labelOf(st, k); return {key:k, name:l.name, color:l.color};
+  });
+}
+function msgRow(st, id, prefix){
+  var m = messageOf(st, id), s = mstate(st, id);
+  if (!m) return N('space', {});
+  var sel = st.ui.select.ids.indexOf(id) >= 0;
+  return N('msgrow', {
+    id:(prefix||'') + 'msg_' + id, mid:id,
+    from:(m.sentByMe ? 'To: ' + m.name : m.name) || '(no recipient)',
+    subject:m.subject || '(no subject)', preview:m.preview, at:m.at, day:m.day,
+    unread:!s.read, starred:!!s.starred, selected:sel, hue:hashHue(m.name || m.email || id),
+    initial:(m.name || m.email || '?').charAt(0).toUpperCase(),
+    labels:labelsOn(st, id), attach:!!(m.attachments && m.attachments.length),
+    snoozed:s.snoozed ? (snoozeOpt(s.snoozed) || {}).label : null,
+    act:{type:'OPEN_MSG', id:id},
+    selId:(prefix||'') + 'sel_' + id, selAct:{type:'SELECT_TOGGLE', id:id},
+    starId:(prefix||'') + 'star_' + id, starAct:{type:'TOGGLE_STAR', id:id}
+  });
+}
+
+function bulkBar(st){
+  var n = st.ui.select.ids.length, none = n === 0;
+  var anyUnread = st.ui.select.ids.some(function(id){ return !mstate(st, id).read; });
+  return N('bulkbar', {id:'bulkbar', items:[
+    {id:'bulk_archive', text:'Archive', icon:'archive', off:none, act:{type:'MOVE', folder:'archive'}},
+    {id:'bulk_snooze',  text:'Snooze',  icon:'clock',   off:none, act:{type:'OPEN_SHEET', sheet:'snooze'}},
+    {id:'bulk_label',   text:'Label',   icon:'tag',     off:none, act:{type:'OPEN_SHEET', sheet:'labels'}},
+    {id:'bulk_read',    text:anyUnread ? 'Read' : 'Unread', icon:'mail', off:none,
+     act:{type:'SET_READ', read:anyUnread}},
+    {id:'bulk_trash',   text:'Trash',   icon:'trash',   off:none, cls:'danger', act:{type:'MOVE', folder:'trash'}}
+  ]});
+}
+
+function listScreen(st, key, opts){
+  opts = opts || {};
+  var ids = opts.ids || listFor(st, key);
+  var f = folder(key) || {key:key, name:opts.title || key};
+  var sel = st.ui.select;
+  var bar = sel.on
+    ? N('appbar', {id:'appbar', cls:'select', title:sel.ids.length + ' selected',
+        left:[iconbtn('sel_cancel', 'close', {type:'SELECT_NONE'})],
+        right:[iconbtn('sel_all', 'checkall', {type:'SELECT_ALL', folder:key})]})
+    : N('appbar', {id:'appbar', title:f.name, back:!!opts.back,
+        right:[iconbtn('open_search', 'search', {type:'NAV', to:'search', params:{}}),
+               iconbtn('start_select', 'checkall', {type:'SELECT_START'})]});
+  var body = [
+    N('chips', {id:'list_filters', c:[
+      N('chip', {id:'filter_all',    text:'All',    on:!st.ui.unreadOnly, act:{type:'TOGGLE_UNREAD_ONLY'}}),
+      N('chip', {id:'filter_unread', text:'Unread ' + unreadCount(st, key),
+                 on:st.ui.unreadOnly, act:{type:'TOGGLE_UNREAD_ONLY'}})
+    ].concat(key === 'trash'
+      ? [N('chip', {id:'empty_trash', text:'Empty trash', act:{type:'EMPTY_TRASH'}})] : [])})
+  ].concat(ids.length
+    ? ids.map(function(id){ return msgRow(st, id); })
+    : [N('emptystate', {id:'empty', icon:f.icon, text:opts.emptyText || ('Nothing in ' + f.name)})])
+   .concat([N('space', {})]);
+
+  var children = [bar, N('scroll', {id:'list_scroll', c:body})];
+  if (sel.on) children.push(bulkBar(st));
+  else {
+    children.push(N('fab', {id:'compose_fab', icon:'pencil', act:{type:'COMPOSE_NEW'}}));
+    children.push(tabbar(st));
+  }
+  return N('screen', {id:'scr_' + key, name:opts.route || key, params:opts.params || {}, c:children});
+}
+
+function scrInbox(st){ return listScreen(st, 'inbox', {route:'inbox'}); }
+function scrFolder(st, params){
+  return listScreen(st, params.key, {route:'folder', back:true, params:{key:params.key}});
+}
+function scrLabelView(st, params){
+  var k = params.key, l = labelOf(st, k);
+  var ids = Object.keys(st.mail).filter(function(id){
+    var s = st.mail[id]; return s.labels.indexOf(k) >= 0 && s.folder !== 'trash';
+  });
+  if (st.ui.unreadOnly) ids = ids.filter(function(id){ return !st.mail[id].read; });
+  return listScreen(st, k, {ids:shuffled(ids, st.meta.seed), route:'labelView', back:true,
+                            title:l.name, params:{key:k},
+                            emptyText:'Nothing labelled ' + l.name});
+}
+
+function scrMessage(st, params){
+  var id = params.id, m = messageOf(st, id), s = mstate(st, id);
+  if (!m) return scrInbox(st);
+  var tools = [
+    iconbtn('msg_archive', 'archive', {type:'MOVE', id:id, folder:'archive'}),
+    iconbtn('msg_trash',   'trash',   {type:'MOVE', id:id, folder:'trash'}),
+    iconbtn('msg_spam',    'spam',    {type:'MOVE', id:id, folder:'spam'}),
+    iconbtn('msg_snooze',  'clock',   {type:'OPEN_SHEET', sheet:'snooze', id:id}),
+    iconbtn('msg_star',    s.starred ? 'starfill' : 'star', {type:'TOGGLE_STAR', id:id},
+            s.starred ? 'star on' : 'star')
+  ];
+  return N('screen', {id:'scr_message', name:'message', params:{id:id}, c:[
+    N('appbar', {id:'appbar', back:true, title:'', right:tools}),
+    N('scroll', {id:'msg_scroll', c:[
+      N('mhead', {id:'msg_head', subject:m.subject || '(no subject)',
+                  name:m.name || '(no recipient)', email:m.email, at:m.at + ' · ' + m.day,
+                  hue:hashHue(m.name || m.email || id),
+                  initial:(m.name || m.email || '?').charAt(0).toUpperCase(),
+                  labels:labelsOn(st, id),
+                  folderName:(folder(s.folder) || {}).name || s.folder,
+                  snoozed:s.snoozed ? (snoozeOpt(s.snoozed) || {}).at : null}),
+      N('mbody', {id:'msg_body', text:m.body}),
+      (m.attachments && m.attachments.length)
+        ? N('attach', {id:'msg_attach', items:m.attachments.map(function(a, i){
+            return {id:'attach_' + i, name:a.name, size:a.size,
+                    act:{type:'EXPLAIN', text:a.name + ' · ' + a.size}};
+          })})
+        : N('space', {}),
+      N('card', {id:'msg_actions', cls:'flush', c:[
+        row('msg_label',  'Labels',
+            {lead:'tag', val: s.labels.length ? s.labels.length + ' applied' : 'None',
+             act:{type:'OPEN_SHEET', sheet:'labels', id:id}}),
+        row('msg_unread', s.read ? 'Mark as unread' : 'Mark as read',
+            {lead:'mail', act:{type:'SET_READ', id:id, read:!s.read}}),
+        row('msg_move',   'Folder', {lead:'folder', val:(folder(s.folder) || {}).name || s.folder,
+            act:{type:'OPEN_SHEET', sheet:'move', id:id}})
+      ]}),
+      N('btnrow', {id:'msg_ops', c:[
+        btn('msg_forward', 'Forward', {type:'COMPOSE_NEW'}, 'ghost'),
+        btn('msg_reply', 'Reply', {type:'COMPOSE_REPLY', id:id}, 'primary')]}),
+      N('space', {})
+    ]})
+  ]});
+}
+
+function scrCompose(st){
+  var c = st.compose;
+  return N('screen', {id:'scr_compose', name:'compose', c:[
+    N('appbar', {id:'appbar', back:true, title:'New message',
+      right:[iconbtn('compose_discard', 'trash', {type:'COMPOSE_DISCARD'}),
+             iconbtn('compose_send', 'send', {type:'COMPOSE_SEND'})]}),
+    N('scroll', {id:'compose_scroll', c:[
+      N('inputrow', {id:'c_to', label:'To', field:'c_to',
+                     value:(st.ui.inputs.c_to !== undefined ? st.ui.inputs.c_to : c.to),
+                     placeholder:'name@example.com',
+                     act:{type:'COMPOSE_SET', field:'to', value:'$VALUE'}}),
+      N('inputrow', {id:'c_subject', label:'Subject', field:'c_subject',
+                     value:(st.ui.inputs.c_subject !== undefined ? st.ui.inputs.c_subject : c.subject),
+                     placeholder:'Subject',
+                     act:{type:'COMPOSE_SET', field:'subject', value:'$VALUE'}}),
+      N('inputrow', {id:'c_body', label:'', field:'c_body', multiline:true,
+                     value:(st.ui.inputs.c_body !== undefined ? st.ui.inputs.c_body : c.body),
+                     placeholder:'Write your message',
+                     act:{type:'COMPOSE_SET', field:'body', value:'$VALUE'}}),
+      st.account.settings.signature
+        ? txt('— Sam Byrne, Northwind', 'muted') : N('space', {}),
+      N('space', {}),
+      N('padded', {c:[btn('compose_send_btn', 'Send', {type:'COMPOSE_SEND'}, 'primary block')]}),
+      N('space', {})
+    ]})
+  ]});
+}
+
+function scrSearch(st){
+  var ids = searchIds(st);
+  var body = [
+    N('searchbar', {id:'search_input', field:'search', value:st.ui.inputs.search || '',
+      placeholder:'Search mail — try from:priya or has:attachment',
+      act:{type:'SET_INPUT', field:'search', value:'$VALUE'},
+      goId:'search_go', go:{type:'SUBMIT_SEARCH'},
+      clearId:(st.ui.query || st.ui.inputs.search) ? 'search_clear' : null,
+      clear:{type:'CLEAR_SEARCH'}})
+  ];
+  if (!st.ui.query) {
+    body.push(N('sec', {text:'Operators'}));
+    body.push(N('card', {id:'search_help', cls:'flush', c:[
+      row('help_from',   'from:priya',      {arrow:false, lead:'user',  sub:'match the sender'}),
+      row('help_label',  'label:work',      {arrow:false, lead:'tag',   sub:'match a label'}),
+      row('help_attach', 'has:attachment',  {arrow:false, lead:'clip',  sub:'only mail with files'}),
+      row('help_unread', 'is:unread',       {arrow:false, lead:'mail',  sub:'only unread mail'})
+    ]}));
+  } else {
+    body.push(txt(ids.length + ' result' + (ids.length === 1 ? '' : 's') + ' for "' + st.ui.query + '"', 'muted'));
+    body = body.concat(ids.length
+      ? ids.map(function(id){ return msgRow(st, id, 'find_'); })
+      : [N('emptystate', {id:'empty', icon:'search', text:'Nothing matches "' + st.ui.query + '"'})]);
+  }
+  body.push(N('space', {}));
+  var children = [appbar('Search', {back:true}), N('scroll', {id:'search_scroll', c:body})];
+  if (st.ui.select.on) children.push(bulkBar(st));
+  return N('screen', {id:'scr_search', name:'search', c:children});
+}
+
+function scrFolders(st){
+  return N('screen', {id:'scr_folders', name:'folders', c:[
+    appbar('Folders'),
+    N('scroll', {id:'folders_scroll', c:[
+      N('card', {id:'folder_list', cls:'flush', c: FOLDERS.map(function(f){
+        var n = inFolder(st, f.key).length, u = unreadCount(st, f.key);
+        return N('folderrow', {id:'folder_' + f.key, name:f.name, icon:f.icon,
+                               count:(u ? u + ' unread' : n + ''), on:false,
+                               act:{type:'NAV', to:'folder', params:{key:f.key}}});
+      })}),
+      N('space', {})
+    ]}),
+    tabbar(st)
+  ]});
+}
+
+function scrLabels(st){
+  var all = allLabels(st);
+  return N('screen', {id:'scr_labels', name:'labels', c:[
+    appbar('Labels', {right:[iconbtn('label_add', 'plus', {type:'LABEL_NEW'})]}),
+    N('scroll', {id:'labels_scroll', c:[
+      N('card', {id:'label_list', cls:'flush', c: all.map(function(l){
+        return N('labelrow', {id:'label_' + l.key, name:l.name, color:l.color,
+                              count:labelCount(st, l.key),
+                              act:{type:'NAV', to:'labelView', params:{key:l.key}}});
+      })}),
+      N('padded', {c:[btn('label_new_btn', 'Create a label', {type:'LABEL_NEW'}, 'block')]}),
+      N('space', {})
+    ]}),
+    tabbar(st)
+  ]});
+}
+
+function scrLabelNew(st){
+  return N('screen', {id:'scr_labelNew', name:'labelNew', c:[
+    appbar('New label', {back:true}),
+    N('scroll', {id:'labelnew_scroll', c:[
+      N('card', {id:'label_form', cls:'flush', c:[
+        N('inputrow', {id:'label_name', label:'Name', field:'label_name',
+                       value:st.ui.inputs.label_name || '', placeholder:'e.g. Invoices',
+                       act:{type:'SET_INPUT', field:'label_name', value:'$VALUE'}})
+      ]}),
+      txt('A colour is assigned automatically.', 'muted'),
+      N('space', {}),
+      N('padded', {c:[btn('label_create', 'Create label', {type:'LABEL_CREATE'}, 'primary block')]})
+    ]})
+  ]});
+}
+
+function scrSettings(st){
+  var s = st.account.settings;
+  function sw(id, text, key, sub){
+    return row(id, text, {sub:sub, arrow:false, act:{type:'TOGGLE_SETTING', key:key},
+                          c:[N('switch', {id:id + '_switch', on:!!s[key], act:{type:'TOGGLE_SETTING', key:key}})]});
+  }
+  return N('screen', {id:'scr_settings', name:'settings', c:[
+    appbar('Settings'),
+    N('scroll', {id:'settings_scroll', c:[
+      N('card', {id:'acct_card', cls:'flush', c:[
+        row('acct_row', st.account.name, {lead:'user', sub:st.account.email, arrow:false})
+      ]}),
+      N('sec', {text:'Composing'}),
+      N('card', {id:'set_compose', cls:'flush', c:[
+        sw('set_signature', 'Append signature', 'signature', 'Adds your name to new messages')
+      ]}),
+      N('sec', {text:'Reading'}),
+      N('card', {id:'set_reading', cls:'flush', c:[
+        sw('set_threadView', 'Group into threads', 'threadView', 'Show replies together'),
+        sw('set_notifyImportant', 'Notify for important mail only', 'notifyImportant', '')
+      ]}),
+      N('sec', {text:'Automation'}),
+      N('card', {id:'set_auto', cls:'flush', c:[
+        sw('set_autoArchiveNews', 'Auto-archive newsletters', 'autoArchiveNews',
+           'Skip the inbox for anything labelled Newsletters')
+      ]}),
+      N('sec', {text:'Mailboxes'}),
+      N('card', {id:'set_boxes', cls:'flush', c:[
+        row('go_folders', 'Folders', {lead:'folder', val:FOLDERS.length + '', act:{type:'TAB', tab:'folders'}}),
+        row('go_labels',  'Labels',  {lead:'tag', val:allLabels(st).length + '', act:{type:'TAB', tab:'labels'}})
+      ]}),
+      N('space', {})
+    ]}),
+    tabbar(st)
+  ]});
+}
+
+/* ------------------------------------------------------------ overlays */
+function sheetLabels(st){
+  var id = st.ui.sheet.id;
+  var ids = id ? [id] : st.ui.select.ids;
+  var applied = function(k){
+    return ids.length > 0 && ids.every(function(x){ return mstate(st, x).labels.indexOf(k) >= 0; });
+  };
+  return N('sheet', {id:'sheet_labels', title:'Labels · ' + ids.length + ' selected',
+    closeId:'sheet_close', close:{type:'CLOSE_SHEET'},
+    c: allLabels(st).map(function(l){
+      return row('pick_' + l.key, l.name, {arrow:false, dot:l.color,
+        act:{type:'LABEL_TOGGLE', id:id, label:l.key},
+        c:[N('check', {id:'check_' + l.key, on:applied(l.key),
+                       act:{type:'LABEL_TOGGLE', id:id, label:l.key}})]});
+    }),
+    footer: N('sheetfoot', {id:'labels_foot',
+      btn: btn('labels_done', 'Done', {type:'LABEL_APPLY_DONE'}, 'primary block')})
+  });
+}
+function sheetSnooze(st){
+  var id = st.ui.sheet.id;
+  return N('sheet', {id:'sheet_snooze', title:'Snooze until', closeId:'sheet_close', close:{type:'CLOSE_SHEET'},
+    c: SNOOZE_OPTIONS.map(function(o){
+      return row('snooze_' + o.key, o.label, {lead:'clock', val:o.at,
+        act:{type:'SNOOZE', id:id, key:o.key}});
+    })});
+}
+function sheetMove(st){
+  var id = st.ui.sheet.id;
+  return N('sheet', {id:'sheet_move', title:'Move to', closeId:'sheet_close', close:{type:'CLOSE_SHEET'},
+    c: FOLDERS.filter(function(f){ return f.real; }).map(function(f){
+      return row('move_' + f.key, f.name, {lead:f.icon, act:{type:'MOVE', id:id, folder:f.key}});
+    })});
+}
+
+var ROUTES = {
+  inbox:scrInbox, folder:scrFolder, labelView:scrLabelView, message:scrMessage,
+  compose:scrCompose, search:scrSearch, folders:scrFolders, labels:scrLabels,
+  labelNew:scrLabelNew, settings:scrSettings
+};
+
+function screen(st){
+  var r = route(st), fn = ROUTES[r.name] || scrInbox;
+  var rootNode = fn(st, r.params || {});
+  rootNode.route = r.name;
+  var extra = [];
+  if (st.ui.sheet) {
+    var sh = st.ui.sheet.type === 'labels' ? sheetLabels(st)
+           : st.ui.sheet.type === 'snooze' ? sheetSnooze(st)
+           : st.ui.sheet.type === 'move'   ? sheetMove(st) : null;
+    if (sh) extra.push(N('mask', {id:'mask', close:{type:'CLOSE_SHEET'}, c:[sh]}));
+  }
+  if (st.ui.confirm) {
+    extra.push(N('mask', {id:'confirm_mask', c:[N('dialog', {id:'confirm_dialog',
+      title:st.ui.confirm.title || '', text:st.ui.confirm.text,
+      ok: btn('confirm_ok', st.ui.confirm.okText || 'Confirm', {type:'CONFIRM_YES'}, 'primary'),
+      cancel: btn('confirm_cancel', 'Cancel', {type:'CONFIRM_NO'}, '')})]}));
+  }
+  if (st.ui.toast) extra.push(N('toast', {id:'toast', text:st.ui.toast.text,
+    undoId:st.ui.toast.undo ? 'toast_undo' : null,
+    undo:st.ui.toast.undo ? {type:st.ui.toast.undo} : null}));
+  rootNode.c = rootNode.c.concat(extra);
+  return rootNode;
+}
+
+/* =======================================================================
+ * TRAVERSAL — element index, GUI action interface, text observation
+ * ==================================================================== */
+var SKIP_KEYS = {act:1, selAct:1, starAct:1, go:1, close:1, clear:1, undo:1, yes:1,
+                 params:1, meta:1, attachments:1};
+
+function labelText(n){ return n.text || n.title || n.name || n.subject || n.label || ''; }
+
+function collect(n, out){
+  if (!n || typeof n !== 'object') return;
+  if (Array.isArray(n)) { for (var i=0;i<n.length;i++) collect(n[i], out); return; }
+  if (n.t === 'appbar' && n.back) out.push({id:'nav_back', act:{type:'BACK'}, text:'Back', t:'back'});
+  if (n.id && n.act)              out.push({id:n.id, act:n.act, text:labelText(n), t:n.t||'el',
+                                            disabled:!!(n.disabled || n.off),
+                                            input:(n.t==='searchbar'||n.t==='inputrow')});
+  if (n.t === 'mask' && n.close)  out.push({id:n.id, act:n.close, text:'Dismiss overlay', t:'mask'});
+  if (n.selId  && n.selAct)       out.push({id:n.selId,  act:n.selAct,  text:'Select this message', t:'check'});
+  if (n.starId && n.starAct)      out.push({id:n.starId, act:n.starAct, text:'Star this message', t:'btn'});
+  if (n.goId   && n.go)           out.push({id:n.goId,   act:n.go,      text:'Search', t:'btn'});
+  if (n.clearId&& n.clear)        out.push({id:n.clearId,act:n.clear,   text:'Clear the search', t:'btn'});
+  if (n.closeId&& n.close)        out.push({id:n.closeId,act:n.close,   text:'Close', t:'btn'});
+  if (n.undoId && n.undo)         out.push({id:n.undoId, act:n.undo,    text:'Undo', t:'btn'});
+  for (var k in n){
+    if (SKIP_KEYS[k]) continue;
+    var v = n[k];
+    if (v && typeof v === 'object') collect(v, out);
+  }
+}
+function elements(st){
+  var rootNode = (st && st.t === 'screen') ? st : screen(st);
+  var masks = (rootNode.c||[]).filter(function(n){ return n.t === 'mask'; });
+  var out = [];
+  collect(masks.length ? masks[masks.length-1] : rootNode, out);
+  /* a toast lives outside the modal layer and stays reachable */
+  if (masks.length) (rootNode.c||[]).forEach(function(n){ if (n.t === 'toast') collect(n, out); });
+  return out;
+}
+function findEl(st, id){
+  var els = elements(st);
+  for (var i=0;i<els.length;i++) if (els[i].id === id) return els[i];
+  return null;
+}
+function substitute(act, text){
+  var a = clone(act);
+  for (var k in a) if (a[k] === '$VALUE') a[k] = text;
+  return a;
+}
+function step(st, a){
+  a = a || {};
+  var kind = a.action || a.type;
+  switch (kind) {
+  case 'tap': {
+    var el = findEl(st, a.id);
+    if (!el) return {state:st, ok:false, error:'ELEMENT_NOT_FOUND: ' + a.id};
+    if (el.disabled) return {state:st, ok:false, error:'ELEMENT_DISABLED: ' + a.id};
+    return {state:reduce(st, el.act), ok:true};
+  }
+  case 'type': {
+    var e2 = findEl(st, a.id);
+    if (!e2) return {state:st, ok:false, error:'ELEMENT_NOT_FOUND: ' + a.id};
+    if (!e2.input) return {state:st, ok:false, error:'NOT_A_TEXT_FIELD: ' + a.id};
+    return {state:reduce(st, substitute(e2.act, a.text == null ? '' : String(a.text))), ok:true};
+  }
+  case 'back':   return {state:reduce(st, {type:'BACK'}), ok:true};
+  case 'home':   return {state:reduce(st, {type:'HOME'}), ok:true};
+  case 'wait':   return {state:reduce(st, {type:'NOOP'}), ok:true};
+  case 'finish': return {state:reduce(st, {type:'FINISH', answer:a.answer}), ok:true};
+  case 'raw':    return {state:reduce(st, a.act || {}), ok:true};
+  default:       return {state:st, ok:false, error:'UNKNOWN_ACTION: ' + kind};
+  }
+}
+
+/* ------------------------------------------------- text observation (a11y) */
+function a11y(st){
+  var rootNode = screen(st), lines = [], r = route(st);
+  lines.push('# Screen route=' + r.name + (r.params && (r.params.id || r.params.key)
+             ? '(' + (r.params.id || r.params.key) + ')' : '') +
+             '  ' + clockStr(st.meta.clock) + '  step ' + st.meta.steps);
+  if (st.ui.select.on)
+    lines.push('# Selection mode: ' + st.ui.select.ids.length + ' selected — ' +
+               'tapping a message toggles it instead of opening it');
+  var masks = (rootNode.c||[]).filter(function(n){ return n.t==='mask'; });
+  if (masks.length) lines.push('# A sheet is open. Nothing behind it can be tapped.');
+  walkText(masks.length ? masks[masks.length-1] : rootNode, 0, lines, st);
+  (rootNode.c||[]).forEach(function(n){
+    if (n.t==='toast') lines.push('[Toast] ' + n.text + (n.undoId ? '   Undo #' + n.undoId : ''));
+  });
+  return lines.join('\n');
+}
+function tid(n){ return (n && n.id && n.act) ? ' #'+n.id : ''; }
+function ind(d){ return new Array(d+1).join('  '); }
+
+function walkText(n, d, out, st){
+  if (!n || typeof n !== 'object') return;
+  if (Array.isArray(n)) { n.forEach(function(x){ walkText(x, d, out, st); }); return; }
+  var line = null;
+  switch (n.t) {
+  case 'screen': break;
+  case 'appbar': line = '[AppBar] ' + (n.title || '') + (n.back ? '   Back #nav_back' : ''); break;
+  case 'iconbtn': line = '[IconButton]' + tid(n) + ' ' + n.icon; break;
+  case 'searchbar':
+    line = '[TextField]' + tid(n) + ' placeholder="' + n.placeholder + '" value="' + (n.value||'') +
+           '"   Search #' + n.goId + (n.clearId ? '   Clear #' + n.clearId : ''); break;
+  case 'inputrow':
+    line = '[TextField]' + tid(n) + ' ' + (n.label || 'body') + ' value="' + (n.value||'') + '"'; break;
+  case 'chip':   line = '[Chip]' + tid(n) + ' ' + n.text + (n.on ? '  [selected]' : ''); break;
+  case 'btn':    line = '[Button]' + (n.id ? ' #'+n.id : '') + ' ' + n.text + (n.disabled ? ' (disabled)' : ''); break;
+  case 'row': {
+    var s = '[Row]' + tid(n) + ' ' + (n.text||'');
+    if (n.val) s += ' = ' + n.val;
+    if (n.sub) s += '   (' + n.sub + ')';
+    line = s; break;
+  }
+  case 'switch': line = '[Toggle]' + tid(n) + ' ' + (n.on ? 'ON' : 'OFF'); break;
+  case 'check':  line = '[Checkbox]' + tid(n) + ' ' + (n.on ? 'checked' : 'unchecked'); break;
+  case 'msgrow': {
+    var bits = [];
+    if (n.unread)  bits.push('UNREAD');
+    if (n.starred) bits.push('starred');
+    if (n.attach)  bits.push('attachment');
+    if (n.snoozed) bits.push('snoozed ' + n.snoozed);
+    if (n.selected) bits.push('SELECTED');
+    out.push(ind(d) + '[Mail]' + tid(n) + ' from ' + n.from + ' · ' + n.at + ' ' + n.day +
+             (bits.length ? '  [' + bits.join(', ') + ']' : ''));
+    out.push(ind(d+1) + '"' + n.subject + '" — ' + n.preview);
+    out.push(ind(d+1) + 'labels: ' + (n.labels.length ? n.labels.map(function(l){ return l.name; }).join(', ') : 'none') +
+             '   select #' + n.selId + '   star #' + n.starId);
+    return;
+  }
+  case 'mhead':
+    out.push(ind(d) + '[Subject] ' + n.subject);
+    out.push(ind(d+1) + 'from ' + n.name + ' <' + n.email + '> · ' + n.at + ' · in ' + n.folderName +
+             (n.snoozed ? ' · snoozed until ' + n.snoozed : ''));
+    out.push(ind(d+1) + 'labels: ' + (n.labels.length ? n.labels.map(function(l){ return l.name; }).join(', ') : 'none'));
+    return;
+  case 'mbody':
+    out.push(ind(d) + '[Body]');
+    String(n.text).split('\n').forEach(function(l){ if (l.trim()) out.push(ind(d+1) + l); });
+    return;
+  case 'attach':
+    out.push(ind(d) + '[Attachments] ' + n.items.map(function(a){
+      return a.name + ' (' + a.size + ') #' + a.id; }).join('  '));
+    return;
+  case 'folderrow': line = '[Folder]' + tid(n) + ' ' + n.name + ' — ' + n.count; break;
+  case 'labelrow':  line = '[Label]' + tid(n) + ' ' + n.name + ' — ' + n.count + ' conversations'; break;
+  case 'bulkbar':
+    out.push(ind(d) + '[BulkActions] ' + n.items.map(function(i){
+      return i.text + ' #' + i.id + (i.off ? '(disabled)' : ''); }).join('  '));
+    return;
+  case 'fab':      line = '[Compose]' + tid(n); break;
+  case 'emptystate': line = '[Empty] ' + n.text; break;
+  case 'sec':      line = '— ' + n.text + ' —'; break;
+  case 'text':     line = n.text || null; break;
+  case 'tabbar':
+    out.push(ind(d) + '[TabBar] ' + n.items.map(function(i){
+      return i.text + (i.badge ? '(' + i.badge + ')' : '') + ' #' + i.id + (i.on ? '[current]' : ''); }).join('  '));
+    return;
+  case 'sheet':    line = '[Sheet] ' + n.title + '   close #' + n.closeId; break;
+  case 'sheetfoot':line = null; break;
+  case 'dialog':   line = '[Dialog] ' + (n.title ? n.title + ' — ' : '') + n.text; break;
+  case 'mask': case 'toast': line = null; break;
+  default:         line = null;
+  }
+  if (line !== null) out.push(ind(d) + line);
+  for (var k in n){
+    if (SKIP_KEYS[k]) continue;
+    var v = n[k];
+    if (v && typeof v === 'object') walkText(v, line !== null ? d+1 : d, out, st);
+  }
+}
+
+/* --------------------------------------------------------- derived view */
+function idsToSubjects(st, ids){
+  return ids.map(function(id){ var m = messageOf(st, id); return m ? m.subject : id; }).sort();
+}
+function derive(st){
+  var inbox = inFolder(st, 'inbox');
+  return {
+    route: route(st).name,
+    inboxCount: inbox.length,
+    inboxUnread: unreadCount(st, 'inbox'),
+    unreadSubjects: idsToSubjects(st, inbox.filter(function(id){ return !st.mail[id].read; })),
+    starredSubjects: idsToSubjects(st, inFolder(st, 'starred')),
+    archivedSubjects: idsToSubjects(st, inFolder(st, 'archive')),
+    trashSubjects: idsToSubjects(st, inFolder(st, 'trash')),
+    spamSubjects: idsToSubjects(st, inFolder(st, 'spam')),
+    snoozedSubjects: idsToSubjects(st, inFolder(st, 'snoozed')),
+    sentSubjects: idsToSubjects(st, inFolder(st, 'sent')),
+    folderCounts: (function(){ var o = {}; FOLDERS.forEach(function(f){ o[f.key] = inFolder(st, f.key).length; }); return o; })(),
+    labelNames: allLabels(st).map(function(l){ return l.name; }).sort(),
+    labelCounts: (function(){ var o = {}; allLabels(st).forEach(function(l){ o[l.key] = labelCount(st, l.key); }); return o; })(),
+    labelCountsByName: (function(){ var o = {}; allLabels(st).forEach(function(l){ o[l.name] = labelCount(st, l.key); }); return o; })(),
+    topLabel: (function(){ var b = null;
+      allLabels(st).forEach(function(l){ if (!b || labelCount(st, l.key) > labelCount(st, b.key)) b = l; });
+      return b ? b.name : null; })(),
+    selectionCount: st.ui.select.ids.length,
+    lastSent: st.sentMessages.length ? st.sentMessages[st.sentMessages.length-1] : null,
+    finished: !!st.meta.finished,
+    answer: st.meta.answer
+  };
+}
+function snapshot(st){ var o = clone(st); o.derived = derive(st); return o; }
+function applyPatch(st, patch){
+  (patch || []).forEach(function(p){ setPath(st, p.path, clone(p.value)); });
+  return st;
+}
+
+/* ------------------------------------------------------------------ export */
+var ENGINE = {
+  ENV_ID: ENV_ID, VERSION: VERSION, CATALOG: CATALOG,
+  createInitialState: createInitialState,
+  reduce: reduce, step: step, screen: screen, a11y: a11y,
+  elements: elements, findEl: findEl, applyPatch: applyPatch,
+  getPath: getPath, setPath: setPath, clone: clone,
+  derive: derive, snapshot: snapshot,
+  select: SELECT
+};
+root.MARLIN_ENGINE = ENGINE;
+root.GUI_ENGINE    = ENGINE;
+
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+</script>
+
+<script id="ui">
+/* ===========================================================================
+ * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
+ * ======================================================================== */
+(function(){
+'use strict';
+var E = window.GUI_ENGINE;
+var app = document.getElementById('app');
+var hud = document.getElementById('hud');
+
+function esc(s){
+  return String(s === undefined || s === null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+var SVG = {
+  back:    '<path d="M15 4.5 8 12l7 7.5"/>',
+  arrow:   '<path d="M9 4.5 16 12l-7 7.5"/>',
+  search:  '<circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.4 15.4 21 21"/>',
+  close:   '<path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5"/>',
+  check:   '<path d="M4.8 12.6 9.8 17.6 19.2 6.8"/>',
+  checkall:'<rect x="3.4" y="3.4" width="17.2" height="17.2" rx="4"/><path d="M8 12.2l3 3 5.2-6"/>',
+  plus:    '<path d="M12 5.6v12.8M5.6 12h12.8"/>',
+  inbox:   '<path d="M3.2 13.4 6 4.8h12l2.8 8.6v4.8a1.8 1.8 0 0 1-1.8 1.8H5a1.8 1.8 0 0 1-1.8-1.8z"/><path d="M3.2 13.4h4.4l1.2 2.6h6.4l1.2-2.6h4.4"/>',
+  star:    '<path d="M12 3.6 14.6 9l5.9.8-4.3 4.1 1.1 5.8L12 17l-5.3 2.7 1.1-5.8L3.5 9.8 9.4 9z"/>',
+  starfill:'<path d="M12 3.6 14.6 9l5.9.8-4.3 4.1 1.1 5.8L12 17l-5.3 2.7 1.1-5.8L3.5 9.8 9.4 9z"/>',
+  clock:   '<circle cx="12" cy="12" r="8.8"/><path d="M12 6.8V12l3.6 2.2"/>',
+  send:    '<path d="M20.8 3.2 10.6 13.4"/><path d="M20.8 3.2 14.4 20.8l-3.8-7.4-7.4-3.8z"/>',
+  draft:   '<path d="M6 3.4h7.6L19 8.8v11.8H6z"/><path d="M13.4 3.4v5.6H19"/>',
+  archive: '<rect x="3" y="4" width="18" height="4.6" rx="1.4"/><path d="M4.8 8.6h14.4v10a1.6 1.6 0 0 1-1.6 1.6H6.4a1.6 1.6 0 0 1-1.6-1.6z"/><path d="M9.8 12.6h4.4"/>',
+  spam:    '<path d="M12 3.2 21 19.4H3z"/><path d="M12 9.4v4.4M12 16.6v.2"/>',
+  trash:   '<path d="M4.4 6.6h15.2"/><path d="M9 6.6V4.8a1.4 1.4 0 0 1 1.4-1.4h3.2A1.4 1.4 0 0 1 15 4.8v1.8"/><path d="M6.4 6.6l1 12.6a1.6 1.6 0 0 0 1.6 1.4h6a1.6 1.6 0 0 0 1.6-1.4l1-12.6"/>',
+  folder:  '<path d="M3.2 6.4a1.8 1.8 0 0 1 1.8-1.8h4l2.2 2.6h7A1.8 1.8 0 0 1 20 9v8.6a1.8 1.8 0 0 1-1.8 1.8H5a1.8 1.8 0 0 1-1.8-1.8z"/>',
+  tag:     '<path d="M11.3 3.4H20v8.7l-8.9 8.9a1.7 1.7 0 0 1-2.4 0l-6.3-6.3a1.7 1.7 0 0 1 0-2.4z"/><circle cx="16.3" cy="7.7" r="1.5"/>',
+  gear:    '<circle cx="12" cy="12" r="3.4"/>'
+         + '<path d="M19.1 14.4a1.6 1.6 0 0 0 .3 1.8l.1.1a1.9 1.9 0 1 1-2.7 2.7l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5v.2a1.9 1.9 0 1 1-3.8 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a1.9 1.9 0 1 1-2.7-2.7l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1h-.2a1.9 1.9 0 1 1 0-3.8h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a1.9 1.9 0 1 1 2.7-2.7l.1.1a1.6 1.6 0 0 0 1.8.3h.1a1.6 1.6 0 0 0 1-1.5v-.2a1.9 1.9 0 1 1 3.8 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a1.9 1.9 0 1 1 2.7 2.7l-.1.1a1.6 1.6 0 0 0-.3 1.8v.1a1.6 1.6 0 0 0 1.5 1h.2a1.9 1.9 0 1 1 0 3.8h-.1a1.6 1.6 0 0 0-1.5 1z"/>',
+  mail:    '<rect x="2.8" y="5" width="18.4" height="14" rx="2.2"/><path d="M3.4 6.6 12 13l8.6-6.4"/>',
+  user:    '<circle cx="12" cy="8" r="3.8"/><path d="M4.6 20.6c0-4 3.3-6.6 7.4-6.6s7.4 2.6 7.4 6.6"/>',
+  pencil:  '<path d="M16.4 3.6 20.4 7.6 8 20H4v-4z"/><path d="M13.6 6.4 17.6 10.4"/>',
+  clip:    '<path d="M20.4 11.6 12.2 19.8a4.6 4.6 0 0 1-6.5-6.5l8.2-8.2a3 3 0 0 1 4.3 4.3l-8.2 8.2a1.5 1.5 0 0 1-2.1-2.1l7.5-7.5"/>'
+};
+function icon(name, size, cls){
+  var d = SVG[name]; if (!d) return '';
+  var fill = name === 'starfill' || (cls && cls.indexOf('fill') >= 0);
+  return '<span class="ico ' + (cls||'') + '" style="width:' + (size||20) + 'px;height:' + (size||20) +
+    'px;display:inline-flex;flex:0 0 auto">' +
+    '<svg viewBox="0 0 24 24" width="100%" height="100%" fill="' + (fill ? 'currentColor' : 'none') +
+    '" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' +
+    d + '</svg></span>';
+}
+function avatar(initial, hue, size){
+  return '<div class="m-av" style="width:' + size + 'px;height:' + size + 'px;' +
+    'background:hsl(' + hue + ' 52% 46%)">' + esc(initial) + '</div>';
+}
+
+var ACTS = [], TRAJ = [];
+function bind(a){ if (!a) return ''; ACTS.push(a); return ' data-act="' + (ACTS.length-1) + '"'; }
+function bindT(a){ if (!a) return ''; ACTS.push(a); return ' data-actt="' + (ACTS.length-1) + '"'; }
+function tid(id){ return id ? ' data-testid="' + esc(id) + '"' : ''; }
+function R(list){ return (list||[]).map(render).join(''); }
+
+function render(n){
+  if (!n || typeof n !== 'object') return '';
+  if (Array.isArray(n)) return R(n);
+  switch (n.t) {
+  case 'screen': return R(n.c);
+
+  case 'appbar': {
+    var left = (n.back
+      ? '<div class="iconbtn" data-testid="nav_back"' + bind({type:'BACK'}) + '>' + icon('back',19) + '</div>'
+      : '') + R(n.left);
+    return '<div class="n-appbar ' + esc(n.cls||'') + '"' + tid(n.id) + '><div class="ab-side">' + left + '</div>'
+      + '<div class="ab-title">' + esc(n.title) + '</div>'
+      + '<div class="ab-side">' + R(n.right) + '</div></div>';
+  }
+  case 'iconbtn':
+    return '<div class="iconbtn ' + esc(n.cls||'') + '"' + tid(n.id) + bind(n.act) + '>' + icon(n.icon, 19) + '</div>';
+
+  case 'searchbar': {
+    var goIdx = n.go ? (ACTS.push(n.go) - 1) : -1;
+    return '<div class="searchbar">' + icon('search', 17)
+      + '<input' + tid(n.id) + bindT(n.act) + ' data-enter="' + goIdx + '"'
+      + ' value="' + esc(n.value) + '" placeholder="' + esc(n.placeholder) + '">'
+      + (n.clearId ? '<div class="sb-clear"' + tid(n.clearId) + bind(n.clear) + '>' + icon('close',12) + '</div>' : '')
+      + '<div class="sb-go"' + tid(n.goId) + ' data-act="' + goIdx + '">' + icon('arrow',15) + '</div></div>';
+  }
+  case 'inputrow':
+    return '<div class="n-input">' + (n.label ? '<div class="i-label">' + esc(n.label) + '</div>' : '')
+      + (n.multiline
+         ? '<textarea' + tid(n.id) + bindT(n.act) + ' placeholder="' + esc(n.placeholder) + '">' + esc(n.value) + '</textarea>'
+         : '<input' + tid(n.id) + bindT(n.act) + ' value="' + esc(n.value) + '" placeholder="' + esc(n.placeholder) + '">')
+      + '</div>';
+
+  case 'scroll':  return '<div class="n-scroll"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'chips':   return '<div class="n-chips"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'chip':    return '<div class="n-chip' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '>' + esc(n.text) + '</div>';
+  case 'card':    return '<div class="n-card ' + esc(n.cls||'') + (n.act?' tap':'') + '"' + tid(n.id) + bind(n.act) + '>' + R(n.c) + '</div>';
+  case 'padded':  return '<div style="padding:4px 16px">' + R(n.c) + '</div>';
+  case 'sec':     return '<div class="n-sec"' + tid(n.id) + '><span>' + esc(n.text) + '</span></div>';
+  case 'text':    return '<div class="n-text ' + esc(n.cls||'') + '">' + esc(n.text) + '</div>';
+  case 'space':   return '<div class="n-space"></div>';
+  case 'divider': return '<div class="n-divider"></div>';
+  case 'emptystate':
+    return '<div style="padding:48px 16px;text-align:center;color:var(--muted)"' + tid(n.id) + '>'
+      + '<div style="opacity:.35;display:flex;justify-content:center;margin-bottom:12px">' + icon(n.icon||'inbox', 46) + '</div>'
+      + '<div style="font-size:13.5px">' + esc(n.text) + '</div></div>';
+
+  case 'row': {
+    var inline = [], below = [];
+    (n.c||[]).forEach(function(ch){
+      (ch.t==='switch'||ch.t==='radio'||ch.t==='check'||ch.t==='btn') ? inline.push(ch) : below.push(ch);
+    });
+    return '<div class="n-row' + (n.act?' tap':'') + '"' + tid(n.id) + bind(n.act) + '>'
+      + (n.dot ? '<span style="flex:0 0 auto;width:12px;height:12px;border-radius:50%;background:' + n.dot + '"></span>' : '')
+      + (n.lead ? '<div class="r-lead">' + icon(n.lead, 18) + '</div>' : '')
+      + '<div class="r-main"><div class="r-label">' + esc(n.text) + '</div>'
+      + (n.sub ? '<div class="r-sub">' + esc(n.sub) + '</div>' : '') + '</div>'
+      + (n.val ? '<div class="r-value ' + esc(n.valCls||'') + '">' + esc(n.val) + '</div>' : '')
+      + R(inline)
+      + (n.arrow && !inline.length ? '<div class="r-arrow">' + icon('arrow',15) + '</div>' : '')
+      + '</div>' + R(below);
+  }
+  case 'btn':
+    return '<div class="n-btn ' + esc(n.cls||'') + (n.disabled?' off':'') + '"' + tid(n.id)
+      + (n.disabled?'':bind(n.act)) + '>' + esc(n.text) + '</div>';
+  case 'btnrow': return '<div class="n-btnrow"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'switch': return '<div class="n-switch' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '><i></i></div>';
+  case 'check':  return '<div class="n-check' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '></div>';
+
+  case 'msgrow': {
+    var lead = n.selected
+      ? '<div class="m-check"' + tid(n.selId) + bind(n.selAct) + '>' + icon('check',18) + '</div>'
+      : '<div' + tid(n.selId) + bind(n.selAct) + ' style="flex:0 0 auto">' + avatar(n.initial, n.hue, 40) + '</div>';
+    var meta = n.labels.map(function(l){
+      return '<span class="chip"><span class="cd" style="background:' + l.color + '"></span>' + esc(l.name) + '</span>';
+    }).join('')
+    + (n.attach ? '<span class="chip attach">' + icon('clip',11) + 'file</span>' : '')
+    + (n.snoozed ? '<span class="chip">' + icon('clock',11) + esc(n.snoozed) + '</span>' : '');
+    return '<div class="msg' + (n.unread?' unread':'') + (n.selected?' sel':'') + '"' + tid(n.id) + bind(n.act) + '>'
+      + lead
+      + '<div class="m-body"><div class="m-top"><div class="m-from">' + esc(n.from) + '</div>'
+      + '<div class="m-at">' + esc(n.day === 'Today' ? n.at : n.day) + '</div></div>'
+      + '<div class="m-subj">' + esc(n.subject) + '</div>'
+      + '<div class="m-prev">' + esc(n.preview) + '</div>'
+      + (meta ? '<div class="m-meta">' + meta + '</div>' : '') + '</div>'
+      + '<div class="m-side">'
+      + '<div class="iconbtn star' + (n.starred?' on':'') + '" style="width:28px;height:28px"' + tid(n.starId)
+      + bind(n.starAct) + '>' + icon(n.starred ? 'starfill' : 'star', 17) + '</div>'
+      + (n.unread ? '<span class="m-dot"></span>' : '') + '</div></div>';
+  }
+
+  case 'mhead':
+    return '<div class="mhead"' + tid(n.id) + '><div class="mh-subj">' + esc(n.subject) + '</div>'
+      + (n.labels.length ? '<div class="mh-labels">' + n.labels.map(function(l){
+          return '<span class="chip"><span class="cd" style="background:' + l.color + '"></span>' + esc(l.name) + '</span>';
+        }).join('') + '</div>' : '')
+      + '<div class="mh-from">' + avatar(n.initial, n.hue, 42)
+      + '<div style="flex:1 1 auto;min-width:0"><div class="mh-name">' + esc(n.name) + '</div>'
+      + '<div class="mh-mail">' + esc(n.email) + '</div></div>'
+      + '<div class="mh-at">' + esc(n.at) + '</div></div>'
+      + '<div class="mh-mail" style="margin-top:10px">in ' + esc(n.folderName)
+      + (n.snoozed ? ' · snoozed until ' + esc(n.snoozed) : '') + '</div></div>';
+  case 'mbody':  return '<div class="mbody"' + tid(n.id) + '>' + esc(n.text) + '</div>';
+  case 'attach':
+    return '<div class="attach"' + tid(n.id) + '>' + n.items.map(function(a){
+      return '<div class="at"' + tid(a.id) + bind(a.act) + '>' + icon('clip',15)
+        + '<span>' + esc(a.name) + '</span><span style="color:var(--muted)">' + esc(a.size) + '</span></div>';
+    }).join('') + '</div>';
+
+  case 'folderrow':
+    return '<div class="folderrow' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '>'
+      + '<div class="f-ico">' + icon(n.icon, 17) + '</div>'
+      + '<div class="f-name">' + esc(n.name) + '</div>'
+      + '<div class="f-count">' + esc(n.count) + '</div>'
+      + '<div class="r-arrow" style="color:#c2ccd8;display:flex">' + icon('arrow',15) + '</div></div>';
+  case 'labelrow':
+    return '<div class="folderrow"' + tid(n.id) + bind(n.act) + '>'
+      + '<div class="f-ico" style="background:' + n.color + '22;color:' + n.color + '">' + icon('tag',17) + '</div>'
+      + '<div class="f-name">' + esc(n.name) + '</div>'
+      + '<div class="f-count">' + n.count + '</div>'
+      + '<div class="r-arrow" style="color:#c2ccd8;display:flex">' + icon('arrow',15) + '</div></div>';
+
+  case 'bulkbar':
+    return '<div class="bulkbar"' + tid(n.id) + '>' + n.items.map(function(i){
+      return '<div class="bb ' + esc(i.cls||'') + (i.off?' off':'') + '"' + tid(i.id)
+        + (i.off?'':bind(i.act)) + '>' + icon(i.icon, 20) + esc(i.text) + '</div>';
+    }).join('') + '</div>';
+
+  case 'fab':
+    return '<div class="fab"' + tid(n.id) + bind(n.act) + '>' + icon(n.icon, 24) + '</div>';
+
+  case 'tabbar':
+    return '<div class="n-tabbar"' + tid(n.id) + '>' + n.items.map(function(i){
+      return '<div class="tb' + (i.on?' on':'') + '"' + tid(i.id) + bind(i.act) + '>'
+        + '<i>' + icon(i.icon, 21) + '</i>' + esc(i.text)
+        + (i.badge ? '<span class="badge">' + i.badge + '</span>' : '') + '</div>';
+    }).join('') + '</div>';
+
+  case 'mask':  return '<div class="n-mask"' + tid(n.id) + bind(n.close) + '>' + R(n.c) + '</div>';
+  case 'sheet':
+    return '<div class="n-sheet"' + tid(n.id) + ' data-stop="1"><div class="sh-hd">'
+      + '<div class="t">' + esc(n.title) + '</div>'
+      + '<div class="iconbtn"' + tid(n.closeId) + bind(n.close) + '>' + icon('close',15) + '</div></div>'
+      + '<div class="sh-bd">' + R(n.c) + '</div>'
+      + (n.footer ? '<div class="sh-ft">' + render(n.footer) + '</div>' : '') + '</div>';
+  case 'sheetfoot': return render(n.btn);
+  case 'dialog':
+    return '<div class="dialog"' + tid(n.id) + ' data-stop="1">'
+      + '<div style="padding:22px 20px 16px;text-align:center">'
+      + (n.title ? '<div style="font:650 17px/1.3 -apple-system,sans-serif;margin-bottom:8px">' + esc(n.title) + '</div>' : '')
+      + '<div style="font-size:13.5px;color:var(--ink2);line-height:1.55">' + esc(n.text) + '</div></div>'
+      + '<div style="display:flex;gap:10px;padding:0 16px 16px">'
+      + '<div class="n-btn" style="flex:1"' + tid(n.cancel.id) + bind(n.cancel.act) + '>' + esc(n.cancel.text) + '</div>'
+      + '<div class="n-btn primary" style="flex:1"' + tid(n.ok.id) + bind(n.ok.act) + '>' + esc(n.ok.text) + '</div>'
+      + '</div></div>';
+  case 'toast':
+    return '<div class="n-toast"' + tid(n.id) + '><span>' + esc(n.text) + '</span>'
+      + (n.undoId ? '<span class="undo"' + tid(n.undoId) + bind(n.undo) + '>UNDO</span>' : '') + '</div>';
+  default: return '';
+  }
+}
+
+var STATE = null;
+function paint(){
+  ACTS = [];
+  var tree = E.screen(STATE);
+  app.innerHTML = render(tree);
+  document.getElementById('sb-clock').textContent = E.select.clockStr(STATE.meta.clock);
+  if (!hud.classList.contains('off')) paintHud();
+}
+app.addEventListener('click', function(ev){
+  var el = ev.target.closest('[data-act]');
+  if (!el) return;
+  if (el.classList.contains('n-mask') && ev.target.closest('[data-stop]')) return;
+  var act = ACTS[+el.getAttribute('data-act')];
+  if (!act) return;
+  TRAJ.push({action:'tap', id: el.getAttribute('data-testid') || null});
+  STATE = E.reduce(STATE, act); paint();
+});
+app.addEventListener('keydown', function(ev){
+  if (ev.key !== 'Enter') return;
+  var el = ev.target.closest('[data-enter]'); if (!el) return;
+  var idx = +el.getAttribute('data-enter'); if (idx < 0) return;
+  ev.preventDefault();
+  var act = ACTS[idx]; if (!act) return;
+  TRAJ.push({action:'tap', id:'(enter)'});
+  STATE = E.reduce(STATE, act); paint();
+});
+app.addEventListener('input', function(ev){
+  var el = ev.target.closest('[data-actt]'); if (!el) return;
+  var act = JSON.parse(JSON.stringify(ACTS[+el.getAttribute('data-actt')]));
+  for (var k in act) if (act[k] === '$VALUE') act[k] = el.value;
+  var id = el.getAttribute('data-testid'), pos = el.selectionStart;
+  TRAJ.push({action:'type', id:id, text:el.value});
+  STATE = E.reduce(STATE, act); paint();
+  var again = id && app.querySelector('[data-testid="' + id + '"]');
+  if (again && again.focus) { again.focus(); try { again.setSelectionRange(pos, pos); } catch(e){} }
+});
+
+function paintHud(){
+  var d = E.derive(STATE);
+  hud.innerHTML = '<h4>__ENV__ · ' + E.ENV_ID + ' v' + E.VERSION + '</h4>'
+    + '<div><span class="k">route</span> ' + d.route + '  <span class="k">step</span> ' + STATE.meta.steps
+    + '  <span class="k">seed</span> ' + STATE.meta.seed + '</div>'
+    + '<div><span class="k">inbox</span> ' + d.inboxCount + ' (' + d.inboxUnread + ' unread)'
+    + '  <span class="k">sel</span> ' + d.selectionCount + '</div>'
+    + '<div style="margin-top:8px"><button id="hud-reset">reset</button>'
+    + '<button id="hud-a11y">copy a11y</button><button id="hud-state">copy state</button>'
+    + '<button id="hud-traj">copy traj</button><button id="hud-hide">hide (h)</button></div>'
+    + '<pre>' + esc(E.a11y(STATE)) + '</pre>';
+  hud.querySelector('#hud-reset').onclick = function(){ ENVAPI.reset({seed:STATE.meta.seed}); };
+  hud.querySelector('#hud-a11y').onclick  = function(){ copy(E.a11y(STATE)); };
+  hud.querySelector('#hud-state').onclick = function(){ copy(JSON.stringify(E.snapshot(STATE), null, 2)); };
+  hud.querySelector('#hud-traj').onclick  = function(){ copy(JSON.stringify(TRAJ, null, 2)); };
+  hud.querySelector('#hud-hide').onclick  = function(){ hud.classList.add('off'); };
+}
+function copy(t){ try { navigator.clipboard.writeText(t); } catch(e){} }
+document.addEventListener('keydown', function(e){
+  if (e.key === 'h') { hud.classList.toggle('off'); if (!hud.classList.contains('off')) paintHud(); }
+});
+
+var ENVAPI = {
+  ENV_ID: E.ENV_ID, VERSION: E.VERSION,
+  reset: function(opts){
+    opts = opts || {};
+    STATE = E.createInitialState(opts.seed || 0);
+    if (opts.patch) E.applyPatch(STATE, opts.patch);
+    TRAJ = []; paint();
+    return E.snapshot(STATE);
+  },
+  getState:   function(){ return E.snapshot(STATE); },
+  setState:   function(s){ STATE = JSON.parse(JSON.stringify(s)); paint(); return true; },
+  step:       function(a){ var r = E.step(STATE, a); STATE = r.state; TRAJ.push(a); paint();
+                           return {ok:r.ok, error:r.error || null}; },
+  dispatch:   function(act){ STATE = E.reduce(STATE, act); paint(); return true; },
+  a11y:       function(){ return E.a11y(STATE); },
+  elements:   function(){ return E.elements(STATE); },
+  route:      function(){ return E.select.route(STATE); },
+  trajectory: function(){ return JSON.parse(JSON.stringify(TRAJ)); },
+  bounds: function(){
+    var base = document.getElementById('screen').getBoundingClientRect(), out = {};
+    app.querySelectorAll('[data-testid]').forEach(function(el){
+      var r = el.getBoundingClientRect();
+      out[el.getAttribute('data-testid')] = {
+        x:Math.round(r.left-base.left), y:Math.round(r.top-base.top),
+        w:Math.round(r.width), h:Math.round(r.height),
+        cx:Math.round(r.left-base.left+r.width/2), cy:Math.round(r.top-base.top+r.height/2)};
+    });
+    return out;
+  }
+};
+window.__ENV__ = ENVAPI;
+var qs = new URLSearchParams(location.search);
+if (qs.get('bare') === '1') document.body.classList.add('bare');
+if (qs.get('hud')  === '1') hud.classList.remove('off');
+ENVAPI.reset({seed: parseInt(qs.get('seed') || '0', 10) || 0});
+window.__ENV_READY__ = true;
+})();
+</script>
+</body>
+</html>

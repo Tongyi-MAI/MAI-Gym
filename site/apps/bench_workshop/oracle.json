@@ -1,0 +1,490 @@
+{
+  "env": "bench_workshop",
+  "note": "Golden action sequences replayed by CI.",
+  "solutions": {
+    "T01_settings": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_showPacks"
+      },
+      {
+        "action": "tap",
+        "id": "set_netOffStock"
+      }
+    ],
+    "T02_fix_cost": [
+      {
+        "action": "finish",
+        "answer": "£39.00"
+      }
+    ],
+    "T03_what_short": [
+      {
+        "action": "finish",
+        "answer": "Ten dowels and sixteen M8 screws."
+      }
+    ],
+    "T04_screws": [
+      {
+        "action": "tap",
+        "id": "need_r_screw"
+      },
+      {
+        "action": "finish",
+        "answer": "216."
+      }
+    ],
+    "T05_legs": [
+      {
+        "action": "finish",
+        "answer": "36 in all; six are on the rack, so 30 have to be built."
+      }
+    ],
+    "T06_no_room": [
+      {
+        "action": "tap",
+        "id": "max_p_bench"
+      },
+      {
+        "action": "finish",
+        "answer": "It says there is no room for another garden bench — the plan is already past what the shelf carries."
+      }
+    ],
+    "T07_max_bench": [
+      {
+        "action": "tap",
+        "id": "clear_plan"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "tap",
+        "id": "max_p_bench"
+      },
+      {
+        "action": "finish",
+        "answer": "Seven."
+      }
+    ],
+    "T08_max_table": [
+      {
+        "action": "tap",
+        "id": "clear_plan"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "tap",
+        "id": "max_p_table"
+      },
+      {
+        "action": "finish",
+        "answer": "Three — there are only three table tops."
+      }
+    ],
+    "T09_trade": [
+      {
+        "action": "tap",
+        "id": "clear_plan"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_table_inc"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_table_inc"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_table_inc"
+      },
+      {
+        "action": "tap",
+        "id": "max_p_bench"
+      },
+      {
+        "action": "finish",
+        "answer": "Four."
+      }
+    ],
+    "T10_order": [
+      {
+        "action": "tap",
+        "id": "buy_short"
+      },
+      {
+        "action": "finish",
+        "answer": "£39.00 — one pack of dowels and one box of screws."
+      }
+    ],
+    "T11_pack_cliff": [
+      {
+        "action": "tap",
+        "id": "clear_plan"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_bench_inc"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_bench_inc"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_bench_inc"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_bench_inc"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_bench_inc"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_bench_inc"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_bench_inc"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_table_inc"
+      },
+      {
+        "action": "finish",
+        "answer": "Two dowels short, and it costs £15.00 — they only come in packs of twenty-five, so twenty-three of them would sit on the shelf."
+      }
+    ],
+    "T12_tree": [
+      {
+        "action": "tap",
+        "id": "tab_tree"
+      },
+      {
+        "action": "tap",
+        "id": "tn_p_bench-a_leg"
+      },
+      {
+        "action": "finish",
+        "answer": "One length of square stock, two dowels and four M8 screws."
+      }
+    ],
+    "T13_gross": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_netOffStock"
+      },
+      {
+        "action": "tap",
+        "id": "tab_plan"
+      },
+      {
+        "action": "finish",
+        "answer": "240 — the six legs on the rack were saving twenty-four screws."
+      }
+    ],
+    "T14_part_order": [
+      {
+        "action": "tap",
+        "id": "buy_short"
+      },
+      {
+        "action": "tap",
+        "id": "tab_shelf"
+      },
+      {
+        "action": "tap",
+        "id": "clear_basket"
+      },
+      {
+        "action": "tap",
+        "id": "buy_r_dowel_inc"
+      }
+    ],
+    "T15_where_screws": [
+      {
+        "action": "tap",
+        "id": "tab_tree"
+      },
+      {
+        "action": "tap",
+        "id": "tn_p_bench-a_leg"
+      },
+      {
+        "action": "finish",
+        "answer": "Into the legs. Thirty of the thirty-six have to be built and each takes four screws, which is 120."
+      }
+    ],
+    "T16_eight_benches": [
+      {
+        "action": "tap",
+        "id": "clear_plan"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_bench_inc"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_bench_inc"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_bench_inc"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_bench_inc"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_bench_inc"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_bench_inc"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_bench_inc"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_bench_inc"
+      },
+      {
+        "action": "tap",
+        "id": "buy_short"
+      },
+      {
+        "action": "finish",
+        "answer": "£15.00 — two dowels short, one pack of twenty-five."
+      }
+    ],
+    "T17_budget_forty": [
+      {
+        "action": "tap",
+        "id": "clear_plan"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_bench_inc"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_bench_inc"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_bench_inc"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_bench_inc"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_bench_inc"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_bench_inc"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_bench_inc"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_bench_inc"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_bench_inc"
+      },
+      {
+        "action": "tap",
+        "id": "buy_short"
+      },
+      {
+        "action": "finish",
+        "answer": "Nine, for £39.00."
+      }
+    ],
+    "T18_ten_benches": [
+      {
+        "action": "tap",
+        "id": "clear_plan"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_bench_inc"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_bench_inc"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_bench_inc"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_bench_inc"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_bench_inc"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_bench_inc"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_bench_inc"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_bench_inc"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_bench_inc"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_bench_inc"
+      },
+      {
+        "action": "finish",
+        "answer": "£129.00 — a £90 pack of square stock, a £15 pack of dowels and a £24 box of screws. £50 does not come near it."
+      }
+    ],
+    "T19_frontier": [
+      {
+        "action": "tap",
+        "id": "clear_plan"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "tap",
+        "id": "max_p_bench"
+      },
+      {
+        "action": "tap",
+        "id": "clear_plan"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_table_inc"
+      },
+      {
+        "action": "tap",
+        "id": "max_p_bench"
+      },
+      {
+        "action": "tap",
+        "id": "clear_plan"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_table_inc"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_table_inc"
+      },
+      {
+        "action": "tap",
+        "id": "max_p_bench"
+      },
+      {
+        "action": "tap",
+        "id": "clear_plan"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_table_inc"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_table_inc"
+      },
+      {
+        "action": "tap",
+        "id": "plan_p_table_inc"
+      },
+      {
+        "action": "tap",
+        "id": "max_p_bench"
+      },
+      {
+        "action": "finish",
+        "answer": "7, 6, 5, 4 — one bench for every table, all the way down."
+      }
+    ],
+    "T20_hundred": [
+      {
+        "action": "tap",
+        "id": "buy_short"
+      },
+      {
+        "action": "finish",
+        "answer": "Nine — six benches and three side tables — for £39.00. The next thing to run out is square stock, and that only comes ten to a pack at £90, which the £61 left will not buy; and £90 spent on stock alone leaves nothing for the dowels, which caps you at seven pieces."
+      }
+    ]
+  }
+}

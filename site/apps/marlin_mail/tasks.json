@@ -1,0 +1,773 @@
+{
+  "env": "marlin_mail",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_star_contract",
+      "name": "Star the contract email",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "star",
+        "single"
+      ],
+      "instruction": "Star the message from Ines Duarte about the contract for signature.",
+      "goal": [
+        {
+          "name": "Contract email is starred",
+          "path": "derived.starredSubjects",
+          "op": "set_eq",
+          "value": [
+            "Contract for signature",
+            "Sunday lunch?"
+          ],
+          "weight": 2,
+          "hint": "Mum's message is starred already and must stay that way"
+        },
+        {
+          "name": "Nothing left the inbox",
+          "path": "derived.inboxCount",
+          "op": "eq",
+          "value": 14
+        }
+      ]
+    },
+    {
+      "id": "T02_settings",
+      "name": "Signature off, auto-archive on",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "settings",
+        "toggle"
+      ],
+      "instruction": "In Settings, stop appending your signature to new messages and turn on auto-archiving for newsletters. Leave the two reading settings alone.",
+      "goal": [
+        {
+          "name": "Signature is off",
+          "path": "account.settings.signature",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Auto-archive is on",
+          "path": "account.settings.autoArchiveNews",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Thread grouping untouched",
+          "path": "account.settings.threadView",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Notification setting untouched",
+          "path": "account.settings.notifyImportant",
+          "op": "eq",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "T03_report_spam",
+      "name": "Report the recruiter spam",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "move",
+        "spam"
+      ],
+      "instruction": "The message from FastGrowth Talent is spam. Move it to the Spam folder.",
+      "goal": [
+        {
+          "name": "It is in Spam",
+          "path": "derived.spamSubjects",
+          "op": "set_eq",
+          "value": [
+            "You have won",
+            "Your dream role awaits!!!"
+          ],
+          "weight": 2
+        },
+        {
+          "name": "The inbox is one lighter",
+          "path": "derived.inboxCount",
+          "op": "eq",
+          "value": 13
+        },
+        {
+          "name": "Nothing was deleted",
+          "path": "derived.folderCounts.trash",
+          "op": "eq",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "T04_archive_newsletters",
+      "name": "Archive both newsletters together",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "multi-select",
+        "bulk",
+        "archive"
+      ],
+      "instruction": "Select both newsletters in the inbox — The Overflow and Design Weekly — and archive them in one go.",
+      "notes": "Exercises selection mode plus the bulk action bar.",
+      "goal": [
+        {
+          "name": "Both newsletters are archived",
+          "path": "derived.archivedSubjects",
+          "op": "set_eq",
+          "value": [
+            "Booking reference XKQP2",
+            "Issue #211: the death of the sidecar",
+            "Kickoff notes",
+            "Welcome to Northwind",
+            "10 interfaces worth stealing"
+          ],
+          "weight": 3
+        },
+        {
+          "name": "Inbox is down to 12",
+          "path": "derived.inboxCount",
+          "op": "eq",
+          "value": 12
+        },
+        {
+          "name": "Selection mode was left",
+          "path": "derived.selectionCount",
+          "op": "eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T05_mark_all_read",
+      "name": "Mark the whole inbox read",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "multi-select",
+        "bulk",
+        "read"
+      ],
+      "instruction": "Mark every conversation in the inbox as read, without moving anything.",
+      "goal": [
+        {
+          "name": "No unread mail left",
+          "path": "derived.inboxUnread",
+          "op": "eq",
+          "value": 0,
+          "weight": 2
+        },
+        {
+          "name": "Nothing was moved",
+          "path": "derived.inboxCount",
+          "op": "eq",
+          "value": 14
+        },
+        {
+          "name": "Nothing was archived",
+          "path": "derived.folderCounts.archive",
+          "op": "eq",
+          "value": 3
+        }
+      ]
+    },
+    {
+      "id": "T06_query_attachments",
+      "name": "Question: how many have attachments",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "answer_expected": true,
+      "tags": [
+        "search",
+        "operator",
+        "query",
+        "read-only"
+      ],
+      "instruction": "Using search, how many conversations have an attachment? Answer with just the number.",
+      "notes": "has:attachment matches the Stripe receipt and the Lumen contract.",
+      "goal": [
+        {
+          "name": "The answer is 2",
+          "source": "answer",
+          "op": "eq",
+          "value": 2,
+          "extract": "number",
+          "weight": 3,
+          "hint": "the search screen lists the operators it understands"
+        },
+        {
+          "name": "Nothing was moved",
+          "path": "derived.inboxCount",
+          "op": "eq",
+          "value": 14
+        }
+      ]
+    },
+    {
+      "id": "T07_query_sender",
+      "name": "Question: who reported the deploy",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "answer_expected": true,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "Who sent the message about the staging deploy being red? Answer with their full name.",
+      "goal": [
+        {
+          "name": "The answer is Daniel Okafor",
+          "source": "answer",
+          "op": "contains",
+          "value": "Daniel Okafor",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was moved",
+          "path": "derived.inboxCount",
+          "op": "eq",
+          "value": 14
+        }
+      ]
+    },
+    {
+      "id": "T08_compose",
+      "name": "Send a new message",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "compose",
+        "form",
+        "text-input"
+      ],
+      "instruction": "Send an email to tomas@northwind.io with the subject \"Friday works\" and the body \"See you at 12:30.\"",
+      "goal": [
+        {
+          "name": "It went to Tomas",
+          "path": "derived.lastSent.email",
+          "op": "eq",
+          "value": "tomas@northwind.io",
+          "weight": 2
+        },
+        {
+          "name": "Subject is right",
+          "path": "derived.lastSent.subject",
+          "op": "eq",
+          "value": "Friday works",
+          "weight": 2
+        },
+        {
+          "name": "Body mentions the time",
+          "path": "derived.lastSent.body",
+          "op": "contains",
+          "value": "12:30"
+        },
+        {
+          "name": "Sent folder now has three",
+          "path": "derived.folderCounts.sent",
+          "op": "eq",
+          "value": 3
+        }
+      ]
+    },
+    {
+      "id": "T09_reply",
+      "name": "Reply to Priya",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "reply",
+        "compose",
+        "prefill"
+      ],
+      "instruction": "Open Priya's roadmap email and reply to it. Keep the subject the app fills in, and write \"Slides 4 to 9 ready.\" as the body.",
+      "goal": [
+        {
+          "name": "Reply went to Priya",
+          "path": "derived.lastSent.email",
+          "op": "eq",
+          "value": "priya@northwind.io"
+        },
+        {
+          "name": "Subject was kept as a reply",
+          "path": "derived.lastSent.subject",
+          "op": "eq",
+          "value": "Re: Q3 roadmap review — moved to Thursday",
+          "weight": 2,
+          "hint": "the reply screen pre-fills it — do not retype it"
+        },
+        {
+          "name": "Body mentions the slides",
+          "path": "derived.lastSent.body",
+          "op": "contains",
+          "value": "Slides"
+        },
+        {
+          "name": "Priya's mail is now read",
+          "path": "mail.m_01.read",
+          "op": "eq",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "T10_add_label",
+      "name": "Add a second label",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "label",
+        "sheet"
+      ],
+      "instruction": "The Aer Lingus check-in email should be filed under Receipts as well as Travel. Add the Receipts label to it.",
+      "goal": [
+        {
+          "name": "It carries both labels",
+          "path": "mail.m_04.labels",
+          "op": "set_eq",
+          "value": [
+            "receipts",
+            "travel"
+          ],
+          "weight": 2,
+          "hint": "labels add up — Travel must stay"
+        },
+        {
+          "name": "Receipts now covers four",
+          "path": "derived.labelCounts.receipts",
+          "op": "eq",
+          "value": 4
+        }
+      ]
+    },
+    {
+      "id": "T11_snooze",
+      "name": "Snooze the review request",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "snooze",
+        "sheet"
+      ],
+      "instruction": "Snooze the GitHub pull request notification until next week.",
+      "goal": [
+        {
+          "name": "It is snoozed",
+          "path": "mail.m_10.snoozed",
+          "op": "eq",
+          "value": "week",
+          "weight": 2
+        },
+        {
+          "name": "Snoozed view has exactly one",
+          "path": "derived.snoozedSubjects",
+          "op": "len_eq",
+          "value": 1
+        },
+        {
+          "name": "It is still in the inbox folder",
+          "path": "mail.m_10.folder",
+          "op": "eq",
+          "value": "inbox",
+          "hint": "snoozing is a flag, not a move"
+        }
+      ]
+    },
+    {
+      "id": "T12_undo_archive",
+      "name": "Archive, then undo it",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "undo",
+        "toast",
+        "process-check"
+      ],
+      "instruction": "Archive Daniel's message about the staging deploy, then undo it straight away so it ends up back in the inbox.",
+      "notes": "The UNDO affordance lives on the toast and survives exactly one step.",
+      "goal": [
+        {
+          "name": "The message is back in the inbox",
+          "path": "mail.m_03.folder",
+          "op": "eq",
+          "value": "inbox",
+          "weight": 2
+        },
+        {
+          "name": "Archive is untouched",
+          "path": "derived.folderCounts.archive",
+          "op": "eq",
+          "value": 3
+        },
+        {
+          "name": "Undo was actually used",
+          "source": "trajectory",
+          "path": "ids",
+          "op": "contains",
+          "value": "toast_undo",
+          "weight": 2,
+          "hint": "a process check — never archiving it at all does not count"
+        }
+      ]
+    },
+    {
+      "id": "T13_new_label",
+      "name": "Create a label and apply it",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "label",
+        "create",
+        "multi-select",
+        "bulk"
+      ],
+      "instruction": "Create a new label called \"Invoices\", then put both the Stripe receipt and the Vodafone bill on it.",
+      "goal": [
+        {
+          "name": "The label exists",
+          "path": "derived.labelNames",
+          "op": "contains",
+          "value": "Invoices",
+          "weight": 2
+        },
+        {
+          "name": "Two conversations carry it",
+          "path": "derived.labelCountsByName.Invoices",
+          "op": "eq",
+          "value": 2,
+          "weight": 3,
+          "hint": "the bulk Label action applies to everything selected"
+        },
+        {
+          "name": "Their old labels are intact",
+          "path": "derived.labelCounts.receipts",
+          "op": "eq",
+          "value": 3
+        }
+      ]
+    },
+    {
+      "id": "T14_empty_trash",
+      "name": "Empty the trash",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "folders",
+        "confirm-dialog",
+        "destructive"
+      ],
+      "instruction": "Empty the Trash folder.",
+      "goal": [
+        {
+          "name": "Trash is empty",
+          "path": "derived.folderCounts.trash",
+          "op": "eq",
+          "value": 0,
+          "weight": 2,
+          "hint": "there is a confirmation dialog"
+        },
+        {
+          "name": "Nothing else was deleted",
+          "path": "derived.inboxCount",
+          "op": "eq",
+          "value": 14
+        },
+        {
+          "name": "Archive untouched",
+          "path": "derived.folderCounts.archive",
+          "op": "eq",
+          "value": 3
+        }
+      ]
+    },
+    {
+      "id": "T15_triage_flagship",
+      "name": "Morning triage (flagship)",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 45,
+      "tags": [
+        "multi-select",
+        "bulk",
+        "snooze",
+        "star",
+        "spam",
+        "long-horizon"
+      ],
+      "instruction": "Do the morning triage: archive both newsletters, move the FastGrowth recruiter mail to Spam, snooze the GitHub review until tomorrow, star the Lumen contract email, and finish by marking everything still in the inbox as read.",
+      "goal": [
+        {
+          "name": "Both newsletters archived",
+          "path": "derived.folderCounts.archive",
+          "op": "eq",
+          "value": 5,
+          "weight": 2
+        },
+        {
+          "name": "Recruiter mail is spam",
+          "path": "mail.m_14.folder",
+          "op": "eq",
+          "value": "spam",
+          "weight": 2
+        },
+        {
+          "name": "GitHub review snoozed until tomorrow",
+          "path": "mail.m_10.snoozed",
+          "op": "eq",
+          "value": "tomorrow",
+          "weight": 2
+        },
+        {
+          "name": "Contract email starred",
+          "path": "derived.starredSubjects",
+          "op": "contains",
+          "value": "Contract for signature",
+          "weight": 2
+        },
+        {
+          "name": "Inbox is fully read",
+          "path": "derived.inboxUnread",
+          "op": "eq",
+          "value": 0,
+          "weight": 2
+        },
+        {
+          "name": "Inbox is down to 11",
+          "path": "derived.inboxCount",
+          "op": "eq",
+          "value": 11
+        },
+        {
+          "name": "Nothing was deleted",
+          "path": "derived.folderCounts.trash",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "Efficiency: 26 steps or fewer",
+          "source": "trajectory",
+          "path": "steps",
+          "op": "lte",
+          "value": 26,
+          "critical": false,
+          "weight": 0.5
+        }
+      ]
+    },
+    {
+      "id": "T16_unread_filter",
+      "name": "Question: unread count",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "answer_expected": true,
+      "tags": [
+        "filter",
+        "query"
+      ],
+      "instruction": "Switch the inbox to the Unread filter, then tell me how many unread conversations there are. Answer with just the number.",
+      "goal": [
+        {
+          "name": "The answer is 7",
+          "source": "answer",
+          "op": "eq",
+          "value": 7,
+          "extract": "number",
+          "weight": 3
+        },
+        {
+          "name": "The unread filter is on",
+          "path": "ui.unreadOnly",
+          "op": "eq",
+          "value": true,
+          "weight": 2
+        },
+        {
+          "name": "Nothing was read along the way",
+          "path": "derived.inboxUnread",
+          "op": "eq",
+          "value": 7,
+          "hint": "opening a conversation marks it read — do not open any"
+        }
+      ]
+    },
+    {
+      "id": "T17_move_keep_star",
+      "name": "Archive it but keep the star",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "move",
+        "sheet",
+        "star"
+      ],
+      "instruction": "Move Mum's \"Sunday lunch?\" email to the Archive. It must stay starred.",
+      "goal": [
+        {
+          "name": "It is archived",
+          "path": "mail.m_05.folder",
+          "op": "eq",
+          "value": "archive",
+          "weight": 2
+        },
+        {
+          "name": "It is still starred",
+          "path": "mail.m_05.starred",
+          "op": "eq",
+          "value": true,
+          "weight": 2,
+          "hint": "Starred is a view, not a folder — moving does not clear it"
+        },
+        {
+          "name": "Still shows in Starred",
+          "path": "derived.starredSubjects",
+          "op": "contains",
+          "value": "Sunday lunch?"
+        }
+      ]
+    },
+    {
+      "id": "T18_query_top_label",
+      "name": "Question: busiest label",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "answer_expected": true,
+      "tags": [
+        "labels",
+        "query",
+        "read-only"
+      ],
+      "instruction": "Which label is on the most conversations? Answer with the label name.",
+      "goal": [
+        {
+          "name": "The answer is Work",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Ww]ork",
+          "weight": 3,
+          "hint": "the Labels tab shows a count next to each"
+        },
+        {
+          "name": "Nothing was moved",
+          "path": "derived.inboxCount",
+          "op": "eq",
+          "value": 14
+        }
+      ]
+    },
+    {
+      "id": "T19_star_then_archive",
+      "name": "Star three receipts, then archive them",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 28,
+      "tags": [
+        "star",
+        "multi-select",
+        "bulk",
+        "two-phase"
+      ],
+      "instruction": "Star all three Receipts-labelled conversations in the inbox, then archive those same three together.",
+      "notes": "There is no bulk star, so the stars go on one at a time; the archive is a single bulk action.",
+      "goal": [
+        {
+          "name": "All four expected conversations are starred",
+          "path": "derived.starredSubjects",
+          "op": "set_eq",
+          "value": [
+            "Sunday lunch?",
+            "Your receipt for August",
+            "Your stay in Porto is confirmed",
+            "Your bill is ready — €42.60"
+          ],
+          "weight": 3
+        },
+        {
+          "name": "All three are archived",
+          "path": "derived.folderCounts.archive",
+          "op": "eq",
+          "value": 6,
+          "weight": 2
+        },
+        {
+          "name": "Inbox is down to 11",
+          "path": "derived.inboxCount",
+          "op": "eq",
+          "value": 11
+        }
+      ]
+    },
+    {
+      "id": "T20_inbox_budget",
+      "name": "Get the inbox under nine (many valid answers)",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "unique_solution": false,
+      "tags": [
+        "constraint",
+        "multi-solution",
+        "bulk"
+      ],
+      "instruction": "Get the inbox down to eight conversations or fewer without deleting anything. Archive or snooze whatever you like, but the Lumen contract email and Mum's message must still be in the inbox when you are done.",
+      "goal": [
+        {
+          "name": "Inbox is eight or fewer",
+          "path": "derived.inboxCount",
+          "op": "lte",
+          "value": 8,
+          "weight": 3
+        },
+        {
+          "name": "The contract email stayed",
+          "path": "mail.m_07.folder",
+          "op": "eq",
+          "value": "inbox",
+          "weight": 2
+        },
+        {
+          "name": "Mum's message stayed",
+          "path": "mail.m_05.folder",
+          "op": "eq",
+          "value": "inbox",
+          "weight": 2
+        },
+        {
+          "name": "Nothing was deleted",
+          "path": "derived.folderCounts.trash",
+          "op": "eq",
+          "value": 1,
+          "weight": 2
+        },
+        {
+          "name": "Nothing went to spam either",
+          "path": "derived.folderCounts.spam",
+          "op": "eq",
+          "value": 1
+        }
+      ]
+    }
+  ]
+}

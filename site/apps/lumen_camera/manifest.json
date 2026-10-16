@@ -1,0 +1,32 @@
+{
+  "id": "lumen_camera",
+  "name": "Camera",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "viewport": {"width": 390, "height": 844},
+  "description": "A single-file H5 stock camera. Three dials that are not independent: aperture, shutter and ISO are each a ladder of whole stops, and the exposure of the frame is one number — shutter + ISO − aperture — measured against what the scene needs. Open the aperture a stop and you have to give that stop back somewhere. Every rung has a price: slower than 1/30 a handheld frame smears, above ISO 1600 it goes grainy, past f/2.8 the background stops falling away. The seeded living room needs 11 stops and the dials give 9, and there is exactly one combination in the whole 8×12×8 grid that is correctly exposed and clears all three lines. Aperture and shutter priority really do solve for the missing dial, the viewfinder is generative SVG that brightens and smears with the settings, and the shots-remaining counter is free space divided by the size of one frame. 4 screens, 3 scenes, 4 modes, 6 formats.",
+  "tasks_file": "tasks.json",
+  "oracle_file": "oracle.json",
+  "action_space": {
+    "tap":    {"id": "test-id of the element"},
+    "type":   {"id": "test-id of a text field", "text": "replaces the whole value"},
+    "back":   {}, "home": {}, "wait": {},
+    "finish": {"answer": "final answer for question tasks; optional for action tasks"},
+    "tap_xy": {"x": "screen pixel x", "y": "screen pixel y", "note": "browser backend only"}
+  },
+  "observation": {
+    "text": "engine.a11y(state) — the viewfinder prints the live settings and every fault, the meter prints how many stops the scene needs against how many the dials give, and each dial prints its whole ladder with the current rung starred and the ones past a limit flagged.",
+    "pixels": "390x844 screenshot (browser backend); __ENV__.bounds() maps every test-id to a pixel box",
+    "state": "engine.snapshot(state) — canonical state plus a derived view with the resolved settings (after any priority mode has solved for the missing dial). For the verifier only."
+  },
+  "world": {
+    "clock": "18:52",
+    "stops": "aperture f/1.4…f/16 (8 rungs), shutter 1/2000…1s (12), ISO 50…6400 (8); exposure = shutter + ISO − aperture",
+    "scenes": "living room needs 11 stops, night market 9, park 3",
+    "seeded": "f/2 · 1/30 · ISO 800 in the living room — 9 stops against 11, so two stops under",
+    "limits": "handheld blur from 1/15 down; grain from ISO 3200 up; bokeh only at f/2.8 and wider",
+    "unique": "f/1.4 · 1/30 · ISO 1600 is the only combination in the living room that is exposed and clears all three limits — 6 + 5 = 11 pins the shutter and ISO to their ceilings, which forces the aperture",
+    "modes": "aperture priority solves for the shutter, shutter priority for the aperture, auto minimises ISO first and only raises it when the shutter would smear",
+    "storage": "4,860 MB free; JPEG 12MP 4 MB, JPEG 48MP 14, JPEG 108MP 28, RAW 12MP 24, RAW 48MP 78, RAW+JPEG 48MP 92"
+  }
+}

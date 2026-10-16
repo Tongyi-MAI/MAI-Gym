@@ -1,0 +1,424 @@
+{
+  "env": "cinder_vault",
+  "note": "Golden action sequences replayed by CI.",
+  "solutions": {
+    "T01_settings": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "lock_1"
+      },
+      {
+        "action": "tap",
+        "id": "set_breachAlerts"
+      }
+    ],
+    "T02_query_score": [
+      {
+        "action": "finish",
+        "answer": "26"
+      }
+    ],
+    "T03_2fa": [
+      {
+        "action": "tap",
+        "id": "en_e_email"
+      },
+      {
+        "action": "tap",
+        "id": "sw_2fa"
+      }
+    ],
+    "T04_query_reused": [
+      {
+        "action": "tap",
+        "id": "tab_health"
+      },
+      {
+        "action": "finish",
+        "answer": "Larkfield Shop and Pigeon Cloud"
+      }
+    ],
+    "T05_fix_one": [
+      {
+        "action": "tap",
+        "id": "en_e_forum"
+      },
+      {
+        "action": "tap",
+        "id": "new_password"
+      }
+    ],
+    "T06_typed": [
+      {
+        "action": "tap",
+        "id": "en_e_shop"
+      },
+      {
+        "action": "tap",
+        "id": "reveal"
+      },
+      {
+        "action": "type",
+        "id": "pw_field",
+        "text": "marsh-ladder-quarry-84"
+      }
+    ],
+    "T07_query_weak": [
+      {
+        "action": "tap",
+        "id": "tab_health"
+      },
+      {
+        "action": "finish",
+        "answer": "5"
+      }
+    ],
+    "T08_generate": [
+      {
+        "action": "tap",
+        "id": "tab_gen"
+      },
+      {
+        "action": "tap",
+        "id": "generate"
+      },
+      {
+        "action": "tap",
+        "id": "put_e_cloud"
+      }
+    ],
+    "T09_gen_options": [
+      {
+        "action": "tap",
+        "id": "tab_gen"
+      },
+      {
+        "action": "tap",
+        "id": "len_20"
+      },
+      {
+        "action": "tap",
+        "id": "gen_numbers"
+      },
+      {
+        "action": "tap",
+        "id": "generate"
+      }
+    ],
+    "T10_forget": [
+      {
+        "action": "tap",
+        "id": "en_e_forum"
+      },
+      {
+        "action": "tap",
+        "id": "forget_entry"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      }
+    ],
+    "T11_bank": [
+      {
+        "action": "tap",
+        "id": "tab_health"
+      },
+      {
+        "action": "finish",
+        "answer": "Kestrel Bank and Sonora"
+      }
+    ],
+    "T12_two_fixes": [
+      {
+        "action": "tap",
+        "id": "en_e_email"
+      },
+      {
+        "action": "tap",
+        "id": "new_password"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "en_e_work"
+      },
+      {
+        "action": "tap",
+        "id": "new_password"
+      }
+    ],
+    "T13_flagship": [
+      {
+        "action": "tap",
+        "id": "en_e_email"
+      },
+      {
+        "action": "tap",
+        "id": "new_password"
+      },
+      {
+        "action": "tap",
+        "id": "sw_2fa"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "en_e_shop"
+      },
+      {
+        "action": "tap",
+        "id": "new_password"
+      },
+      {
+        "action": "tap",
+        "id": "sw_2fa"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "en_e_news"
+      },
+      {
+        "action": "tap",
+        "id": "sw_2fa"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "en_e_cloud"
+      },
+      {
+        "action": "tap",
+        "id": "new_password"
+      },
+      {
+        "action": "tap",
+        "id": "sw_2fa"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "en_e_work"
+      },
+      {
+        "action": "tap",
+        "id": "new_password"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "en_e_forum"
+      },
+      {
+        "action": "tap",
+        "id": "new_password"
+      },
+      {
+        "action": "tap",
+        "id": "sw_2fa"
+      }
+    ],
+    "T14_search": [
+      {
+        "action": "tap",
+        "id": "tab_vault"
+      },
+      {
+        "action": "type",
+        "id": "q_vault",
+        "text": "sonora"
+      },
+      {
+        "action": "tap",
+        "id": "en_e_music"
+      }
+    ],
+    "T15_category": [
+      {
+        "action": "tap",
+        "id": "cat_work"
+      },
+      {
+        "action": "tap",
+        "id": "en_e_cloud"
+      }
+    ],
+    "T16_over_fifty": [
+      {
+        "action": "tap",
+        "id": "en_e_email"
+      },
+      {
+        "action": "tap",
+        "id": "new_password"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "en_e_forum"
+      },
+      {
+        "action": "tap",
+        "id": "new_password"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "en_e_cloud"
+      },
+      {
+        "action": "tap",
+        "id": "new_password"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "en_e_work"
+      },
+      {
+        "action": "tap",
+        "id": "new_password"
+      }
+    ],
+    "T17_reveal": [
+      {
+        "action": "tap",
+        "id": "en_e_bank"
+      },
+      {
+        "action": "tap",
+        "id": "reveal"
+      },
+      {
+        "action": "finish",
+        "answer": "Tr0ub4dor&3"
+      }
+    ],
+    "T18_2fa_all": [
+      {
+        "action": "tap",
+        "id": "en_e_email"
+      },
+      {
+        "action": "tap",
+        "id": "sw_2fa"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "en_e_shop"
+      },
+      {
+        "action": "tap",
+        "id": "sw_2fa"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "en_e_news"
+      },
+      {
+        "action": "tap",
+        "id": "sw_2fa"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "en_e_cloud"
+      },
+      {
+        "action": "tap",
+        "id": "sw_2fa"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "en_e_forum"
+      },
+      {
+        "action": "tap",
+        "id": "sw_2fa"
+      }
+    ],
+    "T19_query_stale": [
+      {
+        "action": "tap",
+        "id": "tab_health"
+      },
+      {
+        "action": "tap",
+        "id": "old_e_forum"
+      },
+      {
+        "action": "finish",
+        "answer": "Ironwood Forum, 1200 days"
+      }
+    ],
+    "T20_no_reuse": [
+      {
+        "action": "tap",
+        "id": "en_e_shop"
+      },
+      {
+        "action": "tap",
+        "id": "new_password"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "en_e_cloud"
+      },
+      {
+        "action": "tap",
+        "id": "new_password"
+      }
+    ]
+  }
+}

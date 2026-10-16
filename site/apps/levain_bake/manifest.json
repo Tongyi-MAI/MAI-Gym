@@ -1,0 +1,32 @@
+{
+  "id": "levain_bake",
+  "name": "Levain",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "viewport": {"width": 390, "height": 844},
+  "description": "A single-file H5 bake planner whose schedule runs backwards. You pick the hour the loaf has to be cool, and every step before it is placed by subtracting its length from the one after — so the kitchen temperature, where the cold retard goes, and whether the starter needs feeding all move the start time and every clock time in between. Two things then judge the plan: it has to be startable (nothing before Friday 18:00) and it has to be liveable (none of the four hands-on steps between midnight and six). The seeded plan is startable and puts two of them at one in the morning; getting all four out of the small hours takes three levers moved together, and at the seeded deadline only five of the 3,630 combinations manage it. 5 screens, a backward timeline, a temperature dial and a deadline picker.",
+  "tasks_file": "tasks.json",
+  "oracle_file": "oracle.json",
+  "action_space": {
+    "tap":    {"id": "test-id of the element"},
+    "type":   {"id": "test-id of a text field", "text": "replaces the whole value"},
+    "back":   {}, "home": {}, "wait": {},
+    "finish": {"answer": "final answer for question tasks; optional for action tasks"},
+    "tap_xy": {"x": "screen pixel x", "y": "screen pixel y", "note": "browser backend only"}
+  },
+  "observation": {
+    "text": "engine.a11y(state) — the timeline prints every step with its clock time, its length, whether it needs your hands and whether it lands in the small hours; the dial and the picker print each option with what it would do. All legible without pixels.",
+    "pixels": "390x844 screenshot (browser backend); __ENV__.bounds() maps every test-id to a pixel box",
+    "state": "engine.snapshot(state) — canonical state plus a derived view with each step's start time keyed by name. For the verifier only."
+  },
+  "world": {
+    "clock": "Friday 18:00, frozen",
+    "scheduling": "backwards from the deadline; every duration is an integer number of minutes",
+    "temperature": "18–28°C, read off a table: feeding 6h→2h20, bulk 8h→2h50, final proof 4h→1h35",
+    "levers": "kitchen temperature, cold retard of 0/8/10/12/14/16 hours, whether the fridge takes the bulk or the proof, whether the starter is already ripe, and the deadline",
+    "hands_on": "feeding, mixing, shaping and baking; the small hours are 00:00–06:00",
+    "preheat": "45 minutes, running alongside the final proof, so it never lengthens the plan",
+    "seeded": "24°, no retard, starter unfed, ready by Sat 10:00 — start Fri 20:35, 13h 25m, with mixing at 00:55 and shaping at 05:15",
+    "frontier": "of 3,630 combinations 414 are both startable and clean; five of them at Sat 10:00, two at Sat 09:00, none at Sat 08:00 — and with the feed kept in, nothing before Sat 11:00"
+  }
+}

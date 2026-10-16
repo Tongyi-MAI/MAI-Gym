@@ -1,0 +1,24 @@
+{
+  "id": "squirrel_eats",
+  "name": "松鼠外卖 · Squirrel Eats",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "viewport": {"width": 390, "height": 844},
+  "description": "单文件 H5 外卖 App 仿真环境：12 个页面、6 家商家、30 道菜品、规格/优惠券/地址/订单全流程。引擎为纯函数状态机，浏览器与无浏览器两种 rollout 后端共用同一份代码。",
+  "tasks_file": "tasks.json",
+  "oracle_file": "oracle.json",
+  "action_space": {
+    "tap":    {"id": "元素 test-id"},
+    "type":   {"id": "输入框 test-id", "text": "要输入的文本（整体替换）"},
+    "back":   {},
+    "home":   {},
+    "wait":   {},
+    "finish": {"answer": "问答类任务的最终答案；操作类任务可省略"},
+    "tap_xy": {"x": "屏幕像素 x", "y": "屏幕像素 y", "note": "仅 browser 后端支持"}
+  },
+  "observation": {
+    "text": "engine.a11y(state) — 带 test-id 的无障碍树文本，供纯文本 LLM 智能体使用",
+    "pixels": "390x844 截图（browser 后端），配合 __ENV__.bounds() 可得到每个 test-id 的像素框",
+    "state": "engine.snapshot(state) — 规范状态 + derived 派生视图，仅供验证器使用，不应喂给智能体"
+  }
+}

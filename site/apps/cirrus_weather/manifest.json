@@ -1,0 +1,32 @@
+{
+  "id": "cirrus_weather",
+  "name": "天气",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "viewport": {"width": 390, "height": 844},
+  "description": "一个单文件 H5「天气」——手机自带的那个（界面为中文）。全应用只有一份数据，而且是逐小时的：72 小时的温度、降水概率、雨量、风速、湿度。别的所有数字都是把它折起来——当日最高是 24 个值取最大，当日降水概率也是取最大（不是平均），当日雨量是求和，而通勤窗的结论是同样三种折叠换一个区间再做一遍。所以这个 app 可以完全正确而依然反直觉：今晚最大降水概率 50% 却一毫米都不下，明早通勤那三小时却有 4.2 毫米。概率和雨量是两个问题，它把两个都答了。单位只是显示层，改成华氏英寸英里每小时会改变屏幕上每一个数字而不改变模型里的任何一个。体感温度是一条写明的规则，可以手算核对。4 个界面，3 天，5 个预设时间窗。",
+  "tasks_file": "tasks.json",
+  "oracle_file": "oracle.json",
+  "action_space": {
+    "tap":    {"id": "test-id of the element"},
+    "type":   {"id": "test-id of a text field", "text": "replaces the whole value"},
+    "back":   {}, "home": {}, "wait": {},
+    "finish": {"answer": "final answer for question tasks; optional for action tasks"},
+    "tap_xy": {"x": "screen pixel x", "y": "screen pixel y", "note": "browser backend only"}
+  },
+  "observation": {
+    "text": "engine.a11y(state) — 逐小时带子把每一格的时刻、温度、降水概率和是否落在窗内逐行打印，逐日页把「最高怎么来的」逐条列出，时间窗页直接给结论和四个折叠值。纯文本也能把账核完。",
+    "pixels": "390x844 screenshot (browser backend); __ENV__.bounds() maps every test-id to a pixel box",
+    "state": "engine.snapshot(state) — canonical state 加上按天名索引的折叠结果和当前时间窗的四个折叠值。仅供校验器使用。"
+  },
+  "world": {
+    "clock": "今天 18:00",
+    "data": "只有逐小时：温度整数摄氏、降水十分之一毫米、风速 km/h、湿度百分比",
+    "folds": "当日最高/最低 = max/min；当日降水概率 = max；当日雨量 = sum；时间窗用同样的折叠换区间",
+    "seeded": "今天 2–18° 概率 50% 雨量 0；明天 3–15° 概率 90% 雨量 6.0 mm 最大风 30 km/h；后天 4–22° 概率 10% 雨量 0",
+    "commute": "明早 07–09 概率 90%、累计 4.2 mm（要带伞）；今晚 18–20 概率 50%、累计 0.0 mm（不用带）",
+    "feels": "≤10℃ 且风 ≥12 km/h 时体感 = 温度 − round(风速/8)；≥26℃ 且湿度 >60 时 = 温度 + round((湿度−60)/10)；其余等于温度",
+    "umbrella": "累计雨量 ≥ 0.5 mm，或概率 ≥ 60% 且确实有量",
+    "units": "华氏 = ×9/5+32；英寸 = mm/25.4；m/s = kmh/3.6；mph = kmh/1.609344"
+  }
+}

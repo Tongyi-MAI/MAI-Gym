@@ -1,0 +1,1405 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Privacy (mocked GUI env)</title>
+<!--
+  ============================================================================
+  Privacy — a single-file H5 stock permissions screen for agent research.
+
+  Same two-block contract as every environment here: script#engine is a pure,
+  DOM-free state machine on globalThis.GUI_ENGINE; script#ui renders its screen
+  tree and exposes window.__ENV__.
+
+  What is new: a permission is not a checkbox, it is an edge in a graph. Every
+  app declares named features and which permissions each one needs, so
+  revoking something does not print a warning — it names the three things that
+  stop working. Some permissions depend on others: precise location is
+  meaningless without location and is dropped with it, and «always» location
+  quietly degrades to «while using» the moment background refresh goes off.
+
+  The headline number is not a score, it is a query: how many apps can find
+  out where you are while you are not looking at them. Three can. Getting that
+  to nought without losing turn-by-turn navigation or your running route means
+  understanding which feature actually needs «always» and which only ever
+  needed «while using» — and two of the six things you would lose are not
+  worth keeping anyway.
+  ============================================================================
+-->
+<style>
+:root{
+  --outer:#e3e6ee;
+  --bezel:#12151f;
+  --bg:#f2f2f7;
+  --card:#ffffff;
+  --card2:#f2f4f9;
+  --line:#e4e4e9;
+  --line2:#c8c8cd;
+  --press:#ececf1;
+  --chev:#c4c4c9;
+  --ink:#0d0d10;
+  --ink2:#48484d;
+  --muted:#8a8a8f;
+  --accent:#007aff;
+  --accent-d:#0057b8;
+  --accent-s:#e5f1ff;
+  --on-accent:#ffffff;
+  --good:#34c759;
+  --good-s:#e6f8ec;
+  --warn:#ff9500;
+  --warn-s:#fff2e0;
+  --bad:#ff3b30;
+  --bad-s:#ffeae8;
+  --bad-line:#f2c8c4;
+  --btn:#ececf1;
+  --btn-off:#e2e2e8;
+  --off:#c8c8cd;
+  --appbar:#f9f9fb;
+  --appbar-ink:#161a27;
+  --appbar-line:#e4e4e9;
+  --tabbar:#f9f9fb;
+  --scrim:rgba(13,13,16,.42);
+  --toast:#0d0d10;
+  --toast-ink:#ffffff;
+  --hero:linear-gradient(140deg,#0057b8,#4aa3ff);
+  --hero-line:transparent;
+  --hero-ink:#ffffff;
+  --disp:-apple-system,"SF Pro Text",Helvetica,Arial,sans-serif;
+  --r:18px; --r2:12px;
+  --shadow:0 1px 2px rgba(16,18,26,.05),0 10px 26px rgba(16,18,26,.07);
+  --ui:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;height:100%}
+body{background:var(--outer);color:var(--ink);font:14px/1.55 var(--ui);
+  display:flex;align-items:center;justify-content:center;overflow:hidden}
+
+#device{position:relative;width:390px;height:844px;background:var(--bezel);border-radius:46px;padding:5px;
+  box-shadow:0 30px 70px rgba(0,0,0,.34);flex:0 0 auto}
+#screen{position:relative;width:100%;height:100%;background:var(--bg);border-radius:41px;
+  overflow:hidden;display:flex;flex-direction:column}
+#notch{position:absolute;top:5px;left:50%;transform:translateX(-50%);width:118px;height:30px;
+  background:var(--bezel);border-radius:0 0 18px 18px;z-index:60}
+body.bare{background:var(--bg)}
+body.bare #device{width:390px;height:844px;padding:0;border-radius:0;box-shadow:none;background:var(--bg)}
+body.bare #screen{border-radius:0}
+body.bare #notch{display:none}
+body.bare .n-sheet{animation:none}
+
+.statusbar{height:44px;flex:0 0 44px;display:flex;align-items:flex-end;justify-content:space-between;
+  padding:0 22px 6px;font-size:13px;font-weight:600;z-index:50;color:var(--ink)}
+.statusbar .sb-r{display:flex;gap:5px;align-items:center}
+.sb-bat{width:22px;height:11px;border:1.3px solid currentColor;border-radius:3px;position:relative;opacity:.9}
+.sb-bat:after{content:"";position:absolute;right:-3px;top:3px;width:2px;height:5px;background:currentColor;border-radius:0 1px 1px 0}
+.sb-bat i{position:absolute;left:1.3px;top:1.3px;bottom:1.3px;width:78%;background:currentColor;border-radius:1px}
+
+#app{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;position:relative}
+
+.n-appbar{flex:0 0 auto;min-height:52px;display:flex;align-items:center;gap:8px;padding:6px 12px;
+  background:var(--appbar);color:var(--appbar-ink);z-index:20;border-bottom:1px solid var(--appbar-line)}
+.n-appbar .ab-title{flex:1 1 auto;text-align:center;font:650 17px/1.3 var(--disp);letter-spacing:-.2px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.n-appbar .ab-side{flex:0 0 auto;min-width:56px;display:flex;align-items:center;gap:2px}
+.n-appbar .ab-side.right{justify-content:flex-end}
+.n-appbar .iconbtn{color:var(--appbar-ink);opacity:.85}
+.iconbtn{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  color:var(--ink2);cursor:pointer}
+.iconbtn:active{background:var(--press)}
+
+.n-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding-bottom:10px}
+.n-scroll::-webkit-scrollbar{width:0}
+
+.n-text{padding:2px 18px;color:var(--ink2)}
+.n-text.h1{font:700 26px/1.18 var(--disp);color:var(--ink);padding:10px 18px 6px;letter-spacing:-.6px}
+.n-text.h2{font:650 18px/1.3 var(--disp);color:var(--ink);padding:12px 18px 2px}
+.n-text.body{font-size:13.5px;padding:5px 18px;line-height:1.7}
+.n-text.muted{font-size:12.5px;color:var(--muted);padding:6px 18px;line-height:1.6}
+.n-text.empty{padding:14px 18px 40px;text-align:center;color:var(--muted);font-size:13.5px}
+.n-sec{padding:18px 18px 6px;font:700 11.5px/1 var(--ui);color:var(--muted);letter-spacing:1.3px;
+  text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.n-space{height:16px}
+
+.n-card{background:var(--card);border-radius:var(--r);margin:9px 16px;overflow:hidden;border:1px solid var(--line)}
+.n-card.flush{padding:0}
+.n-card.pad{padding:14px 16px}
+.n-card.tap{cursor:pointer}
+.n-card.tap:active{background:var(--press)}
+
+.n-row{display:flex;align-items:center;gap:13px;padding:12px 16px;border-bottom:1px solid var(--line);min-height:54px}
+.n-row:last-child{border-bottom:none}
+.n-row.tap{cursor:pointer}
+.n-row.tap:active{background:var(--press)}
+.n-row .r-lead{flex:0 0 auto;width:26px;color:var(--ink2);display:flex;align-items:center;justify-content:center}
+.n-row .r-main{flex:1 1 auto;min-width:0}
+.n-row .r-label{font-size:14.5px}
+.n-row .r-label.strike{text-decoration:line-through;color:var(--muted)}
+.n-row .r-sub{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.5}
+.n-row .r-value{flex:0 0 auto;font-size:14px;color:var(--ink2);text-align:right;font-variant-numeric:tabular-nums}
+.n-row .r-value.strong{color:var(--ink);font-weight:700}
+.n-row .r-value.acc{color:var(--accent);font-weight:700}
+.n-row .r-value.good{color:var(--good);font-weight:700}
+.n-row .r-value.warn{color:var(--warn);font-weight:700}
+.n-row .r-value.bad{color:var(--bad);font-weight:700}
+.n-row .r-arrow{flex:0 0 auto;color:var(--chev);display:flex}
+
+.n-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:47px;padding:0 20px;
+  border-radius:13px;font:650 15px/1 var(--ui);background:var(--btn);color:var(--ink);
+  border:none;cursor:pointer;user-select:none}
+.n-btn:active{filter:brightness(.97)}
+.n-btn.primary{background:var(--accent);color:var(--on-accent)}
+.n-btn.primary.off{background:var(--btn-off);color:var(--muted);cursor:not-allowed}
+.n-btn.ghost{background:transparent;border:1px solid var(--line2);height:37px;font-size:13px;padding:0 14px;color:var(--ink2)}
+.n-btn.danger{background:transparent;border:1px solid var(--bad-line);color:var(--bad);height:37px;font-size:13px;padding:0 14px}
+.n-btn.block{display:flex;width:100%}
+.n-btnrow{display:flex;gap:10px;padding:12px 16px;justify-content:flex-end;align-items:center;flex-wrap:wrap}
+
+.n-chips{display:flex;gap:8px;padding:8px 16px;overflow-x:auto}
+.n-chips::-webkit-scrollbar{height:0}
+.n-chip{flex:0 0 auto;height:34px;padding:0 14px;border-radius:11px;background:var(--card);
+  border:1px solid var(--line2);display:flex;align-items:center;font-size:13px;
+  color:var(--ink2);cursor:pointer;white-space:nowrap;font-weight:600}
+.n-chip.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+
+.n-input{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line);background:var(--card)}
+.n-input .i-label{flex:0 0 78px;font-size:13px;color:var(--muted)}
+.n-input input{flex:1 1 auto;border:none;outline:none;background:transparent;font-size:14.5px;
+  font-family:inherit;color:var(--ink);min-width:0}
+.n-input input::placeholder{color:var(--muted)}
+.n-switch{flex:0 0 auto;width:46px;height:27px;border-radius:14px;background:var(--off);position:relative;cursor:pointer;transition:background .16s}
+.n-switch.on{background:var(--accent)}
+.n-switch i{position:absolute;top:2.5px;left:2.5px;width:22px;height:22px;border-radius:50%;background:#fff;
+  transition:transform .16s;box-shadow:0 1px 3px rgba(0,0,0,.22)}
+.n-switch.on i{transform:translateX(19px)}
+.n-check{flex:0 0 auto;width:23px;height:23px;border-radius:7px;border:1.8px solid var(--off);position:relative;background:var(--card)}
+.n-check.on{border-color:var(--accent);background:var(--accent)}
+.n-check.on:after{content:"";position:absolute;left:7.5px;top:4px;width:5px;height:10px;
+  border:2px solid var(--on-accent);border-top:0;border-left:0;transform:rotate(42deg)}
+.n-radio{flex:0 0 auto;width:22px;height:22px;border-radius:50%;border:1.8px solid var(--off);position:relative}
+.n-radio.on{border-color:var(--accent);background:var(--accent)}
+.n-radio.on:after{content:"";position:absolute;left:7px;top:4px;width:5px;height:9px;
+  border:2px solid var(--on-accent);border-top:0;border-left:0;transform:rotate(42deg)}
+
+.tag{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11px;
+  font-weight:700;background:var(--btn);color:var(--ink2)}
+.tag.acc{background:var(--accent-s);color:var(--accent)}
+.tag.good{background:var(--good-s);color:var(--good)}
+.tag.warn{background:var(--warn-s);color:var(--warn)}
+.tag.bad{background:var(--bad-s);color:var(--bad)}
+
+.n-tabbar{flex:0 0 auto;height:58px;background:var(--tabbar);border-top:1px solid var(--line);display:flex;z-index:30}
+.n-tabbar .tb{flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  color:var(--muted);font-size:10.5px;cursor:pointer;font-weight:600}
+.n-tabbar .tb i{display:flex}
+.n-tabbar .tb.on{color:var(--accent)}
+
+.n-mask{position:absolute;inset:0;background:var(--scrim);z-index:70;display:flex;align-items:flex-end}
+.n-sheet{width:100%;max-height:80%;background:var(--card);border-radius:22px 22px 0 0;display:flex;
+  flex-direction:column;overflow:hidden;animation:up .18s ease-out}
+@keyframes up{from{transform:translateY(24px)}to{transform:none}}
+.n-sheet .sh-hd{padding:16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
+.n-sheet .sh-hd .t{font:650 17px/1.2 var(--disp)}
+.n-sheet .sh-bd{flex:1 1 auto;overflow-y:auto;min-height:0}
+.n-sheet .sh-bd::-webkit-scrollbar{width:0}
+.n-toast{position:absolute;left:50%;bottom:118px;transform:translateX(-50%);background:var(--toast);
+  color:var(--toast-ink);padding:11px 18px;border-radius:11px;font-size:13px;z-index:90;max-width:84%;text-align:center}
+.dialog{margin:auto;width:82%;background:var(--card);border-radius:18px;overflow:hidden;border:1px solid var(--line)}
+
+.stats{display:flex;gap:9px;padding:4px 16px}
+.stat{flex:1 1 0;background:var(--card);border:1px solid var(--line);border-radius:var(--r2);padding:13px 12px}
+.stat.tap{cursor:pointer}
+.stat .st-n{font:800 19px/1.1 var(--disp);letter-spacing:-.5px;font-variant-numeric:tabular-nums}
+.stat .st-l{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.4}
+.stat.acc .st-n{color:var(--accent)}
+
+.hero{margin:8px 16px 4px;padding:18px;border-radius:var(--r);background:var(--hero);
+  border:1px solid var(--hero-line);color:var(--hero-ink)}
+.hero.tap{cursor:pointer}
+.hero .he-k{font-size:11px;letter-spacing:1.3px;text-transform:uppercase;font-weight:800;opacity:.85}
+.hero .he-t{font:800 25px/1.16 var(--disp);margin-top:9px;letter-spacing:-.7px}
+.hero .he-s{font-size:13px;margin-top:8px;line-height:1.6;opacity:.9}
+
+
+.head{margin:0 16px 4px;padding:18px 16px;border-radius:var(--r);background:var(--card);
+  border:1px solid var(--line)}
+.hd-k{font-size:11.5px;color:var(--muted);letter-spacing:.6px}
+.hd-n{font:700 34px/1 var(--disp);margin-top:9px;letter-spacing:-1px}
+.hd-n.zero{color:var(--good)} .hd-n.some{color:var(--bad)}
+.hd-s{font-size:12.5px;color:var(--ink2);margin-top:10px;line-height:1.6}
+.hd-g{display:flex;gap:22px;margin-top:15px;padding-top:13px;border-top:1px solid var(--line)}
+.hd-g .v{font:700 16px/1 var(--disp)}
+.hd-g .l{font-size:10.5px;color:var(--muted);margin-top:5px}
+
+.pm{display:flex;align-items:center;gap:11px;padding:12px 15px;border-bottom:1px solid var(--line)}
+.pm:last-child{border-bottom:none}
+.pm-i{flex:0 0 auto;width:30px;height:30px;border-radius:8px;background:var(--btn);
+  display:flex;align-items:center;justify-content:center;color:var(--ink2)}
+.pm-i.on{background:var(--accent-s);color:var(--accent)}
+.pm-i.risk{background:var(--bad-s);color:var(--bad)}
+.pm-m{flex:1 1 auto;min-width:0}
+.pm-n{font-size:14.5px;font-weight:600}
+.pm-s{font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.5}
+.pm-s b{color:var(--bad)}
+.pm-v{flex:0 0 auto}
+
+.seg{display:flex;gap:3px;background:var(--btn);border-radius:9px;padding:3px}
+.seg div{padding:6px 10px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;
+  color:var(--ink2);white-space:nowrap}
+.seg div.on{background:var(--card);color:var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.seg div:active{opacity:.7}
+
+.grid{margin:0 16px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+  overflow-x:auto}
+.grid table{border-collapse:collapse;width:100%;min-width:340px}
+.grid th,.grid td{padding:7px 6px;font-size:11px;text-align:center;
+  border-bottom:1px solid var(--line)}
+.grid th{font-size:9.5px;color:var(--muted);letter-spacing:.4px;border-bottom:1px solid var(--line2)}
+.grid td.nm,.grid th.nm{text-align:left;font-size:12.5px;font-weight:600;white-space:nowrap}
+.grid td.y{color:var(--accent);font-weight:700}
+.grid td.n{color:var(--chev)}
+.grid td.risk{color:var(--bad);font-weight:700}
+
+.feat{display:flex;align-items:flex-start;gap:10px;padding:11px 15px;
+  border-bottom:1px solid var(--line)}
+.feat:last-child{border-bottom:none}
+.ft-d{flex:0 0 auto;width:8px;height:8px;border-radius:4px;margin-top:6px;background:var(--good)}
+.feat.off .ft-d{background:var(--bad)}
+.ft-m{flex:1 1 auto}
+.ft-n{font-size:13.5px;font-weight:600}
+.feat.off .ft-n{color:var(--bad);text-decoration:line-through}
+.ft-s{font-size:11.5px;color:var(--muted);margin-top:4px}
+.ft-v{flex:0 0 auto;font-size:11.5px;font-weight:600}
+.ft-v.on{color:var(--good)} .ft-v.off{color:var(--bad)}
+
+</style>
+</head>
+<body>
+<div id="device">
+  <div id="notch"></div>
+  <div id="screen">
+    <div class="statusbar" id="sb">
+      <div id="sb-clock">09:58</div>
+      <div class="sb-r">
+        <svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="4.6" y="5.5" width="3" height="6.5" rx="1"/><rect x="9.2" y="3" width="3" height="9" rx="1"/><rect x="13.8" y="0" width="3" height="12" rx="1"/></svg>
+        <svg width="15" height="12" viewBox="0 0 15 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 4.2a9 9 0 0 1 13 0"/><path d="M3.4 6.9a5.6 5.6 0 0 1 8.2 0"/><circle cx="7.5" cy="10" r=".9" fill="currentColor" stroke="none"/></svg>
+        <span class="sb-bat"><i></i></span>
+      </div>
+    </div>
+    <div id="app"></div>
+  </div>
+</div>
+<div id="hud" class="off"></div>
+
+<script id="engine">
+/* ===========================================================================
+ * ENGINE — pure, deterministic, DOM-free.
+ * 权限是图里的边：每个 App 都写明哪些功能靠哪些权限。
+ * 精确位置依赖位置，「Always」依赖后台刷新，撤谁坏什么都是现算的。
+ * ======================================================================== */
+(function(root){
+'use strict';
+
+var ENV_ID  = 'sable_privacy';
+var VERSION = '1.0.0';
+
+/* ------------------------------------------------------------- utilities */
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+function pad2(n){ return (n < 10 ? '0' : '') + n; }
+function hhmm(m){ m = ((m % 1440) + 1440) % 1440; return pad2(Math.floor(m/60)) + ':' + pad2(m%60); }
+function sum(a){ var s = 0; for (var i=0;i<a.length;i++) s += a[i]; return s; }
+function clamp(v, lo, hi){ return v < lo ? lo : (v > hi ? hi : v); }
+function lcg(seed){ var s=(seed>>>0)||1; return function(){ s=(s*1664525+1013904223)>>>0; return s/4294967296; }; }
+function shuffled(list, seed){
+  if (!seed) return list.slice();
+  var r = lcg(seed), a = list.slice();
+  for (var i=a.length-1;i>0;i--){ var j = Math.floor(r()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; }
+  return a;
+}
+function money(p, sym){
+  var neg = p < 0; p = Math.abs(p);
+  return (neg ? '-' : '') + (sym === undefined ? '\u00a3' : sym) +
+         (Math.floor(p/100)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '.' + pad2(p%100);
+}
+function getPath(o, path){
+  var cur = o, parts = String(path).split('.');
+  for (var i=0;i<parts.length;i++){
+    var k = parts[i], m = k.match(/^(.*?)\[(\d+)\]$/);
+    if (m){ cur = cur ? cur[m[1]] : undefined; cur = cur ? cur[+m[2]] : undefined; }
+    else cur = cur ? cur[k] : undefined;
+    if (cur === undefined) return undefined;
+  }
+  return cur;
+}
+function setPath(o, path, value){
+  var parts = String(path).split('.'), cur = o;
+  for (var i=0;i<parts.length-1;i++){
+    var k = parts[i], m = k.match(/^(.*?)\[(\d+)\]$/);
+    cur = m ? cur[m[1]][+m[2]] : (cur[k] = cur[k] || {});
+  }
+  var lastK = parts[parts.length-1], lm = lastK.match(/^(.*?)\[(\d+)\]$/);
+  if (lm) cur[lm[1]][+lm[2]] = value; else cur[lastK] = value;
+  return o;
+}
+
+/* ------------------------------------------- screen-tree node constructors */
+function N(t, o){ o = o || {}; o.t = t; return o; }
+function txt(s, cls){ return N('text', {text:s, cls:cls || ''}); }
+function row(id, text, o){
+  o = o || {}; o.id = id; o.text = text;
+  if (o.arrow === undefined) o.arrow = !!o.act;
+  return N('row', o);
+}
+function btn(id, text, act, cls, disabled){
+  return N('btn', {id:id, text:text, act:act, cls:cls || '', disabled:!!disabled});
+}
+function iconbtn(id, ic, act, cls){ return N('iconbtn', {id:id, icon:ic, act:act, cls:cls || ''}); }
+function appbar(title, o){ o = o || {}; o.title = title; return N('appbar', o); }
+function stepper(id, value, minus, plus){
+  return N('stepper', {id:id, value:value, minusId:id + '_dec', plusId:id + '_inc',
+                       minus:minus, plus:plus});
+}
+function sheet(id, title, kids){
+  return N('sheet', {id:id, title:title, closeId:id + '_close', close:{type:'CLOSE_SHEET'}, c:kids});
+}
+function route(st){ return st.ui.stack[st.ui.stack.length - 1]; }
+function push(st, name, params){ st.ui.stack.push({name:name, params:params || {}}); st.ui.sheet = null; }
+function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
+function toast(st, t){ st.ui.toast = t; }
+
+/* ------------------------------------------------------------- 权限 */
+var PERMS = [
+  {id:'p_loc',   name:'Location',        kind:'level', risk:3,
+   levels:['Never', 'While using', 'Always']},
+  {id:'p_prec',  name:'Precise location', kind:'bool', risk:2, needs:'p_loc'},
+  {id:'p_cam',   name:'Camera',          kind:'bool', risk:3},
+  {id:'p_mic',   name:'Microphone',      kind:'bool', risk:3},
+  {id:'p_contacts', name:'Contacts',     kind:'bool', risk:2},
+  {id:'p_photos', name:'Photos',         kind:'bool', risk:2},
+  {id:'p_notify', name:'Notifications',  kind:'bool', risk:0},
+  {id:'p_bg',    name:'Background refresh', kind:'bool', risk:1},
+  {id:'p_track', name:'Tracking',        kind:'bool', risk:3}
+];
+function permOf(id){ for (var i=0;i<PERMS.length;i++) if (PERMS[i].id === id) return PERMS[i]; return null; }
+
+function F(id, name, needs, note){ return {id:id, name:name, needs:needs, note:note || ''}; }
+function AP(id, name, cat, grants, feats){
+  return {id:id, name:name, cat:cat, grants:grants, feats:feats};
+}
+var APPS = [
+  AP('a_maps', 'Compass Maps', 'Navigation',
+     {p_loc:2, p_prec:true, p_notify:true, p_bg:true},
+     [F('f_nav', 'Turn-by-turn navigation', [['p_loc', 1]], '只要「使用期间」就够'),
+      F('f_lane', 'Lane-level guidance', [['p_prec', true]], '要精确位置'),
+      F('f_arrive', 'Arrival alerts while the app is closed', [['p_loc', 2], ['p_bg', true]],
+        '这一条才真的需要「始终」')]),
+  AP('a_chatter', 'Chatter', 'Social',
+     {p_loc:1, p_cam:true, p_mic:true, p_contacts:true, p_photos:true, p_notify:true,
+      p_bg:true, p_track:true},
+     [F('f_photo', 'Sending photos', [['p_photos', true]], ''),
+      F('f_snap', 'Taking a photo in-app', [['p_cam', true]], ''),
+      F('f_voice', 'Voice messages', [['p_mic', true]], ''),
+      F('f_find', 'Find friends by number', [['p_contacts', true]], ''),
+      F('f_near', 'People nearby', [['p_loc', 1]], '')]),
+  AP('a_weather', 'Cirrus Weather', 'Utilities',
+     {p_loc:2, p_prec:false, p_notify:true, p_bg:true},
+     [F('f_here', 'Weather where you are', [['p_loc', 1]], '「使用期间」就够'),
+      F('f_rain', 'Rain starting in 20 minutes', [['p_loc', 2], ['p_bg', true]],
+        '要在后台一直知道你在哪')]),
+  AP('a_fit', 'Stride Fitness', 'Health',
+     {p_loc:2, p_prec:true, p_bg:true},
+     [F('f_route', 'Outdoor run route', [['p_loc', 1], ['p_prec', true]],
+        '要精确，但不需要「始终」'),
+      F('f_auto', 'Automatic workout detection', [['p_loc', 2], ['p_bg', true]], '')]),
+  AP('a_bank', 'Harbour Bank', 'Finance',
+     {p_cam:true, p_notify:true, p_loc:1},
+     [F('f_cheque', 'Photograph a cheque', [['p_cam', true]], ''),
+      F('f_branch', 'Nearest branch', [['p_loc', 1]], '')]),
+  AP('a_stream', 'Streamly', 'Entertainment',
+     {p_notify:true, p_bg:true, p_track:true},
+     [F('f_dl', 'Download while you sleep', [['p_bg', true]], ''),
+      F('f_rec', 'Personalised recommendations', [['p_track', true]], '')]),
+  AP('a_shop', 'Marketplace', 'Shopping',
+     {p_notify:true, p_photos:true, p_track:true, p_loc:0},
+     [F('f_list', 'Photograph a listing', [['p_photos', true]], ''),
+      F('f_ads', 'Ads based on other apps', [['p_track', true]], '')]),
+  AP('a_notes', 'Pages', 'Reading',
+     {p_photos:true},
+     [F('f_img', 'Put a picture in a note', [['p_photos', true]], '')])
+];
+function appOf(id){ for (var i=0;i<APPS.length;i++) if (APPS[i].id === id) return APPS[i]; return null; }
+
+/* ------------------------------------------------------------- 当前授权 */
+function grant(st, appId, permId){
+  var g = st.grants[appId] || {};
+  var v = g[permId];
+  if (v === undefined) return permOf(permId).kind === 'level' ? 0 : false;
+  return v;
+}
+/* 位置「始终」在后台刷新关掉之后自动降级成「使用期间」；
+ * 精确位置在位置关掉之后自动失效。 */
+function effective(st, appId, permId){
+  var v = grant(st, appId, permId);
+  if (permId === 'p_loc' && v === 2 && !grant(st, appId, 'p_bg')) return 1;
+  if (permId === 'p_prec' && effective(st, appId, 'p_loc') === 0) return false;
+  return v;
+}
+function levelText(v){ return PERMS[0].levels[v] || 'Never'; }
+function holds(st, appId, permId, need){
+  var v = effective(st, appId, permId);
+  if (permOf(permId).kind === 'level') return v >= need;
+  return !!v;
+}
+function featureOn(st, appId, f){
+  for (var i = 0; i < f.needs.length; i++)
+    if (!holds(st, appId, f.needs[i][0], f.needs[i][1])) return false;
+  return true;
+}
+function brokenBy(st, appId, f){
+  var out = [];
+  f.needs.forEach(function(n){
+    if (!holds(st, appId, n[0], n[1]))
+      out.push(permOf(n[0]).name + (permOf(n[0]).kind === 'level'
+        ? '（要「' + levelText(n[1]) + '」或更高）' : ''));
+  });
+  return out;
+}
+function featuresOf(st, appId){
+  var a = appOf(appId);
+  return a.feats.map(function(f){ return {f:f, on:featureOn(st, appId, f)}; });
+}
+function brokenCount(st){
+  var n = 0;
+  APPS.forEach(function(a){
+    a.feats.forEach(function(f){ if (!featureOn(st, a.id, f)) n += 1; });
+  });
+  return n;
+}
+function totalFeatures(){ return sum(APPS.map(function(a){ return a.feats.length; })); }
+
+/* 这个页面的头条数字：有几个 App 能在你没看它的时候知道你在哪 */
+function backgroundLocation(st){
+  return APPS.filter(function(a){
+    return effective(st, a.id, 'p_loc') === 2 && grant(st, a.id, 'p_bg');
+  });
+}
+function withPerm(st, permId){
+  return APPS.filter(function(a){
+    if (permOf(permId).kind === 'level') return effective(st, a.id, permId) > 0;
+    return !!effective(st, a.id, permId);
+  });
+}
+function trackingApps(st){ return withPerm(st, 'p_track'); }
+function riskScore(st){
+  var n = 0;
+  APPS.forEach(function(a){
+    PERMS.forEach(function(p){
+      var v = effective(st, a.id, p.id);
+      if (p.kind === 'level') n += (v === 2 ? p.risk * 2 : (v === 1 ? p.risk : 0));
+      else if (v) n += p.risk;
+    });
+  });
+  return n;
+}
+
+/* =========================================================== state */
+function createInitialState(seed){
+  seed = seed || 0;
+  var grants = {};
+  APPS.forEach(function(a){ grants[a.id] = clone(a.grants); });
+  return {
+    meta:{env:ENV_ID, version:VERSION, seed:seed, steps:0, finished:false, answer:null},
+    grants:grants,
+    /* 种子只打乱权限快捷条的排列 */
+    order:shuffled(PERMS.map(function(p){ return p.id; }), seed),
+    perm:'p_loc',
+    ui:{tab:'overview', stack:[{name:'overview', params:{}}], sheet:null, confirm:null,
+        inputs:{}, toast:null},
+    settings:{askToTrack:true, limitAdTracking:false, shareAnalytics:false}
+  };
+}
+var SELECT = {
+  appOf:appOf, permOf:permOf, grant:grant, effective:effective, levelText:levelText,
+  holds:holds, featureOn:featureOn, brokenBy:brokenBy, featuresOf:featuresOf,
+  brokenCount:brokenCount, totalFeatures:totalFeatures,
+  backgroundLocation:backgroundLocation, withPerm:withPerm, trackingApps:trackingApps,
+  riskScore:riskScore, apps:APPS, perms:PERMS, route:route
+};
+
+/* =========================================================== reducer */
+function reduce(prev, action){
+  var st = clone(prev), A = action || {};
+  st.ui.toast = null;
+  st.meta.steps += 1;
+
+  function lost(before, st, appId){
+    var out = [];
+    featuresOf(st, appId).forEach(function(x, i){
+      if (before[i] && !x.on) out.push(x.f.name);
+    });
+    return out;
+  }
+  function snapshotFeats(st, appId){
+    return featuresOf(st, appId).map(function(x){ return x.on; });
+  }
+
+  switch (A.type) {
+
+  case 'NOOP': break;
+  case 'FINISH': st.meta.finished = true; st.meta.answer = A.answer === undefined ? null : A.answer; break;
+
+  case 'NAV': push(st, A.to, A.params); break;
+  case 'BACK':
+    if (st.ui.sheet) st.ui.sheet = null;
+    else if (st.ui.confirm) st.ui.confirm = null;
+    else pop(st);
+    break;
+  case 'TAB': {
+    var roots = {overview:'overview', perms:'perms', matrix:'matrix', settings:'settings'};
+    st.ui.tab = A.tab; st.ui.sheet = null; st.ui.confirm = null;
+    st.ui.stack = [{name:roots[A.tab] || 'overview', params:{}}];
+    break;
+  }
+  case 'HOME':
+    st.ui.tab = 'overview'; st.ui.stack = [{name:'overview', params:{}}];
+    st.ui.sheet = null; st.ui.confirm = null;
+    break;
+  case 'SET_INPUT': st.ui.inputs[A.field] = A.value; break;
+  case 'OPEN_SHEET': st.ui.sheet = {type:A.sheet, id:A.id || null}; break;
+  case 'CLOSE_SHEET': st.ui.sheet = null; break;
+  case 'CONFIRM_NO': st.ui.confirm = null; break;
+  case 'CONFIRM_YES': {
+    var yes = st.ui.confirm && st.ui.confirm.yes; st.ui.confirm = null;
+    if (yes) { var keep = st.meta.steps; var out = reduce(st, yes); out.meta.steps = keep; return out; }
+    break;
+  }
+  case 'PICK_PERM': st.perm = A.id; break;
+
+  /* ---- 改授权 ---- */
+  case 'SET_LEVEL': {
+    var a = appOf(A.app);
+    if (!a) break;
+    var before = snapshotFeats(st, A.app);
+    if (A.n === 2 && !grant(st, A.app, 'p_bg')){
+      toast(st, a.name + ' 的后台刷新是关的，「Always」会自动降回「While using」——先开后台刷新');
+    }
+    st.grants[A.app][A.perm] = A.n;
+    var l = lost(before, st, A.app);
+    toast(st, a.name + ' 的 ' + permOf(A.perm).name + ' 改成「' + levelText(A.n) + '」'
+              + (l.length ? '，坏掉了：' + l.join('、') : '，没有功能受影响'));
+    break;
+  }
+  case 'TOGGLE_PERM': {
+    var a2 = appOf(A.app);
+    if (!a2) break;
+    var before2 = snapshotFeats(st, A.app);
+    var cur = grant(st, A.app, A.perm);
+    if (A.perm === 'p_prec' && !cur && effective(st, A.app, 'p_loc') === 0){
+      toast(st, '位置本身是关的，精确位置打开也没有意义');
+      break;
+    }
+    st.grants[A.app][A.perm] = !cur;
+    var l2 = lost(before2, st, A.app);
+    toast(st, a2.name + ' 的 ' + permOf(A.perm).name + (cur ? ' 已关闭' : ' 已开启')
+              + (l2.length ? '，坏掉了：' + l2.join('、') : '，没有功能受影响'));
+    break;
+  }
+  case 'REVOKE_ALL': {
+    var p = permOf(A.perm);
+    var affected = withPerm(st, A.perm);
+    if (!affected.length){ toast(st, '没有 App 拿着 ' + p.name); break; }
+    st.ui.confirm = {title:'把所有 App 的 ' + p.name + ' 都撤掉？',
+      text:affected.length + ' 个 App 会受影响：' + affected.map(function(x){ return x.name; })
+           .join('、') + '。',
+      okText:'全部撤掉', yes:{type:'REVOKE_ALL_YES', perm:A.perm}};
+    break;
+  }
+  case 'REVOKE_ALL_YES': {
+    var p2 = permOf(A.perm), n = 0;
+    APPS.forEach(function(a3){
+      if (p2.kind === 'level'){ if (grant(st, a3.id, A.perm) > 0){ st.grants[a3.id][A.perm] = 0; n += 1; } }
+      else if (grant(st, a3.id, A.perm)){ st.grants[a3.id][A.perm] = false; n += 1; }
+    });
+    toast(st, n + ' 个 App 的 ' + p2.name + ' 已撤销，现在有 ' + brokenCount(st) + ' 项功能用不了');
+    break;
+  }
+  case 'STOP_BG_LOCATION': {
+    var bg = backgroundLocation(st);
+    if (!bg.length){ toast(st, '已经没有 App 能在后台知道你的位置了'); break; }
+    st.ui.confirm = {title:'不让任何 App 在后台定位？',
+      text:bg.map(function(x){ return x.name; }).join('、')
+           + ' 会从「Always」降到「While using」。',
+      okText:'都降下来', yes:{type:'STOP_BG_YES'}};
+    break;
+  }
+  case 'STOP_BG_YES': {
+    var was = brokenCount(st);
+    backgroundLocation(st).forEach(function(a4){ st.grants[a4.id].p_loc = 1; });
+    toast(st, '都降成「While using」了，一共有 ' + (brokenCount(st) - was) + ' 项功能因此停掉');
+    break;
+  }
+
+  case 'SET_TOGGLE': st.settings[A.key] = !st.settings[A.key]; break;
+
+  default: break;
+  }
+  return st;
+}
+
+/* =========================================================== screens */
+function tabbar(st){
+  var items = [
+    {id:'tab_overview', text:'Overview', icon:'shield', tab:'overview'},
+    {id:'tab_perms',    text:'By permission', icon:'key', tab:'perms'},
+    {id:'tab_matrix',   text:'Matrix',   icon:'grid',  tab:'matrix'},
+    {id:'tab_settings', text:'Settings', icon:'gear',  tab:'settings'}
+  ].map(function(i){
+    return {id:i.id, text:i.text, icon:i.icon, on:(st.ui.tab === i.tab), act:{type:'TAB', tab:i.tab}};
+  });
+  return N('tabbar', {id:'tabbar', items:items});
+}
+function headCard(st){
+  var bg = backgroundLocation(st);
+  return N('head', {id:'head', kicker:'Can find you while you are not looking',
+    amount:bg.length + (bg.length === 1 ? ' app' : ' apps'),
+    zero:bg.length === 0,
+    sub:bg.length
+      ? bg.map(function(a){ return a.name; }).join('、')
+        + ' —— 它们的位置是「Always」而且后台刷新开着。'
+      : '没有 App 能在后台拿到你的位置。',
+    grid:[{v:brokenCount(st) + '/' + totalFeatures(), l:'功能用不了'},
+          {v:trackingApps(st).length + '', l:'允许跟踪'},
+          {v:riskScore(st) + '', l:'暴露面'}]});
+}
+function appRow(st, a){
+  var on = a.feats.filter(function(f){ return featureOn(st, a.id, f); }).length;
+  var held = PERMS.filter(function(p){
+    var v = effective(st, a.id, p.id);
+    return p.kind === 'level' ? v > 0 : !!v;
+  });
+  var bgloc = effective(st, a.id, 'p_loc') === 2 && grant(st, a.id, 'p_bg');
+  return N('pm', {id:'app_' + a.id, name:a.name,
+    icon:bgloc ? 'alert' : 'shield', on:held.length > 0, risk:bgloc,
+    sub:a.cat + ' · ' + held.length + ' 项权限 · 功能 ' + on + '/' + a.feats.length
+        + (bgloc ? ' · <b>后台可定位</b>' : ''),
+    val:held.map(function(p){
+      return p.id === 'p_loc' ? levelText(effective(st, a.id, 'p_loc')) : p.name;
+    }).slice(0, 2).join('、') + (held.length > 2 ? '…' : ''),
+    act:{type:'NAV', to:'app', params:{id:a.id}}});
+}
+
+function scrOverview(st){
+  return N('screen', {id:'scr_overview', name:'overview', c:[
+    appbar('Privacy'),
+    N('scroll', {id:'ov_scroll', c:[
+      headCard(st),
+      N('padded', {c:[btn('stop_bg', '不让任何 App 在后台定位', {type:'STOP_BG_LOCATION'},
+                          'primary block', backgroundLocation(st).length === 0)]}),
+      N('chips', {id:'perm_row', c: st.order.map(permOf).map(function(p){
+        return N('chip', {id:'pc_' + p.id, text:p.name + ' ' + withPerm(st, p.id).length,
+          on:st.perm === p.id, act:{type:'PICK_PERM', id:p.id}});
+      })}),
+      N('sec', {text:'应用', side:APPS.length + ' 个'}),
+      N('card', {id:'app_list', cls:'flush', c: APPS.map(function(a){
+        return appRow(st, a);
+      })}),
+      txt('撤一个权限不会只是少一个勾——每个 App 都写明了哪些功能靠它。'
+          + '精确位置在位置关掉之后自动失效，「Always」在后台刷新关掉之后自动降成「While using」。',
+          'muted'),
+      N('space', {})
+    ]}),
+    tabbar(st)
+  ]});
+}
+
+function scrApp(st, params){
+  var a = appOf(params.id);
+  if (!a) return scrOverview(st);
+  return N('screen', {id:'scr_app', name:'app', params:params, c:[
+    appbar(a.name, {back:true}),
+    N('scroll', {id:'app_scroll', c:[
+      N('hero', {id:'app_hero', kicker:a.cat.toUpperCase(), title:a.name,
+        sub:a.feats.filter(function(f){ return featureOn(st, a.id, f); }).length + '/'
+            + a.feats.length + ' 项功能能用'}),
+      N('sec', {text:'权限'}),
+      N('card', {id:'perm_card', cls:'flush', c: PERMS.filter(function(p){
+          return a.grants[p.id] !== undefined;
+        }).map(function(p){
+          var v = effective(st, a.id, p.id);
+          var raw = grant(st, a.id, p.id);
+          var degraded = p.id === 'p_loc' && raw === 2 && v === 1;
+          if (p.kind === 'level')
+            return row('pr_' + p.id, p.name,
+              {lead:'key', arrow:false,
+               sub:degraded ? '设的是 Always，可后台刷新关着，实际只有 While using' : '',
+               c:[N('seg', {id:'seg_' + p.id, items:p.levels.map(function(L, i){
+                 return {id:'lv_' + p.id + '_' + i, text:L, on:raw === i,
+                   act:{type:'SET_LEVEL', app:a.id, perm:p.id, n:i}};
+               })})]});
+          return row('pr_' + p.id, p.name,
+            {lead:'key', arrow:false,
+             sub:p.id === 'p_prec' && effective(st, a.id, 'p_loc') === 0
+               ? '位置是关的，这一条不起作用' : '',
+             c:[N('switch', {id:'sw_' + p.id, on:!!v,
+                  act:{type:'TOGGLE_PERM', app:a.id, perm:p.id}})]});
+        })}),
+      N('sec', {text:'靠这些权限的功能'}),
+      N('card', {id:'feat_card', cls:'flush', c: featuresOf(st, a.id).map(function(x){
+        return N('feat', {id:'ft_' + x.f.id, name:x.f.name, on:x.on,
+          sub:x.on ? (x.f.note || '要：' + x.f.needs.map(function(n){
+                        return permOf(n[0]).name; }).join('、'))
+                   : '缺：' + brokenBy(st, a.id, x.f).join('、'),
+          val:x.on ? '能用' : '用不了'});
+      })}),
+      N('space', {})
+    ]})
+  ]});
+}
+
+function scrPerms(st){
+  var p = permOf(st.perm);
+  var users = withPerm(st, st.perm);
+  return N('screen', {id:'scr_perms', name:'perms', c:[
+    appbar('By permission'),
+    N('scroll', {id:'perms_scroll', c:[
+      N('chips', {id:'pick_row', c: st.order.map(permOf).map(function(x){
+        return N('chip', {id:'pp_' + x.id, text:x.name, on:st.perm === x.id,
+          act:{type:'PICK_PERM', id:x.id}});
+      })}),
+      N('head', {id:'perm_head', kicker:p.name, amount:users.length + ' 个 App',
+        zero:users.length === 0,
+        sub:users.length ? users.map(function(a){ return a.name; }).join('、')
+                         : '没有 App 拿着它。',
+        grid:[{v:p.risk + '', l:'风险权重'},
+              {v:p.kind === 'level' ? '三档' : '开关', l:'类型'},
+              {v:p.needs ? permOf(p.needs).name : '无', l:'依赖'}]}),
+      N('sec', {text:'谁拿着它'}),
+      N('card', {id:'holders', cls:'flush', c: APPS.map(function(a){
+        var v = effective(st, a.id, st.perm);
+        var has = p.kind === 'level' ? v > 0 : !!v;
+        var deps = a.feats.filter(function(f){
+          return f.needs.some(function(n){ return n[0] === st.perm; });
+        });
+        return row('hd_' + a.id, a.name,
+          {lead:has ? 'key' : 'close',
+           sub:deps.length ? '靠它的功能：' + deps.map(function(f){ return f.name; }).join('、')
+                           : '没有功能靠它',
+           val:p.kind === 'level' ? levelText(v) : (has ? '已开' : '已关'),
+           valCls:has ? 'acc' : 'muted',
+           act:{type:'NAV', to:'app', params:{id:a.id}}});
+      })}),
+      N('padded', {c:[btn('revoke_all', '把所有 App 的' + p.name + '都撤掉',
+        {type:'REVOKE_ALL', perm:st.perm}, 'danger block', users.length === 0)]}),
+      N('space', {})
+    ]}),
+    tabbar(st)
+  ]});
+}
+
+function scrMatrix(st){
+  var cols = ['p_loc', 'p_prec', 'p_cam', 'p_mic', 'p_contacts', 'p_photos', 'p_bg', 'p_track'];
+  return N('screen', {id:'scr_matrix', name:'matrix', c:[
+    appbar('Matrix'),
+    N('scroll', {id:'matrix_scroll', c:[
+      headCard(st),
+      N('sec', {text:'谁拿着什么'}),
+      N('grid', {id:'matrix', cols:cols.map(function(c){
+          return permOf(c).name.split(' ')[0];
+        }),
+        rows:APPS.map(function(a){
+          return {name:a.name, cells:cols.map(function(c){
+            var v = effective(st, a.id, c);
+            if (permOf(c).kind === 'level')
+              return {text:v === 2 ? 'Always' : (v === 1 ? 'Using' : '—'),
+                      cls:v === 2 ? 'risk' : (v === 1 ? 'y' : 'n')};
+            return {text:v ? '●' : '—', cls:v ? (c === 'p_track' ? 'risk' : 'y') : 'n'};
+          })};
+        })}),
+      N('sec', {text:'用不了的功能', side:brokenCount(st) + ' 项'}),
+      N('card', {id:'broken', cls:'flush', c: (function(){
+        var out = [];
+        APPS.forEach(function(a){
+          a.feats.forEach(function(f){
+            if (!featureOn(st, a.id, f))
+              out.push(row('bk_' + f.id, a.name + ' · ' + f.name,
+                {lead:'alert', sub:'缺：' + brokenBy(st, a.id, f).join('、'),
+                 act:{type:'NAV', to:'app', params:{id:a.id}}}));
+          });
+        });
+        return out.length ? out : [txt('所有功能都还能用。', 'empty')];
+      })()}),
+      N('space', {})
+    ]}),
+    tabbar(st)
+  ]});
+}
+
+function scrSettings(st){
+  function sw(id, text, key, sub){
+    return row(id, text, {sub:sub, arrow:false,
+      c:[N('switch', {id:'set_' + key, on:!!st.settings[key], act:{type:'SET_TOGGLE', key:key}})]});
+  }
+  return N('screen', {id:'scr_settings', name:'settings', c:[
+    appbar('Settings'),
+    N('scroll', {id:'settings_scroll', c:[
+      headCard(st),
+      N('sec', {text:'Tracking'}),
+      N('card', {id:'track_card', cls:'flush', c:[
+        sw('ask_row', '让 App 请求跟踪', 'askToTrack', '关掉以后新 App 一律不许问'),
+        sw('ad_row', '限制广告标识', 'limitAdTracking', ''),
+        sw('an_row', '分享分析数据', 'shareAnalytics', '')]}),
+      N('sec', {text:'规则'}),
+      N('card', {id:'rule_card', cls:'flush', c:[
+        row('r_prec', '精确位置', {lead:'info', val:'依赖位置', valCls:'strong', arrow:false,
+          sub:'位置关掉之后它自动失效，开着也没有意义'}),
+        row('r_always', '「Always」', {lead:'info', val:'依赖后台刷新', valCls:'strong',
+          arrow:false, sub:'后台刷新一关，Always 就退化成 While using'}),
+        row('r_feat', '撤权限的后果', {lead:'alert', val:'点名到功能', valCls:'warn',
+          arrow:false, sub:'每个 App 都写明了哪几项功能靠哪几条权限'}),
+        row('r_head', '头条数字', {lead:'info', val:'一次查询', valCls:'strong', arrow:false,
+          sub:'位置 = Always 而且后台刷新开着的 App 数，不是什么综合评分'})]}),
+      N('sec', {text:'现在'}),
+      N('card', {id:'now_card', cls:'flush', c: PERMS.map(function(p){
+        return row('np_' + p.id, p.name, {lead:'key',
+          val:withPerm(st, p.id).length + ' 个 App', valCls:'strong', arrow:false,
+          sub:withPerm(st, p.id).map(function(a){ return a.name; }).join('、') || '没有'});
+      })}),
+      N('space', {})
+    ]}),
+    tabbar(st)
+  ]});
+}
+
+var ROUTES = {overview:scrOverview, app:scrApp, perms:scrPerms, matrix:scrMatrix,
+              settings:scrSettings};
+function screen(st){
+  var r = route(st), fn = ROUTES[r.name] || scrOverview;
+  var rootNode = fn(st, r.params || {});
+  rootNode.route = r.name;
+  var extra = [];
+  if (st.ui.confirm)
+    extra.push(N('mask', {id:'confirm_mask', c:[N('dialog', {id:'confirm_dialog',
+      title:st.ui.confirm.title || '', text:st.ui.confirm.text,
+      ok: btn('confirm_ok', st.ui.confirm.okText || 'Confirm', {type:'CONFIRM_YES'}, 'primary'),
+      cancel: btn('confirm_cancel', 'Cancel', {type:'CONFIRM_NO'}, '')})]}));
+  if (st.ui.toast) extra.push(N('toast', {id:'toast', text:st.ui.toast}));
+  rootNode.c = rootNode.c.concat(extra);
+  return rootNode;
+}
+
+/* =======================================================================
+ * TRAVERSAL — element index, GUI action interface, text observation.
+ * Identical in every environment here: the screen tree is the only thing
+ * that differs, and all three readers below walk that same tree.
+ * ==================================================================== */
+var SKIP_KEYS = {act:1, minus:1, plus:1, close:1, yes:1, params:1, meta:1, grid:1, cells:1, cols:1, needs:1, feats:1, grants:1, levels:1, deps:1};
+
+function labelOf(n){ return n.text || n.title || n.name || n.label || n.main || ''; }
+
+function collect(n, out){
+  if (!n || typeof n !== 'object') return;
+  if (Array.isArray(n)) { for (var i=0;i<n.length;i++) collect(n[i], out); return; }
+  if (n.t === 'appbar' && n.back) out.push({id:'nav_back', act:{type:'BACK'}, text:'Back', t:'back'});
+  if (n.id && n.act)              out.push({id:n.id, act:n.act, text:labelOf(n), t:n.t||'el',
+                                            disabled:!!n.disabled,
+                                            input:(n.t === 'inputrow')});
+  if (n.t === 'mask' && n.close)  out.push({id:n.id, act:n.close, text:'Dismiss overlay', t:'mask'});
+  for (var k in n){
+    /* a node may carry extra buttons as a pair of keys: someId holds the
+     * test-id and some holds the action. That is how steppers, sheet close
+     * buttons and per-row buttons all get into the element index. */
+    if (k.length > 2 && k.slice(-2) === 'Id' && typeof n[k] === 'string'){
+      var sib = n[k.slice(0, -2)];
+      if (sib && typeof sib === 'object' && sib.type)
+        out.push({id:n[k], act:sib, text:k.slice(0, -2), t:'sub'});
+    }
+    if (SKIP_KEYS[k]) continue;
+    var v = n[k];
+    if (v && typeof v === 'object') collect(v, out);
+  }
+}
+function elements(st){
+  var rootNode = (st && st.t === 'screen') ? st : screen(st);
+  var masks = (rootNode.c || []).filter(function(n){ return n.t === 'mask'; });
+  var out = [];
+  collect(masks.length ? masks[masks.length-1] : rootNode, out);
+  return out;
+}
+function findEl(st, id){
+  var els = elements(st);
+  for (var i=0;i<els.length;i++) if (els[i].id === id) return els[i];
+  return null;
+}
+function substitute(act, text){
+  var a = clone(act);
+  for (var k in a) if (a[k] === '$VALUE') a[k] = text;
+  return a;
+}
+function step(st, a){
+  a = a || {};
+  var kind = a.action || a.type;
+  switch (kind) {
+  case 'tap': {
+    var el = findEl(st, a.id);
+    if (!el) return {state:st, ok:false, error:'ELEMENT_NOT_FOUND: ' + a.id};
+    if (el.disabled) return {state:st, ok:false, error:'ELEMENT_DISABLED: ' + a.id};
+    return {state:reduce(st, el.act), ok:true};
+  }
+  case 'type': {
+    var e2 = findEl(st, a.id);
+    if (!e2) return {state:st, ok:false, error:'ELEMENT_NOT_FOUND: ' + a.id};
+    if (!e2.input) return {state:st, ok:false, error:'NOT_A_TEXT_FIELD: ' + a.id};
+    return {state:reduce(st, substitute(e2.act, a.text == null ? '' : String(a.text))), ok:true};
+  }
+  case 'back':   return {state:reduce(st, {type:'BACK'}), ok:true};
+  case 'home':   return {state:reduce(st, {type:'HOME'}), ok:true};
+  case 'wait':   return {state:reduce(st, {type:'NOOP'}), ok:true};
+  case 'finish': return {state:reduce(st, {type:'FINISH', answer:a.answer}), ok:true};
+  case 'raw':    return {state:reduce(st, a.act || {}), ok:true};
+  default:       return {state:st, ok:false, error:'UNKNOWN_ACTION: ' + kind};
+  }
+}
+
+/* ------------------------------------------------- text observation (a11y) */
+function a11y(st){
+  var rootNode = screen(st), lines = [], r = route(st);
+  lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
+             '  step ' + st.meta.steps);
+  lines.push('# ' + backgroundLocation(st).length + ' 个 App 能在后台知道你在哪，' + brokenCount(st) + '/' + totalFeatures() + ' 项功能用不了，' + trackingApps(st).length + ' 个 App 允许跟踪。');
+  var masks = (rootNode.c || []).filter(function(n){ return n.t === 'mask'; });
+  if (masks.length) lines.push('# An overlay is open. Nothing behind it can be tapped.');
+  walkText(masks.length ? masks[masks.length-1] : rootNode, 0, lines, st);
+  (rootNode.c || []).forEach(function(n){ if (n.t === 'toast') lines.push('[Toast] ' + n.text); });
+  return lines.join('\n');
+}
+function tid(n){ return (n && n.id && n.act) ? ' #' + n.id : ''; }
+function ind(d){ return new Array(d+1).join('  '); }
+
+function walkText(n, d, out, st){
+  if (!n || typeof n !== 'object') return;
+  if (Array.isArray(n)) { n.forEach(function(x){ walkText(x, d, out, st); }); return; }
+  var line = null;
+  switch (n.t) {
+  case 'screen': break;
+  case 'appbar': line = '[AppBar] ' + (n.title || '') + (n.back ? '   Back #nav_back' : ''); break;
+  case 'iconbtn': line = '[IconButton]' + tid(n) + ' ' + n.icon; break;
+  case 'inputrow':
+    line = '[TextField]' + tid(n) + ' ' + (n.label || '') + ' value="' + (n.value || '') + '"'; break;
+  case 'chip':   line = '[Chip]' + tid(n) + ' ' + n.text + (n.on ? '  [selected]' : ''); break;
+  case 'btn':    line = '[Button]' + (n.id ? ' #' + n.id : '') + ' ' + n.text + (n.disabled ? ' (disabled)' : ''); break;
+  case 'row': {
+    var s = '[Row]' + tid(n) + ' ' + (n.text || '') + (n.strike ? ' (crossed out)' : '');
+    if (n.val) s += ' \u2014 ' + n.val;
+    if (n.sub) s += '   (' + n.sub + ')';
+    line = s; break;
+  }
+  case 'switch': line = '[Toggle]' + tid(n) + ' ' + (n.on ? 'ON' : 'OFF'); break;
+  case 'check':  line = '[Checkbox]' + tid(n) + ' ' + (n.on ? 'ticked' : 'not ticked'); break;
+  case 'radio':  line = '[Radio]' + tid(n) + ' ' + (n.on ? 'selected' : 'not selected'); break;
+  case 'stepper':
+    line = '[Stepper] ' + n.value + '  down #' + n.minusId + '  up #' + n.plusId; break;
+  case 'hero':
+    out.push(ind(d) + '[Hero]' + tid(n) + ' ' + n.kicker + ' \u2014 ' + n.title + '. ' + n.sub);
+    return;
+  case 'stat':   line = '[Stat]' + tid(n) + ' ' + n.l + ': ' + n.n; break;
+  case 'pills':  line = n.items.map(function(p){ return '[' + p.text + ']'; }).join(' '); break;
+  case 'sec':    line = '\u2014 ' + n.text + (n.side ? ' (' + n.side + ')' : '') + ' \u2014'; break;
+  case 'text':   line = n.text || null; break;
+  case 'tabbar':
+    out.push(ind(d) + '[TabBar] ' + n.items.map(function(i){
+      return i.text + ' #' + i.id + (i.on ? '[current]' : ''); }).join('  '));
+    return;
+  case 'sheet':  line = '[Sheet] ' + n.title + '   close #' + n.closeId; break;
+  case 'dialog': line = '[Dialog] ' + (n.title ? n.title + ' \u2014 ' : '') + n.text; break;
+  case 'mask': case 'toast': line = null; break;
+  default: {
+    var extra = walkExtra(n, d, out, st);
+    if (extra === true) return;
+    line = extra || null;
+  }
+  }
+  if (line !== null) out.push(ind(d) + line);
+  for (var k in n){
+    if (SKIP_KEYS[k]) continue;
+    var v = n[k];
+    if (v && typeof v === 'object') walkText(v, line !== null ? d+1 : d, out, st);
+  }
+}
+/* per-environment nodes: return a string to print, true if already printed,
+ * or null to ignore */
+function walkExtra(n, d, out, st){
+
+  if (n.t === 'head'){
+    out.push(ind(d) + '[' + n.kicker + '] ' + n.amount);
+    out.push(ind(d+1) + n.sub);
+    n.grid.forEach(function(g){ out.push(ind(d+1) + g.l + '：' + g.v); });
+    return true;
+  }
+  if (n.t === 'pm'){
+    out.push(ind(d) + '[App]' + tid(n) + ' ' + n.name + '  ' + n.val);
+    out.push(ind(d+1) + n.sub.replace(/<[^>]+>/g, ''));
+    return true;
+  }
+  if (n.t === 'seg'){
+    out.push(ind(d) + '[三档] ' + n.items.map(function(i){
+      return i.text + ' #' + i.id + (i.on ? '*' : ''); }).join('   '));
+    return true;
+  }
+  if (n.t === 'feat'){
+    out.push(ind(d) + '[功能] ' + n.name + ' — ' + n.val);
+    out.push(ind(d+1) + n.sub);
+    return true;
+  }
+  if (n.t === 'grid'){
+    out.push(ind(d) + '[矩阵] 列：' + n.cols.join('  '));
+    n.rows.forEach(function(r){
+      out.push(ind(d+1) + r.name + ': ' + r.cells.map(function(c){ return c.text; }).join('  '));
+    });
+    return true;
+  }
+
+  return null;
+}
+
+/* --------------------------------------------------------- derived view */
+function derive(st){
+  var loc = {}, feats = {}, held = {};
+  APPS.forEach(function(a){
+    loc[a.name] = levelText(effective(st, a.id, 'p_loc'));
+    a.feats.forEach(function(f){ feats[a.name + '·' + f.name] = featureOn(st, a.id, f); });
+    held[a.name] = PERMS.filter(function(p){
+      var v = effective(st, a.id, p.id);
+      return p.kind === 'level' ? v > 0 : !!v;
+    }).map(function(p){ return p.name; }).sort();
+  });
+  var counts = {};
+  PERMS.forEach(function(p){ counts[p.name] = withPerm(st, p.id).length; });
+  return {
+    route: route(st).name,
+    routeId: (route(st).params || {}).id || null,
+    tab: st.ui.tab,
+    perm: st.perm,
+    backgroundLocationCount: backgroundLocation(st).length,
+    backgroundLocationApps: backgroundLocation(st).map(function(a){ return a.name; }).sort(),
+    locationLevel: loc,
+    permissionCounts: counts,
+    heldBy: held,
+    featureOn: feats,
+    brokenCount: brokenCount(st),
+    totalFeatures: totalFeatures(),
+    brokenFeatures: (function(){
+      var out = [];
+      APPS.forEach(function(a){
+        a.feats.forEach(function(f){ if (!featureOn(st, a.id, f)) out.push(a.name + '·' + f.name); });
+      });
+      return out.sort();
+    })(),
+    trackingApps: trackingApps(st).map(function(a){ return a.name; }).sort(),
+    riskScore: riskScore(st),
+    settings: clone(st.settings),
+    finished: !!st.meta.finished,
+    answer: st.meta.answer
+  };
+}
+
+function snapshot(st){ var o = clone(st); o.derived = derive(st); return o; }
+function applyPatch(st, patch){
+  (patch || []).forEach(function(p){ setPath(st, p.path, clone(p.value)); });
+  return st;
+}
+
+var ENGINE = {
+  ENV_ID: ENV_ID, VERSION: VERSION, CATALOG: {apps:APPS, permissions:PERMS},
+  createInitialState: createInitialState,
+  reduce: reduce, step: step, screen: screen, a11y: a11y,
+  elements: elements, findEl: findEl, applyPatch: applyPatch,
+  getPath: getPath, setPath: setPath, clone: clone,
+  derive: derive, snapshot: snapshot,
+  select: SELECT
+};
+root.PRIVACY_ENGINE = ENGINE;
+root.GUI_ENGINE = ENGINE;
+
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+</script>
+
+<script id="ui">
+/* ===========================================================================
+ * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
+ * ======================================================================== */
+(function(){
+'use strict';
+var E = window.GUI_ENGINE;
+var app = document.getElementById('app');
+var hud = document.getElementById('hud');
+function esc(s){
+  return String(s === undefined || s === null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+var SVG = {
+  back: '<path d="M15 4.5 8 12l7 7.5"/>',
+  arrow: '<path d="M9 4.5 16 12l-7 7.5"/>',
+  plus: '<path d="M12 5.6v12.8M5.6 12h12.8"/>',
+  minus: '<path d="M5.6 12h12.8"/>',
+  close: '<path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5"/>',
+  check: '<path d="M4.8 12.6 9.8 17.6 19.2 6.8"/>',
+  gear: '<circle cx="12" cy="12" r="3.4"/><path d="M19.1 14.4a1.6 1.6 0 0 0 .3 1.8l.1.1a1.9 1.9 0 1 1-2.7 2.7l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5v.2a1.9 1.9 0 1 1-3.8 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a1.9 1.9 0 1 1-2.7-2.7l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1h-.2a1.9 1.9 0 1 1 0-3.8h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a1.9 1.9 0 1 1 2.7-2.7l.1.1a1.6 1.6 0 0 0 1.8.3h.1a1.6 1.6 0 0 0 1-1.5v-.2a1.9 1.9 0 1 1 3.8 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a1.9 1.9 0 1 1 2.7 2.7l-.1.1a1.6 1.6 0 0 0-.3 1.8v.1a1.6 1.6 0 0 0 1.5 1h.2a1.9 1.9 0 1 1 0 3.8h-.1a1.6 1.6 0 0 0-1.5 1z"/>',
+  list: '<path d="M8.6 6.4h11M8.6 12h11M8.6 17.6h11"/><circle cx="4.7" cy="6.4" r="1.2" fill="currentColor" stroke="none"/><circle cx="4.7" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="4.7" cy="17.6" r="1.2" fill="currentColor" stroke="none"/>',
+  info: '<circle cx="12" cy="12" r="8.8"/><path d="M12 11.1v5.4"/><circle cx="12" cy="7.9" r=".95" fill="currentColor" stroke="none"/>',
+  alert: '<path d="M12 4.2 2.9 19.4h18.2z"/><path d="M12 10.2v4"/><circle cx="12" cy="16.9" r=".95" fill="currentColor" stroke="none"/>',
+  money: '<rect x="2.8" y="6" width="18.4" height="12" rx="2.4"/><circle cx="12" cy="12" r="2.8"/><path d="M6.4 9.6v4.8M17.6 9.6v4.8"/>',
+  trash: '<path d="M4.6 6.6h14.8"/><path d="M9.4 6.6V4.8h5.2v1.8"/><path d="M6.6 6.6 7.6 20a1.4 1.4 0 0 0 1.4 1.3h6a1.4 1.4 0 0 0 1.4-1.3l1-13.4"/><path d="M10.4 10.6v6M13.6 10.6v6"/>',
+  search: '<circle cx="10.8" cy="10.8" r="6.6"/><path d="m15.6 15.6 4.4 4.4"/>',
+  user: '<circle cx="12" cy="8.2" r="3.8"/><path d="M4.4 20.4c0-3.8 3.4-6.4 7.6-6.4s7.6 2.6 7.6 6.4"/>',
+  clock: '<circle cx="12" cy="12" r="8.8"/><path d="M12 6.8V12l3.6 2.2"/>',
+  shield: '<path d="M12 2.6 20 5.6v6c0 5-3.4 8.6-8 9.8-4.6-1.2-8-4.8-8-9.8v-6z"/>',
+  key: '<circle cx="8.2" cy="12" r="4.4"/><path d="M12.4 11h9.2v3.2M18 11v3.2"/>',
+  grid: '<rect x="3.4" y="3.4" width="17.2" height="17.2" rx="2"/><path d="M3.4 9.2h17.2M3.4 15h17.2M9.2 3.4v17.2M15 3.4v17.2"/>'
+};
+var FILLED = {};
+function icon(name, size, cls){
+  var d = SVG[name]; if (!d) return '';
+  return '<span class="ico ' + (cls||'') + '" style="width:' + (size||20) + 'px;height:' + (size||20) +
+    'px;display:inline-flex;flex:0 0 auto"><svg viewBox="0 0 24 24" width="100%" height="100%" fill="' +
+    (FILLED[name] ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="1.7" ' +
+    'stroke-linecap="round" stroke-linejoin="round">' + d + '</svg></span>';
+}
+
+var ACTS = [], TRAJ = [];
+function bind(a){ if (!a) return ''; ACTS.push(a); return ' data-act="' + (ACTS.length-1) + '"'; }
+function bindT(a){ if (!a) return ''; ACTS.push(a); return ' data-actt="' + (ACTS.length-1) + '"'; }
+function tid(id){ return id ? ' data-testid="' + esc(id) + '"' : ''; }
+function R(list){ return (list||[]).map(render).join(''); }
+function tagsHtml(items){
+  return (items||[]).map(function(t){
+    return '<span class="tag ' + (t.cls||'') + '">' + esc(t.text) + '</span>'; }).join('');
+}
+
+function render(n){
+  if (!n || typeof n !== 'object') return '';
+  if (Array.isArray(n)) return R(n);
+  switch (n.t) {
+  case 'screen': return R(n.c);
+  case 'appbar': {
+    var left = (n.back
+      ? '<div class="iconbtn" data-testid="nav_back"' + bind({type:'BACK'}) + '>' + icon('back',19) + '</div>'
+      : '') + R(n.left);
+    return '<div class="n-appbar"' + tid(n.id) + '><div class="ab-side">' + left + '</div>'
+      + '<div class="ab-title">' + esc(n.title) + '</div>'
+      + '<div class="ab-side right">' + R(n.right) + '</div></div>';
+  }
+  case 'iconbtn': return '<div class="iconbtn ' + esc(n.cls||'') + '"' + tid(n.id) + bind(n.act) + '>' + icon(n.icon, 19) + '</div>';
+  case 'scroll':  return '<div class="n-scroll"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'chips':   return '<div class="n-chips"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'chip':    return '<div class="n-chip' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '>' + esc(n.text) + '</div>';
+  case 'card':    return '<div class="n-card ' + esc(n.cls||'') + (n.act?' tap':'') + '"' + tid(n.id) + bind(n.act) + '>' + R(n.c) + '</div>';
+  case 'padded':  return '<div style="padding:5px 16px">' + R(n.c) + '</div>';
+  case 'sec':     return '<div class="n-sec"' + tid(n.id) + '><span>' + esc(n.text) + '</span>'
+                       + (n.side ? '<span>' + esc(n.side) + '</span>' : '') + '</div>';
+  case 'text':    return '<div class="n-text ' + esc(n.cls||'') + '">' + esc(n.text) + '</div>';
+  case 'space':   return '<div class="n-space"></div>';
+  case 'row': {
+    var inline = [], below = [];
+    (n.c||[]).forEach(function(ch){
+      (ch.t==='switch'||ch.t==='radio'||ch.t==='check'||ch.t==='stepper'||ch.t==='btn'||ch.t==='iconbtn')
+        ? inline.push(ch) : below.push(ch);
+    });
+    return '<div class="n-row' + (n.act?' tap':'') + '"' + tid(n.id) + bind(n.act) + '>'
+      + (n.lead ? '<div class="r-lead"' + (n.leadColour ? ' style="color:' + esc(n.leadColour) + '"' : '')
+                + '>' + icon(n.lead, 19) + '</div>' : '')
+      + (n.avatar ? avatarHtml(n.avatar) : '')
+      + (n.thumb && typeof thumbHtml === 'function' ? thumbHtml(n.thumb) : '')
+      + '<div class="r-main"><div class="r-label' + (n.strike?' strike':'') + '">' + esc(n.text) + '</div>'
+      + (n.sub ? '<div class="r-sub">' + esc(n.sub) + '</div>' : '') + '</div>'
+      + (n.val ? '<div class="r-value ' + esc(n.valCls||'') + '">' + esc(n.val) + '</div>' : '')
+      + R(inline)
+      + (n.arrow && !inline.length ? '<div class="r-arrow">' + icon('arrow',15) + '</div>' : '')
+      + '</div>' + R(below);
+  }
+  case 'btn':
+    return '<div class="n-btn ' + esc(n.cls||'') + (n.disabled?' off':'') + '"' + tid(n.id)
+      + (n.disabled?'':bind(n.act)) + '>' + esc(n.text) + '</div>';
+  case 'btnrow': return '<div class="n-btnrow"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'bar':    return '<div style="flex:0 0 auto;background:var(--card);border-top:1px solid var(--line);'
+                      + 'padding:12px 16px 16px;z-index:30"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'switch': return '<div class="n-switch' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '><i></i></div>';
+  case 'check':  return '<div class="n-check' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '></div>';
+  case 'radio':  return '<div class="n-radio' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '></div>';
+  case 'inputrow':
+    return '<div class="n-input"><div class="i-label">' + esc(n.label) + '</div>'
+      + '<input' + tid(n.id) + bindT(n.act) + ' value="' + esc(n.value) + '" placeholder="'
+      + esc(n.placeholder) + '"></div>';
+  case 'stepper':
+    return '<div style="display:flex;align-items:center;gap:8px"' + tid(n.id) + '>'
+      + '<div class="iconbtn" style="background:var(--btn);width:30px;height:30px"' + tid(n.minusId) + bind(n.minus) + '>' + icon('minus',14) + '</div>'
+      + '<div style="min-width:52px;text-align:center;font-weight:700;font-size:12.5px;font-variant-numeric:tabular-nums">'
+      + esc(n.value) + '</div>'
+      + '<div class="iconbtn" style="background:var(--btn);width:30px;height:30px"' + tid(n.plusId) + bind(n.plus) + '>' + icon('plus',14) + '</div></div>';
+  case 'stats':  return '<div class="stats"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'stat':
+    return '<div class="stat' + (n.acc?' acc':'') + (n.act?' tap':'') + '"' + tid(n.id) + bind(n.act)
+      + '><div class="st-n">' + esc(n.n) + '</div><div class="st-l">' + esc(n.l) + '</div></div>';
+  case 'hero':
+    return '<div class="hero' + (n.act?' tap':'') + '"' + tid(n.id) + bind(n.act) + '>'
+      + '<div class="he-k">' + esc(n.kicker) + '</div>'
+      + '<div class="he-t">' + esc(n.title) + '</div>'
+      + '<div class="he-s">' + esc(n.sub) + '</div>' + R(n.c) + '</div>';
+  case 'pills':
+    return '<div style="display:flex;gap:7px;flex-wrap:wrap;padding:8px 18px 4px"' + tid(n.id) + '>'
+      + tagsHtml(n.items) + '</div>';
+  case 'tabbar':
+    return '<div class="n-tabbar"' + tid(n.id) + '>' + n.items.map(function(i){
+      return '<div class="tb' + (i.on?' on':'') + '"' + tid(i.id) + bind(i.act) + '>'
+        + '<i>' + icon(i.icon, 21) + '</i>' + esc(i.text) + '</div>';
+    }).join('') + '</div>';
+  case 'mask':  return '<div class="n-mask"' + tid(n.id) + bind(n.close) + '>' + R(n.c) + '</div>';
+  case 'sheet':
+    return '<div class="n-sheet"' + tid(n.id) + ' data-stop="1"><div class="sh-hd">'
+      + '<div class="t">' + esc(n.title) + '</div>'
+      + '<div class="iconbtn"' + tid(n.closeId) + bind(n.close) + '>' + icon('close',15) + '</div></div>'
+      + '<div class="sh-bd">' + R(n.c) + '</div></div>';
+  case 'dialog':
+    return '<div class="dialog"' + tid(n.id) + ' data-stop="1">'
+      + '<div style="padding:22px 20px 16px;text-align:center">'
+      + (n.title ? '<div style="font:650 17px/1.3 var(--disp);margin-bottom:8px">' + esc(n.title) + '</div>' : '')
+      + '<div style="font-size:13.5px;color:var(--ink2);line-height:1.55">' + esc(n.text) + '</div></div>'
+      + '<div style="display:flex;gap:10px;padding:0 16px 16px">'
+      + '<div class="n-btn" style="flex:1"' + tid(n.cancel.id) + bind(n.cancel.act) + '>' + esc(n.cancel.text) + '</div>'
+      + '<div class="n-btn primary" style="flex:1"' + tid(n.ok.id) + bind(n.ok.act) + '>' + esc(n.ok.text) + '</div>'
+      + '</div></div>';
+  case 'toast': return '<div class="n-toast"' + tid(n.id) + '>' + esc(n.text) + '</div>';
+  default: return renderExtra(n);
+  }
+}
+function avatarHtml(a){
+  return '<div class="av" style="width:38px;height:38px;border-radius:50%;flex:0 0 auto;display:flex;'
+    + 'align-items:center;justify-content:center;font:700 14px/1 var(--disp);color:#fff;background:hsl('
+    + a.hue + ' 52% 46%)">' + esc(a.initial) + '</div>';
+}
+
+function renderExtra(n){
+  switch (n.t) {
+  case 'head':
+    return '<div class="head"' + tid(n.id) + '><div class="hd-k">' + esc(n.kicker) + '</div>'
+      + '<div class="hd-n ' + (n.zero?'zero':'some') + '">' + esc(n.amount) + '</div>'
+      + '<div class="hd-s">' + esc(n.sub) + '</div><div class="hd-g">'
+      + n.grid.map(function(g){
+          return '<div><div class="v">' + esc(g.v) + '</div><div class="l">' + esc(g.l)
+            + '</div></div>';
+        }).join('') + '</div></div>';
+  case 'pm':
+    return '<div class="pm"' + tid(n.id) + bind(n.act) + '>'
+      + '<div class="pm-i' + (n.risk?' risk':(n.on?' on':'')) + '">' + icon(n.icon, 15) + '</div>'
+      + '<div class="pm-m"><div class="pm-n">' + esc(n.name) + '</div>'
+      + '<div class="pm-s">' + n.sub + '</div></div>'
+      + '<div class="pm-v" style="font-size:11.5px;color:var(--muted)">' + esc(n.val)
+      + '</div></div>';
+  case 'seg':
+    return '<div class="seg"' + tid(n.id) + '>' + n.items.map(function(i){
+      return '<div class="' + (i.on?'on':'') + '"' + tid(i.id) + bind(i.act) + '>'
+        + esc(i.text) + '</div>';
+    }).join('') + '</div>';
+  case 'feat':
+    return '<div class="feat' + (n.on?'':' off') + '"' + tid(n.id) + '>'
+      + '<div class="ft-d"></div><div class="ft-m"><div class="ft-n">' + esc(n.name) + '</div>'
+      + '<div class="ft-s">' + esc(n.sub) + '</div></div>'
+      + '<div class="ft-v ' + (n.on?'on':'off') + '">' + esc(n.val) + '</div></div>';
+  case 'grid': {
+    var head = '<tr><th class="nm">App</th>' + n.cols.map(function(c){
+      return '<th>' + esc(c) + '</th>'; }).join('') + '</tr>';
+    var body = n.rows.map(function(r){
+      return '<tr><td class="nm">' + esc(r.name) + '</td>' + r.cells.map(function(c){
+        return '<td class="' + c.cls + '">' + esc(c.text) + '</td>'; }).join('') + '</tr>';
+    }).join('');
+    return '<div class="grid"' + tid(n.id) + '><table>' + head + body + '</table></div>';
+  }
+  default: return '';
+  }
+}
+
+var STATE = null;
+function paint(){
+  ACTS = [];
+  app.innerHTML = render(E.screen(STATE));
+  var c = '';
+  if (c) document.getElementById('sb-clock').textContent = c;
+  if (!hud.classList.contains('off')) paintHud();
+}
+app.addEventListener('click', function(ev){
+  var el = ev.target.closest('[data-act]'); if (!el) return;
+  if (el.classList.contains('n-mask') && ev.target.closest('[data-stop]')) return;
+  var act = ACTS[+el.getAttribute('data-act')]; if (!act) return;
+  TRAJ.push({action:'tap', id: el.getAttribute('data-testid') || null});
+  STATE = E.reduce(STATE, act); paint();
+});
+app.addEventListener('input', function(ev){
+  var el = ev.target.closest('[data-actt]'); if (!el) return;
+  var act = JSON.parse(JSON.stringify(ACTS[+el.getAttribute('data-actt')]));
+  for (var k in act) if (act[k] === '$VALUE') act[k] = el.value;
+  var id = el.getAttribute('data-testid'), pos = el.selectionStart;
+  TRAJ.push({action:'type', id:id, text:el.value});
+  STATE = E.reduce(STATE, act); paint();
+  var again = id && app.querySelector('[data-testid="' + id + '"]');
+  if (again && again.focus) { again.focus(); try { again.setSelectionRange(pos, pos); } catch(e){} }
+});
+
+function paintHud(){
+  var d = E.derive(STATE);
+  hud.innerHTML = '<h4>__ENV__ \u00b7 ' + E.ENV_ID + ' v' + E.VERSION + '</h4>'
+    + '<div><span class="k">route</span> ' + d.route + '  <span class="k">step</span> ' + STATE.meta.steps + '</div>'
+    + '<div><span class="k">bgloc</span> ' + d.backgroundLocationCount + '  <span class="k">broken</span> ' + d.brokenCount + '  <span class="k">track</span> ' + d.trackingApps.length + '</div>'
+    + '<div style="margin-top:8px"><button id="hud-reset">reset</button>'
+    + '<button id="hud-a11y">copy a11y</button><button id="hud-state">copy state</button>'
+    + '<button id="hud-traj">copy traj</button><button id="hud-hide">hide (h)</button></div>'
+    + '<pre>' + esc(E.a11y(STATE)) + '</pre>';
+  hud.querySelector('#hud-reset').onclick = function(){ ENVAPI.reset({seed:STATE.meta.seed}); };
+  hud.querySelector('#hud-a11y').onclick  = function(){ copy(E.a11y(STATE)); };
+  hud.querySelector('#hud-state').onclick = function(){ copy(JSON.stringify(E.snapshot(STATE), null, 2)); };
+  hud.querySelector('#hud-traj').onclick  = function(){ copy(JSON.stringify(TRAJ, null, 2)); };
+  hud.querySelector('#hud-hide').onclick  = function(){ hud.classList.add('off'); };
+}
+function copy(t){ try { navigator.clipboard.writeText(t); } catch(e){} }
+document.addEventListener('keydown', function(e){
+  if (e.key === 'h') { hud.classList.toggle('off'); if (!hud.classList.contains('off')) paintHud(); }
+});
+
+var ENVAPI = {
+  ENV_ID: E.ENV_ID, VERSION: E.VERSION,
+  reset: function(opts){
+    opts = opts || {};
+    STATE = E.createInitialState(opts.seed || 0);
+    if (opts.patch) E.applyPatch(STATE, opts.patch);
+    TRAJ = []; paint();
+    return E.snapshot(STATE);
+  },
+  getState:   function(){ return E.snapshot(STATE); },
+  setState:   function(s){ STATE = JSON.parse(JSON.stringify(s)); paint(); return true; },
+  step:       function(a){ var r = E.step(STATE, a); STATE = r.state; TRAJ.push(a); paint();
+                           return {ok:r.ok, error:r.error || null}; },
+  dispatch:   function(act){ STATE = E.reduce(STATE, act); paint(); return true; },
+  a11y:       function(){ return E.a11y(STATE); },
+  elements:   function(){ return E.elements(STATE); },
+  route:      function(){ return E.select.route(STATE); },
+  trajectory: function(){ return JSON.parse(JSON.stringify(TRAJ)); },
+  bounds: function(){
+    var base = document.getElementById('screen').getBoundingClientRect(), out = {};
+    app.querySelectorAll('[data-testid]').forEach(function(el){
+      var r = el.getBoundingClientRect();
+      out[el.getAttribute('data-testid')] = {
+        x:Math.round(r.left-base.left), y:Math.round(r.top-base.top),
+        w:Math.round(r.width), h:Math.round(r.height),
+        cx:Math.round(r.left-base.left+r.width/2), cy:Math.round(r.top-base.top+r.height/2)};
+    });
+    return out;
+  }
+};
+window.__ENV__ = ENVAPI;
+var qs = new URLSearchParams(location.search);
+if (qs.get('bare') === '1') document.body.classList.add('bare');
+if (qs.get('hud')  === '1') hud.classList.remove('off');
+ENVAPI.reset({seed: parseInt(qs.get('seed') || '0', 10) || 0});
+window.__ENV_READY__ = true;
+})();
+</script>
+</body>
+</html>

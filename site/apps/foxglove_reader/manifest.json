@@ -1,0 +1,28 @@
+{
+  "id": "foxglove_reader",
+  "name": "Foxglove",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "viewport": {"width": 390, "height": 844},
+  "description": "A single-file H5 e-reader with no pages in its data. A book is one long string; the pages are walked out of it on the spot from however many characters fit, which is the type size times a margin factor, and every break snaps back to the last space. Make the type bigger and the book gets longer — the same words, more pages. Your place, your bookmarks and your highlights are therefore kept as character offsets, so changing the type size moves a bookmark to a different page number and leaves it on exactly the same sentence. 6 screens, 4 books, 4 type sizes, 3 margin widths, 3 colour themes, full-text search.",
+  "tasks_file": "tasks.json",
+  "oracle_file": "oracle.json",
+  "action_space": {
+    "tap":    {"id": "test-id of the element"},
+    "type":   {"id": "test-id of a text field", "text": "replaces the whole value"},
+    "back":   {}, "home": {}, "wait": {},
+    "finish": {"answer": "final answer for question tasks; optional for action tasks"},
+    "tap_xy": {"x": "screen pixel x", "y": "screen pixel y", "note": "browser backend only"}
+  },
+  "observation": {
+    "text": "engine.a11y(state) — the page text itself, the page number, the characters-per-page figure and the offset all serialise.",
+    "pixels": "390x844 screenshot (browser backend); the type size and theme are real CSS, so the page looks like what it says it is",
+    "state": "engine.snapshot(state) — canonical state plus a derived view with offsets, page numbers and the quoted text at each mark. For the verifier only."
+  },
+  "world": {
+    "pagination": "characters per page = type size figure x margin factor / 100; pages are walked from the start and each break moves back to the last space",
+    "position": "kept as a character offset, never as a page number",
+    "marks": "bookmarks and highlights are offsets too, so they survive re-pagination on the same words",
+    "counts": "at Medium and Normal the main book is 4 pages; at Huge it is 8"
+  }
+}

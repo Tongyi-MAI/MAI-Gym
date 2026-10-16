@@ -1,0 +1,733 @@
+{
+  "env": "larkspur_fest",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_settings",
+      "name": "Two settings",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "settings"
+      ],
+      "instruction": "Stop warning about tight changes, and let the app drop whatever clashes when you add something.",
+      "goal": [
+        {
+          "name": "No tight warnings",
+          "path": "derived.settings.warnTight",
+          "op": "eq",
+          "value": false,
+          "weight": 2
+        },
+        {
+          "name": "Auto-drop on",
+          "path": "derived.settings.autoRemoveClash",
+          "op": "eq",
+          "value": true,
+          "weight": 2
+        },
+        {
+          "name": "Reminders untouched",
+          "path": "derived.settings.remind",
+          "op": "eq",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "T02_query_count",
+      "name": "Question: how many play on Friday",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "answer_expected": true,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "How many acts are on the bill for Friday? Answer with just the number.",
+      "goal": [
+        {
+          "name": "Eight",
+          "source": "answer",
+          "op": "eq",
+          "value": 8,
+          "extract": "number",
+          "weight": 3
+        },
+        {
+          "name": "You did not change the plan",
+          "path": "derived.lineupCount",
+          "op": "eq",
+          "value": 3
+        }
+      ]
+    },
+    {
+      "id": "T03_add_headliner",
+      "name": "Add the Saturday headliner",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "plan"
+      ],
+      "instruction": "Add Larkspur, the Saturday headline act, to your plan.",
+      "goal": [
+        {
+          "name": "Larkspur is in",
+          "path": "derived.saturday",
+          "op": "contains",
+          "value": "Larkspur",
+          "weight": 3
+        },
+        {
+          "name": "Nothing clashes",
+          "path": "derived.clashCount",
+          "op": "eq",
+          "value": 0,
+          "weight": 2
+        },
+        {
+          "name": "Friday untouched",
+          "path": "derived.friday",
+          "op": "len_eq",
+          "value": 3
+        }
+      ]
+    },
+    {
+      "id": "T04_clash",
+      "name": "Add something that clashes",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "answer_expected": true,
+      "tags": [
+        "clash",
+        "query"
+      ],
+      "instruction": "Add Foxglove Nine to your Friday, then tell me which act it clashes with.",
+      "goal": [
+        {
+          "name": "Foxglove Nine is in",
+          "path": "derived.friday",
+          "op": "contains",
+          "value": "Foxglove Nine",
+          "weight": 2
+        },
+        {
+          "name": "There is a clash",
+          "path": "derived.clashCount",
+          "op": "eq",
+          "value": 1,
+          "weight": 2
+        },
+        {
+          "name": "It is Marram",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Mm]arram",
+          "weight": 3,
+          "hint": "they overlap between seven and quarter past"
+        }
+      ]
+    },
+    {
+      "id": "T05_fix",
+      "name": "Let the app sort the clash out",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "clash",
+        "fix"
+      ],
+      "instruction": "Add Foxglove Nine to Friday, then use the fix button on the clashes page to sort out the clash it causes.",
+      "goal": [
+        {
+          "name": "No clashes left",
+          "path": "derived.clashCount",
+          "op": "eq",
+          "value": 0,
+          "weight": 3
+        },
+        {
+          "name": "Foxglove Nine survived",
+          "path": "derived.friday",
+          "op": "contains",
+          "value": "Foxglove Nine",
+          "weight": 3,
+          "hint": "the fix drops one of the pair — the two sets are the same length, so the earlier one goes"
+        },
+        {
+          "name": "Marram was the one dropped",
+          "path": "derived.friday",
+          "op": "not_contains",
+          "value": "Marram",
+          "weight": 2
+        },
+        {
+          "name": "You used the fix button",
+          "source": "trajectory",
+          "path": "ids",
+          "op": "regex",
+          "value": "fix_fri",
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T06_query_walk",
+      "name": "Question: the longest walk",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "answer_expected": true,
+      "tags": [
+        "site",
+        "query",
+        "read-only"
+      ],
+      "instruction": "How many minutes does it take to walk from the Meadow to the Sidecar? Answer with just the number.",
+      "goal": [
+        {
+          "name": "Twenty",
+          "source": "answer",
+          "op": "eq",
+          "value": 20,
+          "extract": "number",
+          "weight": 3
+        },
+        {
+          "name": "The plan was not touched",
+          "path": "derived.lineupCount",
+          "op": "eq",
+          "value": 3
+        }
+      ]
+    },
+    {
+      "id": "T07_remove",
+      "name": "Drop one",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "plan"
+      ],
+      "instruction": "Take Ash Lantern out of your Friday.",
+      "goal": [
+        {
+          "name": "It is gone",
+          "path": "derived.friday",
+          "op": "not_contains",
+          "value": "Ash Lantern",
+          "weight": 3
+        },
+        {
+          "name": "Two acts left on Friday",
+          "path": "derived.friday",
+          "op": "len_eq",
+          "value": 2,
+          "weight": 2
+        },
+        {
+          "name": "The Ironwoods are still in",
+          "path": "derived.friday",
+          "op": "contains",
+          "value": "The Ironwoods"
+        }
+      ]
+    },
+    {
+      "id": "T08_query_overlap",
+      "name": "Question: what overlaps Marram",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "answer_expected": true,
+      "tags": [
+        "clash",
+        "query",
+        "read-only"
+      ],
+      "instruction": "How many acts on Friday overlap with Marram's set? Answer with just the number.",
+      "goal": [
+        {
+          "name": "Two",
+          "source": "answer",
+          "op": "eq",
+          "value": 2,
+          "extract": "number",
+          "weight": 3,
+          "hint": "Puddle Club and Foxglove Nine both run into it"
+        },
+        {
+          "name": "You did not add them",
+          "path": "derived.friday",
+          "op": "len_eq",
+          "value": 3,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T09_clear_day",
+      "name": "Start Friday again",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "plan",
+        "confirm-dialog"
+      ],
+      "instruction": "Clear everything you have picked for Friday.",
+      "goal": [
+        {
+          "name": "Friday is empty",
+          "path": "derived.friday",
+          "op": "len_eq",
+          "value": 0,
+          "weight": 3
+        },
+        {
+          "name": "Nothing is picked at all",
+          "path": "derived.lineupCount",
+          "op": "eq",
+          "value": 0,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T10_flagship",
+      "name": "A clean Saturday (flagship, many valid answers)",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 34,
+      "unique_solution": false,
+      "tags": [
+        "clash",
+        "constraint",
+        "multi-solution",
+        "long-horizon"
+      ],
+      "instruction": "Build a Saturday of at least four acts that includes Larkspur, with no clashes and no tight changes anywhere in it. Leave Friday alone.",
+      "goal": [
+        {
+          "name": "Four or more on Saturday",
+          "path": "derived.saturday",
+          "op": "len_gte",
+          "value": 4,
+          "weight": 3
+        },
+        {
+          "name": "Larkspur among them",
+          "path": "derived.saturday",
+          "op": "contains",
+          "value": "Larkspur",
+          "weight": 3
+        },
+        {
+          "name": "Nothing clashes",
+          "path": "derived.clashCount",
+          "op": "eq",
+          "value": 0,
+          "weight": 3
+        },
+        {
+          "name": "And no tight changes",
+          "path": "derived.tightCount",
+          "op": "eq",
+          "value": 0,
+          "weight": 3,
+          "hint": "mind the walk between stages, not just the times"
+        },
+        {
+          "name": "Friday is as it was",
+          "path": "derived.friday",
+          "op": "len_eq",
+          "value": 3,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T11_stage_filter",
+      "name": "Only the Chapel",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "filter",
+        "plan"
+      ],
+      "instruction": "Filter the Friday bill down to the Chapel stage and add Vellum from there.",
+      "goal": [
+        {
+          "name": "Vellum is in",
+          "path": "derived.friday",
+          "op": "contains",
+          "value": "Vellum",
+          "weight": 3
+        },
+        {
+          "name": "You used the stage filter",
+          "source": "trajectory",
+          "path": "ids",
+          "op": "contains",
+          "value": "stage_chapel",
+          "weight": 3
+        }
+      ]
+    },
+    {
+      "id": "T12_query_tight",
+      "name": "Question: the tight change",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "answer_expected": true,
+      "tags": [
+        "tight",
+        "query"
+      ],
+      "instruction": "Add Foxglove Nine to Friday. It leaves you a tight change into the headliner — how many minutes does that walk take? Answer with just the number.",
+      "goal": [
+        {
+          "name": "Eight minutes",
+          "source": "answer",
+          "op": "eq",
+          "value": 8,
+          "extract": "number",
+          "weight": 3,
+          "hint": "the Barn to the Meadow, with no gap at all between the sets"
+        },
+        {
+          "name": "There is a tight change",
+          "path": "derived.tightCount",
+          "op": "eq",
+          "value": 1,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T13_auto_drop",
+      "name": "Let it drop the clash for you",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "settings",
+        "clash"
+      ],
+      "instruction": "Turn on the setting that drops clashing acts automatically, then add Puddle Club.",
+      "goal": [
+        {
+          "name": "The setting is on",
+          "path": "derived.settings.autoRemoveClash",
+          "op": "eq",
+          "value": true,
+          "weight": 2
+        },
+        {
+          "name": "Puddle Club is in",
+          "path": "derived.friday",
+          "op": "contains",
+          "value": "Puddle Club",
+          "weight": 3
+        },
+        {
+          "name": "Marram was dropped for it",
+          "path": "derived.friday",
+          "op": "not_contains",
+          "value": "Marram",
+          "weight": 3
+        },
+        {
+          "name": "And nothing clashes",
+          "path": "derived.clashCount",
+          "op": "eq",
+          "value": 0,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T14_query_minutes",
+      "name": "Question: how much music",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "answer_expected": true,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "How many minutes of music does your Friday plan add up to? Answer with just the number.",
+      "goal": [
+        {
+          "name": "195",
+          "source": "answer",
+          "op": "eq",
+          "value": 195,
+          "extract": "number",
+          "weight": 3,
+          "hint": "45 plus 60 plus 90"
+        },
+        {
+          "name": "The plan is unchanged",
+          "path": "derived.fridayMinutes",
+          "op": "eq",
+          "value": 195
+        }
+      ]
+    },
+    {
+      "id": "T15_fix_keeping",
+      "name": "Fix Friday but keep the headliner",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "clash",
+        "constraint",
+        "long-horizon"
+      ],
+      "instruction": "Add Hollowbrook to Friday. That clashes with The Ironwoods — sort it out so that nothing clashes, The Ironwoods stay in the plan and Friday is back to three acts.",
+      "goal": [
+        {
+          "name": "The Ironwoods are still in",
+          "path": "derived.friday",
+          "op": "contains",
+          "value": "The Ironwoods",
+          "weight": 3
+        },
+        {
+          "name": "Nothing clashes",
+          "path": "derived.clashCount",
+          "op": "eq",
+          "value": 0,
+          "weight": 3
+        },
+        {
+          "name": "Hollowbrook is out again",
+          "path": "derived.friday",
+          "op": "not_contains",
+          "value": "Hollowbrook",
+          "weight": 2,
+          "hint": "the two of them cannot both be in — one has to go"
+        },
+        {
+          "name": "You did add it first",
+          "source": "trajectory",
+          "path": "ids",
+          "op": "contains",
+          "value": "add_a_hollow",
+          "weight": 2
+        },
+        {
+          "name": "Friday is back to three",
+          "path": "derived.friday",
+          "op": "len_eq",
+          "value": 3,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T16_search",
+      "name": "Find an act by name",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "search",
+        "navigation"
+      ],
+      "instruction": "Search the Saturday bill for \"Kestrel\" and open it.",
+      "goal": [
+        {
+          "name": "On an act page",
+          "path": "derived.route",
+          "op": "eq",
+          "value": "act"
+        },
+        {
+          "name": "It is Kestrel",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "a_kest",
+          "weight": 3
+        },
+        {
+          "name": "You used the search box",
+          "source": "trajectory",
+          "path": "ids",
+          "op": "contains",
+          "value": "q_act",
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T17_genre",
+      "name": "Choral only",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "answer_expected": true,
+      "tags": [
+        "filter",
+        "query"
+      ],
+      "instruction": "Filter Friday down to the choral acts. How many are there? Answer with just the number.",
+      "goal": [
+        {
+          "name": "Two",
+          "source": "answer",
+          "op": "eq",
+          "value": 2,
+          "extract": "number",
+          "weight": 3
+        },
+        {
+          "name": "You used the genre filter",
+          "source": "trajectory",
+          "path": "ids",
+          "op": "contains",
+          "value": "genre_choral",
+          "weight": 3
+        }
+      ]
+    },
+    {
+      "id": "T18_three_clean",
+      "name": "Three on Saturday, cleanly (many valid answers)",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 28,
+      "unique_solution": false,
+      "tags": [
+        "clash",
+        "constraint",
+        "multi-solution"
+      ],
+      "instruction": "Pick at least three Saturday acts with nothing clashing and no tight changes between them. Larkspur does not have to be one of them. Leave Friday as it is.",
+      "goal": [
+        {
+          "name": "Three or more on Saturday",
+          "path": "derived.saturday",
+          "op": "len_gte",
+          "value": 3,
+          "weight": 3
+        },
+        {
+          "name": "No clashes",
+          "path": "derived.clashCount",
+          "op": "eq",
+          "value": 0,
+          "weight": 3
+        },
+        {
+          "name": "No tight changes",
+          "path": "derived.tightCount",
+          "op": "eq",
+          "value": 0,
+          "weight": 3
+        },
+        {
+          "name": "Friday untouched",
+          "path": "derived.friday",
+          "op": "len_eq",
+          "value": 3,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T19_day_switch",
+      "name": "Look at Saturday",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "navigation"
+      ],
+      "instruction": "Switch the plan over to Saturday and add Tern from the suggestions or the bill.",
+      "goal": [
+        {
+          "name": "Showing Saturday",
+          "path": "derived.day",
+          "op": "eq",
+          "value": "sat",
+          "weight": 2
+        },
+        {
+          "name": "Tern is in",
+          "path": "derived.saturday",
+          "op": "contains",
+          "value": "Tern",
+          "weight": 3
+        },
+        {
+          "name": "Nothing clashes",
+          "path": "derived.clashCount",
+          "op": "eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T20_swap_days",
+      "name": "Clear one day, fill the other",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "plan",
+        "long-horizon"
+      ],
+      "instruction": "You cannot make Friday after all. Clear the whole of Friday, then put Tern and Larkspur into Saturday.",
+      "goal": [
+        {
+          "name": "Friday is empty",
+          "path": "derived.friday",
+          "op": "len_eq",
+          "value": 0,
+          "weight": 3
+        },
+        {
+          "name": "Tern is in",
+          "path": "derived.saturday",
+          "op": "contains",
+          "value": "Tern",
+          "weight": 2
+        },
+        {
+          "name": "So is Larkspur",
+          "path": "derived.saturday",
+          "op": "contains",
+          "value": "Larkspur",
+          "weight": 2
+        },
+        {
+          "name": "Two acts in all",
+          "path": "derived.lineupCount",
+          "op": "eq",
+          "value": 2,
+          "weight": 2
+        },
+        {
+          "name": "And nothing clashes",
+          "path": "derived.clashCount",
+          "op": "eq",
+          "value": 0
+        }
+      ]
+    }
+  ]
+}

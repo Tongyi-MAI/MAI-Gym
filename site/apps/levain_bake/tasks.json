@@ -1,0 +1,805 @@
+{
+  "env": "levain_bake",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_settings",
+      "name": "Two switches",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "settings"
+      ],
+      "instruction": "In Setup, stop the app flagging the small hours and stop it telling you when to put the oven on. Leave the third switch alone.",
+      "goal": [
+        {
+          "name": "Small hours no longer flagged",
+          "path": "derived.settings.markNights",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Preheat line off",
+          "path": "derived.settings.showPreheat",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Folds untouched",
+          "path": "derived.settings.folds",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "The plan was not changed",
+          "path": "derived.temp",
+          "op": "eq",
+          "value": 24
+        }
+      ]
+    },
+    {
+      "id": "T02_start",
+      "name": "Question: when do you start?",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "On the plan as it stands, what time do you have to start?",
+      "goal": [
+        {
+          "name": "Friday 20:35",
+          "source": "answer",
+          "op": "regex",
+          "value": "20[:.]?35",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.startMinute",
+          "op": "eq",
+          "value": 1235
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T03_nights",
+      "name": "Question: what lands at night?",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "How many of the hands-on steps fall between midnight and six in the morning, and which ones?",
+      "goal": [
+        {
+          "name": "two",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)2(?!\\d)|[Tt]wo",
+          "weight": 3
+        },
+        {
+          "name": "the mix",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Mm]ix",
+          "weight": 3
+        },
+        {
+          "name": "the shaping",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Ss]hap",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.nights",
+          "op": "eq",
+          "value": 2
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T04_mix_time",
+      "name": "Open the mix",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "query",
+        "navigate"
+      ],
+      "instruction": "Open the mixing step and tell me what time it starts.",
+      "goal": [
+        {
+          "name": "Saturday 00:55",
+          "source": "answer",
+          "op": "regex",
+          "value": "0?0[:.]?55",
+          "weight": 3
+        },
+        {
+          "name": "You are on the mixing step",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "mix"
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.nights",
+          "op": "eq",
+          "value": 2
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T05_total",
+      "name": "Question: how long is the whole thing?",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "From the first step to the loaf being cool, how long does this plan take?",
+      "goal": [
+        {
+          "name": "13 hours 25 minutes",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:13)(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "25 minutes",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)25(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.totalMinutes",
+          "op": "eq",
+          "value": 805
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T06_too_soon",
+      "name": "Ready by six in the morning",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "refusal"
+      ],
+      "instruction": "Set the deadline to Saturday 06:00 and tell me what the app says about it.",
+      "goal": [
+        {
+          "name": "The deadline is Sat 06:00",
+          "path": "derived.deadline",
+          "op": "eq",
+          "value": 1800
+        },
+        {
+          "name": "It cannot be started",
+          "path": "derived.feasible",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "you would have had to start already",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:(1h|85|already|too late|cannot|can't))(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T07_warm",
+      "name": "Warm the kitchen",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "multi-step"
+      ],
+      "instruction": "Turn the kitchen up to 28° and tell me what that does to the start time and to the number of steps in the small hours.",
+      "goal": [
+        {
+          "name": "The kitchen is at 28°",
+          "path": "derived.temp",
+          "op": "eq",
+          "value": 28
+        },
+        {
+          "name": "Start moves to Fri 23:25",
+          "path": "derived.startText",
+          "op": "contains",
+          "value": "23:25"
+        },
+        {
+          "name": "Still two in the small hours",
+          "path": "derived.nights",
+          "op": "eq",
+          "value": 2
+        },
+        {
+          "name": "Friday 23:25",
+          "source": "answer",
+          "op": "regex",
+          "value": "23[:.]?25",
+          "weight": 3
+        },
+        {
+          "name": "still two",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)2(?!\\d)|[Tt]wo",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T08_ripe",
+      "name": "Skip the feed",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "multi-step"
+      ],
+      "instruction": "Take the starter as already ripe and tell me the new start time.",
+      "goal": [
+        {
+          "name": "The starter is ripe",
+          "path": "derived.starterReady",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Start moves to Fri 23:55",
+          "path": "derived.startText",
+          "op": "contains",
+          "value": "23:55"
+        },
+        {
+          "name": "Still two in the small hours",
+          "path": "derived.nights",
+          "op": "eq",
+          "value": 2
+        },
+        {
+          "name": "Friday 23:55",
+          "source": "answer",
+          "op": "regex",
+          "value": "23[:.]?55",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T09_cold_bulk",
+      "name": "Twelve hours of cold bulk",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "refusal",
+        "multi-step"
+      ],
+      "instruction": "Put twelve hours of cold retard on the bulk, leaving everything else alone, and tell me why the app will not have it.",
+      "goal": [
+        {
+          "name": "The retard is on the bulk",
+          "path": "derived.where",
+          "op": "eq",
+          "value": "bulk"
+        },
+        {
+          "name": "Twelve hours",
+          "path": "derived.retard",
+          "op": "eq",
+          "value": 12
+        },
+        {
+          "name": "It cannot be started",
+          "path": "derived.feasible",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "you would have had to start hours ago",
+          "source": "answer",
+          "op": "regex",
+          "value": "(5h|start|ago|too late|cannot|can't)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T10_later",
+      "name": "Push it to the evening",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "multi-step"
+      ],
+      "instruction": "Move the deadline to Saturday 18:00 and tell me what is left in the small hours.",
+      "goal": [
+        {
+          "name": "Ready by Sat 18:00",
+          "path": "derived.deadline",
+          "op": "eq",
+          "value": 2520
+        },
+        {
+          "name": "One step in the small hours",
+          "path": "derived.nights",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "It is the feed",
+          "path": "derived.nightNames",
+          "op": "set_eq",
+          "value": [
+            "Feed the starter"
+          ]
+        },
+        {
+          "name": "just the feed",
+          "source": "answer",
+          "op": "regex",
+          "value": "([Ff]eed|starter)",
+          "weight": 3
+        },
+        {
+          "name": "one",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![A-Za-z])(?:(?<![\\d-])1(?!\\d)|[Oo]ne)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T11_preheat",
+      "name": "Question: does the oven cost you time?",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "query",
+        "reasoning"
+      ],
+      "instruction": "The oven wants 45 minutes of preheating. Does that make the plan any longer? Say why.",
+      "goal": [
+        {
+          "name": "no",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![A-Za-z])(?:([Nn]o|not|doesn|never))",
+          "weight": 3
+        },
+        {
+          "name": "it runs during the proof",
+          "source": "answer",
+          "op": "regex",
+          "value": "(proof|along|during|same time|parallel)",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.totalMinutes",
+          "op": "eq",
+          "value": 805
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T12_hands",
+      "name": "Question: which steps need you?",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "Which steps actually need your hands? Name them.",
+      "goal": [
+        {
+          "name": "feeding",
+          "source": "answer",
+          "op": "regex",
+          "value": "([Ff]eed|starter)",
+          "weight": 3
+        },
+        {
+          "name": "mixing",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Mm]ix",
+          "weight": 3
+        },
+        {
+          "name": "shaping",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Ss]hap",
+          "weight": 3
+        },
+        {
+          "name": "baking",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Bb]ak",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.nights",
+          "op": "eq",
+          "value": 2
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T13_three_levers",
+      "name": "Three things at once",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 24,
+      "tags": [
+        "multi-step"
+      ],
+      "instruction": "Turn the kitchen up to 28°, take the starter as already ripe, and move the deadline to Saturday 20:00. Then tell me the start time and how many hands-on steps land in the small hours.",
+      "goal": [
+        {
+          "name": "The kitchen is at 28°",
+          "path": "derived.temp",
+          "op": "eq",
+          "value": 28
+        },
+        {
+          "name": "The starter is ripe",
+          "path": "derived.starterReady",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Ready by Sat 20:00",
+          "path": "derived.deadline",
+          "op": "eq",
+          "value": 2640
+        },
+        {
+          "name": "Nothing in the small hours",
+          "path": "derived.nights",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Saturday 11:45",
+          "source": "answer",
+          "op": "regex",
+          "value": "11[:.]?45",
+          "weight": 3
+        },
+        {
+          "name": "none of them",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)0(?!\\d)|[Nn]one|[Zz]ero|[Nn]othing",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T14_temp_table",
+      "name": "Question: what temperature is worth",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "query",
+        "arithmetic"
+      ],
+      "instruction": "Add up the three fermentation steps — feeding, bulk and final proof. How long do they come to at 18°, and how long at 28°?",
+      "goal": [
+        {
+          "name": "18 hours at 18°",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:18)(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "6h 45m at 28°",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:(6h ?45|405|6[.,]75))(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.temp",
+          "op": "eq",
+          "value": 24
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T15_clean_ten",
+      "name": "A night's sleep, still ready at ten",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 34,
+      "tags": [
+        "optimise",
+        "constraint"
+      ],
+      "instruction": "Keep the loaf due at Saturday 10:00, but arrange things so that not one hands-on step falls between midnight and six.",
+      "goal": [
+        {
+          "name": "Still ready at Sat 10:00",
+          "path": "derived.deadline",
+          "op": "eq",
+          "value": 2040
+        },
+        {
+          "name": "Nothing hands-on in the small hours",
+          "path": "derived.nights",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "And it can actually be started",
+          "path": "derived.feasible",
+          "op": "eq",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "T16_coldest",
+      "name": "The same, in the coldest kitchen it allows",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 34,
+      "tags": [
+        "optimise",
+        "search"
+      ],
+      "instruction": "Same thing — ready at Saturday 10:00, nothing hands-on between midnight and six — but with the kitchen as cool as it will go and still work. What temperature is that?",
+      "goal": [
+        {
+          "name": "Still ready at Sat 10:00",
+          "path": "derived.deadline",
+          "op": "eq",
+          "value": 2040
+        },
+        {
+          "name": "Nothing in the small hours",
+          "path": "derived.nights",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "It can be started",
+          "path": "derived.feasible",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "The kitchen is at 24°",
+          "path": "derived.temp",
+          "op": "eq",
+          "value": 24
+        },
+        {
+          "name": "24 degrees",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)24(?!\\d)",
+          "weight": 3,
+          "hint": "colder makes the plan longer, and it has to still start after six in the evening"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T17_earliest",
+      "name": "The earliest you could have it",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 34,
+      "tags": [
+        "search",
+        "optimise"
+      ],
+      "instruction": "What is the earliest hour you could have the loaf cool and ready, with nothing hands-on between midnight and six? Set the plan up that way.",
+      "goal": [
+        {
+          "name": "Ready at Sat 09:00",
+          "path": "derived.deadline",
+          "op": "eq",
+          "value": 1980
+        },
+        {
+          "name": "Nothing in the small hours",
+          "path": "derived.nights",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "It can be started",
+          "path": "derived.feasible",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "nine in the morning",
+          "source": "answer",
+          "op": "regex",
+          "value": "(0?9[:.]?00|nine)",
+          "weight": 3,
+          "hint": "eight is not reachable at any temperature"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T18_eight",
+      "name": "Eight o'clock is not on offer",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "reasoning",
+        "impossible"
+      ],
+      "instruction": "Could you have it ready by Saturday 08:00 with nothing hands-on between midnight and six? Work it out and, if not, say the earliest that is actually reachable.",
+      "goal": [
+        {
+          "name": "no",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![A-Za-z])(?:([Nn]o|not|cannot|can't|impossible))",
+          "weight": 3
+        },
+        {
+          "name": "nine is the earliest",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:(0?9|nine))(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was left broken",
+          "path": "derived.feasible",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T19_must_feed",
+      "name": "The starter really does need feeding",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 36,
+      "tags": [
+        "search",
+        "constraint"
+      ],
+      "instruction": "Suppose the starter definitely has to be fed — you cannot skip that step. What is the earliest deadline that still leaves nothing hands-on between midnight and six? Set it up that way.",
+      "goal": [
+        {
+          "name": "The starter is still unfed",
+          "path": "derived.starterReady",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Ready at Sat 11:00",
+          "path": "derived.deadline",
+          "op": "eq",
+          "value": 2100
+        },
+        {
+          "name": "Nothing in the small hours",
+          "path": "derived.nights",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "It can be started",
+          "path": "derived.feasible",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "eleven",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:(11|eleven))(?!\\d)",
+          "weight": 3,
+          "hint": "with the feed back in, the fridge has to take the bulk rather than the proof"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T20_all_three",
+      "name": "Three constraints at once",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 36,
+      "tags": [
+        "constraint",
+        "optimise"
+      ],
+      "instruction": "The loaf has to be cool by Saturday 12:00, the starter has to be fed, the kitchen will not go above 24°, and nothing hands-on may fall between midnight and six. Make it work.",
+      "goal": [
+        {
+          "name": "Ready at Sat 12:00",
+          "path": "derived.deadline",
+          "op": "eq",
+          "value": 2160
+        },
+        {
+          "name": "The starter is fed in the plan",
+          "path": "derived.starterReady",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "The kitchen is no warmer than 24°",
+          "path": "derived.temp",
+          "op": "lte",
+          "value": 24
+        },
+        {
+          "name": "Nothing in the small hours",
+          "path": "derived.nights",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "It can be started",
+          "path": "derived.feasible",
+          "op": "eq",
+          "value": true
+        }
+      ]
+    }
+  ]
+}

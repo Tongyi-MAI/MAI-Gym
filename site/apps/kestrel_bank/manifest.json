@@ -1,0 +1,29 @@
+{
+  "id": "kestrel_bank",
+  "name": "Kestrel",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "viewport": {"width": 390, "height": 844},
+  "description": "A single-file H5 current account. The balance here is not a number but a line: today is the 17th, eight scheduled payments have still to leave before the month is out, and the app projects the balance forward over every one of them. Pausing a standing order, moving its payment day, or pulling money back out of a savings pot all bend that same line, and the forecast says exactly where its lowest point falls. As seeded it dips to -£72.49 on the 27th, one day before payday, and several different edits fix it. 11 screens, 15 transactions, 9 scheduled payments, 3 pots and a set of card controls.",
+  "tasks_file": "tasks.json",
+  "oracle_file": "oracle.json",
+  "action_space": {
+    "tap":    {"id": "test-id of the element"},
+    "type":   {"id": "test-id of a text field", "text": "replaces the whole value"},
+    "back":   {}, "home": {}, "wait": {},
+    "finish": {"answer": "final answer for question tasks; optional for action tasks"},
+    "tap_xy": {"x": "screen pixel x", "y": "screen pixel y", "note": "browser backend only"}
+  },
+  "observation": {
+    "text": "engine.a11y(state) — the balance, the lowest projected point and the day-by-day forecast all serialise, so a text-only agent can reason about the line without seeing the chart.",
+    "pixels": "390x844 screenshot (browser backend); __ENV__.bounds() maps every test-id to a pixel box",
+    "state": "engine.snapshot(state) — canonical state plus a derived view with every amount in pence. For the verifier only."
+  },
+  "world": {
+    "today": "the 17th of March, fixed — a forecast reads the same however long an agent takes to reach it",
+    "money": "integers in pence; the projection is a running sum, so the lowest point is exact",
+    "forecast": "balance after each still-to-come scheduled payment, in day order",
+    "pause_vs_cancel": "pausing skips this month, cancelling stops it for good; the forecast treats both the same way for the rest of the month",
+    "pots": "money in a pot has left the current account, so it does not hold the forecast up until you move it back"
+  }
+}

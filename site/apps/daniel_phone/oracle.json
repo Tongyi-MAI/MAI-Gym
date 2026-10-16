@@ -1,0 +1,459 @@
+{
+  "env": "daniel_phone",
+  "note": "Golden action sequences replayed by CI.",
+  "solutions": {
+    "T01_free": [
+      {
+        "action": "tap",
+        "id": "w_storage"
+      },
+      {
+        "action": "finish",
+        "answer": "3.14 GB free of 128 GB. iOS 26.1 needs 6.80 GB free to install, so it is 3.66 GB short."
+      }
+    ],
+    "T02_largest": [
+      {
+        "action": "tap",
+        "id": "w_storage"
+      },
+      {
+        "action": "tap",
+        "id": "sa_sonora_music"
+      }
+    ],
+    "T03_empty": [
+      {
+        "action": "tap",
+        "id": "w_storage"
+      },
+      {
+        "action": "tap",
+        "id": "rc_trash"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      }
+    ],
+    "T04_owner": [
+      {
+        "action": "tap",
+        "id": "dk_settings_app"
+      },
+      {
+        "action": "tap",
+        "id": "st_account"
+      },
+      {
+        "action": "finish",
+        "answer": "Daniel Okafor, an engineering manager at Meridian Labs in London. Family Sharing has his partner Ama, their children Zoe and Kwame, and his mum Grace Okafor."
+      }
+    ],
+    "T05_bak_one": [
+      {
+        "action": "tap",
+        "id": "w_backup"
+      },
+      {
+        "action": "tap",
+        "id": "bak_harbour_files"
+      }
+    ],
+    "T06_offload_maps": [
+      {
+        "action": "tap",
+        "id": "dk_compass_maps"
+      },
+      {
+        "action": "tap",
+        "id": "act_offload"
+      }
+    ],
+    "T07_offload_vs_delete": [
+      {
+        "action": "tap",
+        "id": "w_storage"
+      },
+      {
+        "action": "tap",
+        "id": "sa_foxglove_reader"
+      },
+      {
+        "action": "finish",
+        "answer": "Offloading Books frees 150 MB — just the app. Deleting it frees 4.39 GB, because it also throws away the 4.24 GB of downloaded audiobooks in Documents & Data."
+      }
+    ],
+    "T08_no_backup": [
+      {
+        "action": "tap",
+        "id": "w_backup"
+      },
+      {
+        "action": "finish",
+        "answer": "Sonora. It holds 18.7 GB of downloaded music on the device but contributes 0 MB to the backup, because downloads re-download from the store and are never backed up."
+      }
+    ],
+    "T09_originals": [
+      {
+        "action": "tap",
+        "id": "dk_settings_app"
+      },
+      {
+        "action": "tap",
+        "id": "st_photos"
+      },
+      {
+        "action": "tap",
+        "id": "seg_originals"
+      },
+      {
+        "action": "finish",
+        "answer": "It refused. Keeping originals wants the whole 135 GB iCloud library on a 128 GB iPhone — 89.5 GB more than this device has — so Optimise iPhone Storage stayed on."
+      }
+    ],
+    "T10_move_books": [
+      {
+        "action": "tap",
+        "id": "ic_foxglove_reader"
+      },
+      {
+        "action": "tap",
+        "id": "mv_f_util"
+      }
+    ],
+    "T11_dock": [
+      {
+        "action": "tap",
+        "id": "dk_lumen_camera"
+      },
+      {
+        "action": "tap",
+        "id": "mv_p2"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "ic_harbour_files"
+      },
+      {
+        "action": "tap",
+        "id": "mv_dock"
+      }
+    ],
+    "T12_after_trash": [
+      {
+        "action": "tap",
+        "id": "w_storage"
+      },
+      {
+        "action": "tap",
+        "id": "rc_trash"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "finish",
+        "answer": "That freed 2.18 GB, so there is now 5.32 GB free. The update needs 6.80 GB, so it is still 1.48 GB short."
+      }
+    ],
+    "T13_bak_count": [
+      {
+        "action": "tap",
+        "id": "w_backup"
+      },
+      {
+        "action": "finish",
+        "answer": "5. The backup is 20.4 GB over, and the four biggest (Files 6.20, Messages 4.80, Books 4.24, Aperture 3.18) only come to 18.4 GB — Umber's 2.76 has to go too."
+      }
+    ],
+    "T14_bak_do": [
+      {
+        "action": "tap",
+        "id": "w_backup"
+      },
+      {
+        "action": "tap",
+        "id": "bak_harbour_files"
+      },
+      {
+        "action": "tap",
+        "id": "bak_quill_messages"
+      },
+      {
+        "action": "tap",
+        "id": "bak_foxglove_reader"
+      },
+      {
+        "action": "tap",
+        "id": "bak_aperture_cinema"
+      },
+      {
+        "action": "tap",
+        "id": "bak_umber_photos"
+      },
+      {
+        "action": "tap",
+        "id": "bk_now"
+      }
+    ],
+    "T15_pools": [
+      {
+        "action": "tap",
+        "id": "w_backup"
+      },
+      {
+        "action": "tap",
+        "id": "bak_harbour_files"
+      },
+      {
+        "action": "finish",
+        "answer": "None at all — not one byte. It freed 6.20 GB in iCloud and left the device on 3.14 GB free. Backup switches move the iCloud pool only."
+      }
+    ],
+    "T16_cannot": [
+      {
+        "action": "tap",
+        "id": "w_update"
+      },
+      {
+        "action": "finish",
+        "answer": "No. Offloading every single app on the iPhone frees 3.62 GB, and the update needs 3.66 GB more than is free — it falls 40 MB short even in the best case. Something's documents have to go, or Recently Deleted has to be emptied."
+      }
+    ],
+    "T17_fewest": [
+      {
+        "action": "tap",
+        "id": "w_storage"
+      },
+      {
+        "action": "tap",
+        "id": "rc_trash"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "tap",
+        "id": "sa_compass_maps"
+      },
+      {
+        "action": "tap",
+        "id": "act_offload"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "sa_umber_photos"
+      },
+      {
+        "action": "tap",
+        "id": "act_offload"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "sa_sonora_music"
+      },
+      {
+        "action": "tap",
+        "id": "act_offload"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "sa_aperture_cinema"
+      },
+      {
+        "action": "tap",
+        "id": "act_offload"
+      },
+      {
+        "action": "back"
+      }
+    ],
+    "T18_install": [
+      {
+        "action": "tap",
+        "id": "w_storage"
+      },
+      {
+        "action": "tap",
+        "id": "rc_trash"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "tap",
+        "id": "sa_compass_maps"
+      },
+      {
+        "action": "tap",
+        "id": "act_offload"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "sa_umber_photos"
+      },
+      {
+        "action": "tap",
+        "id": "act_offload"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "sa_sonora_music"
+      },
+      {
+        "action": "tap",
+        "id": "act_offload"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "sa_aperture_cinema"
+      },
+      {
+        "action": "tap",
+        "id": "act_offload"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "home"
+      },
+      {
+        "action": "tap",
+        "id": "w_update"
+      },
+      {
+        "action": "tap",
+        "id": "up_install"
+      }
+    ],
+    "T19_smallest_delete": [
+      {
+        "action": "tap",
+        "id": "w_storage"
+      },
+      {
+        "action": "tap",
+        "id": "sa_foxglove_reader"
+      },
+      {
+        "action": "tap",
+        "id": "act_delete"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      }
+    ],
+    "T20_both": [
+      {
+        "action": "tap",
+        "id": "w_storage"
+      },
+      {
+        "action": "tap",
+        "id": "rc_trash"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "tap",
+        "id": "sa_compass_maps"
+      },
+      {
+        "action": "tap",
+        "id": "act_offload"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "sa_umber_photos"
+      },
+      {
+        "action": "tap",
+        "id": "act_offload"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "sa_sonora_music"
+      },
+      {
+        "action": "tap",
+        "id": "act_offload"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "sa_aperture_cinema"
+      },
+      {
+        "action": "tap",
+        "id": "act_offload"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "home"
+      },
+      {
+        "action": "tap",
+        "id": "w_backup"
+      },
+      {
+        "action": "tap",
+        "id": "bak_harbour_files"
+      },
+      {
+        "action": "tap",
+        "id": "bak_quill_messages"
+      },
+      {
+        "action": "tap",
+        "id": "bak_foxglove_reader"
+      },
+      {
+        "action": "tap",
+        "id": "bak_aperture_cinema"
+      },
+      {
+        "action": "finish",
+        "answer": "9 changes: emptying Recently Deleted, four offloads (Maps, Umber, Sonora, Aperture) and four backup switches off (Files, Messages, Books, Aperture). Emptying first is what makes four enough on both sides instead of five."
+      }
+    ]
+  }
+}

@@ -1,0 +1,378 @@
+{
+  "env": "cirrus_weather",
+  "note": "Golden action sequences replayed by CI.",
+  "solutions": {
+    "T01_settings": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_showFeels"
+      },
+      {
+        "action": "tap",
+        "id": "set_showAqi"
+      }
+    ],
+    "T02_today": [
+      {
+        "action": "finish",
+        "answer": "最高 18°，最低 2°。"
+      }
+    ],
+    "T03_tomorrow": [
+      {
+        "action": "tap",
+        "id": "tab_days"
+      },
+      {
+        "action": "finish",
+        "answer": "最高 15°，最大降水概率 90%。"
+      }
+    ],
+    "T04_hour": [
+      {
+        "action": "tap",
+        "id": "hr_31"
+      },
+      {
+        "action": "finish",
+        "answer": "7°，体感 3°。"
+      }
+    ],
+    "T05_aqi": [
+      {
+        "action": "finish",
+        "answer": "63，属于「良」。"
+      }
+    ],
+    "T06_bad_window": [
+      {
+        "action": "tap",
+        "id": "tab_window"
+      },
+      {
+        "action": "tap",
+        "id": "win_from_inc"
+      },
+      {
+        "action": "tap",
+        "id": "win_from_inc"
+      },
+      {
+        "action": "tap",
+        "id": "win_from_inc"
+      },
+      {
+        "action": "finish",
+        "answer": "它说开始时间不能晚于结束时间，挪不过去。"
+      }
+    ],
+    "T07_commute": [
+      {
+        "action": "tap",
+        "id": "tab_window"
+      },
+      {
+        "action": "finish",
+        "answer": "要带伞。最大降水概率 90%，这三个小时累计 4.2 毫米。"
+      }
+    ],
+    "T08_evening": [
+      {
+        "action": "tap",
+        "id": "tab_window"
+      },
+      {
+        "action": "tap",
+        "id": "pre_w_commute_pm"
+      },
+      {
+        "action": "finish",
+        "answer": "不用带。概率有 50%，可是这三个小时的累计雨量是 0.0 毫米 —— 概率和雨量是两回事。"
+      }
+    ],
+    "T09_fahrenheit": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "ut_F"
+      },
+      {
+        "action": "finish",
+        "answer": "今天 64°F，明天 59°F。"
+      }
+    ],
+    "T10_inches": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "ur_in"
+      },
+      {
+        "action": "tap",
+        "id": "tab_window"
+      },
+      {
+        "action": "finish",
+        "answer": "0.17 英寸。"
+      }
+    ],
+    "T11_wind": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "uw_ms"
+      },
+      {
+        "action": "finish",
+        "answer": "8.3 m/s —— 30 除以 3.6。"
+      }
+    ],
+    "T12_saturday": [
+      {
+        "action": "tap",
+        "id": "tab_window"
+      },
+      {
+        "action": "tap",
+        "id": "pre_w_sat"
+      },
+      {
+        "action": "finish",
+        "answer": "适合。最大降水概率只有 10%，一滴雨都没有，最高 22°。"
+      }
+    ],
+    "T13_day_fold": [
+      {
+        "action": "tap",
+        "id": "tab_days"
+      },
+      {
+        "action": "tap",
+        "id": "day_1"
+      },
+      {
+        "action": "finish",
+        "answer": "最高温是那天 24 个温度里的最大值，降水概率也是 24 个概率里的最大值 —— 不是平均，也不是加起来；只有雨量才是加起来的。"
+      }
+    ],
+    "T14_nudge": [
+      {
+        "action": "tap",
+        "id": "tab_window"
+      },
+      {
+        "action": "tap",
+        "id": "win_from_dec"
+      },
+      {
+        "action": "tap",
+        "id": "win_to_inc"
+      },
+      {
+        "action": "finish",
+        "answer": "5.6 毫米。"
+      }
+    ],
+    "T15_prob_vs_amount": [
+      {
+        "action": "tap",
+        "id": "tab_window"
+      },
+      {
+        "action": "tap",
+        "id": "pre_w_commute_pm"
+      },
+      {
+        "action": "tap",
+        "id": "pre_w_commute_am"
+      },
+      {
+        "action": "finish",
+        "answer": "今晚 18–20 的概率是 50%，可累计雨量是 0.0 毫米 —— 那 50% 落在一场根本不成量的毛毛雨上。明早 07–09 是 90% 而且实打实有 4.2 毫米，那是会把人淋透的量。带不带伞看的是量，不是概率。"
+      }
+    ],
+    "T16_feels": [
+      {
+        "action": "tap",
+        "id": "hr_31"
+      },
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "finish",
+        "answer": "那时候风 30 km/h，温度 7 度不到 10 度，所以套冷天那条规则：30 除以 8 是 3.75，四舍五入是 4，7 减 4 就是 3 度。"
+      }
+    ],
+    "T17_worst_hour": [
+      {
+        "action": "tap",
+        "id": "tab_days"
+      },
+      {
+        "action": "tap",
+        "id": "day_1"
+      },
+      {
+        "action": "tap",
+        "id": "hr_32"
+      },
+      {
+        "action": "finish",
+        "answer": "明天 08:00，那一小时 2.1 毫米，是全天最大的一格。"
+      }
+    ],
+    "T18_dry_window": [
+      {
+        "action": "tap",
+        "id": "tab_window"
+      },
+      {
+        "action": "tap",
+        "id": "pre_w_lunch"
+      },
+      {
+        "action": "tap",
+        "id": "win_to_dec"
+      },
+      {
+        "action": "finish",
+        "answer": "11:00–12:00 —— 雨到 10:00 就停了，11 点以后累计是 0。"
+      }
+    ],
+    "T19_all_units": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "ut_F"
+      },
+      {
+        "action": "tap",
+        "id": "ur_in"
+      },
+      {
+        "action": "tap",
+        "id": "uw_mph"
+      },
+      {
+        "action": "tap",
+        "id": "tab_window"
+      },
+      {
+        "action": "finish",
+        "answer": "明天最高 59°F，明早通勤那三小时 0.17 英寸，明天最大风速 19 mph。"
+      }
+    ],
+    "T20_whole_day": [
+      {
+        "action": "tap",
+        "id": "tab_window"
+      },
+      {
+        "action": "tap",
+        "id": "win_from_dec"
+      },
+      {
+        "action": "tap",
+        "id": "win_from_dec"
+      },
+      {
+        "action": "tap",
+        "id": "win_from_dec"
+      },
+      {
+        "action": "tap",
+        "id": "win_from_dec"
+      },
+      {
+        "action": "tap",
+        "id": "win_from_dec"
+      },
+      {
+        "action": "tap",
+        "id": "win_from_dec"
+      },
+      {
+        "action": "tap",
+        "id": "win_from_dec"
+      },
+      {
+        "action": "tap",
+        "id": "win_to_inc"
+      },
+      {
+        "action": "tap",
+        "id": "win_to_inc"
+      },
+      {
+        "action": "tap",
+        "id": "win_to_inc"
+      },
+      {
+        "action": "tap",
+        "id": "win_to_inc"
+      },
+      {
+        "action": "tap",
+        "id": "win_to_inc"
+      },
+      {
+        "action": "tap",
+        "id": "win_to_inc"
+      },
+      {
+        "action": "tap",
+        "id": "win_to_inc"
+      },
+      {
+        "action": "tap",
+        "id": "win_to_inc"
+      },
+      {
+        "action": "tap",
+        "id": "win_to_inc"
+      },
+      {
+        "action": "tap",
+        "id": "win_to_inc"
+      },
+      {
+        "action": "tap",
+        "id": "win_to_inc"
+      },
+      {
+        "action": "tap",
+        "id": "win_to_inc"
+      },
+      {
+        "action": "tap",
+        "id": "win_to_inc"
+      },
+      {
+        "action": "tap",
+        "id": "win_to_inc"
+      },
+      {
+        "action": "finish",
+        "answer": "整天 6.0 毫米，通勤那三小时就占了 4.2 毫米，其余二十一个小时加起来只有 1.8 毫米 ——雨基本都下在早上那一阵。"
+      }
+    ]
+  }
+}

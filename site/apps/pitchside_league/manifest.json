@@ -1,0 +1,27 @@
+{
+  "id": "pitchside_league",
+  "name": "Pitchside",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "viewport": {"width": 390, "height": 844},
+  "description": "A single-file H5 league app with two tables over one set of facts. The real table is not stored: it is folded out of sixteen results every time it is read — three for a win, one for a draw, then goal difference, then goals scored, then the name. The second table is the same fold with your predictions for the coming round mixed in, so you can see what a result would do to the standings without anything having happened, and clearing the predictions puts it back. 6 screens, 8 clubs, 16 results, 4 fixtures to guess at.",
+  "tasks_file": "tasks.json",
+  "oracle_file": "oracle.json",
+  "action_space": {
+    "tap":    {"id": "test-id of the element"},
+    "type":   {"id": "test-id of a text field", "text": "replaces the whole value"},
+    "back":   {}, "home": {}, "wait": {},
+    "finish": {"answer": "final answer for question tasks; optional for action tasks"},
+    "tap_xy": {"x": "screen pixel x", "y": "screen pixel y", "note": "browser backend only"}
+  },
+  "observation": {
+    "text": "engine.a11y(state) — both tables serialise row by row with played, goal difference and points, and the what-if table marks which clubs moved.",
+    "pixels": "390x844 screenshot (browser backend); __ENV__.bounds() maps every test-id to a pixel box",
+    "state": "engine.snapshot(state) — canonical state plus a derived view keyed by club name. For the verifier only."
+  },
+  "world": {
+    "table": "3 points a win, 1 a draw; ordered by points, then goal difference, then goals scored, then name",
+    "predictions": "a home win is 2-0, a draw 1-1, an away win 0-2; they only ever affect the second table",
+    "standings": "Larkfield lead on 10 points from Fenwold on 9, level on goal difference and split by goals scored"
+  }
+}

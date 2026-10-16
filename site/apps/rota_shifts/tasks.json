@@ -1,0 +1,765 @@
+{
+  "env": "rota_shifts",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_settings",
+      "name": "两个开关",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "settings"
+      ],
+      "instruction": "在设置里打开「在格子里显示时薪」，关掉「排班时提醒加班」。「把有问题的班标红」不要动。",
+      "goal": [
+        {
+          "name": "时薪打开了",
+          "path": "derived.settings.showRate",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "加班提醒关掉了",
+          "path": "derived.settings.warnOvertime",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "标红没有动",
+          "path": "derived.settings.markProblems",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "排班表没有改",
+          "path": "derived.filled",
+          "op": "eq",
+          "value": 19
+        }
+      ]
+    },
+    {
+      "id": "T02_issue_count",
+      "name": "问一句：现在有几处问题",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "这张排班表现在有几处问题？",
+      "goal": [
+        {
+          "name": "四处",
+          "source": "answer",
+          "op": "regex",
+          "value": "((?<!\\d)4(?!\\d)|四)",
+          "weight": 3
+        },
+        {
+          "name": "排班表没有改",
+          "path": "derived.issueCount",
+          "op": "eq",
+          "value": 4
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T03_bill",
+      "name": "问一句：本周工资",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "按现在这张表，本周工资一共多少钱？",
+      "goal": [
+        {
+          "name": "¥4,568.00",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)4(?!\\d)[,.]?(?<!\\d)568(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "排班表没有改",
+          "path": "derived.bill",
+          "op": "eq",
+          "value": 456800
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T04_friday",
+      "name": "打开周五晚班",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "query",
+        "navigate"
+      ],
+      "instruction": "打开周五晚班这个格子，告诉我还差几个人。",
+      "goal": [
+        {
+          "name": "差一个",
+          "source": "answer",
+          "op": "regex",
+          "value": "((?<![\\d-])1(?!\\d)|一)",
+          "weight": 3
+        },
+        {
+          "name": "停在周五晚班上",
+          "path": "derived.routeCell",
+          "op": "eq",
+          "value": "fri_pm"
+        },
+        {
+          "name": "排班表没有改",
+          "path": "derived.filled",
+          "op": "eq",
+          "value": 19
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T05_supervisors",
+      "name": "问一句：谁能带班",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "哪几个人能带班？把名字都说出来。",
+      "goal": [
+        {
+          "name": "林晓",
+          "source": "answer",
+          "op": "contains",
+          "value": "林晓",
+          "weight": 3
+        },
+        {
+          "name": "赵敏",
+          "source": "answer",
+          "op": "contains",
+          "value": "赵敏",
+          "weight": 3
+        },
+        {
+          "name": "何俊",
+          "source": "answer",
+          "op": "contains",
+          "value": "何俊",
+          "weight": 3
+        },
+        {
+          "name": "排班表没有改",
+          "path": "derived.filled",
+          "op": "eq",
+          "value": 19
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T06_refuse",
+      "name": "排不进去的人",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "refusal"
+      ],
+      "instruction": "试着把赵敏排进周三早班。如果排不进去，就别动它，把理由说给我听。",
+      "goal": [
+        {
+          "name": "周三早班没有变",
+          "path": "derived.cells.周三早班",
+          "op": "set_eq",
+          "value": [
+            "吴斌",
+            "林晓"
+          ]
+        },
+        {
+          "name": "周三不可用",
+          "source": "answer",
+          "op": "regex",
+          "value": "(周三|不可用|夜校)",
+          "weight": 3
+        },
+        {
+          "name": "问题数没有变",
+          "path": "derived.issueCount",
+          "op": "eq",
+          "value": 4
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T07_fix_wed",
+      "name": "周三那处违规",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "fix"
+      ],
+      "instruction": "赵敏被排进了她不可用的周三晚班。把她撤下来，换一个既能带班又排得进去的人。",
+      "goal": [
+        {
+          "name": "赵敏不在周三晚班了",
+          "path": "derived.cells.周三晚班",
+          "op": "not_contains",
+          "value": "赵敏"
+        },
+        {
+          "name": "换上了何俊",
+          "path": "derived.cells.周三晚班",
+          "op": "contains",
+          "value": "何俊"
+        },
+        {
+          "name": "周三晚班还是两个人",
+          "path": "derived.cells.周三晚班",
+          "op": "len_eq",
+          "value": 2
+        },
+        {
+          "name": "少了一处问题",
+          "path": "derived.issueCount",
+          "op": "eq",
+          "value": 3
+        }
+      ]
+    },
+    {
+      "id": "T08_fix_double",
+      "name": "周二那处连班",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "fix"
+      ],
+      "instruction": "陈露周二被排了早班又排了晚班。把她从周二晚班撤下来，补一个能补的人上去。",
+      "goal": [
+        {
+          "name": "周二晚班没有陈露了",
+          "path": "derived.cells.周二晚班",
+          "op": "not_contains",
+          "value": "陈露"
+        },
+        {
+          "name": "补上了吴斌",
+          "path": "derived.cells.周二晚班",
+          "op": "contains",
+          "value": "吴斌"
+        },
+        {
+          "name": "周二晚班还是两个人",
+          "path": "derived.cells.周二晚班",
+          "op": "len_eq",
+          "value": 2
+        },
+        {
+          "name": "陈露降到四个班",
+          "path": "derived.hours.陈露",
+          "op": "eq",
+          "value": 32
+        }
+      ]
+    },
+    {
+      "id": "T09_fix_nosup",
+      "name": "周四早班没人带班",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "fix"
+      ],
+      "instruction": "周四早班两个人都不能带班。撤下一个，换一个能带班的上去。",
+      "goal": [
+        {
+          "name": "周四早班有林晓",
+          "path": "derived.cells.周四早班",
+          "op": "contains",
+          "value": "林晓"
+        },
+        {
+          "name": "还是两个人",
+          "path": "derived.cells.周四早班",
+          "op": "len_eq",
+          "value": 2
+        },
+        {
+          "name": "没有带班的这处问题没了",
+          "path": "derived.issueTexts",
+          "op": "not_contains",
+          "value": "周四早班没有带班的"
+        }
+      ]
+    },
+    {
+      "id": "T10_fill_friday",
+      "name": "补上周五晚班",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "fix",
+        "ordering"
+      ],
+      "instruction": "周五晚班只有何俊一个人，可是眼下谁都排不进去。想办法把它补满 —— 提示：先看看是什么占住了别人的工时。",
+      "goal": [
+        {
+          "name": "周五晚班两个人",
+          "path": "derived.cells.周五晚班",
+          "op": "len_eq",
+          "value": 2
+        },
+        {
+          "name": "补的是陈露",
+          "path": "derived.cells.周五晚班",
+          "op": "contains",
+          "value": "陈露"
+        },
+        {
+          "name": "十个班都满了",
+          "path": "derived.filled",
+          "op": "eq",
+          "value": 20
+        },
+        {
+          "name": "陈露没有超上限",
+          "path": "derived.hours.陈露",
+          "op": "lte",
+          "value": 40
+        }
+      ]
+    },
+    {
+      "id": "T11_he_max",
+      "name": "问一句：何俊最多能排几个班",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "query",
+        "arithmetic"
+      ],
+      "instruction": "何俊一周最多能排几个班？为什么是这个数？",
+      "goal": [
+        {
+          "name": "三个班",
+          "source": "answer",
+          "op": "regex",
+          "value": "((?<!\\d)3(?!\\d)|三)",
+          "weight": 3
+        },
+        {
+          "name": "因为上限二十四小时",
+          "source": "answer",
+          "op": "regex",
+          "value": "((?<!\\d)24(?!\\d)|二十四|上限)",
+          "weight": 3
+        },
+        {
+          "name": "排班表没有改",
+          "path": "derived.filled",
+          "op": "eq",
+          "value": 19
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T12_wu_hours",
+      "name": "问一句：吴斌的工时",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "query",
+        "navigate"
+      ],
+      "instruction": "打开吴斌的页面，告诉我他这周排了几个班、其中加班几个小时。",
+      "goal": [
+        {
+          "name": "四个班",
+          "source": "answer",
+          "op": "regex",
+          "value": "((?<!\\d)4(?!\\d)|四)",
+          "weight": 3
+        },
+        {
+          "name": "加班八小时",
+          "source": "answer",
+          "op": "regex",
+          "value": "((?<!\\d)8(?!\\d)|八)",
+          "weight": 3
+        },
+        {
+          "name": "停在吴斌页面上",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "p_wu"
+        },
+        {
+          "name": "排班表没有改",
+          "path": "derived.hours.吴斌",
+          "op": "eq",
+          "value": 32
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T13_monday_only",
+      "name": "只排周一",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "multi-step",
+        "reset"
+      ],
+      "instruction": "把整周清空，然后只把周一的两个班排满 —— 每班两个人、每班一个带班的。别的班先空着。",
+      "goal": [
+        {
+          "name": "只排了周一的四个人次",
+          "path": "derived.filled",
+          "op": "eq",
+          "value": 4
+        },
+        {
+          "name": "周一早班两个人",
+          "path": "derived.cells.周一早班",
+          "op": "len_eq",
+          "value": 2
+        },
+        {
+          "name": "周一晚班两个人",
+          "path": "derived.cells.周一晚班",
+          "op": "len_eq",
+          "value": 2
+        },
+        {
+          "name": "周二早班是空的",
+          "path": "derived.cells.周二早班",
+          "op": "len_eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T14_overtime_now",
+      "name": "问一句：现在加班多少",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "query",
+        "arithmetic"
+      ],
+      "instruction": "按现在这张表，一共加班几个小时？是谁在加？",
+      "goal": [
+        {
+          "name": "二十四小时",
+          "source": "answer",
+          "op": "regex",
+          "value": "((?<!\\d)24(?!\\d)|二十四)",
+          "weight": 3
+        },
+        {
+          "name": "赵敏",
+          "source": "answer",
+          "op": "contains",
+          "value": "赵敏",
+          "weight": 3
+        },
+        {
+          "name": "吴斌",
+          "source": "answer",
+          "op": "contains",
+          "value": "吴斌",
+          "weight": 3
+        },
+        {
+          "name": "陈露",
+          "source": "answer",
+          "op": "contains",
+          "value": "陈露",
+          "weight": 3
+        },
+        {
+          "name": "排班表没有改",
+          "path": "derived.totalOvertime",
+          "op": "eq",
+          "value": 24
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T15_fix_all",
+      "name": "四处全改掉",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 44,
+      "tags": [
+        "constraint",
+        "multi-step"
+      ],
+      "instruction": "把这张表上的四处问题全部改掉，让整周都排得住 —— 每个班两个人、每个班一个带班的、没人连上两个班、没人超上限、没人被排在不可用的那天。",
+      "goal": [
+        {
+          "name": "整张表能用",
+          "path": "derived.legal",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "一处问题都没有",
+          "path": "derived.issueCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "十个班都满了",
+          "path": "derived.filled",
+          "op": "eq",
+          "value": 20
+        }
+      ]
+    },
+    {
+      "id": "T16_cheapest",
+      "name": "压到最便宜",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 52,
+      "tags": [
+        "optimise",
+        "constraint"
+      ],
+      "instruction": "在整张表合规的前提下，把本周工资压到最低。压完告诉我是多少钱。",
+      "goal": [
+        {
+          "name": "整张表能用",
+          "path": "derived.legal",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "工资不超过 ¥4,696",
+          "path": "derived.bill",
+          "op": "lte",
+          "value": 469600,
+          "hint": "合同工时一共 136 小时，一周却要 160 小时，加班避不掉 —— 但加在谁头上是可以挑的"
+        },
+        {
+          "name": "十个班都满了",
+          "path": "derived.filled",
+          "op": "eq",
+          "value": 20
+        },
+        {
+          "name": "¥4,696.00",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)4(?!\\d)[,.]?(?<!\\d)696(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T17_he_min",
+      "name": "何俊最少排几个",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 52,
+      "tags": [
+        "optimise",
+        "reasoning"
+      ],
+      "instruction": "何俊时薪最贵，一小时 ¥30。在整张表合规的前提下，他最少要排几个班？把表排成那个样子，并说清楚为什么不能更少。",
+      "goal": [
+        {
+          "name": "整张表能用",
+          "path": "derived.legal",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "何俊只排了两个班",
+          "path": "derived.hours.何俊",
+          "op": "eq",
+          "value": 16
+        },
+        {
+          "name": "十个班都满了",
+          "path": "derived.filled",
+          "op": "eq",
+          "value": 20
+        },
+        {
+          "name": "两个班",
+          "source": "answer",
+          "op": "regex",
+          "value": "((?<!\\d)2(?!\\d)|两|二)",
+          "weight": 3
+        },
+        {
+          "name": "周三和周五各要他一个",
+          "source": "answer",
+          "op": "regex",
+          "value": "(周三|周五)",
+          "weight": 3,
+          "hint": "周三赵敏不在、周五林晓不在，那两天各有两个班都要带班的"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T18_ot_floor",
+      "name": "加班压到最少",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 52,
+      "tags": [
+        "optimise",
+        "reasoning"
+      ],
+      "instruction": "把表排成合规的，并且让加班时数降到不能再降。加班最少是多少小时？为什么不可能更少？",
+      "goal": [
+        {
+          "name": "整张表能用",
+          "path": "derived.legal",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "加班正好 24 小时",
+          "path": "derived.totalOvertime",
+          "op": "eq",
+          "value": 24
+        },
+        {
+          "name": "十个班都满了",
+          "path": "derived.filled",
+          "op": "eq",
+          "value": 20
+        },
+        {
+          "name": "二十四小时",
+          "source": "answer",
+          "op": "regex",
+          "value": "((?<!\\d)24(?!\\d)|二十四)",
+          "weight": 3
+        },
+        {
+          "name": "因为合同工时不够",
+          "source": "answer",
+          "op": "regex",
+          "value": "((?<!\\d)136(?!\\d)|(?<!\\d)160(?!\\d)|合同|不够|(?<!\\d)20(?!\\d) 个班|二十个班)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T19_sup_capacity",
+      "name": "带班的够不够",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 22,
+      "tags": [
+        "reasoning",
+        "query"
+      ],
+      "instruction": "十个班每班都要一个带班的，可是能带班的只有三个人，而且各有一天不在，一个人一天也只能上一个班。算一算这三个人一周合起来最多能带多少个班，够不够十个。别改排班表。",
+      "goal": [
+        {
+          "name": "排班表没有改",
+          "path": "derived.filled",
+          "op": "eq",
+          "value": 19
+        },
+        {
+          "name": "问题数没有变",
+          "path": "derived.issueCount",
+          "op": "eq",
+          "value": 4
+        },
+        {
+          "name": "十一个",
+          "source": "answer",
+          "op": "regex",
+          "value": "((?<!\\d)11(?!\\d)|十一)",
+          "weight": 3
+        },
+        {
+          "name": "够，只多一个",
+          "source": "answer",
+          "op": "regex",
+          "value": "(够|刚好|多一个|(?<!\\d)1(?!\\d) 个|一个)",
+          "weight": 3,
+          "hint": "林晓四天、赵敏四天、何俊三个班的上限"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T20_rebuild",
+      "name": "整周重排",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 56,
+      "tags": [
+        "constraint",
+        "multi-step"
+      ],
+      "instruction": "整周清空，从头排一遍。要求：十个班全满、一处问题都没有、工资不超过 ¥4,700。",
+      "goal": [
+        {
+          "name": "整张表能用",
+          "path": "derived.legal",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "十个班都满了",
+          "path": "derived.filled",
+          "op": "eq",
+          "value": 20
+        },
+        {
+          "name": "工资不超过 ¥4,700",
+          "path": "derived.bill",
+          "op": "lte",
+          "value": 470000
+        },
+        {
+          "name": "一处问题都没有",
+          "path": "derived.issueCount",
+          "op": "eq",
+          "value": 0
+        }
+      ]
+    }
+  ]
+}

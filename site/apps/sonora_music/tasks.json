@@ -1,0 +1,700 @@
+{
+  "env": "sonora_music",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_pause_shuffle",
+      "name": "Pause and shuffle",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "transport"
+      ],
+      "instruction": "Pause playback and turn shuffle on.",
+      "goal": [
+        {
+          "name": "Playback is paused",
+          "path": "derived.playing",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Shuffle is on",
+          "path": "derived.shuffle",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Repeat was not touched",
+          "path": "derived.repeat",
+          "op": "eq",
+          "value": "off"
+        }
+      ]
+    },
+    {
+      "id": "T02_quality_explicit",
+      "name": "Lossless and clean",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "settings"
+      ],
+      "instruction": "In Settings, switch audio quality to Lossless and turn on hiding explicit songs. Leave the other settings alone.",
+      "goal": [
+        {
+          "name": "Quality is Lossless",
+          "path": "settings.quality",
+          "op": "eq",
+          "value": "lossless"
+        },
+        {
+          "name": "Explicit songs are hidden",
+          "path": "settings.explicitFilter",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Sleep timer untouched",
+          "path": "settings.sleep",
+          "op": "eq",
+          "value": "off"
+        },
+        {
+          "name": "Cellular download untouched",
+          "path": "settings.cellularDownload",
+          "op": "eq",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "T03_like_current",
+      "name": "Like what is playing",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "like"
+      ],
+      "instruction": "Add the song that is playing right now to Liked Songs.",
+      "goal": [
+        {
+          "name": "Liked Songs is exactly right",
+          "path": "derived.likedTitles",
+          "op": "set_eq",
+          "value": [
+            "Blue Hour Waltz",
+            "Ferry Lights",
+            "Gravel Hymn",
+            "Paper Lantern"
+          ],
+          "weight": 2,
+          "hint": "the three already liked must stay liked"
+        }
+      ]
+    },
+    {
+      "id": "T04_play_album",
+      "name": "Play an album from the top",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "playback",
+        "context"
+      ],
+      "instruction": "Play the album Neon Arcade from the first track.",
+      "goal": [
+        {
+          "name": "Playing the first track",
+          "path": "derived.nowPlaying",
+          "op": "eq",
+          "value": "Coin Slot",
+          "weight": 2
+        },
+        {
+          "name": "From the right album",
+          "path": "derived.nowAlbum",
+          "op": "eq",
+          "value": "Neon Arcade"
+        },
+        {
+          "name": "It is playing",
+          "path": "derived.playing",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "The rest of the album is queued in order",
+          "path": "derived.queueTitles",
+          "op": "eq",
+          "value": [
+            "High Score",
+            "Midnight Cabinet",
+            "Chrome Rain",
+            "Continue?"
+          ],
+          "weight": 2,
+          "hint": "starting an album replaces the queue with the tracks after it"
+        }
+      ]
+    },
+    {
+      "id": "T05_queue_add",
+      "name": "Queue a track from search",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "search",
+        "queue"
+      ],
+      "instruction": "Find \"Salt Marsh\" and add it to the end of the queue.",
+      "goal": [
+        {
+          "name": "Queue ends with Salt Marsh",
+          "path": "derived.queueTitles",
+          "op": "eq",
+          "value": [
+            "Sleeping on the Roof",
+            "Paper Lantern",
+            "Cold Harbour",
+            "Salt Marsh"
+          ],
+          "weight": 3,
+          "hint": "add to queue appends; play next would put it first"
+        }
+      ]
+    },
+    {
+      "id": "T06_repeat_one",
+      "name": "Repeat one",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "transport",
+        "tri-state"
+      ],
+      "instruction": "Set repeat to repeat-one. Leave shuffle off.",
+      "notes": "One control cycles off -> all -> one.",
+      "goal": [
+        {
+          "name": "Repeat is set to one",
+          "path": "derived.repeat",
+          "op": "eq",
+          "value": "one",
+          "weight": 2
+        },
+        {
+          "name": "Shuffle is still off",
+          "path": "derived.shuffle",
+          "op": "eq",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "T07_seek_half",
+      "name": "Jump to the halfway point",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "seek"
+      ],
+      "instruction": "Jump the current track to exactly its halfway point.",
+      "goal": [
+        {
+          "name": "Position is 50%",
+          "path": "derived.positionPct",
+          "op": "eq",
+          "value": 50,
+          "weight": 2
+        },
+        {
+          "name": "Position in seconds is right",
+          "path": "derived.position",
+          "op": "eq",
+          "value": 109,
+          "hint": "the seek bar has exact 0/25/50/75% marks"
+        },
+        {
+          "name": "Still the same track",
+          "path": "derived.nowPlaying",
+          "op": "eq",
+          "value": "Ferry Lights"
+        }
+      ]
+    },
+    {
+      "id": "T08_query_album_length",
+      "name": "Question: album length",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "answer_expected": true,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "How long is the album Glasshouse in total? Answer with the number of minutes.",
+      "goal": [
+        {
+          "name": "The answer is 27",
+          "source": "answer",
+          "op": "eq",
+          "value": 27,
+          "extract": "number",
+          "weight": 3,
+          "hint": "the album header shows the total running time"
+        },
+        {
+          "name": "Nothing started playing",
+          "path": "derived.nowPlaying",
+          "op": "eq",
+          "value": "Ferry Lights"
+        }
+      ]
+    },
+    {
+      "id": "T09_query_longest",
+      "name": "Question: the longest track",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "answer_expected": true,
+      "tags": [
+        "query",
+        "compare",
+        "read-only"
+      ],
+      "instruction": "Which is the longest track in the library? Answer with its title.",
+      "notes": "Low Tide, Late on Salt and Static runs 8:21.",
+      "goal": [
+        {
+          "name": "The answer is Low Tide, Late",
+          "source": "answer",
+          "op": "contains",
+          "value": "Low Tide",
+          "weight": 3
+        },
+        {
+          "name": "Nothing started playing",
+          "path": "derived.nowPlaying",
+          "op": "eq",
+          "value": "Ferry Lights"
+        }
+      ]
+    },
+    {
+      "id": "T10_playlist_add",
+      "name": "Add to a playlist",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "playlist",
+        "search",
+        "sheet"
+      ],
+      "instruction": "Add \"Chrome Rain\" to the Deep Focus playlist.",
+      "goal": [
+        {
+          "name": "Deep Focus contains it",
+          "path": "derived.playlistTracks.Deep Focus",
+          "op": "contains",
+          "value": "Chrome Rain",
+          "weight": 2
+        },
+        {
+          "name": "Deep Focus now has seven",
+          "path": "derived.playlistCounts.Deep Focus",
+          "op": "eq",
+          "value": 7
+        },
+        {
+          "name": "Night Drive untouched",
+          "path": "derived.playlistCounts.Night Drive",
+          "op": "eq",
+          "value": 5
+        }
+      ]
+    },
+    {
+      "id": "T11_playlist_reorder",
+      "name": "Reorder a playlist",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "playlist",
+        "reorder"
+      ],
+      "instruction": "In the Night Drive playlist, move \"Chrome Rain\" up so it is the first track.",
+      "goal": [
+        {
+          "name": "Chrome Rain is first",
+          "path": "derived.playlistTracks.Night Drive[0]",
+          "op": "eq",
+          "value": "Chrome Rain",
+          "weight": 2
+        },
+        {
+          "name": "Coin Slot slipped to second",
+          "path": "derived.playlistTracks.Night Drive[1]",
+          "op": "eq",
+          "value": "Coin Slot"
+        },
+        {
+          "name": "Still five tracks",
+          "path": "derived.playlistCounts.Night Drive",
+          "op": "eq",
+          "value": 5
+        }
+      ]
+    },
+    {
+      "id": "T12_queue_reorder",
+      "name": "Reorder the queue",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "queue",
+        "reorder"
+      ],
+      "instruction": "Move \"Cold Harbour\" to the front of the queue so it plays next.",
+      "goal": [
+        {
+          "name": "Cold Harbour is next up",
+          "path": "derived.queueTitles",
+          "op": "eq",
+          "value": [
+            "Cold Harbour",
+            "Sleeping on the Roof",
+            "Paper Lantern"
+          ],
+          "weight": 3,
+          "hint": "each move swaps with the neighbour, so it takes two"
+        }
+      ]
+    },
+    {
+      "id": "T13_queue_remove",
+      "name": "Drop one from the queue",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "queue",
+        "remove"
+      ],
+      "instruction": "Remove \"Paper Lantern\" from the queue and leave the other two where they are.",
+      "goal": [
+        {
+          "name": "Queue is the other two, in order",
+          "path": "derived.queueTitles",
+          "op": "eq",
+          "value": [
+            "Sleeping on the Roof",
+            "Cold Harbour"
+          ],
+          "weight": 3
+        },
+        {
+          "name": "It is still a liked song",
+          "path": "derived.likedTitles",
+          "op": "contains",
+          "value": "Paper Lantern",
+          "hint": "removing from the queue is not unliking"
+        }
+      ]
+    },
+    {
+      "id": "T14_new_playlist",
+      "name": "New playlist with one song",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 24,
+      "tags": [
+        "playlist",
+        "create",
+        "form"
+      ],
+      "instruction": "Create a playlist called \"Late Shift\" and put \"Breakwater\" in it.",
+      "goal": [
+        {
+          "name": "The playlist exists",
+          "path": "derived.playlistNames",
+          "op": "contains",
+          "value": "Late Shift",
+          "weight": 2
+        },
+        {
+          "name": "It holds exactly Breakwater",
+          "path": "derived.playlistTracks.Late Shift",
+          "op": "eq",
+          "value": [
+            "Breakwater"
+          ],
+          "weight": 3
+        },
+        {
+          "name": "The seeded playlists are intact",
+          "path": "derived.playlistCounts.Deep Focus",
+          "op": "eq",
+          "value": 6
+        }
+      ]
+    },
+    {
+      "id": "T15_session_flagship",
+      "name": "Set up a listening session (flagship)",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 34,
+      "tags": [
+        "playlist",
+        "transport",
+        "queue",
+        "seek",
+        "download",
+        "long-horizon"
+      ],
+      "instruction": "Set up a session: play the Deep Focus playlist from the start, queue \"Glasshouse\" so it plays next, set repeat to all, jump the current track to 25%, and download the album the current track comes from.",
+      "goal": [
+        {
+          "name": "Playing the first Deep Focus track",
+          "path": "derived.nowPlaying",
+          "op": "eq",
+          "value": "Condensation",
+          "weight": 2
+        },
+        {
+          "name": "Glasshouse is next up",
+          "path": "derived.queueTitles[0]",
+          "op": "eq",
+          "value": "Glasshouse",
+          "weight": 2,
+          "hint": "play next puts it at the front, not the back"
+        },
+        {
+          "name": "Repeat is all",
+          "path": "derived.repeat",
+          "op": "eq",
+          "value": "all",
+          "weight": 2
+        },
+        {
+          "name": "Position is 25%",
+          "path": "derived.positionPct",
+          "op": "eq",
+          "value": 25,
+          "weight": 2
+        },
+        {
+          "name": "Glasshouse album is downloaded",
+          "path": "derived.downloadedAlbums",
+          "op": "contains",
+          "value": "Glasshouse",
+          "weight": 2
+        },
+        {
+          "name": "Paper Lantern is still downloaded",
+          "path": "derived.downloadedAlbums",
+          "op": "contains",
+          "value": "Paper Lantern"
+        },
+        {
+          "name": "Efficiency: 16 steps or fewer",
+          "source": "trajectory",
+          "path": "steps",
+          "op": "lte",
+          "value": 16,
+          "critical": false,
+          "weight": 0.5
+        }
+      ]
+    },
+    {
+      "id": "T16_downloads",
+      "name": "Swap the offline album",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "downloads",
+        "settings"
+      ],
+      "instruction": "Download the Dust Radio album and remove the Paper Lantern download, so Dust Radio is the only album kept offline.",
+      "goal": [
+        {
+          "name": "Only Dust Radio is offline",
+          "path": "derived.downloadedAlbums",
+          "op": "set_eq",
+          "value": [
+            "Dust Radio"
+          ],
+          "weight": 3
+        }
+      ]
+    },
+    {
+      "id": "T17_explicit_filter",
+      "name": "Question: what the filter hides",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "answer_expected": true,
+      "tags": [
+        "settings",
+        "filter",
+        "query"
+      ],
+      "instruction": "Turn on \"Hide explicit songs\", then open the Night Drive playlist and tell me how many songs it still shows. Answer with just the number.",
+      "goal": [
+        {
+          "name": "The filter is on",
+          "path": "settings.explicitFilter",
+          "op": "eq",
+          "value": true,
+          "weight": 2
+        },
+        {
+          "name": "The answer is 3",
+          "source": "answer",
+          "op": "eq",
+          "value": 3,
+          "extract": "number",
+          "weight": 3,
+          "hint": "two of the five tracks are marked explicit"
+        },
+        {
+          "name": "The playlist itself was not edited",
+          "path": "derived.playlistCounts.Night Drive",
+          "op": "eq",
+          "value": 5,
+          "hint": "filtering hides, it does not delete"
+        }
+      ]
+    },
+    {
+      "id": "T18_crossfade_sleep",
+      "name": "Crossfade and sleep timer",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 22,
+      "tags": [
+        "settings",
+        "stepper"
+      ],
+      "instruction": "Set crossfade to 6 seconds and the sleep timer to 30 minutes.",
+      "goal": [
+        {
+          "name": "Crossfade is 6 seconds",
+          "path": "settings.crossfade",
+          "op": "eq",
+          "value": 6,
+          "weight": 2,
+          "hint": "the stepper moves one second at a time from 0"
+        },
+        {
+          "name": "Sleep timer is 30 minutes",
+          "path": "settings.sleep",
+          "op": "eq",
+          "value": "30",
+          "weight": 2
+        },
+        {
+          "name": "Quality untouched",
+          "path": "settings.quality",
+          "op": "eq",
+          "value": "high"
+        }
+      ]
+    },
+    {
+      "id": "T19_curate_likes",
+      "name": "Curate Liked Songs",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 32,
+      "tags": [
+        "like",
+        "unlike",
+        "multi-screen"
+      ],
+      "instruction": "Liked Songs should end up containing exactly three tracks: \"Ferry Lights\", \"Chrome Rain\" and \"Gravel Hymn\". Add and remove whatever it takes.",
+      "notes": "Starts as Paper Lantern, Blue Hour Waltz and Gravel Hymn — two out, two in, one stays.",
+      "goal": [
+        {
+          "name": "Liked Songs is exactly those three",
+          "path": "derived.likedTitles",
+          "op": "set_eq",
+          "value": [
+            "Chrome Rain",
+            "Ferry Lights",
+            "Gravel Hymn"
+          ],
+          "weight": 3
+        },
+        {
+          "name": "Exactly three are liked",
+          "path": "derived.likedCount",
+          "op": "eq",
+          "value": 3
+        },
+        {
+          "name": "No playlist was edited",
+          "path": "derived.playlistCounts.Deep Focus",
+          "op": "eq",
+          "value": 6
+        }
+      ]
+    },
+    {
+      "id": "T20_queue_no_mira",
+      "name": "Build a queue (many valid answers)",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "unique_solution": false,
+      "tags": [
+        "queue",
+        "constraint",
+        "multi-solution"
+      ],
+      "instruction": "Get the queue to five songs or more, with nothing from the album Paper Lantern in it, and with at least two different albums represented.",
+      "notes": "Playing an album replaces the queue with the rest of that album, which gets you the length in two taps — but it leaves you with only one album in there.",
+      "goal": [
+        {
+          "name": "At least five queued",
+          "path": "derived.queueLength",
+          "op": "gte",
+          "value": 5,
+          "weight": 3
+        },
+        {
+          "name": "Nothing from Paper Lantern",
+          "path": "derived.queueAlbums",
+          "op": "not_contains",
+          "value": "Paper Lantern",
+          "weight": 3,
+          "hint": "the three tracks queued at reset are all from Paper Lantern"
+        },
+        {
+          "name": "At least two albums in the queue",
+          "path": "derived.queueDistinctAlbums",
+          "op": "gte",
+          "value": 2,
+          "weight": 3,
+          "hint": "queue something from somewhere else as well"
+        }
+      ]
+    }
+  ]
+}

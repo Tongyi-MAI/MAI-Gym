@@ -1,0 +1,713 @@
+{
+  "env": "slate_calc",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_settings",
+      "name": "两个开关",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "settings"
+      ],
+      "instruction": "在设置里关掉「数字分节显示」和「记录历史」，角度那一栏别动。",
+      "goal": [
+        {
+          "name": "分节关了",
+          "path": "derived.settings.groupDigits",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "历史不再记了",
+          "path": "derived.settings.keepTape",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "角度没动",
+          "path": "derived.settings.degrees",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "屏幕上还是 0",
+          "path": "derived.display",
+          "op": "eq",
+          "value": "0"
+        }
+      ]
+    },
+    {
+      "id": "T02_add",
+      "name": "算一下 12 + 34",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "keypad"
+      ],
+      "instruction": "用键盘算 12 + 34，把结果告诉我。",
+      "goal": [
+        {
+          "name": "屏幕上是 46",
+          "path": "derived.display",
+          "op": "eq",
+          "value": "46"
+        },
+        {
+          "name": "46",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)46(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T03_pct_rule",
+      "name": "问一句：百分号是什么规矩",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "这台计算器的百分号键，在加减后面和在乘除后面意思一样吗？去设置页看看规则，说给我听。",
+      "goal": [
+        {
+          "name": "不一样",
+          "source": "answer",
+          "op": "regex",
+          "value": "(不一样|不同|两种|不一致)",
+          "weight": 3
+        },
+        {
+          "name": "加减是左边的百分之几",
+          "source": "answer",
+          "op": "regex",
+          "value": "(左边|百分之|之几)",
+          "weight": 3
+        },
+        {
+          "name": "什么都没算",
+          "path": "derived.historyCount",
+          "op": "eq",
+          "value": 0
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T04_third",
+      "name": "算一下 1 ÷ 3",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "keypad"
+      ],
+      "instruction": "算 1 ÷ 3，屏幕上显示多少？",
+      "goal": [
+        {
+          "name": "屏幕上是 0.3333333333",
+          "path": "derived.display",
+          "op": "eq",
+          "value": "0.3333333333"
+        },
+        {
+          "name": "0.3333333333",
+          "source": "answer",
+          "op": "regex",
+          "value": "0[.,]3333333333",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T05_float",
+      "name": "算一下 0.1 + 0.2",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "keypad"
+      ],
+      "instruction": "算 0.1 + 0.2，屏幕上显示多少？",
+      "goal": [
+        {
+          "name": "屏幕上是 0.3",
+          "path": "derived.display",
+          "op": "eq",
+          "value": "0.3"
+        },
+        {
+          "name": "0.3",
+          "source": "answer",
+          "op": "regex",
+          "value": "0[.,]3(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T06_div_zero",
+      "name": "除以零",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "refusal"
+      ],
+      "instruction": "试着算 9 ÷ 0，把计算器的反应讲给我听。",
+      "goal": [
+        {
+          "name": "报了错",
+          "path": "derived.error",
+          "op": "eq",
+          "value": "不能除以零"
+        },
+        {
+          "name": "不能除以零",
+          "source": "answer",
+          "op": "regex",
+          "value": "(除以零|除以 0|不能|错)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T07_precedence",
+      "name": "先乘除还是从左往右",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "keypad",
+        "reasoning"
+      ],
+      "instruction": "算 2 + 3 × 4，结果是多少？顺便说说为什么不是 20。",
+      "goal": [
+        {
+          "name": "屏幕上是 14",
+          "path": "derived.display",
+          "op": "eq",
+          "value": "14"
+        },
+        {
+          "name": "14",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)14(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "先乘除后加减",
+          "source": "answer",
+          "op": "regex",
+          "value": "(优先|先乘|乘除|precedence)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T08_pct_add",
+      "name": "50 加 10%",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "percent"
+      ],
+      "instruction": "按 5 0 + 1 0 % =，结果是多少？",
+      "goal": [
+        {
+          "name": "屏幕上是 55",
+          "path": "derived.display",
+          "op": "eq",
+          "value": "55"
+        },
+        {
+          "name": "纸带上记的是 50 + 5",
+          "path": "derived.lastExpr",
+          "op": "contains",
+          "value": "50 + 5"
+        },
+        {
+          "name": "55",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)55(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T09_pct_mul",
+      "name": "50 乘 10%",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "percent",
+        "reasoning"
+      ],
+      "instruction": "同样是 50 和 10%，这次按 5 0 × 1 0 % =。结果是多少？和上一种按法差在哪？",
+      "goal": [
+        {
+          "name": "屏幕上是 5",
+          "path": "derived.display",
+          "op": "eq",
+          "value": "5"
+        },
+        {
+          "name": "纸带上记的是 50 × 0.1",
+          "path": "derived.lastExpr",
+          "op": "contains",
+          "value": "0.1"
+        },
+        {
+          "name": "5",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)5(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "乘除时百分号只是除以一百",
+          "source": "answer",
+          "op": "regex",
+          "value": "(除以一百|除以 ?100|0[.,]1|不一样|不同)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T10_repeat_eq",
+      "name": "连按两次等号",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "keypad"
+      ],
+      "instruction": "按 5 + 3 = =，第二次等号之后屏幕上是多少？",
+      "goal": [
+        {
+          "name": "屏幕上是 11",
+          "path": "derived.display",
+          "op": "eq",
+          "value": "11"
+        },
+        {
+          "name": "11",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)11(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T11_memory",
+      "name": "用内存键攒两笔",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "memory",
+        "multi-step"
+      ],
+      "instruction": "先算 7 × 8 把结果存进内存，清屏，再算 6 × 7 也加进内存，最后把内存取出来。是多少？",
+      "goal": [
+        {
+          "name": "内存里是 98",
+          "path": "derived.memory",
+          "op": "eq",
+          "value": "98"
+        },
+        {
+          "name": "屏幕上也是 98",
+          "path": "derived.display",
+          "op": "eq",
+          "value": "98"
+        },
+        {
+          "name": "98",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)98(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T12_tape",
+      "name": "把纸带上的数拿回来",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 28,
+      "tags": [
+        "tape",
+        "multi-step"
+      ],
+      "instruction": "依次算 12 × 12、25 × 4、9 × 9，然后到历史页把「25 × 4」那一条的结果放回计算器。",
+      "goal": [
+        {
+          "name": "屏幕上是 100",
+          "path": "derived.display",
+          "op": "eq",
+          "value": "100"
+        },
+        {
+          "name": "纸带上有三条",
+          "path": "derived.historyCount",
+          "op": "eq",
+          "value": 3
+        },
+        {
+          "name": "回到了计算页",
+          "path": "derived.route",
+          "op": "eq",
+          "value": "calc"
+        }
+      ]
+    },
+    {
+      "id": "T13_disk",
+      "name": "标称 500 GB 的盘",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "convert"
+      ],
+      "instruction": "到换算页，按十进制 GB 输入 500，看看它是多少个二进制 GiB。",
+      "goal": [
+        {
+          "name": "换算的是数据",
+          "path": "derived.convCat",
+          "op": "eq",
+          "value": "data"
+        },
+        {
+          "name": "按 GB 输入",
+          "path": "derived.convUnit",
+          "op": "eq",
+          "value": "GB"
+        },
+        {
+          "name": "值是 500",
+          "path": "derived.convValue",
+          "op": "eq",
+          "value": "500"
+        },
+        {
+          "name": "465.6612873",
+          "source": "answer",
+          "op": "regex",
+          "value": "465[.,]?66",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T14_temp",
+      "name": "37 度是多少华氏度",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "convert"
+      ],
+      "instruction": "到换算页，把 37 摄氏度换成华氏度和开尔文。",
+      "goal": [
+        {
+          "name": "换算的是温度",
+          "path": "derived.convCat",
+          "op": "eq",
+          "value": "temp"
+        },
+        {
+          "name": "按摄氏输入",
+          "path": "derived.convUnit",
+          "op": "eq",
+          "value": "C"
+        },
+        {
+          "name": "值是 37",
+          "path": "derived.convValue",
+          "op": "eq",
+          "value": "37"
+        },
+        {
+          "name": "98.6",
+          "source": "answer",
+          "op": "regex",
+          "value": "98[.,]6",
+          "weight": 3
+        },
+        {
+          "name": "310.15",
+          "source": "answer",
+          "op": "regex",
+          "value": "310[.,]15",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T15_discount",
+      "name": "打八折再减一百",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "percent",
+        "multi-step"
+      ],
+      "instruction": "一件 1280 元的衣服先打八折，再用一张 100 元的券。最后付多少？用计算器一步步算出来。",
+      "goal": [
+        {
+          "name": "屏幕上是 924",
+          "path": "derived.display",
+          "op": "eq",
+          "value": "924"
+        },
+        {
+          "name": "中间那步是 1024",
+          "path": "derived.results",
+          "op": "contains",
+          "value": "1024"
+        },
+        {
+          "name": "924",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)924(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T16_markup",
+      "name": "先加价再打折",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 32,
+      "tags": [
+        "percent",
+        "reasoning"
+      ],
+      "instruction": "一件 1280 元的衣服先涨价 25%，再打八折。最后是多少？和原价比是贵了还是便宜了？",
+      "goal": [
+        {
+          "name": "屏幕上是 1280",
+          "path": "derived.display",
+          "op": "eq",
+          "value": "1280"
+        },
+        {
+          "name": "中间那步是 1600",
+          "path": "derived.results",
+          "op": "contains",
+          "value": "1600"
+        },
+        {
+          "name": "1280",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)1280(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "正好回到原价",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:(一样|相同|原价|没变|不贵不便宜|1280))(?!\\d)",
+          "weight": 3,
+          "hint": "加价 25% 是乘 1.25，打八折是乘 0.8"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T17_one_tb",
+      "name": "一块 1 TB 的硬盘",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "convert",
+        "reasoning"
+      ],
+      "instruction": "买了一块标称 1 TB 的硬盘（厂商说的 1 TB 就是 1000 GB）。插到电脑上系统会显示多少 GiB？用换算页算出来，并说清楚为什么会少。",
+      "goal": [
+        {
+          "name": "换算的是数据",
+          "path": "derived.convCat",
+          "op": "eq",
+          "value": "data"
+        },
+        {
+          "name": "按 GB 输入 1000",
+          "path": "derived.convValue",
+          "op": "eq",
+          "value": "1000"
+        },
+        {
+          "name": "931.3225746",
+          "source": "answer",
+          "op": "regex",
+          "value": "931[.,]?3",
+          "weight": 3
+        },
+        {
+          "name": "因为一个是一千一个是 1024",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:(1024|二进制|十进制|1073741824))(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T18_pace",
+      "name": "跑进四小时要多快",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "multi-step",
+        "arithmetic"
+      ],
+      "instruction": "全程马拉松 42.195 公里。要在 4 小时（240 分钟）内跑完，平均每公里要几分几秒？先用计算器算出每公里多少分钟，再把小数部分换成秒。",
+      "goal": [
+        {
+          "name": "先算出 5.687877711",
+          "path": "derived.results",
+          "op": "contains",
+          "value": "5.687877711"
+        },
+        {
+          "name": "5 分 41 秒",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)41(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "每公里五分多",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)5(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T19_weight",
+      "name": "体检表和护照对不上",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 32,
+      "tags": [
+        "convert",
+        "multi-step"
+      ],
+      "instruction": "体检表上写 68.5 公斤，旧护照上写 150 磅。哪个更重？差多少克？先用换算页把 150 磅换成克，再用计算器减。",
+      "goal": [
+        {
+          "name": "换算过质量",
+          "path": "derived.convCat",
+          "op": "eq",
+          "value": "mass"
+        },
+        {
+          "name": "按磅输入 150",
+          "path": "derived.convValue",
+          "op": "eq",
+          "value": "150"
+        },
+        {
+          "name": "屏幕上是 461.1445",
+          "path": "derived.display",
+          "op": "eq",
+          "value": "461.1445"
+        },
+        {
+          "name": "体检表那个重",
+          "source": "answer",
+          "op": "regex",
+          "value": "(体检|68[.,]5|公斤)",
+          "weight": 3
+        },
+        {
+          "name": "差 461.1445 克",
+          "source": "answer",
+          "op": "regex",
+          "value": "461[.,]?1",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T20_aa",
+      "name": "AA 加服务费",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 32,
+      "tags": [
+        "percent",
+        "multi-step"
+      ],
+      "instruction": "一顿饭 386 元，五个人 AA。先算出每人多少，再给每人加 10% 的服务费。最后每人付多少？",
+      "goal": [
+        {
+          "name": "屏幕上是 84.92",
+          "path": "derived.display",
+          "op": "eq",
+          "value": "84.92"
+        },
+        {
+          "name": "中间那步是 77.2",
+          "path": "derived.results",
+          "op": "contains",
+          "value": "77.2"
+        },
+        {
+          "name": "84.92",
+          "source": "answer",
+          "op": "regex",
+          "value": "84[.,]92",
+          "weight": 3
+        },
+        {
+          "name": "不加服务费是 77.2",
+          "source": "answer",
+          "op": "regex",
+          "value": "77[.,]2",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    }
+  ]
+}

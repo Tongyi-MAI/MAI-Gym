@@ -1,0 +1,740 @@
+{
+  "env": "gavel_auction",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_settings",
+      "name": "Two settings",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "settings"
+      ],
+      "instruction": "Stop the app asking you to confirm every bid, and make it watch anything you bid on.",
+      "goal": [
+        {
+          "name": "No confirmation",
+          "path": "derived.settings.confirmBids",
+          "op": "eq",
+          "value": false,
+          "weight": 2
+        },
+        {
+          "name": "Auto-watch on",
+          "path": "derived.settings.autoWatch",
+          "op": "eq",
+          "value": true,
+          "weight": 2
+        },
+        {
+          "name": "Outbid alerts untouched",
+          "path": "derived.settings.outbidAlerts",
+          "op": "eq",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "T02_query_min",
+      "name": "Question: the smallest next bid",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "answer_expected": true,
+      "tags": [
+        "ladder",
+        "query",
+        "read-only"
+      ],
+      "instruction": "What is the smallest bid the elm and beech chair will accept? Answer in pounds and pence.",
+      "goal": [
+        {
+          "name": "£84.00",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)84(?!\\d)",
+          "weight": 3,
+          "hint": "£82 now, and the step at that price is £2"
+        },
+        {
+          "name": "You did not bid",
+          "path": "derived.biddingOn",
+          "op": "len_eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T03_watch",
+      "name": "Watch the clock",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "watchlist"
+      ],
+      "instruction": "Add the mantel clock to your watchlist.",
+      "goal": [
+        {
+          "name": "It is watched",
+          "path": "derived.watching",
+          "op": "contains",
+          "value": "Mantel clock",
+          "weight": 3
+        },
+        {
+          "name": "Three lots watched now",
+          "path": "derived.watchCount",
+          "op": "eq",
+          "value": 3,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T04_outbid",
+      "name": "Bid the minimum and get beaten",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "bidding",
+        "proxy"
+      ],
+      "instruction": "Put the smallest allowed bid on the box of green Penguins and see what happens.",
+      "goal": [
+        {
+          "name": "You are not leading",
+          "path": "derived.leader.Box of green Penguins",
+          "op": "eq",
+          "value": "rival",
+          "weight": 3,
+          "hint": "somebody already had a higher maximum in"
+        },
+        {
+          "name": "Your maximum is £13",
+          "path": "derived.yourMax.Box of green Penguins",
+          "op": "eq",
+          "value": 1300,
+          "weight": 2
+        },
+        {
+          "name": "But the price moved to £14",
+          "path": "derived.prices.Box of green Penguins",
+          "op": "eq",
+          "value": 1400,
+          "weight": 3,
+          "hint": "your maximum plus one step, capped at theirs"
+        }
+      ]
+    },
+    {
+      "id": "T05_lead_prints",
+      "name": "Take the lead on the prints",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "bidding",
+        "proxy"
+      ],
+      "instruction": "Become the highest bidder on the three botanical prints.",
+      "goal": [
+        {
+          "name": "You are leading",
+          "path": "derived.leader.Three botanical prints",
+          "op": "eq",
+          "value": "you",
+          "weight": 3
+        },
+        {
+          "name": "At £54",
+          "path": "derived.prices.Three botanical prints",
+          "op": "eq",
+          "value": 5400,
+          "weight": 3,
+          "hint": "the other maximum was £52 and the step there is £2"
+        },
+        {
+          "name": "And the reserve is met",
+          "path": "derived.reserveMet.Three botanical prints",
+          "op": "eq",
+          "value": true,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T06_query_pay",
+      "name": "Question: what a big maximum actually costs",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "answer_expected": true,
+      "tags": [
+        "proxy",
+        "query"
+      ],
+      "instruction": "Put a maximum of £92 on the botanical prints. What does the lot actually stand at afterwards? Answer in pounds and pence.",
+      "goal": [
+        {
+          "name": "£54.00",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)54(?!\\d)",
+          "weight": 3,
+          "hint": "your maximum is not the price — it is the other bidder's maximum plus a step"
+        },
+        {
+          "name": "Your maximum really is £92",
+          "path": "derived.yourMax.Three botanical prints",
+          "op": "eq",
+          "value": 9200,
+          "weight": 2
+        },
+        {
+          "name": "And the price really is £54",
+          "path": "derived.prices.Three botanical prints",
+          "op": "eq",
+          "value": 5400,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T07_lead_books",
+      "name": "Lead the Penguins",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "bidding",
+        "proxy"
+      ],
+      "instruction": "Become the highest bidder on the box of green Penguins.",
+      "goal": [
+        {
+          "name": "You are leading",
+          "path": "derived.leader.Box of green Penguins",
+          "op": "eq",
+          "value": "you",
+          "weight": 3
+        },
+        {
+          "name": "At £17",
+          "path": "derived.prices.Box of green Penguins",
+          "op": "eq",
+          "value": 1700,
+          "weight": 3,
+          "hint": "their maximum was £16 and under £20 the step is a pound"
+        }
+      ]
+    },
+    {
+      "id": "T08_reserve_trap",
+      "name": "Leading and still not selling",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "reserve",
+        "bidding"
+      ],
+      "instruction": "Become the highest bidder on the mantel clock — and then tell me whether that means you have bought it.",
+      "answer_expected": true,
+      "goal": [
+        {
+          "name": "You are leading it",
+          "path": "derived.leader.Mantel clock",
+          "op": "eq",
+          "value": "you",
+          "weight": 3
+        },
+        {
+          "name": "At £270",
+          "path": "derived.prices.Mantel clock",
+          "op": "eq",
+          "value": 27000,
+          "weight": 2
+        },
+        {
+          "name": "The reserve is still not met",
+          "path": "derived.reserveMet.Mantel clock",
+          "op": "eq",
+          "value": false,
+          "weight": 3
+        },
+        {
+          "name": "And you say so",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![A-Za-z])(?:no|not|reserve)",
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T09_watch_three",
+      "name": "Watch three more",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "watchlist"
+      ],
+      "instruction": "Add the lamp, the chair and the desk to your watchlist.",
+      "goal": [
+        {
+          "name": "Five watched",
+          "path": "derived.watchCount",
+          "op": "eq",
+          "value": 5,
+          "weight": 3
+        },
+        {
+          "name": "The lamp",
+          "path": "derived.watching",
+          "op": "contains",
+          "value": "Brass reading lamp",
+          "weight": 2
+        },
+        {
+          "name": "The chair",
+          "path": "derived.watching",
+          "op": "contains",
+          "value": "Elm and beech chair",
+          "weight": 2
+        },
+        {
+          "name": "The desk",
+          "path": "derived.watching",
+          "op": "contains",
+          "value": "Oak writing desk",
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T10_query_reserve",
+      "name": "Question: which are not selling yet",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "answer_expected": true,
+      "tags": [
+        "reserve",
+        "query",
+        "read-only"
+      ],
+      "instruction": "How many lots have not reached their reserve yet? Answer with just the number.",
+      "goal": [
+        {
+          "name": "Three",
+          "source": "answer",
+          "op": "eq",
+          "value": 3,
+          "extract": "number",
+          "weight": 3,
+          "hint": "the lamp, the clock and the rug"
+        },
+        {
+          "name": "Nothing was bid on",
+          "path": "derived.biddingOn",
+          "op": "len_eq",
+          "value": 0,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T11_sort",
+      "name": "Cheapest first",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "sort",
+        "navigation"
+      ],
+      "instruction": "Sort the catalogue by cheapest first and open whatever comes top.",
+      "goal": [
+        {
+          "name": "Sorted by price",
+          "path": "derived.sort",
+          "op": "eq",
+          "value": "price",
+          "weight": 3
+        },
+        {
+          "name": "On the Penguins",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "l_books",
+          "weight": 3,
+          "hint": "£12 is the lowest in the sale"
+        }
+      ]
+    },
+    {
+      "id": "T12_flagship",
+      "name": "Two leads for as little as possible (flagship)",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 34,
+      "tags": [
+        "bidding",
+        "proxy",
+        "long-horizon"
+      ],
+      "instruction": "Take the lead on both the botanical prints and the box of green Penguins, and do not bid on anything else.",
+      "goal": [
+        {
+          "name": "Leading the prints",
+          "path": "derived.leader.Three botanical prints",
+          "op": "eq",
+          "value": "you",
+          "weight": 3
+        },
+        {
+          "name": "Leading the Penguins",
+          "path": "derived.leader.Box of green Penguins",
+          "op": "eq",
+          "value": "you",
+          "weight": 3
+        },
+        {
+          "name": "The prints stand at £54",
+          "path": "derived.prices.Three botanical prints",
+          "op": "eq",
+          "value": 5400,
+          "weight": 2
+        },
+        {
+          "name": "The Penguins at £17",
+          "path": "derived.prices.Box of green Penguins",
+          "op": "eq",
+          "value": 1700,
+          "weight": 2
+        },
+        {
+          "name": "Nothing else was bid on",
+          "path": "derived.biddingOn",
+          "op": "len_eq",
+          "value": 2,
+          "weight": 3
+        },
+        {
+          "name": "Efficiency: 12 steps or fewer",
+          "source": "trajectory",
+          "path": "steps",
+          "op": "lte",
+          "value": 12,
+          "critical": false,
+          "weight": 0.5
+        }
+      ]
+    },
+    {
+      "id": "T13_category",
+      "name": "Furniture only",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "filter",
+        "bidding"
+      ],
+      "instruction": "Filter to furniture, then place the smallest allowed bid on the elm and beech chair.",
+      "goal": [
+        {
+          "name": "You bid on the chair",
+          "path": "derived.yourMax.Elm and beech chair",
+          "op": "eq",
+          "value": 8400,
+          "weight": 3
+        },
+        {
+          "name": "Which did not take the lead",
+          "path": "derived.leader.Elm and beech chair",
+          "op": "eq",
+          "value": "rival",
+          "weight": 2
+        },
+        {
+          "name": "You used the category filter",
+          "source": "trajectory",
+          "path": "ids",
+          "op": "contains",
+          "value": "cat_furniture",
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T14_query_step",
+      "name": "Question: the step on the desk",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "answer_expected": true,
+      "tags": [
+        "ladder",
+        "query",
+        "read-only"
+      ],
+      "instruction": "The oak writing desk stands at £470. How much does each bid have to go up by at that price? Answer in pounds.",
+      "goal": [
+        {
+          "name": "Ten pounds",
+          "source": "answer",
+          "op": "eq",
+          "value": 10,
+          "extract": "number",
+          "weight": 3,
+          "hint": "anything from £250 to £500 moves in tens"
+        },
+        {
+          "name": "Nothing was bid",
+          "path": "derived.biddingOn",
+          "op": "len_eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T15_raise",
+      "name": "Beaten, then back in front",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "bidding",
+        "proxy",
+        "long-horizon"
+      ],
+      "instruction": "Put the minimum on the Penguins, get outbid, then raise your maximum until you are in front.",
+      "goal": [
+        {
+          "name": "You are leading in the end",
+          "path": "derived.leader.Box of green Penguins",
+          "op": "eq",
+          "value": "you",
+          "weight": 3
+        },
+        {
+          "name": "At £17",
+          "path": "derived.prices.Box of green Penguins",
+          "op": "eq",
+          "value": 1700,
+          "weight": 2
+        },
+        {
+          "name": "You bid twice",
+          "path": "derived.bidCounts.Box of green Penguins",
+          "op": "eq",
+          "value": 4,
+          "weight": 2,
+          "hint": "it started on two bids"
+        }
+      ]
+    },
+    {
+      "id": "T16_three_leads",
+      "name": "Three leads under £250 (many valid answers)",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 40,
+      "unique_solution": false,
+      "tags": [
+        "bidding",
+        "constraint",
+        "multi-solution"
+      ],
+      "instruction": "Get yourself in front on at least three lots, with the total of those leading prices staying under £250.",
+      "goal": [
+        {
+          "name": "Leading three or more",
+          "path": "derived.leadingOn",
+          "op": "len_gte",
+          "value": 3,
+          "weight": 3
+        },
+        {
+          "name": "Under £250 all told",
+          "path": "derived.totalCommitted",
+          "op": "lte",
+          "value": 25000,
+          "weight": 3,
+          "hint": "the Penguins, the lamp and the prints come to about a hundred between them"
+        }
+      ]
+    },
+    {
+      "id": "T17_no_confirm",
+      "name": "Bid without being asked twice",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "settings",
+        "bidding",
+        "process-check"
+      ],
+      "instruction": "Turn off the bid confirmation first, then take the lead on the brass reading lamp.",
+      "goal": [
+        {
+          "name": "Confirmation is off",
+          "path": "derived.settings.confirmBids",
+          "op": "eq",
+          "value": false,
+          "weight": 2
+        },
+        {
+          "name": "You are leading the lamp",
+          "path": "derived.leader.Brass reading lamp",
+          "op": "eq",
+          "value": "you",
+          "weight": 3
+        },
+        {
+          "name": "At £32",
+          "path": "derived.prices.Brass reading lamp",
+          "op": "eq",
+          "value": 3200,
+          "weight": 2
+        },
+        {
+          "name": "The reserve is met now",
+          "path": "derived.reserveMet.Brass reading lamp",
+          "op": "eq",
+          "value": true,
+          "weight": 2,
+          "hint": "it needed £25 and was only at £18"
+        }
+      ]
+    },
+    {
+      "id": "T18_query_ladder",
+      "name": "Question: a step further up the ladder",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "answer_expected": true,
+      "tags": [
+        "ladder",
+        "query",
+        "read-only"
+      ],
+      "instruction": "On this ladder, what is the bidding step for a lot standing at £180? Answer in pounds.",
+      "goal": [
+        {
+          "name": "Five pounds",
+          "source": "answer",
+          "op": "eq",
+          "value": 5,
+          "extract": "number",
+          "weight": 3,
+          "hint": "between £100 and £250"
+        },
+        {
+          "name": "Nothing was bid",
+          "path": "derived.biddingOn",
+          "op": "len_eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T19_watch_and_bid",
+      "name": "Watch it, bid it, lead it",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 34,
+      "tags": [
+        "watchlist",
+        "bidding",
+        "long-horizon"
+      ],
+      "instruction": "Put the brass reading lamp on your watchlist, bid until you are the highest bidder on it, and make sure it has passed its reserve. Do not put anything else on the watchlist while you are there.",
+      "goal": [
+        {
+          "name": "Watched",
+          "path": "derived.watching",
+          "op": "contains",
+          "value": "Brass reading lamp",
+          "weight": 2
+        },
+        {
+          "name": "Leading it",
+          "path": "derived.leader.Brass reading lamp",
+          "op": "eq",
+          "value": "you",
+          "weight": 3
+        },
+        {
+          "name": "Reserve met",
+          "path": "derived.reserveMet.Brass reading lamp",
+          "op": "eq",
+          "value": true,
+          "weight": 3
+        },
+        {
+          "name": "And nothing else bid on",
+          "path": "derived.biddingOn",
+          "op": "len_eq",
+          "value": 1,
+          "weight": 2
+        },
+        {
+          "name": "The watchlist grew by exactly one",
+          "path": "derived.watchCount",
+          "op": "eq",
+          "value": 3,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T20_unwatch",
+      "name": "Swap what you are watching",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "watchlist"
+      ],
+      "instruction": "Take the folding plate camera off your watchlist and put the oak writing desk on it instead. Leave the rug where it is.",
+      "goal": [
+        {
+          "name": "The camera is off",
+          "path": "derived.watching",
+          "op": "not_contains",
+          "value": "Folding plate camera",
+          "weight": 3
+        },
+        {
+          "name": "The desk is on",
+          "path": "derived.watching",
+          "op": "contains",
+          "value": "Oak writing desk",
+          "weight": 3
+        },
+        {
+          "name": "The rug is still on",
+          "path": "derived.watching",
+          "op": "contains",
+          "value": "Kilim runner",
+          "weight": 2
+        },
+        {
+          "name": "Two watched",
+          "path": "derived.watchCount",
+          "op": "eq",
+          "value": 2,
+          "weight": 2
+        }
+      ]
+    }
+  ]
+}

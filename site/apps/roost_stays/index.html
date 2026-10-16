@@ -1,0 +1,3019 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Roost · Stays (mocked GUI env)</title>
+<!--
+  ============================================================================
+  Roost — a single-file H5 mobile GUI environment for agent research.
+
+  Same two-block contract as every environment in this repo:
+
+    script#engine  ...  pure state machine. No DOM, no Date.now, no Math.random.
+                        Exports globalThis.ROOST_ENGINE and is loaded verbatim
+                        by pipeline/runner.mjs inside a node:vm sandbox.
+    script#ui      ...  renders engine.screen(state) -> DOM, exposes __ENV__.
+
+  Everything you see is drawn: the illustrations are inline SVG scenes built
+  from a small vocabulary (sky, ridge, water, foliage, structure), so the app
+  renders identically on a machine with no fonts, no network and no images.
+  ============================================================================
+-->
+<style>
+:root{
+  --accent:#2f6f5e; --accent-d:#235444; --accent-s:#e7f1ed; --accent-l:#4a9683;
+  --bg:#faf8f4; --card:#fff; --line:#eceae3; --line2:#f5f3ee;
+  --ink:#1b2a29; --ink2:#5d6c6a; --muted:#98a3a1;
+  --gold:#e0a33c; --red:#cf4c3c; --sky:#7fb8d6;
+  --r:16px; --r2:12px;
+  --shadow:0 1px 2px rgba(24,38,36,.05),0 8px 24px rgba(24,38,36,.06);
+  --serif:ui-serif,Georgia,"Iowan Old Style","Times New Roman",serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;height:100%}
+body{
+  background:#e9e6df;
+  font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  color:var(--ink);display:flex;align-items:center;justify-content:center;overflow:hidden;
+}
+
+/* ---------------- device frame ---------------- */
+#device{position:relative;width:390px;height:844px;background:#111;border-radius:46px;padding:5px;
+  box-shadow:0 30px 70px rgba(0,0,0,.32);flex:0 0 auto}
+#screen{position:relative;width:100%;height:100%;background:var(--bg);border-radius:41px;
+  overflow:hidden;display:flex;flex-direction:column}
+#notch{position:absolute;top:5px;left:50%;transform:translateX(-50%);width:118px;height:30px;
+  background:#111;border-radius:0 0 18px 18px;z-index:60}
+body.bare{background:var(--bg)}
+body.bare #device{width:390px;height:844px;padding:0;border-radius:0;box-shadow:none;background:var(--bg)}
+body.bare #screen{border-radius:0}
+body.bare #notch{display:none}
+body.bare .n-sheet{animation:none}
+
+/* ---------------- status bar ---------------- */
+.statusbar{height:44px;flex:0 0 44px;display:flex;align-items:flex-end;justify-content:space-between;
+  padding:0 22px 6px;font-size:13px;font-weight:600;z-index:50;color:var(--ink)}
+.statusbar.on-art{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.3)}
+.statusbar .sb-r{display:flex;gap:5px;align-items:center}
+.sb-bat{width:22px;height:11px;border:1.3px solid currentColor;border-radius:3px;position:relative;opacity:.9}
+.sb-bat:after{content:"";position:absolute;right:-3px;top:3px;width:2px;height:5px;background:currentColor;border-radius:0 1px 1px 0}
+.sb-bat i{position:absolute;left:1.3px;top:1.3px;bottom:1.3px;width:72%;background:currentColor;border-radius:1px}
+
+#app{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;position:relative}
+
+/* ---------------- chrome ---------------- */
+.n-appbar{flex:0 0 auto;min-height:48px;display:flex;align-items:center;gap:8px;padding:6px 12px;
+  background:var(--card);border-bottom:1px solid var(--line);z-index:20}
+.n-appbar .ab-title{flex:1 1 auto;text-align:center;font:600 16.5px/1.3 var(--serif);letter-spacing:.2px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.n-appbar .ab-side{flex:0 0 auto;min-width:60px;display:flex;align-items:center;gap:6px}
+.n-appbar .ab-side.right{justify-content:flex-end}
+.n-appbar.plain{background:transparent;border-bottom:none}
+.n-appbar.float{position:absolute;top:0;left:0;right:0;background:transparent;border:none;z-index:30}
+.iconbtn{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  color:var(--ink);cursor:pointer;background:transparent}
+.iconbtn:active{background:#f1efe9}
+.iconbtn.glass{background:rgba(255,255,255,.92);box-shadow:0 2px 8px rgba(0,0,0,.14)}
+.iconbtn.on{color:var(--red)}
+
+.n-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding-bottom:10px}
+.n-scroll::-webkit-scrollbar{width:0}
+.n-scroll.flush{padding-bottom:0}
+
+/* ---------------- typography ---------------- */
+.n-text{padding:2px 16px;color:var(--ink2)}
+.n-text.h1{font:700 25px/1.2 var(--serif);color:var(--ink);padding:18px 16px 6px;letter-spacing:-.2px}
+.n-text.h2{font:600 17px/1.3 var(--serif);color:var(--ink);padding:16px 16px 6px}
+.n-text.h3{font:600 14px/1.3 -apple-system,sans-serif;color:var(--ink);padding:12px 16px 4px}
+.n-text.body{font-size:14px;padding:4px 16px;line-height:1.6}
+.n-text.muted{font-size:12.5px;color:var(--muted);padding:4px 16px}
+.n-text.eyebrow{font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:var(--accent);
+  font-weight:700;padding:14px 16px 2px}
+.n-text.empty{padding:8px 16px 40px;text-align:center;color:var(--muted);font-size:13.5px}
+.n-sec{padding:16px 16px 6px;font:600 15.5px/1.3 var(--serif);color:var(--ink)}
+.n-space{height:16px}
+.n-divider{height:1px;background:var(--line);margin:8px 16px}
+
+/* ---------------- illustration ---------------- */
+.art{position:relative;overflow:hidden;background:#e8eeec;flex:0 0 auto}
+.art svg{width:100%;height:100%;display:block}
+.art.rounded{border-radius:var(--r2)}
+.scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,251,243,.78) 0%,rgba(255,251,243,.34) 26%,rgba(255,251,243,0) 46%)}
+.hero{position:relative;height:246px}
+.hero .hero-txt{position:absolute;left:18px;right:18px;top:14px;color:var(--ink)}
+.hero .hero-eyebrow{font-size:11px;letter-spacing:1.8px;text-transform:uppercase;color:var(--accent-d);font-weight:800}
+.hero .hero-title{font:700 27px/1.14 var(--serif);margin-top:5px;letter-spacing:-.3px}
+.hero .hero-sub{font-size:12.5px;color:#4a605c;margin-top:6px;max-width:270px}
+
+.gallery{display:flex;gap:8px;padding:10px 16px;overflow-x:auto}
+.gallery::-webkit-scrollbar{height:0}
+.gallery .g-item{flex:0 0 auto;width:118px;height:84px;border-radius:10px;overflow:hidden;
+  border:1px solid var(--line);cursor:pointer}
+.gallery .g-item.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-s)}
+
+/* ---------------- cards ---------------- */
+.n-card{background:var(--card);border-radius:var(--r);margin:10px 16px;box-shadow:var(--shadow);overflow:hidden}
+.n-card.pad{padding:14px}
+.n-card.tap{cursor:pointer;transition:transform .09s}
+.n-card.tap:active{transform:scale(.99)}
+.n-card.flat{box-shadow:none;border:1px solid var(--line)}
+
+.stay .s-art{height:168px;position:relative}
+.stay .s-fav{position:absolute;top:10px;right:10px;z-index:2}
+.stay .s-badge{position:absolute;top:10px;left:10px;z-index:2;background:rgba(255,255,255,.94);
+  border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;color:var(--ink);
+  box-shadow:0 2px 8px rgba(0,0,0,.12)}
+.stay .s-body{padding:12px 14px 14px}
+.stay .s-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.stay .s-name{font:600 16px/1.3 var(--serif);flex:1 1 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stay .s-rate{flex:0 0 auto;font-size:12.5px;color:var(--ink);display:flex;align-items:center;gap:3px}
+.stay .s-rate b{font-weight:650}
+.stay .s-meta{color:var(--muted);font-size:12.5px;margin-top:4px}
+.stay .s-price{margin-top:9px;font-size:14px}
+.stay .s-price b{font:700 17px/1 var(--serif)}
+.stay .s-price span{color:var(--muted);font-size:12.5px}
+.stay .s-tags{margin-top:9px;display:flex;gap:6px;flex-wrap:wrap}
+
+.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;
+  font-weight:600;background:var(--line2);color:var(--ink2)}
+.pill.good{background:var(--accent-s);color:var(--accent-d)}
+.pill.warn{background:#fdf3e2;color:#a5701c}
+.pill.mut{background:#f2f1ec;color:var(--muted)}
+.pill.live{background:#e9f6f0;color:#1f7a54}
+.pill.dead{background:#f4f2f0;color:#9a9a94}
+
+/* ---------------- rows / controls ---------------- */
+.n-row{display:flex;align-items:center;gap:12px;padding:14px;background:var(--card);
+  border-bottom:1px solid var(--line2);min-height:52px}
+.n-row:last-child{border-bottom:none}
+.n-row.tap{cursor:pointer}
+.n-row.tap:active{background:#faf9f6}
+.n-row .r-lead{flex:0 0 auto;width:26px;color:var(--accent);display:flex;align-items:center;justify-content:center}
+.n-row .r-main{flex:1 1 auto;min-width:0}
+.n-row .r-label{font-size:14.5px}
+.n-row .r-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.n-row .r-value{flex:0 0 auto;font-size:13.5px;color:var(--ink2);max-width:160px;text-align:right;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.n-row .r-value.strong{color:var(--ink);font-weight:650}
+.n-row .r-arrow{flex:0 0 auto;color:#c3c9c7;display:flex}
+
+.n-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;height:44px;padding:0 20px;
+  border-radius:12px;font-size:15px;font-weight:650;background:var(--line2);color:var(--ink);
+  border:none;cursor:pointer;user-select:none}
+.n-btn:active{filter:brightness(.96)}
+.n-btn.primary{background:var(--accent);color:#fff}
+.n-btn.primary.off{background:#cfd6d4;cursor:not-allowed}
+.n-btn.ghost{background:transparent;border:1px solid var(--line);height:36px;font-size:13.5px;padding:0 14px;color:var(--ink2)}
+.n-btn.danger{background:#fff;border:1px solid #eec4bd;color:var(--red);height:36px;font-size:13.5px;padding:0 14px}
+.n-btn.block{display:flex;width:100%}
+.n-btn.sm{height:34px;font-size:13.5px;padding:0 14px}
+.n-btnrow{display:flex;gap:8px;padding:12px 14px;justify-content:flex-end;align-items:center}
+
+.n-chips{display:flex;gap:8px;padding:10px 16px;overflow-x:auto}
+.n-chips::-webkit-scrollbar{height:0}
+.n-chip{flex:0 0 auto;height:34px;padding:0 14px;border-radius:18px;background:var(--card);
+  border:1px solid var(--line);display:flex;align-items:center;gap:6px;font-size:13px;
+  color:var(--ink2);cursor:pointer;white-space:nowrap}
+.n-chip.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.n-chip .ico{opacity:.9}
+
+.searchbar{margin:10px 16px;background:var(--card);border:1px solid var(--line);border-radius:30px;
+  display:flex;align-items:center;gap:10px;padding:10px 14px;box-shadow:var(--shadow)}
+.searchbar input{flex:1 1 auto;border:none;outline:none;background:transparent;font-size:14.5px;
+  font-family:inherit;color:var(--ink);min-width:0}
+.searchbar .sb-go{flex:0 0 auto;width:32px;height:32px;border-radius:50%;background:var(--accent);
+  color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.searchbar .sb-clear{flex:0 0 auto;width:22px;height:22px;border-radius:50%;background:#e8e6e0;
+  color:var(--ink2);display:flex;align-items:center;justify-content:center;cursor:pointer}
+
+.n-input{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--card);
+  border-bottom:1px solid var(--line2)}
+.n-input .i-label{flex:0 0 92px;font-size:13px;color:var(--muted)}
+.n-input input,.n-input textarea{flex:1 1 auto;border:none;outline:none;background:transparent;
+  font-size:14.5px;font-family:inherit;color:var(--ink);resize:none;min-width:0}
+.n-input textarea{height:56px;line-height:1.45}
+
+.n-switch{flex:0 0 auto;width:46px;height:27px;border-radius:14px;background:#dcdfdc;position:relative;
+  cursor:pointer;transition:background .16s}
+.n-switch.on{background:var(--accent)}
+.n-switch i{position:absolute;top:2.5px;left:2.5px;width:22px;height:22px;border-radius:50%;background:#fff;
+  transition:transform .16s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.n-switch.on i{transform:translateX(19px)}
+.n-radio{flex:0 0 auto;width:21px;height:21px;border-radius:50%;border:1.7px solid #d3d8d6;position:relative}
+.n-radio.on{border-color:var(--accent);background:var(--accent)}
+.n-radio.on:after{content:"";position:absolute;left:6.5px;top:3.5px;width:5px;height:9px;
+  border:2px solid #fff;border-top:0;border-left:0;transform:rotate(42deg)}
+
+.n-stepper{display:flex;align-items:center;gap:12px;flex:0 0 auto}
+.n-stepper .st-btn{width:30px;height:30px;border-radius:50%;border:1.4px solid #d8dcda;color:var(--ink2);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;background:#fff}
+.n-stepper .st-btn.off{opacity:.35;cursor:not-allowed}
+.n-stepper .st-val{min-width:20px;text-align:center;font-size:15px;font-weight:650}
+
+/* ---------------- amenity grid ---------------- */
+.amen{display:grid;grid-template-columns:1fr 1fr;gap:2px 10px;padding:4px 16px 8px}
+.amen .a-item{display:flex;align-items:center;gap:9px;padding:9px 0;font-size:13.5px;color:var(--ink2)}
+.amen .a-item .ico{color:var(--accent);flex:0 0 auto}
+.amen .a-item.off{opacity:.34;text-decoration:line-through}
+
+/* ---------------- reviews ---------------- */
+.stars{display:inline-flex;gap:1.5px;color:var(--gold)}
+.rsum{padding:16px}
+.rsum .rs-top{display:flex;align-items:center;gap:12px}
+.rsum .rs-big{font:700 34px/1 var(--serif)}
+.rsum .rs-sub{font-size:12.5px;color:var(--muted);margin-top:5px}
+.rsum .rs-bars{margin-top:16px;display:grid;gap:9px}
+.rsum .rs-row{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--ink2)}
+.rsum .rs-row .lbl{flex:0 0 88px}
+.rsum .rs-row .track{flex:1 1 auto;display:block;height:5px;border-radius:3px;background:#e7e5dd;overflow:hidden}
+.rsum .rs-row .fill{display:block;height:100%;background:var(--accent);border-radius:2px}
+.rsum .rs-row .num{flex:0 0 28px;text-align:right;color:var(--ink);font-weight:600}
+.rev{padding:14px}
+.rev .rv-top{display:flex;align-items:center;gap:10px}
+.rev .rv-av{flex:0 0 auto;width:38px;height:38px;border-radius:50%;overflow:hidden;background:var(--line2)}
+.rev .rv-who{font-size:14px;font-weight:650}
+.rev .rv-meta{font-size:11.5px;color:var(--muted);margin-top:2px;display:flex;align-items:center;gap:6px}
+.rev .rv-text{margin-top:10px;font-size:13.5px;line-height:1.62;color:var(--ink2)}
+.rev .rv-reply{margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--line2);
+  font-size:12.5px;color:var(--ink2);line-height:1.55}
+.rev .rv-reply b{color:var(--ink)}
+.rev .rv-foot{margin-top:11px;display:flex}
+.rev .rv-help{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink2);
+  border:1px solid var(--line);border-radius:16px;padding:5px 12px;cursor:pointer;background:#fff}
+.rev .rv-help.on{border-color:var(--accent);color:var(--accent-d);background:var(--accent-s);font-weight:650}
+
+/* ---------------- host ---------------- */
+.host{display:flex;align-items:center;gap:12px;padding:14px}
+.host .h-av{flex:0 0 auto;width:48px;height:48px;border-radius:50%;overflow:hidden;background:var(--line2)}
+.host .h-name{font:600 15px/1.3 var(--serif)}
+.host .h-sub{font-size:12px;color:var(--muted);margin-top:2px}
+
+/* ---------------- calendar ---------------- */
+.cal{padding:4px 12px 12px;background:var(--card)}
+.cal .c-head{display:flex;align-items:center;justify-content:space-between;padding:8px 4px 12px}
+.cal .c-month{font:600 16px/1 var(--serif)}
+.cal .c-dow{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:11px;
+  color:var(--muted);font-weight:600;padding-bottom:6px}
+.cal .c-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px 0}
+.cal .c-day{height:42px;display:flex;align-items:center;justify-content:center;font-size:14px;
+  cursor:pointer;position:relative;color:var(--ink)}
+.cal .c-day.mute{color:#d6dbd9;cursor:not-allowed}
+.cal .c-day.blank{cursor:default}
+.cal .c-day.in-range{background:var(--accent-s)}
+.cal .c-day.edge{color:#fff;font-weight:700}
+.cal .c-day.edge:before{content:"";position:absolute;inset:3px 1px;background:var(--accent);border-radius:11px;z-index:0}
+.cal .c-day span{position:relative;z-index:1}
+.cal .c-day.start.in-range{background:linear-gradient(90deg,transparent 50%,var(--accent-s) 50%)}
+.cal .c-day.end.in-range{background:linear-gradient(90deg,var(--accent-s) 50%,transparent 50%)}
+
+/* ---------------- price breakdown ---------------- */
+.kv{display:flex;justify-content:space-between;gap:12px;padding:7px 16px;font-size:13.5px;color:var(--ink2)}
+.kv .v{color:var(--ink)}
+.kv.total{padding-top:12px;margin-top:6px;border-top:1px solid var(--line);font-weight:700}
+.kv.total .k,.kv.total .v{color:var(--ink);font-size:15.5px}
+.kv.save .v{color:var(--accent)}
+
+/* ---------------- bottom bars ---------------- */
+.n-bar{flex:0 0 auto;background:var(--card);border-top:1px solid var(--line);padding:10px 16px 12px;
+  display:flex;align-items:center;gap:14px;z-index:30;box-shadow:0 -4px 20px rgba(24,38,36,.05)}
+.n-bar .bar-txt{flex:1 1 auto;min-width:0}
+.n-bar .bar-price{font:700 18px/1.1 var(--serif)}
+.n-bar .bar-sub{font-size:11.5px;color:var(--muted);margin-top:3px}
+.n-tabbar{flex:0 0 auto;height:58px;background:var(--card);border-top:1px solid var(--line);display:flex;z-index:30}
+.n-tabbar .tb{flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  color:var(--muted);font-size:10.5px;cursor:pointer;font-weight:600}
+.n-tabbar .tb i{display:flex}
+.n-tabbar .tb.on{color:var(--accent)}
+
+/* ---------------- overlays ---------------- */
+.n-mask{position:absolute;inset:0;background:rgba(16,26,25,.42);z-index:70;display:flex;align-items:flex-end}
+.n-sheet{width:100%;max-height:82%;background:var(--card);border-radius:20px 20px 0 0;display:flex;
+  flex-direction:column;overflow:hidden;animation:up .18s ease-out}
+@keyframes up{from{transform:translateY(24px)}to{transform:none}}
+.n-sheet .sh-hd{padding:16px 16px 12px;display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--line)}
+.n-sheet .sh-hd .t{font:600 17px/1.2 var(--serif)}
+.n-sheet .sh-bd{flex:1 1 auto;overflow-y:auto;min-height:0}
+.n-sheet .sh-bd::-webkit-scrollbar{width:0}
+.n-sheet .sh-ft{flex:0 0 auto;border-top:1px solid var(--line);padding:12px 16px 14px}
+.n-toast{position:absolute;left:50%;bottom:120px;transform:translateX(-50%);background:rgba(22,32,31,.93);
+  color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;z-index:90;max-width:80%;text-align:center}
+.dialog{margin:auto;width:80%;background:#fff;border-radius:16px;overflow:hidden}
+
+/* ---------------- dev HUD ---------------- */
+#hud{position:fixed;top:14px;left:14px;width:310px;max-height:calc(100% - 28px);overflow:auto;
+  background:#131a19;color:#c9d4d1;border-radius:12px;padding:12px;
+  font:11.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;z-index:200;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+#hud h4{margin:0 0 8px;font-size:12px;color:#fff;letter-spacing:.4px}
+#hud .k{color:#7d8b88}
+#hud pre{margin:6px 0 0;white-space:pre-wrap;word-break:break-word;color:#9fe0c5;max-height:250px;overflow:auto}
+#hud button{background:#23302d;border:none;color:#c9d4d1;border-radius:6px;padding:5px 9px;margin:2px 4px 2px 0;
+  font:inherit;cursor:pointer}
+#hud button:hover{background:#2f403c}
+#hud.off{display:none}
+</style>
+</head>
+<body>
+<div id="device">
+  <div id="notch"></div>
+  <div id="screen">
+    <div class="statusbar" id="sb">
+      <div id="sb-clock">9:41</div>
+      <div class="sb-r">
+        <svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="4.6" y="5.5" width="3" height="6.5" rx="1"/><rect x="9.2" y="3" width="3" height="9" rx="1"/><rect x="13.8" y="0" width="3" height="12" rx="1"/></svg>
+        <svg width="15" height="12" viewBox="0 0 15 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 4.2a9 9 0 0 1 13 0"/><path d="M3.4 6.9a5.6 5.6 0 0 1 8.2 0"/><circle cx="7.5" cy="10" r=".9" fill="currentColor" stroke="none"/></svg>
+        <span class="sb-bat"><i></i></span>
+      </div>
+    </div>
+    <div id="app"></div>
+  </div>
+</div>
+<div id="hud" class="off"></div>
+
+<script id="engine">
+/* ===========================================================================
+ * ENGINE — pure, deterministic, DOM-free.
+ * ======================================================================== */
+(function (root) {
+'use strict';
+
+var VERSION = '1.0.0';
+var ENV_ID  = 'roost_stays';
+
+/* -------------------------------------------------------- calendar math */
+/* Howard Hinnant's civil<->days algorithms: pure arithmetic, no Date object. */
+function daysFromCivil(y, m, d){
+  y -= m <= 2 ? 1 : 0;
+  var era = Math.floor(y / 400), yoe = y - era * 400;
+  var doy = Math.floor((153 * (m + (m > 2 ? -3 : 9)) + 2) / 5) + d - 1;
+  var doe = yoe * 365 + Math.floor(yoe / 4) - Math.floor(yoe / 100) + doy;
+  return era * 146097 + doe - 719468;
+}
+function parseDate(s){ var p = String(s).split('-'); return {y:+p[0], m:+p[1], d:+p[2]}; }
+function iso(y, m, d){ return y + '-' + (m<10?'0':'') + m + '-' + (d<10?'0':'') + d; }
+function dayNum(s){ var c = parseDate(s); return daysFromCivil(c.y, c.m, c.d); }
+function weekday(s){ return ((dayNum(s) + 4) % 7 + 7) % 7; }          /* 0 = Sunday */
+function daysInMonth(y, m){ return daysFromCivil(m===12?y+1:y, m===12?1:m+1, 1) - daysFromCivil(y, m, 1); }
+function nightsBetween(a, b){ return (a && b) ? dayNum(b) - dayNum(a) : 0; }
+
+var MONTHS = ['January','February','March','April','May','June',
+              'July','August','September','October','November','December'];
+var MON    = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var DOW    = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+function shortDate(s){ if (!s) return ''; var c = parseDate(s); return MON[c.m-1] + ' ' + c.d; }
+function longDate(s){ if (!s) return ''; var c = parseDate(s);
+  return DOW[weekday(s)] + ', ' + MON[c.m-1] + ' ' + c.d + ', ' + c.y; }
+function medDate(s){ if (!s) return ''; var c = parseDate(s);
+  return DOW[weekday(s)] + ' ' + MON[c.m-1] + ' ' + c.d; }
+
+/* ------------------------------------------------------------- catalog */
+var AMENITIES = [
+  {key:'wifi',      label:'Fast wifi',            icon:'wifi'},
+  {key:'kitchen',   label:'Full kitchen',         icon:'kitchen'},
+  {key:'fireplace', label:'Wood fireplace',       icon:'fire'},
+  {key:'parking',   label:'Free parking',         icon:'car'},
+  {key:'pets',      label:'Pets allowed',         icon:'paw'},
+  {key:'pool',      label:'Heated pool',          icon:'wave'},
+  {key:'workspace', label:'Dedicated workspace',  icon:'desk'},
+  {key:'ac',        label:'Air conditioning',     icon:'snow'},
+  {key:'firepit',   label:'Outdoor fire pit',     icon:'fire'},
+  {key:'kayak',     label:'Kayaks included',      icon:'kayak'},
+  {key:'stepfree',  label:'Step-free entrance',   icon:'access'}
+];
+
+var STAYS = [
+  {id:'p_cabin', tags:['cabins','mountain','nature'], name:'Pinecrest Cabin', city:'Aspen, Colorado', type:'Cabin', art:'cabin', hue:158,
+   nightly:148, cleaning:45, rating:4.92, reviews:214, distanceMi:160,
+   scores:{cleanliness:4.9, accuracy:4.9, checkin:5.0, location:4.8, value:4.7}, beds:2, baths:1, guests:4,
+   amenities:['wifi','kitchen','fireplace','parking','pets'], freeCancel:true, instant:true,
+   host:{name:'Marisol', avatar:1, years:6, superhost:true},
+   blurb:'An A-frame of warm cedar tucked under the aspens, twelve minutes from the gondola. '
+       + 'Wake up to elk in the meadow and a wood stove that does all the work.'},
+
+  {id:'p_beach', tags:['water','nature'], name:'Saltwater Bungalow', city:'Tofino, British Columbia', type:'Bungalow', art:'beach', hue:198,
+   nightly:210, cleaning:60, rating:4.78, reviews:96,  distanceMi:1340,
+   scores:{cleanliness:4.8, accuracy:4.8, checkin:4.7, location:4.9, value:4.5}, beds:2, baths:2, guests:4,
+   amenities:['wifi','kitchen','pool','parking'], freeCancel:false, instant:false,
+   host:{name:'Aput', avatar:2, years:3, superhost:false},
+   blurb:'Cedar and glass on stilts above the tideline. The deck faces due west, so every evening '
+       + 'ends the same way: orange, then pink, then stars.'},
+
+  {id:'p_loft', tags:['design','city'], name:'Harbor Loft', city:'Lisbon, Portugal', type:'Loft', art:'city', hue:24,
+   nightly:96, cleaning:30, rating:4.61, reviews:431, distanceMi:4880,
+   scores:{cleanliness:4.5, accuracy:4.6, checkin:4.7, location:5.0, value:4.6}, beds:1, baths:1, guests:2,
+   amenities:['wifi','workspace','ac','stepfree'], freeCancel:true, instant:true,
+   host:{name:'Ines', avatar:3, years:8, superhost:true},
+   blurb:'Top floor of a tiled 1890s building in Alfama, with a window seat aimed straight at the river '
+       + 'and the 28 tram rattling past below.'},
+
+  {id:'p_dome', tags:['desert','unique','design'], name:'Dune Dome', city:'Joshua Tree, California', type:'Dome', art:'desert', hue:28,
+   nightly:132, cleaning:40, rating:4.85, reviews:158, distanceMi:830,
+   scores:{cleanliness:4.9, accuracy:4.8, checkin:4.9, location:4.7, value:4.8}, beds:1, baths:1, guests:2,
+   amenities:['wifi','kitchen','firepit','ac'], freeCancel:true, instant:true,
+   host:{name:'Ray', avatar:2, years:4, superhost:true},
+   blurb:'A geodesic dome on five acres of high desert. No neighbours, no light pollution, and a '
+       + 'skylight positioned for the Milky Way in June.'},
+
+  {id:'p_tree', tags:['unique','nature','cabins'], name:'Cedar Treehouse', city:'Olympic Peninsula, Washington', type:'Treehouse', art:'forest', hue:142,
+   nightly:175, cleaning:55, rating:4.97, reviews:73,  distanceMi:1220,
+   scores:{cleanliness:5.0, accuracy:4.9, checkin:5.0, location:4.9, value:4.8}, beds:1, baths:1, guests:3,
+   amenities:['wifi','kitchen','pets','fireplace'], freeCancel:false, instant:false,
+   host:{name:'Jonah', avatar:1, years:5, superhost:true},
+   blurb:'Twenty-two feet up an old-growth cedar, reached by a switchback stair. It sways a little in '
+       + 'the wind, which everyone worries about and then falls asleep to.'},
+
+  {id:'p_lake', tags:['water','nature','family'], name:'Blue Heron Cottage', city:'Lake Placid, New York', type:'Cottage', art:'lake', hue:186,
+   nightly:118, cleaning:50, rating:4.55, reviews:289, distanceMi:1720,
+   scores:{cleanliness:4.2, accuracy:4.6, checkin:4.7, location:4.8, value:4.7}, beds:3, baths:2, guests:6,
+   amenities:['wifi','kitchen','parking','ac','kayak','pets'], freeCancel:true, instant:true,
+   host:{name:'Dorothy', avatar:3, years:11, superhost:false},
+   blurb:'A green-shuttered cottage with its own dock and two kayaks in the boathouse. Loons at dusk, '
+       + 'mist on the water at six in the morning.'}
+,
+
+  {id:'p_canyon', tags:['desert','unique','design'], name:'Red Rock Casita', city:'Moab, Utah',
+   type:'Casita', art:'canyon', hue:14,
+   nightly:124, cleaning:38, rating:4.81, reviews:142, distanceMi:350,
+   scores:{cleanliness:4.8, accuracy:4.9, checkin:4.8, location:4.9, value:4.8},
+   beds:1, baths:1, guests:3,
+   amenities:['wifi','kitchen','ac','firepit','parking'], freeCancel:true, instant:true,
+   host:{name:'Nayeli', avatar:1, years:5, superhost:true},
+   blurb:'Built into the base of a sandstone fin, so one wall of the bedroom is the rock itself. '
+       + 'It stays cool through the afternoon without touching the air conditioning.'},
+
+  {id:'p_chalet', tags:['cabins','mountain','family'], name:'Larkspur Chalet', city:'Big Sky, Montana',
+   type:'Chalet', art:'mountain', hue:206,
+   nightly:265, cleaning:70, rating:4.89, reviews:118, distanceMi:750,
+   scores:{cleanliness:4.9, accuracy:4.9, checkin:4.8, location:5.0, value:4.6},
+   beds:3, baths:2, guests:6,
+   amenities:['wifi','kitchen','fireplace','parking','ac'], freeCancel:true, instant:false,
+   host:{name:'Anders', avatar:2, years:7, superhost:true},
+   blurb:'Three floors of larch and glass with a mud room big enough for six sets of skis. '
+       + 'The lift is a two minute walk downhill and a slightly longer one back.'},
+
+  {id:'p_barn', tags:['cabins','family','nature'], name:'Sunflower Barn', city:'Lindsborg, Kansas',
+   type:'Barn', art:'barn', hue:42,
+   nightly:138, cleaning:35, rating:4.73, reviews:205, distanceMi:540,
+   scores:{cleanliness:4.7, accuracy:4.8, checkin:4.9, location:4.5, value:4.9},
+   beds:2, baths:1, guests:5,
+   amenities:['wifi','kitchen','parking','pets','workspace'], freeCancel:true, instant:true,
+   host:{name:'Ruth', avatar:3, years:9, superhost:false},
+   blurb:'A 1920s dairy barn with the hayloft turned into a sleeping platform. Forty acres of '
+       + 'prairie, a fenced yard for the dog, and nothing overhead at night but stars.'},
+
+  {id:'p_airstream', tags:['desert','unique','mountain'], name:'Juniper Airstream', city:'Sedona, Arizona',
+   type:'Airstream', art:'airstream', hue:26,
+   nightly:96, cleaning:28, rating:4.66, reviews:311, distanceMi:650,
+   scores:{cleanliness:4.6, accuracy:4.5, checkin:4.8, location:4.8, value:4.7},
+   beds:1, baths:1, guests:2,
+   amenities:['wifi','ac','firepit','parking'], freeCancel:false, instant:true,
+   host:{name:'Cleo', avatar:1, years:3, superhost:false},
+   blurb:'A restored 1976 Airstream parked on a private juniper flat, pointed at the red rocks. '
+       + 'Small inside, enormous outside.'},
+
+  {id:'p_coast', tags:['water','nature','family'], name:'Gull Point Cottage', city:'Tillamook, Oregon',
+   type:'Cottage', art:'coast', hue:190,
+   nightly:152, cleaning:44, rating:4.84, reviews:167, distanceMi:1250,
+   scores:{cleanliness:4.8, accuracy:4.7, checkin:4.9, location:4.9, value:4.7},
+   beds:2, baths:1, guests:4,
+   amenities:['wifi','kitchen','fireplace','parking'], freeCancel:true, instant:true,
+   host:{name:'Margit', avatar:3, years:12, superhost:true},
+   blurb:'Weathered cedar shingles on a headland above the surf line, with a switchback path down '
+       + 'to the sand. Grey whales pass close in on their way north through spring.'}
+];
+
+/* Guest reviews. Displayed reviews are a sample of the full count on each stay,
+   which is why `stay.reviews` is larger than the list here. */
+var REVIEWS = [
+  {id:'rv_cabin_1', stayId:'p_cabin', author:'Dana W.',  avatar:3, date:'2026-05', rating:5, helpful:14,
+   text:'The wood stove is not a decoration — it heated the whole place in twenty minutes. We saw elk from the kitchen window on both mornings.'},
+  {id:'rv_cabin_2', stayId:'p_cabin', author:'Marcus T.', avatar:2, date:'2026-04', rating:4, helpful:9,
+   text:'Beautiful cabin, exactly as pictured. The drive up the last half mile is rough in a low car; we would rent something with clearance next time.',
+   reply:{by:'Marisol', text:'Good call on the clearance — I have added a note to the check-in guide. Thanks Marcus.'}},
+  {id:'rv_cabin_3', stayId:'p_cabin', author:'Priya R.',  avatar:1, date:'2026-03', rating:5, helpful:22,
+   text:'Third time here and it keeps getting better. Marisol left snowshoes by the door without us even asking.'},
+  {id:'rv_cabin_4', stayId:'p_cabin', author:'Tom H.',    avatar:2, date:'2026-02', rating:5, helpful:6,
+   text:'Twelve minutes to the gondola is accurate. Slept better than I have in months.'},
+
+  {id:'rv_beach_1', stayId:'p_beach', author:'Elena K.',  avatar:1, date:'2026-05', rating:5, helpful:18,
+   text:'The deck is the whole point. We ate every meal out there and watched the sun go down behind the islands.'},
+  {id:'rv_beach_2', stayId:'p_beach', author:'Sam O.',    avatar:2, date:'2026-04', rating:4, helpful:11,
+   text:'Lovely place. The pool takes a while to warm up, and there is no free cancellation — worth knowing before you book.'},
+  {id:'rv_beach_3', stayId:'p_beach', author:'Nadia F.',  avatar:3, date:'2026-03', rating:5, helpful:7,
+   text:'Woke up to sea lions on the rocks. Aput answered every message within minutes.'},
+  {id:'rv_beach_4', stayId:'p_beach', author:'Greg L.',   avatar:2, date:'2026-01', rating:4, helpful:5,
+   text:'Stunning in winter, though the storm windows rattle. Bring earplugs if you are a light sleeper.'},
+
+  {id:'rv_loft_1',  stayId:'p_loft',  author:'Bea M.',    avatar:1, date:'2026-05', rating:5, helpful:31,
+   text:'The window seat is not an exaggeration. I worked from it for four days and barely left the flat.'},
+  {id:'rv_loft_2',  stayId:'p_loft',  author:'Hugo S.',   avatar:2, date:'2026-04', rating:5, helpful:24,
+   text:'Perfect base. Everything in Alfama is a five minute walk and the 28 stop is right below the window.'},
+  {id:'rv_loft_3',  stayId:'p_loft',  author:'Clara D.',  avatar:3, date:'2026-03', rating:4, helpful:12,
+   text:'Gorgeous tiles, tiny kitchen. Fine for coffee and toast, not for cooking a real dinner.'},
+  {id:'rv_loft_4',  stayId:'p_loft',  author:'Ana P.',    avatar:1, date:'2026-02', rating:5, helpful:19,
+   text:'Ines met us at the door with a map she had marked up herself. Every recommendation was right.'},
+  {id:'rv_loft_5',  stayId:'p_loft',  author:'Ravi N.',   avatar:2, date:'2026-01', rating:4, helpful:15,
+   text:'The tram is charming for two days and then it is a tram. Ask for the back room if you are sensitive to noise.',
+   reply:{by:'Ines', text:'Noted — I now mention the tram in the listing so nobody is surprised.'}},
+
+  {id:'rv_dome_1',  stayId:'p_dome',  author:'Wren A.',   avatar:3, date:'2026-05', rating:5, helpful:27,
+   text:'We lay under the skylight until two in the morning. I have never seen that many stars in one place.'},
+  {id:'rv_dome_2',  stayId:'p_dome',  author:'Jo K.',     avatar:1, date:'2026-04', rating:5, helpful:13,
+   text:'Ray thought of everything — firewood stacked, star chart on the table, spare blankets in the chest.'},
+  {id:'rv_dome_3',  stayId:'p_dome',  author:'Micah B.',  avatar:2, date:'2026-03', rating:4, helpful:16,
+   text:'Wonderful, but it is genuinely remote. Bring more water than you think you need.'},
+  {id:'rv_dome_4',  stayId:'p_dome',  author:'Lila C.',   avatar:3, date:'2026-02', rating:5, helpful:8,
+   text:'The silence at night is total. Worth every mile of the drive.'},
+
+  {id:'rv_tree_1',  stayId:'p_tree',  author:'Owen F.',   avatar:2, date:'2026-05', rating:5, helpful:21,
+   text:'Yes it sways. Yes you get used to it within an hour. Best sleep of the year.'},
+  {id:'rv_tree_2',  stayId:'p_tree',  author:'Sara V.',   avatar:1, date:'2026-04', rating:5, helpful:17,
+   text:'The stair is steeper than it looks in photos — not a problem for us, but I would not bring my parents.'},
+  {id:'rv_tree_3',  stayId:'p_tree',  author:'Ade O.',    avatar:3, date:'2026-03', rating:5, helpful:12,
+   text:'Jonah left a thermos of coffee on the platform at seven in the morning. Unreal.'},
+  {id:'rv_tree_4',  stayId:'p_tree',  author:'Kim J.',    avatar:2, date:'2026-01', rating:4, helpful:9,
+   text:'Magical. Book a second night, one is not enough.'},
+
+  {id:'rv_lake_1',  stayId:'p_lake',  author:'Ben R.',    avatar:2, date:'2026-05', rating:5, helpful:20,
+   text:'Kayaks were ready on the dock when we arrived. The loons at dusk are the reason to come.'},
+  {id:'rv_lake_2',  stayId:'p_lake',  author:'Marta G.',  avatar:1, date:'2026-04', rating:4, helpful:10,
+   text:'Roomy and comfortable for six. The wifi drops if everyone streams at once.'},
+  {id:'rv_lake_3',  stayId:'p_lake',  author:'Chris P.',  avatar:3, date:'2026-03', rating:3, helpful:26,
+   text:'The cottage is fine but it needed a deeper clean — dust on the ceiling fans and sand in the hall. Dorothy refunded part of the cleaning fee when we mentioned it.',
+   reply:{by:'Dorothy', text:'You were right and I am sorry. I have changed cleaners since.'}},
+  {id:'rv_lake_4',  stayId:'p_lake',  author:'Ines L.',   avatar:1, date:'2026-02', rating:5, helpful:14,
+   text:'Mist on the water at six in the morning is exactly as advertised.'},
+  {id:'rv_lake_5',  stayId:'p_lake',  author:'Dev S.',    avatar:2, date:'2026-01', rating:4, helpful:6,
+   text:'Great value for the space. Bring your own coffee, the kitchen only has tea.'}
+,
+
+  {id:'rv_canyon_1', stayId:'p_canyon', author:'Tess B.',  avatar:1, date:'2026-05', rating:5, helpful:19,
+   text:'The casita is carved into the rock on one side, which keeps it cool without the air conditioning running all day. Petroglyphs a twenty minute walk up the wash.'},
+  {id:'rv_canyon_2', stayId:'p_canyon', author:'Marco V.', avatar:2, date:'2026-04', rating:4, helpful:11,
+   text:'Beautiful and quiet. The last mile is washboard dirt — fine in a sedan if you take it slowly.'},
+  {id:'rv_canyon_3', stayId:'p_canyon', author:'Ivy L.',   avatar:3, date:'2026-02', rating:5, helpful:14,
+   text:'Nayeli left a cooler of cold drinks out for our arrival after a long drive. Small thing, big difference.'},
+
+  {id:'rv_chalet_1', stayId:'p_chalet', author:'Hanna P.', avatar:3, date:'2026-05', rating:5, helpful:22,
+   text:'Six of us and nobody felt on top of anyone else. The mud room is bigger than my kitchen at home.'},
+  {id:'rv_chalet_2', stayId:'p_chalet', author:'Derek M.', avatar:2, date:'2026-03', rating:5, helpful:17,
+   text:'Ski-out is real ski-out. We were on the lift eight minutes after leaving the door.'},
+  {id:'rv_chalet_3', stayId:'p_chalet', author:'Yuki S.',  avatar:1, date:'2026-01', rating:4, helpful:8,
+   text:'Wonderful house. The upstairs bedroom gets warm — open the window and it is perfect.',
+   reply:{by:'Anders', text:'Thanks Yuki — a second vent goes in before next winter.'}},
+
+  {id:'rv_barn_1',   stayId:'p_barn',   author:'Callie R.', avatar:1, date:'2026-05', rating:5, helpful:26,
+   text:'The kids ran themselves ragged in the field and slept twelve hours. Worth the drive for that alone.'},
+  {id:'rv_barn_2',   stayId:'p_barn',   author:'Otto N.',   avatar:2, date:'2026-04', rating:4, helpful:15,
+   text:'Charming conversion. The roosters start at five thirty — a feature rather than a bug, but know it going in.'},
+  {id:'rv_barn_3',   stayId:'p_barn',   author:'Felix A.',  avatar:3, date:'2026-02', rating:5, helpful:12,
+   text:'Brought the dog and he had the time of his life. The fenced yard is exactly as described.'},
+
+  {id:'rv_air_1',    stayId:'p_airstream', author:'Rosa T.', avatar:3, date:'2026-05', rating:4, helpful:20,
+   text:'Tiny, tidy and surprisingly comfortable. It is an Airstream — you will bump elbows. That is the deal.'},
+  {id:'rv_air_2',    stayId:'p_airstream', author:'Nils H.', avatar:2, date:'2026-03', rating:5, helpful:18,
+   text:'The fire pit under those red rocks at sunset is the whole reason to book this.'},
+  {id:'rv_air_3',    stayId:'p_airstream', author:'June K.', avatar:1, date:'2026-01', rating:4, helpful:9,
+   text:'No free cancellation, so check your dates twice. Otherwise excellent value for Sedona.'},
+
+  {id:'rv_coast_1',  stayId:'p_coast',  author:'Beto A.',  avatar:2, date:'2026-05', rating:5, helpful:24,
+   text:'You hear the surf from the bed. Grey whales went past twice while we ate breakfast.'},
+  {id:'rv_coast_2',  stayId:'p_coast',  author:'Lena F.',  avatar:1, date:'2026-04', rating:4, helpful:13,
+   text:'Lovely cottage, damp coastal air — the heater takes an hour to catch up. Bring wool socks.'},
+  {id:'rv_coast_3',  stayId:'p_coast',  author:'Sam W.',   avatar:3, date:'2026-02', rating:5, helpful:10,
+   text:'The path down to the beach is steep but short. Worth every step.'}
+];
+var SCORE_LABELS = [
+  {key:'cleanliness', label:'Cleanliness'}, {key:'accuracy', label:'Accuracy'},
+  {key:'checkin', label:'Check-in'}, {key:'location', label:'Location'}, {key:'value', label:'Value'}
+];
+
+var CATEGORIES = [
+  {key:'all',      label:'All stays',  icon:'compass'},
+  {key:'cabins',   label:'Cabins',     icon:'fire'},
+  {key:'water',    label:'Waterfront', icon:'wave'},
+  {key:'mountain', label:'Mountains',  icon:'mountain'},
+  {key:'desert',   label:'Desert',     icon:'sun'},
+  {key:'unique',   label:'Unique',     icon:'star'},
+  {key:'design',   label:'Design',     icon:'city'},
+  {key:'family',   label:'Family',     icon:'user'}
+];
+
+var ADDONS = [
+  {key:'breakfast', label:'Daily breakfast basket', per:'night', price:18, icon:'breakfast',
+   desc:'Pastries, fruit and coffee left at your door each morning.'},
+  {key:'pickup',    label:'Airport pickup',         per:'stay',  price:45, icon:'car',
+   desc:'Private transfer on arrival day, one way.'},
+  {key:'checkout',  label:'Late checkout, 2 pm',    per:'stay',  price:25, icon:'clock',
+   desc:'Two extra hours on your last morning.'}
+];
+
+var PROMOS = [
+  {code:'ROOST20',   kind:'pct',  value:20, min:0,   expires:'2026-12-31', label:'20% off the nightly total'},
+  {code:'FIRSTTRIP', kind:'flat', value:30, min:200, expires:'2026-12-31', label:'$30 off nightly totals over $200'},
+  {code:'SPRING10',  kind:'pct',  value:10, min:0,   expires:'2026-04-30', label:'10% off, spring promotion'}
+];
+
+var CURRENCIES = {USD:{sym:'$', rate:1}, EUR:{sym:'€', rate:0.92}};
+var CATALOG = {stays:STAYS, amenities:AMENITIES, addons:ADDONS, promos:PROMOS,
+               categories:CATEGORIES, reviews:REVIEWS, scoreLabels:SCORE_LABELS};
+
+/* ------------------------------------------------------------- helpers */
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+function byId(list, id){ for (var i=0;i<list.length;i++) if (list[i].id===id) return list[i]; return null; }
+function stay(id){ return byId(STAYS, id); }
+function amenity(k){ for (var i=0;i<AMENITIES.length;i++) if (AMENITIES[i].key===k) return AMENITIES[i]; return null; }
+function reviewsFor(id){ return REVIEWS.filter(function(r){ return r.stayId === id; }); }
+function review(id){ for (var i=0;i<REVIEWS.length;i++) if (REVIEWS[i].id===id) return REVIEWS[i]; return null; }
+function addon(k){ for (var i=0;i<ADDONS.length;i++) if (ADDONS[i].key===k) return ADDONS[i]; return null; }
+function promo(code){
+  code = String(code || '').toUpperCase();
+  for (var i=0;i<PROMOS.length;i++) if (PROMOS[i].code===code) return PROMOS[i];
+  return null;
+}
+function lcg(seed){ var s=(seed>>>0)||1; return function(){ s=(s*1664525+1013904223)>>>0; return s/4294967296; }; }
+function shuffled(list, seed){
+  if (!seed) return list.slice();
+  var r=lcg(seed), a=list.slice();
+  for (var i=a.length-1;i>0;i--){ var j=Math.floor(r()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; }
+  return a;
+}
+function getPath(obj, path){
+  var parts = String(path).replace(/\[(\w+|last|-1)\]/g, '.$1').split('.').filter(Boolean), cur = obj;
+  for (var i=0;i<parts.length;i++){
+    if (cur == null) return undefined;
+    var k = parts[i];
+    if (Array.isArray(cur) && (k==='last'||k==='-1')) cur = cur[cur.length-1]; else cur = cur[k];
+  }
+  return cur;
+}
+function setPath(obj, path, value){
+  var parts = String(path).replace(/\[(\w+)\]/g,'.$1').split('.').filter(Boolean), cur = obj;
+  for (var i=0;i<parts.length-1;i++){
+    var k = parts[i];
+    if (cur[k] == null) cur[k] = /^\d+$/.test(parts[i+1]) ? [] : {};
+    cur = cur[k];
+  }
+  cur[parts[parts.length-1]] = value;
+  return obj;
+}
+
+/* --------------------------------------------------------- world clock */
+var TODAY = '2026-06-08';
+var CLOCK0 = {h:9, mi:41, s:0};
+var SECONDS_PER_STEP = 6;
+function tick(c, n){
+  var t = c.s + n; c.s = t % 60;
+  var m = c.mi + Math.floor(t/60); c.mi = m % 60;
+  c.h = (c.h + Math.floor(m/60)) % 24;
+  return c;
+}
+function clockStr(c){ return c.h + ':' + (c.mi<10?'0':'') + c.mi; }
+
+/* ------------------------------------------------------ initial state */
+function createInitialState(seed){
+  seed = seed || 0;
+  return {
+    meta:{ env:ENV_ID, version:VERSION, seed:seed, today:TODAY, clock:clone(CLOCK0),
+           steps:0, bookingSeq:3, cardSeq:4, answer:null, finished:false },
+    ui:{ stack:[{name:'home', params:{}}], tab:'explore', sheet:null, confirm:null, toast:null,
+         inputs:{}, query:'', category:'all', gallery:0,
+         calMonth:{y:2026, m:6}, reviewSort:'recent',
+         filters:{sort:'featured', freeCancel:false, pets:false, instant:false,
+                  nearby:false, maxPrice:0} },
+    profile:{ name:'Jordan Lee', email:'jordan@example.com', avatar:3, member:'2021',
+              location:'Denver, Colorado',
+              settings:{ currency:'USD', units:'mi', tripUpdates:true, marketing:true,
+                         accessibleOnly:false } },
+    wishlist:[],
+    reviewHelpful:{},
+    payments:[
+      {id:'pm_amex',   brand:'Amex',   last4:'8871', name:'JORDAN LEE', exp:'11/27'},
+      {id:'pm_visa',   brand:'Visa',   last4:'2043', name:'JORDAN LEE', exp:'04/28'},
+      {id:'pm_paypal', brand:'PayPal', last4:'',     name:'jordan@example.com', exp:''}
+    ],
+    defaultPaymentId:'pm_amex',
+    draft:{ stayId:null, checkIn:null, checkOut:null,
+            guests:{adults:2, children:0, pets:0}, addons:[], promo:null, note:'', paymentId:null },
+    bookings:[
+      {id:'b_2001', stayId:'p_beach', stayName:'Saltwater Bungalow', city:'Tofino, British Columbia',
+       status:'upcoming', checkIn:'2026-07-04', checkOut:'2026-07-07', nights:3,
+       guests:{adults:2, children:0, pets:0}, addons:[], promo:null, note:'',
+       price:{nights:3, nightly:630, cleaning:60, service:76, extras:0, discount:0}, total:766,
+       paymentId:'pm_visa', bookedAt:'2026-05-30'},
+      {id:'b_2002', stayId:'p_loft', stayName:'Harbor Loft', city:'Lisbon, Portugal',
+       status:'completed', checkIn:'2026-03-02', checkOut:'2026-03-05', nights:3,
+       guests:{adults:2, children:0, pets:0}, addons:['breakfast'], promo:null, note:'',
+       price:{nights:3, nightly:288, cleaning:30, service:35, extras:54, discount:0}, total:407,
+       paymentId:'pm_amex', bookedAt:'2026-01-18'}
+    ]
+  };
+}
+
+/* ------------------------------------------------------------ pricing */
+function promoUsable(st, p, nightlyTotal){
+  if (!p) return false;
+  if (p.expires < st.meta.today) return false;
+  return nightlyTotal >= (p.min || 0);
+}
+function quote(st, stayId, checkIn, checkOut, addons, promoCode){
+  var s = stay(stayId);
+  if (!s) return null;
+  var nights = Math.max(0, nightsBetween(checkIn, checkOut));
+  var nightly = s.nightly * nights;
+  var service = Math.round(nightly * 0.12);
+  var extras = 0;
+  (addons || []).forEach(function(k){
+    var a = addon(k); if (!a) return;
+    extras += a.per === 'night' ? a.price * nights : a.price;
+  });
+  var discount = 0, p = promo(promoCode);
+  if (p && promoUsable(st, p, nightly)) {
+    discount = p.kind === 'pct' ? Math.round(nightly * p.value / 100) : p.value;
+  }
+  var cleaning = nights ? s.cleaning : 0;
+  return {nights:nights, nightly:nightly, cleaning:cleaning, service:service,
+          extras:extras, discount:discount,
+          total: nightly + cleaning + service + extras - discount};
+}
+function draftQuote(st){
+  var d = st.draft;
+  return quote(st, d.stayId, d.checkIn, d.checkOut, d.addons, d.promo);
+}
+function guestCount(g){ return g.adults + g.children; }
+function fitsGuests(st, s){
+  var g = st.draft.guests;
+  if (guestCount(g) > s.guests) return 'Sleeps ' + s.guests;
+  if (g.pets > 0 && s.amenities.indexOf('pets') < 0) return 'No pets';
+  return null;
+}
+
+/* ------------------------------------------------------------ queries */
+function visibleStays(st){
+  var list = shuffled(STAYS, st.meta.seed), f = st.ui.filters, q = st.ui.query.toLowerCase();
+  if (q) list = list.filter(function(s){
+    var hay = [s.name, s.city, s.type, s.host.name, s.blurb,
+               s.tags.join(' '),
+               s.amenities.map(function(k){ var a = amenity(k); return a ? a.label : k; }).join(' '),
+               s.freeCancel ? 'free cancellation' : '',
+               s.instant ? 'instant book' : '',
+               s.host.superhost ? 'superhost' : ''].join(' ').toLowerCase();
+    return q.split(/\s+/).every(function(w){ return hay.indexOf(w) >= 0; });
+  });
+  if (st.ui.category !== 'all')
+    list = list.filter(function(s){ return s.tags.indexOf(st.ui.category) >= 0; });
+  if (f.freeCancel) list = list.filter(function(s){ return s.freeCancel; });
+  if (f.pets)       list = list.filter(function(s){ return s.amenities.indexOf('pets') >= 0; });
+  if (f.instant)    list = list.filter(function(s){ return s.instant; });
+  if (f.nearby)     list = list.filter(function(s){ return s.distanceMi <= 1000; });
+  if (f.maxPrice)   list = list.filter(function(s){ return s.nightly <= f.maxPrice; });
+  if (st.profile.settings.accessibleOnly)
+    list = list.filter(function(s){ return s.amenities.indexOf('stepfree') >= 0; });
+  if (f.sort === 'price')  list = list.slice().sort(function(a,b){ return a.nightly - b.nightly; });
+  if (f.sort === 'rating') list = list.slice().sort(function(a,b){ return b.rating - a.rating; });
+  if (f.sort === 'distance') list = list.slice().sort(function(a,b){ return a.distanceMi - b.distanceMi; });
+  return list;
+}
+function route(st){ return st.ui.stack[st.ui.stack.length - 1]; }
+function commas(n){ return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+function dist(st, mi){
+  return st.profile.settings.units === 'km'
+    ? commas(Math.round(mi * 1.609)) + ' km'
+    : commas(mi) + ' mi';
+}
+function sortedReviews(st, stayId){
+  var list = reviewsFor(stayId).slice(), k = st.ui.reviewSort;
+  if (k === 'high') list.sort(function(a,b){ return b.rating - a.rating || (a.date < b.date ? 1 : -1); });
+  else if (k === 'low') list.sort(function(a,b){ return a.rating - b.rating || (a.date < b.date ? 1 : -1); });
+  else list.sort(function(a,b){ return a.date < b.date ? 1 : (a.date > b.date ? -1 : 0); });
+  return list;
+}
+function helpfulCount(st, r){ return r.helpful + (st.reviewHelpful[r.id] ? 1 : 0); }
+function money(st, usd){
+  var c = CURRENCIES[st.profile.settings.currency] || CURRENCIES.USD;
+  return c.sym + commas(Math.round(usd * c.rate));
+}
+
+var SELECT = { quote:quote, draftQuote:draftQuote, visibleStays:visibleStays, route:route,
+               money:money, clockStr:clockStr, nightsBetween:nightsBetween, guestCount:guestCount,
+               shortDate:shortDate, longDate:longDate, medDate:medDate, dist:dist,
+               reviewsFor:reviewsFor, sortedReviews:sortedReviews, helpfulCount:helpfulCount, fitsGuests:fitsGuests, promoUsable:promoUsable };
+
+/* ------------------------------------------------------------- reducer */
+function push(st, name, params){ st.ui.stack.push({name:name, params:params||{}}); st.ui.sheet=null; }
+function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
+function toast(st, t){ st.ui.toast = t; }
+function clampInt(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+
+var GUEST_LIMITS = {adults:[1,12], children:[0,8], pets:[0,3]};
+var BRANDS = {'3':'Amex', '4':'Visa', '5':'Mastercard', '6':'Discover'};
+
+function reduce(prev, action){
+  var st = clone(prev), A = action || {};
+  st.ui.toast = null;
+  st.meta.steps += 1;
+  tick(st.meta.clock, SECONDS_PER_STEP);
+
+  switch (A.type) {
+
+  /* ---- navigation ---- */
+  case 'NAV':  push(st, A.to, A.params); break;
+  case 'BACK':
+    if (st.ui.confirm) st.ui.confirm = null;
+    else if (st.ui.sheet) st.ui.sheet = null;
+    else pop(st);
+    break;
+  case 'TAB':
+    st.ui.tab = A.tab; st.ui.sheet = null; st.ui.confirm = null;
+    st.ui.stack = [{name: A.tab === 'explore' ? 'home' : A.tab, params:{}}];
+    break;
+  case 'HOME':
+    st.ui.tab = 'explore'; st.ui.stack = [{name:'home', params:{}}];
+    st.ui.sheet = null; st.ui.confirm = null;
+    break;
+
+  /* ---- search & filtering ---- */
+  case 'SET_INPUT': st.ui.inputs[A.field] = A.value; break;
+  case 'SUBMIT_SEARCH':
+    st.ui.query = String(st.ui.inputs.search || '').trim();
+    if (route(st).name !== 'results') push(st, 'results', {});
+    break;
+  case 'CLEAR_SEARCH': st.ui.query = ''; st.ui.inputs.search = ''; toast(st, 'Search cleared'); break;
+  case 'SET_CATEGORY':
+    st.ui.category = A.key;
+    if (route(st).name !== 'results' && A.key !== 'all') push(st, 'results', {});
+    break;
+  case 'SET_FILTER': st.ui.filters[A.key] = A.value; break;
+  case 'CLEAR_FILTERS':
+    st.ui.filters = {sort:'featured', freeCancel:false, pets:false, instant:false,
+                     nearby:false, maxPrice:0};
+    st.ui.category = 'all';
+    toast(st, 'Filters cleared');
+    break;
+
+  /* ---- sheets ---- */
+  case 'OPEN_SHEET':
+    st.ui.sheet = {type:A.sheet};
+    if (A.sheet === 'promo') st.ui.inputs.promo = st.draft.promo || '';
+    if (A.sheet === 'calendar' && st.draft.checkIn) {
+      var ci = parseDate(st.draft.checkIn);
+      st.ui.calMonth = {y:ci.y, m:ci.m};
+    }
+    break;
+  case 'CLOSE_SHEET': st.ui.sheet = null; break;
+  case 'CONFIRM_NO':  st.ui.confirm = null; break;
+  case 'CONFIRM_YES': {
+    var yes = st.ui.confirm && st.ui.confirm.yes; st.ui.confirm = null;
+    if (yes) { var keep = st.meta.steps, kc = clone(st.meta.clock);
+               var out = reduce(st, yes); out.meta.steps = keep; out.meta.clock = kc; return out; }
+    break;
+  }
+
+  /* ---- calendar ---- */
+  case 'CAL_MONTH': {
+    var m = st.ui.calMonth.m + A.delta, y = st.ui.calMonth.y;
+    if (m < 1) { m = 12; y -= 1; }
+    if (m > 12) { m = 1; y += 1; }
+    st.ui.calMonth = {y:y, m:m};
+    break;
+  }
+  case 'CAL_PICK': {
+    var d = A.date;
+    if (d < st.meta.today) { toast(st, 'That date has already passed'); break; }
+    var dr = st.draft;
+    if (!dr.checkIn || dr.checkOut || d <= dr.checkIn) { dr.checkIn = d; dr.checkOut = null; }
+    else { dr.checkOut = d; }
+    break;
+  }
+  case 'CAL_CLEAR': st.draft.checkIn = null; st.draft.checkOut = null; break;
+
+  /* ---- guests ---- */
+  case 'GUESTS': {
+    var lim = GUEST_LIMITS[A.key]; if (!lim) break;
+    st.draft.guests[A.key] = clampInt(st.draft.guests[A.key] + A.delta, lim[0], lim[1]);
+    break;
+  }
+
+  /* ---- stays ---- */
+  case 'FAV': {
+    var i = st.wishlist.indexOf(A.stayId);
+    if (i >= 0) { st.wishlist.splice(i, 1); toast(st, 'Removed from wishlist'); }
+    else { st.wishlist.push(A.stayId); toast(st, 'Saved to wishlist'); }
+    break;
+  }
+  case 'SET_GALLERY': st.ui.gallery = A.idx; break;
+  case 'OPEN_REVIEWS':
+    st.ui.reviewSort = 'recent';
+    push(st, 'reviews', {id:A.stayId});
+    break;
+  case 'SET_REVIEW_SORT': st.ui.reviewSort = A.key; break;
+  case 'REVIEW_HELPFUL': {
+    var rv = review(A.id); if (!rv) break;
+    if (st.reviewHelpful[A.id]) { delete st.reviewHelpful[A.id]; toast(st, 'Removed your vote'); }
+    else { st.reviewHelpful[A.id] = true; toast(st, 'Marked as helpful'); }
+    break;
+  }
+  case 'OPEN_STAY':
+    st.ui.gallery = 0;
+    push(st, 'stay', {id:A.stayId});
+    break;
+  case 'RESERVE': {
+    var s = stay(A.stayId); if (!s) break;
+    if (!st.draft.checkIn || !st.draft.checkOut) { toast(st, 'Choose your dates first'); break; }
+    var bad = fitsGuests(st, s);
+    if (bad) { toast(st, 'This stay does not fit your party (' + bad + ')'); break; }
+    st.draft.stayId = A.stayId;
+    if (!st.draft.paymentId) st.draft.paymentId = st.defaultPaymentId;
+    st.ui.inputs.note = st.draft.note || '';
+    push(st, 'booking', {});
+    break;
+  }
+
+  /* ---- booking ---- */
+  case 'TOGGLE_ADDON': {
+    var k = A.key, arr = st.draft.addons, j = arr.indexOf(k);
+    if (j >= 0) arr.splice(j, 1); else arr.push(k);
+    arr.sort();
+    break;
+  }
+  case 'SET_DRAFT': st.draft[A.key] = A.value; break;
+  case 'APPLY_PROMO': {
+    var code = String(st.ui.inputs.promo || '').trim().toUpperCase();
+    var p = promo(code);
+    if (!p) { toast(st, 'That code is not valid'); break; }
+    var q0 = quote(st, st.draft.stayId, st.draft.checkIn, st.draft.checkOut, st.draft.addons, null);
+    if (p.expires < st.meta.today) { toast(st, 'That code expired on ' + p.expires); break; }
+    if (q0 && q0.nightly < (p.min || 0)) { toast(st, 'Code needs a nightly total of at least $' + p.min); break; }
+    st.draft.promo = p.code;
+    st.ui.sheet = null;
+    toast(st, p.label + ' applied');
+    break;
+  }
+  case 'CLEAR_PROMO': st.draft.promo = null; st.ui.inputs.promo = ''; break;
+
+  /* ---- payment methods ---- */
+  case 'PICK_PAYMENT': st.draft.paymentId = A.id; pop(st); break;
+  case 'SET_DEFAULT_PAYMENT':
+    if (byId(st.payments, A.id)) { st.defaultPaymentId = A.id; toast(st, 'Default payment updated'); }
+    break;
+  case 'CARD_NEW':
+    st.ui.inputs.card_number = ''; st.ui.inputs.card_name = st.profile.name.toUpperCase();
+    st.ui.inputs.card_exp = '';
+    push(st, 'addCard', {});
+    break;
+  case 'CARD_SAVE': {
+    var num = String(st.ui.inputs.card_number || '').replace(/\s|-/g, '');
+    var nm  = String(st.ui.inputs.card_name || '').trim();
+    var exp = String(st.ui.inputs.card_exp || '').trim();
+    if (num.length < 12 || /\D/.test(num)) { toast(st, 'Enter a valid card number'); break; }
+    if (!nm) { toast(st, 'Enter the name on the card'); break; }
+    if (!/^\d{2}\/\d{2}$/.test(exp)) { toast(st, 'Expiry must look like MM/YY'); break; }
+    var nid = 'pm_new' + st.meta.cardSeq; st.meta.cardSeq += 1;
+    st.payments.push({id:nid, brand: BRANDS[num.charAt(0)] || 'Card',
+                      last4: num.slice(-4), name: nm, exp: exp});
+    pop(st);
+    toast(st, 'Card added');
+    break;
+  }
+  case 'CARD_DELETE': {
+    if (st.payments.length <= 1) { toast(st, 'Keep at least one payment method'); break; }
+    st.payments = st.payments.filter(function(p){ return p.id !== A.id; });
+    if (st.defaultPaymentId === A.id) st.defaultPaymentId = st.payments[0].id;
+    if (st.draft.paymentId === A.id) st.draft.paymentId = st.defaultPaymentId;
+    toast(st, 'Card removed');
+    break;
+  }
+
+  /* ---- confirm the booking ---- */
+  case 'CONFIRM_BOOKING': {
+    var d2 = st.draft, s2 = stay(d2.stayId);
+    if (!s2) { toast(st, 'Pick a stay first'); break; }
+    if (!d2.checkIn || !d2.checkOut) { toast(st, 'Choose your dates first'); break; }
+    var bad2 = fitsGuests(st, s2);
+    if (bad2) { toast(st, 'This stay does not fit your party (' + bad2 + ')'); break; }
+    if (!d2.paymentId) { toast(st, 'Choose a payment method'); break; }
+    var q = draftQuote(st);
+    var bid = 'b_' + (2000 + st.meta.bookingSeq); st.meta.bookingSeq += 1;
+    st.bookings.push({
+      id: bid, stayId: s2.id, stayName: s2.name, city: s2.city, status:'upcoming',
+      checkIn: d2.checkIn, checkOut: d2.checkOut, nights: q.nights,
+      guests: clone(d2.guests), addons: d2.addons.slice().sort(), promo: d2.promo || null,
+      note: d2.note || '',
+      price: {nights:q.nights, nightly:q.nightly, cleaning:q.cleaning, service:q.service,
+              extras:q.extras, discount:q.discount},
+      total: q.total, paymentId: d2.paymentId, bookedAt: st.meta.today
+    });
+    st.draft = {stayId:null, checkIn:null, checkOut:null,
+                guests:{adults:2, children:0, pets:0}, addons:[], promo:null, note:'', paymentId:null};
+    st.ui.sheet = null;
+    st.ui.tab = 'trips';
+    st.ui.stack = [{name:'trips', params:{}}, {name:'confirmed', params:{id:bid}}];
+    break;
+  }
+
+  /* ---- trips ---- */
+  case 'CANCEL_TRIP': {
+    var b = byId(st.bookings, A.id); if (!b) break;
+    if (b.status !== 'upcoming') { toast(st, 'Only upcoming trips can be cancelled'); break; }
+    var s3 = stay(b.stayId);
+    st.ui.confirm = {
+      title:'Cancel this trip?',
+      text: s3 && s3.freeCancel
+        ? 'Free cancellation applies, so you will be refunded in full.'
+        : 'This host does not offer free cancellation. The cleaning fee will not be refunded.',
+      okText:'Cancel trip', yes:{type:'CANCEL_TRIP_OK', id:A.id}
+    };
+    break;
+  }
+  case 'CANCEL_TRIP_OK': {
+    var b2 = byId(st.bookings, A.id);
+    if (b2 && b2.status === 'upcoming') { b2.status = 'cancelled'; toast(st, 'Trip cancelled'); }
+    break;
+  }
+  case 'REBOOK': {
+    var b3 = byId(st.bookings, A.id); if (!b3) break;
+    st.draft = {stayId:null, checkIn:null, checkOut:null, guests:clone(b3.guests),
+                addons:[], promo:null, note:'', paymentId:null};
+    st.ui.gallery = 0;
+    st.ui.tab = 'explore';
+    st.ui.stack = [{name:'home', params:{}}, {name:'stay', params:{id:b3.stayId}}];
+    break;
+  }
+
+  /* ---- settings ---- */
+  case 'SET_SETTING':    st.profile.settings[A.key] = A.value; break;
+  case 'TOGGLE_SETTING': st.profile.settings[A.key] = !st.profile.settings[A.key]; break;
+
+  case 'FINISH':
+    st.meta.answer = (A.answer === undefined ? null : A.answer);
+    st.meta.finished = true;
+    break;
+  case 'NOOP': default: break;
+  }
+  return st;
+}
+
+/* =======================================================================
+ * SCREEN TREE — consumed by the DOM renderer, the headless hit-tester and
+ * the a11y serialiser. Illustrations are nodes too, and they carry `alt`
+ * text so a text-only agent still knows what the picture shows.
+ * ==================================================================== */
+var SCENE_ALT = {
+  cabin:'Illustration: an A-frame cabin among pines beneath snowy peaks at dusk',
+  beach:'Illustration: a stilted bungalow above the tideline at sunset',
+  city:'Illustration: tiled hillside houses above a harbour at dusk',
+  desert:'Illustration: a geodesic dome among mesas and cacti under a low sun',
+  forest:'Illustration: a treehouse high in old-growth cedars in morning mist',
+  lake:'Illustration: a cottage and dock on a still lake at dawn',
+  canyon:'Illustration: a white casita tucked against red sandstone fins in late afternoon light',
+  mountain:'Illustration: a timber chalet below snow-capped alpine peaks on a clear morning',
+  barn:'Illustration: a red converted dairy barn on golden prairie at sunset',
+  airstream:'Illustration: a silver Airstream trailer on a desert flat below red rocks',
+  coast:'Illustration: a shingled cottage on a green headland above breaking surf',
+  travel:'Illustration: layered ridges, a winding road and a camper van under a rising sun',
+  living:'Illustration: a living room with a sofa, rug, plant and a window onto hills',
+  bed:'Illustration: a bedroom with a made bed, a side lamp and a bright window',
+  empty:'Illustration: a signpost on an empty hillside',
+  confirmed:'Illustration: a packed suitcase under a sunrise with confetti'
+};
+function galleryOf(s){ return [s.art, 'living', 'bed']; }
+
+function N(t, o){ o = o || {}; o.t = t; return o; }
+function appbar(title, o){
+  o = o || {};
+  return N('appbar', {id:'appbar', title:title, back:!!o.back, cls:o.cls||'', right:o.right||[], left:o.left||[]});
+}
+function row(id, label, o){
+  o = o || {};
+  return N('row', {id:id, text:label, sub:o.sub, val:o.val, valCls:o.valCls, lead:o.lead,
+                   arrow:o.arrow !== false, act:o.act, cls:o.cls, c:o.c});
+}
+function btn(id, text, act, cls, disabled){
+  return N('btn', {id:id, text:text, act:act, cls:cls||'', disabled:!!disabled});
+}
+function txt(text, cls){ return N('text', {text:text, cls:cls||'body'}); }
+function art(scene, hue, o){
+  o = o || {};
+  return N('art', {id:o.id, scene:scene, hue:hue, alt:SCENE_ALT[scene]||'Illustration',
+                   h:o.h||160, cls:o.cls||'', act:o.act});
+}
+
+function tabbar(st){
+  var items = [
+    {id:'tab_explore', text:'Explore', icon:'compass', tab:'explore'},
+    {id:'tab_trips',   text:'Trips',   icon:'suitcase', tab:'trips'},
+    {id:'tab_profile', text:'Profile', icon:'user',    tab:'profile'}
+  ].map(function(i){
+    return {id:i.id, text:i.text, icon:i.icon, on:(st.ui.tab===i.tab), act:{type:'TAB', tab:i.tab}};
+  });
+  return N('tabbar', {id:'tabbar', items:items});
+}
+
+function dateLabel(st){
+  var d = st.draft;
+  if (!d.checkIn) return 'Add dates';
+  if (!d.checkOut) return shortDate(d.checkIn) + ' — ?';
+  return shortDate(d.checkIn) + ' — ' + shortDate(d.checkOut);
+}
+function guestLabel(st){
+  var g = st.draft.guests, parts = [g.adults + ' adult' + (g.adults>1?'s':'')];
+  if (g.children) parts.push(g.children + ' child' + (g.children>1?'ren':''));
+  if (g.pets) parts.push(g.pets + ' pet' + (g.pets>1?'s':''));
+  return parts.join(', ');
+}
+
+function stayCard(st, s, prefix){
+  var faved = st.wishlist.indexOf(s.id) >= 0;
+  var tags = [];
+  if (s.freeCancel) tags.push({text:'Free cancellation', cls:'good'});
+  if (s.instant)    tags.push({text:'Instant book', cls:'live'});
+  if (s.amenities.indexOf('pets') >= 0) tags.push({text:'Pets welcome', cls:''});
+  return N('staycard', {
+    id: prefix + s.id, act:{type:'OPEN_STAY', stayId:s.id},
+    scene:s.art, hue:s.hue, alt:SCENE_ALT[s.art],
+    name:s.name, city:s.city, type:s.type, rating:s.rating, reviews:s.reviews,
+    nightly:money(st, s.nightly), beds:s.beds, guests:s.guests,
+    distance:dist(st, s.distanceMi) + ' away',
+    badge: s.host.superhost ? 'Superhost' : null,
+    favId: 'fav_' + prefix + s.id, faved: faved, favAct:{type:'FAV', stayId:s.id},
+    tags: tags
+  });
+}
+
+/* ------------------------------------------------------------- screens */
+function scrHome(st){
+  var list = visibleStays(st);
+  var cats = CATEGORIES.map(function(c){
+    return N('chip', {id:'cat_'+c.key, text:c.label, icon:c.icon, on:st.ui.category===c.key,
+                      act:{type:'SET_CATEGORY', key:c.key}});
+  });
+  return N('screen', {id:'scr_home', name:'home', c:[
+    N('scroll', {id:'home_scroll', cls:'flush', c:[
+      N('hero', {id:'home_hero', scene:'travel', hue:196, alt:SCENE_ALT.travel,
+                 eyebrow:'Roost', title:'Where to next?',
+                 sub:'Six places worth the detour.'}),
+      N('searchbar', {id:'home_search', field:'search', value:st.ui.inputs.search||'',
+                      placeholder:'Try "cabin", "pets", "Lisbon"',
+                      act:{type:'SET_INPUT', field:'search', value:'$VALUE'},
+                      goId:'home_search_go', go:{type:'SUBMIT_SEARCH'},
+                      clearId:(st.ui.inputs.search ? 'home_search_clear' : null),
+                      clear:{type:'CLEAR_SEARCH'}}),
+      N('card', {id:'home_when_card', cls:'flat', c:[
+        row('home_dates', 'When', {lead:'calendar', val:dateLabel(st),
+            act:{type:'OPEN_SHEET', sheet:'calendar'}}),
+        row('home_guests', 'Who', {lead:'user', val:guestLabel(st),
+            act:{type:'OPEN_SHEET', sheet:'guests'}})
+      ]}),
+      N('chips', {id:'home_cats', c:cats}),
+      N('sec', {text:'Featured stays'}),
+      txt('Distances are from your current location · ' + st.profile.location, 'muted')
+    ].concat(list.length
+      ? list.map(function(s){ return stayCard(st, s, 'stay_'); })
+      : [emptyState('No stays match those filters', 'clear_filters')])
+     .concat([N('space', {})])}),
+    tabbar(st)
+  ]});
+}
+
+function emptyState(msg, clearId){
+  return N('empty', {id:'empty', scene:'empty', hue:170, alt:SCENE_ALT.empty, text:msg,
+                     btn: clearId ? btn(clearId, 'Clear filters', {type:'CLEAR_FILTERS'}, 'ghost') : null});
+}
+
+function categoryLabel(key){
+  for (var i=0;i<CATEGORIES.length;i++) if (CATEGORIES[i].key === key) return CATEGORIES[i].label;
+  return key;
+}
+function scrResults(st){
+  var list = visibleStays(st), f = st.ui.filters;
+  var chips = [
+    N('chip', {id:'sort_featured', text:'Featured', on:f.sort==='featured', act:{type:'SET_FILTER',key:'sort',value:'featured'}}),
+    N('chip', {id:'sort_price',    text:'Price',    icon:'tag',  on:f.sort==='price',  act:{type:'SET_FILTER',key:'sort',value:'price'}}),
+    N('chip', {id:'sort_rating',   text:'Rating',   icon:'star', on:f.sort==='rating', act:{type:'SET_FILTER',key:'sort',value:'rating'}}),
+    N('chip', {id:'sort_distance', text:'Distance', icon:'compass', on:f.sort==='distance', act:{type:'SET_FILTER',key:'sort',value:'distance'}}),
+    N('chip', {id:'filter_nearby', text:'Within ' + dist(st, 1000), icon:'pin', on:f.nearby, act:{type:'SET_FILTER',key:'nearby',value:!f.nearby}}),
+    N('chip', {id:'filter_freecancel', text:'Free cancellation', on:f.freeCancel, act:{type:'SET_FILTER',key:'freeCancel',value:!f.freeCancel}}),
+    N('chip', {id:'filter_pets',       text:'Pets allowed', icon:'paw', on:f.pets,   act:{type:'SET_FILTER',key:'pets',value:!f.pets}}),
+    N('chip', {id:'filter_instant',    text:'Instant book', on:f.instant,            act:{type:'SET_FILTER',key:'instant',value:!f.instant}})
+  ];
+  return N('screen', {id:'scr_results', name:'results', c:[
+    appbar('Stays', {back:true,
+      right:[btn('clear_all', 'Reset', {type:'CLEAR_FILTERS'}, 'ghost')]}),
+    N('searchbar', {id:'results_search', field:'search', value:st.ui.inputs.search||'',
+                    placeholder:'Search destinations or stays',
+                    act:{type:'SET_INPUT', field:'search', value:'$VALUE'},
+                    goId:'results_search_go', go:{type:'SUBMIT_SEARCH'},
+                    clearId:(st.ui.query || st.ui.inputs.search ? 'results_search_clear' : null),
+                    clear:{type:'CLEAR_SEARCH'}}),
+    N('scroll', {id:'results_scroll', cls:'flush', c:[
+      st.ui.query ? N('chips', {id:'active_query', c:[
+        N('chip', {id:'query_chip', text:'"' + st.ui.query + '"  ✕', on:true,
+                   act:{type:'CLEAR_SEARCH'}})]}) : N('space', {}),
+      N('chips', {id:'result_filters', c:chips}),
+      txt(list.length + ' stay' + (list.length===1?'':'s')
+          + (st.ui.category !== 'all' ? ' in ' + categoryLabel(st.ui.category) : '')
+          + ' near ' + st.profile.location + ' · ' + dateLabel(st) + ' · ' + guestLabel(st), 'muted')
+    ].concat(list.length
+      ? list.map(function(s){ return stayCard(st, s, 'result_'); })
+      : [emptyState(st.ui.query
+            ? 'Nothing matches "' + st.ui.query + '" with those filters'
+            : 'No stays match those filters', 'clear_filters')])
+     .concat([N('space', {})])})
+  ]});
+}
+
+function scrStay(st, params){
+  var s = stay(params.id); if (!s) return scrHome(st);
+  var gal = galleryOf(s), gi = Math.min(st.ui.gallery || 0, gal.length - 1);
+  var faved = st.wishlist.indexOf(s.id) >= 0;
+  var q = quote(st, s.id, st.draft.checkIn, st.draft.checkOut, [], null);
+  var ready = !!(st.draft.checkIn && st.draft.checkOut);
+  var bad = fitsGuests(st, s);
+  var pills = [{text:s.type, cls:''},
+               {text:s.beds + ' bed' + (s.beds>1?'s':''), cls:''},
+               {text:'Sleeps ' + s.guests, cls: bad ? 'warn' : ''}];
+  if (s.freeCancel) pills.push({text:'Free cancellation', cls:'good'});
+  else pills.push({text:'No free cancellation', cls:'warn'});
+  if (s.instant) pills.push({text:'Instant book', cls:'live'});
+
+  return N('screen', {id:'scr_stay', name:'stay', params:{id:s.id}, c:[
+    N('appbar', {id:'appbar', cls:'float', back:true, glass:true,
+      right:[N('favbtn', {id:'stay_fav', on:faved, act:{type:'FAV', stayId:s.id}})]}),
+    N('scroll', {id:'stay_scroll', cls:'flush', c:[
+      art(gal[gi], s.hue, {id:'stay_art', h:300}),
+      N('gallery', {id:'stay_gallery', items: gal.map(function(sc, i){
+        return {id:'gal_'+i, scene:sc, hue:s.hue, alt:SCENE_ALT[sc], on:i===gi,
+                act:{type:'SET_GALLERY', idx:i}};
+      })}),
+      txt(s.name, 'h1'),
+      N('rateline', {id:'stay_rating', rating:s.rating, reviews:s.reviews, city:s.city,
+                     distance: dist(st, s.distanceMi) + ' from ' + st.profile.location,
+                     act:{type:'OPEN_REVIEWS', stayId:s.id}}),
+      N('pills', {id:'stay_pills', items:pills}),
+      N('card', {id:'host_card', cls:'flat', c:[
+        N('host', {id:'stay_host', name:'Hosted by ' + s.host.name, avatar:s.host.avatar,
+                   sub:(s.host.superhost ? 'Superhost · ' : '') + s.host.years + ' years hosting'})
+      ]}),
+      N('sec', {text:'What this place offers'}),
+      N('amenities', {id:'stay_amenities', items: AMENITIES.map(function(a){
+        return {icon:a.icon, label:a.label, off: s.amenities.indexOf(a.key) < 0};
+      }).filter(function(a, i){ return !a.off || i < 8; })}),
+      N('sec', {text:'About this place'}),
+      txt(s.blurb, 'body'),
+      N('divider', {}),
+      N('sec', {text:s.rating + ' · ' + s.reviews + ' reviews'}),
+      N('card', {id:'stay_review_preview', cls:'flat', c:
+        sortedReviews(st, s.id).slice(0, 2).map(function(r){
+          return reviewNode(st, r, 'preview_');
+        })}),
+      N('padded', {c:[btn('stay_all_reviews', 'Show all ' + s.reviews + ' reviews',
+                          {type:'OPEN_REVIEWS', stayId:s.id}, 'block')]}),
+      N('divider', {}),
+      N('card', {id:'stay_when_card', cls:'flat', c:[
+        row('stay_dates', 'Dates', {lead:'calendar', val:dateLabel(st), act:{type:'OPEN_SHEET', sheet:'calendar'}}),
+        row('stay_guests', 'Guests', {lead:'user', val:guestLabel(st), act:{type:'OPEN_SHEET', sheet:'guests'}})
+      ]}),
+      bad ? txt('Heads up: this stay does not fit your party (' + bad + ').', 'muted') : N('space', {}),
+      N('space', {})
+    ]}),
+    N('bar', {id:'stay_bar', c:[
+      N('barprice', {id:'stay_price', price: money(st, s.nightly), unit:'night',
+                     sub: ready ? (money(st, q.total) + ' total for ' + q.nights + ' nights')
+                                : 'Add dates for a total'}),
+      btn('reserve', ready ? 'Reserve' : 'Add dates', ready && !bad ? {type:'RESERVE', stayId:s.id} : null,
+          'primary', !ready || !!bad)
+    ]})
+  ]});
+}
+
+function scrBooking(st){
+  var d = st.draft, s = stay(d.stayId); if (!s) return scrHome(st);
+  var q = draftQuote(st);
+  var pm = byId(st.payments, d.paymentId);
+  var p = promo(d.promo);
+  var addonRows = ADDONS.map(function(a){
+    var on = d.addons.indexOf(a.key) >= 0;
+    var price = a.per === 'night' ? money(st, a.price) + ' / night' : money(st, a.price) + ' total';
+    return row('addon_' + a.key, a.label, {sub:a.desc + '  ·  ' + price, lead:a.icon, arrow:false,
+               act:{type:'TOGGLE_ADDON', key:a.key},
+               c:[N('switch', {id:'addon_' + a.key + '_switch', on:on})]});
+  });
+  var kvs = [
+    N('kv', {k: money(st, s.nightly) + ' × ' + q.nights + ' nights', v: money(st, q.nightly)}),
+    N('kv', {k:'Cleaning fee', v: money(st, q.cleaning)}),
+    N('kv', {k:'Roost service fee', v: money(st, q.service)})
+  ];
+  if (q.extras) kvs.push(N('kv', {k:'Extras', v: money(st, q.extras)}));
+  if (q.discount) kvs.push(N('kv', {k:'Promo ' + d.promo, v:'−' + money(st, q.discount), cls:'save'}));
+  kvs.push(N('kv', {k:'Total', v: money(st, q.total), cls:'total'}));
+
+  return N('screen', {id:'scr_booking', name:'booking', c:[
+    appbar('Confirm and pay', {back:true}),
+    N('scroll', {id:'booking_scroll', c:[
+      N('tripsummary', {id:'trip_summary', scene:s.art, hue:s.hue, alt:SCENE_ALT[s.art],
+                        name:s.name, city:s.city, rating:s.rating, reviews:s.reviews}),
+      N('sec', {text:'Your trip'}),
+      N('card', {id:'book_when', cls:'flat', c:[
+        row('book_dates', 'Dates', {lead:'calendar',
+            val: q.nights + ' nights', sub: medDate(d.checkIn) + '  →  ' + medDate(d.checkOut) + ', ' + parseDate(d.checkIn).y,
+            act:{type:'OPEN_SHEET', sheet:'calendar'}}),
+        row('book_guests', 'Guests', {lead:'user', val:guestLabel(st),
+            act:{type:'OPEN_SHEET', sheet:'guests'}})
+      ]}),
+      N('sec', {text:'Add to your stay'}),
+      N('card', {id:'book_addons', cls:'flat', c:addonRows}),
+      N('sec', {text:'Pay with'}),
+      N('card', {id:'book_pay', cls:'flat', c:[
+        row('book_payment', pm ? (pm.brand + (pm.last4 ? ' ···· ' + pm.last4 : '')) : 'Choose a card',
+            {lead:'card', sub: pm && pm.exp ? ('Expires ' + pm.exp) : (pm ? pm.name : ''),
+             act:{type:'NAV', to:'payments', params:{pick:true}}})
+      ]}),
+      N('sec', {text:'Promo code'}),
+      N('card', {id:'book_promo_card', cls:'flat', c:[
+        row('book_promo', p ? p.code : 'Add a promo code',
+            {lead:'tag', val: p ? p.label : '', valCls: p ? 'strong' : '',
+             act:{type:'OPEN_SHEET', sheet:'promo'},
+             c: p ? [btn('promo_remove', 'Remove', {type:'CLEAR_PROMO'}, 'ghost')] : []})
+      ]}),
+      N('sec', {text:'Note to the host'}),
+      N('card', {id:'book_note_card', cls:'flat', c:[
+        N('inputrow', {id:'book_note', label:'Message', field:'note',
+                       value: st.ui.inputs.note !== undefined ? st.ui.inputs.note : d.note,
+                       placeholder:'Arrival time, questions, anything useful',
+                       multiline:true, act:{type:'SET_DRAFT', key:'note', value:'$VALUE'}})
+      ]}),
+      N('sec', {text:'Price details'}),
+      N('card', {id:'book_price', cls:'flat pad', c:kvs}),
+      txt(s.freeCancel
+          ? 'Free cancellation until 48 hours before check-in.'
+          : 'This host does not offer free cancellation. The cleaning fee is non-refundable.', 'muted'),
+      N('space', {})
+    ]}),
+    N('bar', {id:'book_bar', c:[
+      N('barprice', {id:'book_total', price: money(st, q.total), unit:'total',
+                     sub: q.nights + ' nights · ' + guestLabel(st)}),
+      btn('book_confirm', 'Confirm and pay', {type:'CONFIRM_BOOKING'}, 'primary')
+    ]})
+  ]});
+}
+
+function scrPayments(st, params){
+  var pick = !!params.pick;
+  var cards = st.payments.map(function(p){
+    var sub = p.last4 ? (p.name + ' · exp ' + p.exp) : p.name;
+    return N('card', {id:'paycard_' + p.id, cls:'flat', c:[
+      row('pay_' + p.id, p.brand + (p.last4 ? ' ···· ' + p.last4 : ''),
+          {lead:'card', sub:sub, arrow:pick,
+           act: pick ? {type:'PICK_PAYMENT', id:p.id} : {type:'SET_DEFAULT_PAYMENT', id:p.id},
+           c: pick ? [] : [N('radio', {id:'pay_default_' + p.id, on: st.defaultPaymentId === p.id,
+                                       act:{type:'SET_DEFAULT_PAYMENT', id:p.id}})]}),
+      N('btnrow', {id:'payops_' + p.id, c:[
+        N('label', {text: st.defaultPaymentId === p.id ? 'Default payment method' : ''}),
+        btn('pay_delete_' + p.id, 'Remove', {type:'CARD_DELETE', id:p.id}, 'danger')
+      ]})
+    ]});
+  });
+  return N('screen', {id:'scr_payments', name:'payments', c:[
+    appbar(pick ? 'Choose a card' : 'Payment methods', {back:true,
+      right:[btn('card_add', 'Add', {type:'CARD_NEW'}, 'ghost')]}),
+    N('scroll', {id:'pay_list', c: cards.concat([
+      N('card', {id:'pay_add_card', cls:'flat', c:[
+        row('card_add_row', 'Add a payment method', {lead:'plus', act:{type:'CARD_NEW'}})
+      ]}), N('space', {})
+    ])})
+  ]});
+}
+
+function scrAddCard(st){
+  var i = st.ui.inputs;
+  return N('screen', {id:'scr_addCard', name:'addCard', c:[
+    appbar('Add a card', {back:true}),
+    N('scroll', {id:'card_form', c:[
+      N('card', {id:'card_fields', cls:'flat', c:[
+        N('inputrow', {id:'card_number', label:'Card number', field:'card_number', value:i.card_number||'',
+                       placeholder:'1234 5678 9012 3456', act:{type:'SET_INPUT', field:'card_number', value:'$VALUE'}}),
+        N('inputrow', {id:'card_name', label:'Name on card', field:'card_name', value:i.card_name||'',
+                       placeholder:'JORDAN LEE', act:{type:'SET_INPUT', field:'card_name', value:'$VALUE'}}),
+        N('inputrow', {id:'card_exp', label:'Expiry', field:'card_exp', value:i.card_exp||'',
+                       placeholder:'MM/YY', act:{type:'SET_INPUT', field:'card_exp', value:'$VALUE'}})
+      ]}),
+      txt('We never store the full number — only the last four digits are kept on your account.', 'muted'),
+      N('space', {}),
+      N('padded', {c:[btn('card_save', 'Save card', {type:'CARD_SAVE'}, 'primary block')]})
+    ]})
+  ]});
+}
+
+function monthLabel(d){ var p = String(d).split('-'); return MON[(+p[1]) - 1] + ' ' + p[0]; }
+
+function reviewNode(st, r, prefix){
+  prefix = prefix || '';
+  var mine = !!st.reviewHelpful[r.id];
+  return N('review', {
+    id: prefix + 'review_' + r.id, rid: r.id,
+    author: r.author, avatar: r.avatar, date: monthLabel(r.date), rating: r.rating,
+    text: r.text, reply: r.reply || null,
+    helpful: mine, count: helpfulCount(st, r),
+    helpfulId: prefix + 'helpful_' + r.id,
+    helpfulAct: {type:'REVIEW_HELPFUL', id:r.id}
+  });
+}
+
+function scrReviews(st, params){
+  var s = stay(params.id); if (!s) return scrHome(st);
+  var list = sortedReviews(st, s.id), k = st.ui.reviewSort;
+  return N('screen', {id:'scr_reviews', name:'reviews', params:{id:s.id}, c:[
+    appbar('Reviews', {back:true}),
+    N('scroll', {id:'reviews_scroll', c:[
+      N('ratingsummary', {id:'rating_summary', rating:s.rating, reviews:s.reviews, stay:s.name,
+        scores: SCORE_LABELS.map(function(sc){
+          return {key:sc.key, label:sc.label, value:s.scores[sc.key]};
+        })}),
+      N('chips', {id:'review_sorts', c:[
+        N('chip', {id:'rsort_recent', text:'Most recent',  on:k==='recent', act:{type:'SET_REVIEW_SORT', key:'recent'}}),
+        N('chip', {id:'rsort_high',   text:'Highest rated', on:k==='high',  act:{type:'SET_REVIEW_SORT', key:'high'}}),
+        N('chip', {id:'rsort_low',    text:'Lowest rated',  on:k==='low',   act:{type:'SET_REVIEW_SORT', key:'low'}})
+      ]}),
+      txt('Showing ' + list.length + ' of ' + s.reviews + ' reviews', 'muted')
+    ].concat(list.map(function(r){
+      return N('card', {id:'reviewcard_' + r.id, cls:'flat', c:[reviewNode(st, r)]});
+    })).concat([N('space', {})])})
+  ]});
+}
+
+var STATUS_PILL = {upcoming:{text:'Upcoming', cls:'live'}, completed:{text:'Completed', cls:'mut'},
+                   cancelled:{text:'Cancelled', cls:'dead'}};
+
+function scrTrips(st){
+  var cards = st.bookings.slice().reverse().map(function(b){
+    var s = stay(b.stayId);
+    var ops = [];
+    if (b.status === 'upcoming') ops.push(btn('trip_cancel_' + b.id, 'Cancel trip', {type:'CANCEL_TRIP', id:b.id}, 'danger'));
+    ops.push(btn('trip_rebook_' + b.id, 'Book again', {type:'REBOOK', id:b.id}, 'ghost'));
+    return N('card', {id:'tripcard_' + b.id, c:[
+      N('tripline', {id:'trip_' + b.id, scene:s.art, hue:s.hue, alt:SCENE_ALT[s.art],
+        name:b.stayName, city:b.city, status:STATUS_PILL[b.status],
+        dates: shortDate(b.checkIn) + ' — ' + shortDate(b.checkOut) + ', ' + parseDate(b.checkIn).y,
+        total: money(st, b.total),
+        act:{type:'NAV', to:'tripDetail', params:{id:b.id}}}),
+      N('btnrow', {id:'tripops_' + b.id, c:ops})
+    ]});
+  });
+  return N('screen', {id:'scr_trips', name:'trips', c:[
+    appbar('Trips'),
+    N('scroll', {id:'trip_list', c: cards.length ? cards.concat([N('space',{})])
+                                                 : [emptyState('No trips yet — go find one.', null)]}),
+    tabbar(st)
+  ]});
+}
+
+function scrTripDetail(st, params){
+  var b = byId(st.bookings, params.id); if (!b) return scrTrips(st);
+  var s = stay(b.stayId), pm = byId(st.payments, b.paymentId);
+  var addonText = b.addons.length
+    ? b.addons.map(function(k){ return addon(k).label; }).join(', ')
+    : 'None';
+  var kvs = [
+    N('kv', {k: money(st, s.nightly) + ' × ' + b.nights + ' nights', v: money(st, b.price.nightly)}),
+    N('kv', {k:'Cleaning fee', v: money(st, b.price.cleaning)}),
+    N('kv', {k:'Roost service fee', v: money(st, b.price.service)})
+  ];
+  if (b.price.extras)   kvs.push(N('kv', {k:'Extras', v: money(st, b.price.extras)}));
+  if (b.price.discount) kvs.push(N('kv', {k:'Promo ' + b.promo, v:'−' + money(st, b.price.discount), cls:'save'}));
+  kvs.push(N('kv', {k:'Total paid', v: money(st, b.total), cls:'total'}));
+  var ops = [];
+  if (b.status === 'upcoming') ops.push(btn('td_cancel', 'Cancel trip', {type:'CANCEL_TRIP', id:b.id}, 'danger'));
+  ops.push(btn('td_rebook', 'Book again', {type:'REBOOK', id:b.id}, 'ghost'));
+
+  return N('screen', {id:'scr_tripDetail', name:'tripDetail', params:{id:b.id}, c:[
+    appbar('Trip details', {back:true}),
+    N('scroll', {id:'td_scroll', cls:'flush', c:[
+      art(s.art, s.hue, {id:'td_art', h:190}),
+      txt(b.stayName, 'h1'),
+      txt(b.city, 'muted'),
+      N('pills', {id:'td_status', items:[STATUS_PILL[b.status]]}),
+      N('card', {id:'td_info', cls:'flat', c:[
+        row('td_checkin',  'Check-in',       {val: longDate(b.checkIn), arrow:false}),
+        row('td_checkout', 'Check-out',      {val: longDate(b.checkOut), arrow:false}),
+        row('td_guests',   'Guests',         {val: b.guests.adults + ' adults, ' + b.guests.children +
+                                                   ' children, ' + b.guests.pets + ' pets', arrow:false}),
+        row('td_addons',   'Extras',         {val: addonText, arrow:false}),
+        row('td_note',     'Note to host',   {val: b.note || 'None', arrow:false}),
+        row('td_payment',  'Paid with',      {val: pm ? pm.brand + (pm.last4?' ···· '+pm.last4:'') : '—', arrow:false}),
+        row('td_code',     'Confirmation',   {val: b.id.toUpperCase(), arrow:false}),
+        row('td_booked',   'Booked on',      {val: b.bookedAt, arrow:false})
+      ]}),
+      N('sec', {text:'Price details'}),
+      N('card', {id:'td_price', cls:'flat pad', c:kvs}),
+      N('btnrow', {id:'td_ops', c:ops}),
+      N('space', {})
+    ]})
+  ]});
+}
+
+function scrConfirmed(st, params){
+  var b = byId(st.bookings, params.id); if (!b) return scrTrips(st);
+  var city = b.city.split(',')[0];
+  return N('screen', {id:'scr_confirmed', name:'confirmed', c:[
+    appbar('', {back:true, cls:'plain'}),
+    N('scroll', {id:'conf_scroll', cls:'flush', c:[
+      art('confirmed', 150, {id:'conf_art', h:210, cls:'rounded'}),
+      txt('You are going to ' + city + '!', 'h1'),
+      txt(b.stayName + ' · ' + shortDate(b.checkIn) + ' — ' + shortDate(b.checkOut), 'body'),
+      N('card', {id:'conf_card', cls:'flat', c:[
+        row('conf_dates', 'Dates',   {val: b.nights + ' nights', arrow:false}),
+        row('conf_guests','Guests',  {val: b.guests.adults + ' adults, ' + b.guests.children +
+                                           ' children, ' + b.guests.pets + ' pets', arrow:false}),
+        row('conf_total', 'Total',   {val: money(st, b.total), valCls:'strong', arrow:false}),
+        row('conf_code',  'Confirmation', {val: b.id.toUpperCase(), arrow:false})
+      ]}),
+      N('space', {}),
+      N('padded', {c:[btn('conf_view', 'View trip details', {type:'NAV', to:'tripDetail', params:{id:b.id}}, 'primary block')]}),
+      N('space', {}),
+      N('padded', {c:[btn('conf_home', 'Back to Explore', {type:'HOME'}, 'block')]}),
+      N('space', {})
+    ]})
+  ]});
+}
+
+function scrProfile(st){
+  return N('screen', {id:'scr_profile', name:'profile', c:[
+    appbar('Profile'),
+    N('scroll', {id:'profile_scroll', c:[
+      N('card', {id:'me_card', c:[
+        N('host', {id:'me_head', name:st.profile.name, avatar:st.profile.avatar,
+                   sub:st.profile.email + ' · member since ' + st.profile.member})
+      ]}),
+      N('card', {id:'me_menu', cls:'flat', c:[
+        row('me_wishlist', 'Wishlist',        {lead:'heart', val: st.wishlist.length + ' saved',
+            act:{type:'NAV', to:'wishlist', params:{}}}),
+        row('me_payments', 'Payment methods', {lead:'card', val: st.payments.length + ' cards',
+            act:{type:'NAV', to:'payments', params:{}}}),
+        row('me_settings', 'Settings',        {lead:'gear', act:{type:'NAV', to:'settings', params:{}}})
+      ]}),
+      N('space', {})
+    ]}),
+    tabbar(st)
+  ]});
+}
+
+function scrWishlist(st){
+  var saved = st.wishlist.map(function(id){ return stay(id); }).filter(Boolean);
+  return N('screen', {id:'scr_wishlist', name:'wishlist', c:[
+    appbar('Wishlist', {back:true}),
+    N('scroll', {id:'wish_list', cls:'flush', c: saved.length
+      ? saved.map(function(s){ return stayCard(st, s, 'wish_'); }).concat([N('space',{})])
+      : [emptyState('Nothing saved yet. Tap the heart on a stay you like.', null)]})
+  ]});
+}
+
+function scrSettings(st){
+  var s = st.profile.settings;
+  function sw(id, label, key, sub){
+    return row(id, label, {sub:sub, arrow:false, act:{type:'TOGGLE_SETTING', key:key},
+                           c:[N('switch', {id:id+'_switch', on:!!s[key]})]});
+  }
+  return N('screen', {id:'scr_settings', name:'settings', c:[
+    appbar('Settings', {back:true}),
+    N('scroll', {id:'settings_scroll', c:[
+      N('sec', {text:'Currency'}),
+      N('chips', {id:'cur_chips', c:['USD','EUR'].map(function(c){
+        return N('chip', {id:'cur_'+c, text: c + ' ' + CURRENCIES[c].sym, on: s.currency===c,
+                          act:{type:'SET_SETTING', key:'currency', value:c}});
+      })}),
+      N('sec', {text:'Distance units'}),
+      N('chips', {id:'unit_chips', c:[
+        N('chip', {id:'unit_mi', text:'Miles',      on:s.units==='mi', act:{type:'SET_SETTING', key:'units', value:'mi'}}),
+        N('chip', {id:'unit_km', text:'Kilometres', on:s.units==='km', act:{type:'SET_SETTING', key:'units', value:'km'}})
+      ]}),
+      N('sec', {text:'Notifications'}),
+      N('card', {id:'set_notify', cls:'flat', c:[
+        sw('set_tripUpdates', 'Trip updates', 'tripUpdates', 'Check-in reminders and host messages'),
+        sw('set_marketing',   'Marketing emails', 'marketing', 'Deals, new stays and travel ideas')
+      ]}),
+      N('sec', {text:'Accessibility'}),
+      N('card', {id:'set_access', cls:'flat', c:[
+        sw('set_accessibleOnly', 'Step-free stays only', 'accessibleOnly',
+           'Hide stays without a step-free entrance')
+      ]}),
+      N('space', {})
+    ]})
+  ]});
+}
+
+/* ------------------------------------------------------------ overlays */
+function sheetCalendar(st){
+  var cm = st.ui.calMonth, d = st.draft;
+  var first = weekday(iso(cm.y, cm.m, 1)), n = daysInMonth(cm.y, cm.m), cells = [];
+  for (var b = 0; b < first; b++) cells.push({blank:true});
+  for (var day = 1; day <= n; day++) {
+    var ds = iso(cm.y, cm.m, day);
+    var past = ds < st.meta.today;
+    var isIn = d.checkIn === ds, isOut = d.checkOut === ds;
+    var inRange = !!(d.checkIn && d.checkOut && ds >= d.checkIn && ds <= d.checkOut);
+    cells.push({id:'day_'+ds, date:ds, day:day, past:past, edge:isIn||isOut,
+                start:isIn, end:isOut, inRange:inRange,
+                act: past ? null : {type:'CAL_PICK', date:ds}});
+  }
+  var nights = nightsBetween(d.checkIn, d.checkOut);
+  return N('sheet', {id:'sheet_calendar',
+    title: nights ? (nights + ' nights · ' + shortDate(d.checkIn) + ' – ' + shortDate(d.checkOut))
+                  : 'Select your dates',
+    closeId:'sheet_close', close:{type:'CLOSE_SHEET'},
+    c:[ N('calendar', {id:'calendar', month: MONTHS[cm.m-1] + ' ' + cm.y, dow:DOW, cells:cells,
+                       prevId:'cal_prev', prev:{type:'CAL_MONTH', delta:-1},
+                       nextId:'cal_next', next:{type:'CAL_MONTH', delta:1}}) ],
+    footer: N('sheetfoot', {id:'cal_foot',
+      label: d.checkIn ? (medDate(d.checkIn) + (d.checkOut ? '  →  ' + medDate(d.checkOut) : '  →  pick check-out')) : 'Tap a date to start',
+      left: btn('cal_clear', 'Clear', {type:'CAL_CLEAR'}, 'ghost'),
+      btn: btn('cal_done', 'Done', {type:'CLOSE_SHEET'}, 'primary', !d.checkOut)})
+  });
+}
+
+function sheetGuests(st){
+  var g = st.draft.guests;
+  function line(key, label, sub){
+    var lim = GUEST_LIMITS[key];
+    return row('guests_' + key, label, {sub:sub, arrow:false, c:[
+      N('stepper', {id:'g_'+key, value:g[key],
+        minusId:'g_'+key+'_minus', plusId:'g_'+key+'_plus',
+        minusOff: g[key] <= lim[0], plusOff: g[key] >= lim[1],
+        minus:{type:'GUESTS', key:key, delta:-1}, plus:{type:'GUESTS', key:key, delta:1}})]});
+  }
+  return N('sheet', {id:'sheet_guests', title:'Who is coming?', closeId:'sheet_close', close:{type:'CLOSE_SHEET'},
+    c:[ line('adults', 'Adults', 'Age 13 and over'),
+        line('children', 'Children', 'Ages 2 to 12'),
+        line('pets', 'Pets', 'Only at stays that allow them') ],
+    footer: N('sheetfoot', {id:'guests_foot', label: guestLabel(st),
+      btn: btn('guests_done', 'Done', {type:'CLOSE_SHEET'}, 'primary')})
+  });
+}
+
+function sheetPromo(st){
+  return N('sheet', {id:'sheet_promo', title:'Add a promo code', closeId:'sheet_close', close:{type:'CLOSE_SHEET'},
+    c:[ N('inputrow', {id:'promo_input', label:'Code', field:'promo', value:st.ui.inputs.promo||'',
+                       placeholder:'e.g. ROOST20', act:{type:'SET_INPUT', field:'promo', value:'$VALUE'}}),
+        txt('Codes are case-insensitive. Expired codes will be rejected.', 'muted') ],
+    footer: N('sheetfoot', {id:'promo_foot', label:'',
+      btn: btn('promo_apply', 'Apply code', {type:'APPLY_PROMO'}, 'primary')})
+  });
+}
+
+var ROUTES = {
+  home:scrHome, results:scrResults, stay:scrStay, reviews:scrReviews,
+  booking:scrBooking, payments:scrPayments,
+  addCard:scrAddCard, trips:scrTrips, tripDetail:scrTripDetail, confirmed:scrConfirmed,
+  profile:scrProfile, wishlist:scrWishlist, settings:scrSettings
+};
+
+function screen(st){
+  var r = route(st), fn = ROUTES[r.name] || scrHome;
+  var rootNode = fn(st, r.params || {});
+  rootNode.route = r.name;
+  var extra = [];
+  if (st.ui.sheet) {
+    var sh = st.ui.sheet.type === 'calendar' ? sheetCalendar(st)
+           : st.ui.sheet.type === 'guests'   ? sheetGuests(st)
+           : st.ui.sheet.type === 'promo'    ? sheetPromo(st) : null;
+    if (sh) extra.push(N('mask', {id:'mask', close:{type:'CLOSE_SHEET'}, c:[sh]}));
+  }
+  if (st.ui.confirm) {
+    extra.push(N('mask', {id:'confirm_mask', c:[N('dialog', {id:'confirm_dialog',
+      title: st.ui.confirm.title || '', text: st.ui.confirm.text,
+      ok: btn('confirm_ok', st.ui.confirm.okText || 'Confirm', {type:'CONFIRM_YES'}, 'primary'),
+      cancel: btn('confirm_cancel', 'Keep it', {type:'CONFIRM_NO'}, '')})]}));
+  }
+  if (st.ui.toast) extra.push(N('toast', {id:'toast', text:st.ui.toast}));
+  rootNode.c = rootNode.c.concat(extra);
+  return rootNode;
+}
+
+/* =======================================================================
+ * TRAVERSAL — element index, GUI action interface, text observation
+ * ==================================================================== */
+var SKIP_KEYS = {act:1, minus:1, plus:1, go:1, close:1, prev:1, next:1, favAct:1, helpfulAct:1,
+                 yes:1, params:1, meta:1, guests:1, price:1, tags:1, status:1, reply:1, scores:1};
+
+function labelOf(n){ return n.text || n.title || n.name || n.label || ''; }
+
+function collect(n, out){
+  if (!n || typeof n !== 'object') return;
+  if (Array.isArray(n)) { for (var i=0;i<n.length;i++) collect(n[i], out); return; }
+  if (n.t === 'appbar' && n.back) out.push({id:'nav_back', act:{type:'BACK'}, text:'Back', t:'back'});
+  if (n.id && n.act)              out.push({id:n.id, act:n.act, text:labelOf(n), t:n.t||'el',
+                                            disabled:!!n.disabled,
+                                            input:(n.t==='searchbar'||n.t==='inputrow')});
+  if (n.t === 'mask' && n.close)  out.push({id:n.id, act:n.close, text:'Dismiss overlay', t:'mask'});
+  if (n.minusId && n.minus)       out.push({id:n.minusId, act:n.minus, text:'minus', t:'stepper',
+                                            disabled:!!n.minusOff});
+  if (n.plusId  && n.plus)        out.push({id:n.plusId,  act:n.plus,  text:'plus',  t:'stepper',
+                                            disabled:!!n.plusOff});
+  if (n.goId    && n.go)          out.push({id:n.goId,    act:n.go,    text:'Search', t:'btn'});
+  if (n.clearId && n.clear)       out.push({id:n.clearId, act:n.clear, text:'Clear the search', t:'btn'});
+  if (n.closeId && n.close)       out.push({id:n.closeId, act:n.close, text:'Close',  t:'btn'});
+  if (n.prevId  && n.prev)        out.push({id:n.prevId,  act:n.prev,  text:'Previous month', t:'btn'});
+  if (n.nextId  && n.next)        out.push({id:n.nextId,  act:n.next,  text:'Next month',     t:'btn'});
+  if (n.helpfulId && n.helpfulAct) out.push({id:n.helpfulId, act:n.helpfulAct,
+                                             text:(n.helpful?'Remove helpful vote':'Mark helpful'), t:'btn'});
+  if (n.favId   && n.favAct)      out.push({id:n.favId,   act:n.favAct,
+                                            text:(n.faved?'Remove from':'Save to')+' wishlist', t:'btn'});
+  for (var k in n){
+    if (SKIP_KEYS[k]) continue;
+    var v = n[k];
+    if (v && typeof v === 'object') collect(v, out);
+  }
+}
+
+/* modal semantics: an open sheet or dialog swallows everything behind it */
+function elements(st){
+  var rootNode = (st && st.t === 'screen') ? st : screen(st);
+  var masks = (rootNode.c||[]).filter(function(n){ return n.t === 'mask'; });
+  var out = [];
+  collect(masks.length ? masks[masks.length-1] : rootNode, out);
+  return out;
+}
+function findEl(st, id){
+  var els = elements(st);
+  for (var i=0;i<els.length;i++) if (els[i].id === id) return els[i];
+  return null;
+}
+function substitute(act, text){
+  var a = clone(act);
+  for (var k in a) if (a[k] === '$VALUE') a[k] = text;
+  return a;
+}
+
+function step(st, a){
+  a = a || {};
+  var kind = a.action || a.type;
+  switch (kind) {
+  case 'tap': {
+    var el = findEl(st, a.id);
+    if (!el) return {state:st, ok:false, error:'ELEMENT_NOT_FOUND: ' + a.id};
+    if (el.disabled) return {state:st, ok:false, error:'ELEMENT_DISABLED: ' + a.id};
+    return {state:reduce(st, el.act), ok:true};
+  }
+  case 'type': {
+    var e2 = findEl(st, a.id);
+    if (!e2) return {state:st, ok:false, error:'ELEMENT_NOT_FOUND: ' + a.id};
+    if (!e2.input) return {state:st, ok:false, error:'NOT_A_TEXT_FIELD: ' + a.id};
+    return {state:reduce(st, substitute(e2.act, a.text == null ? '' : String(a.text))), ok:true};
+  }
+  case 'back':   return {state:reduce(st, {type:'BACK'}), ok:true};
+  case 'home':   return {state:reduce(st, {type:'HOME'}), ok:true};
+  case 'wait':   return {state:reduce(st, {type:'NOOP'}), ok:true};
+  case 'finish': return {state:reduce(st, {type:'FINISH', answer:a.answer}), ok:true};
+  case 'raw':    return {state:reduce(st, a.act || {}), ok:true};
+  default:       return {state:st, ok:false, error:'UNKNOWN_ACTION: ' + kind};
+  }
+}
+
+/* ------------------------------------------------- text observation (a11y) */
+function a11y(st){
+  var rootNode = screen(st), lines = [], r = route(st);
+  lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
+             '  ' + clockStr(st.meta.clock) + '  today ' + st.meta.today + '  step ' + st.meta.steps);
+  var masks = (rootNode.c||[]).filter(function(n){ return n.t==='mask'; });
+  if (masks.length) lines.push('# An overlay is open. Nothing behind it can be tapped.');
+  walkText(masks.length ? masks[masks.length-1] : rootNode, 0, lines, st);
+  (rootNode.c||[]).forEach(function(n){ if (n.t==='toast') lines.push('[Toast] ' + n.text); });
+  return lines.join('\n');
+}
+function tid(n){ return (n && n.id && n.act) ? ' #'+n.id : ''; }
+function ind(d){ return new Array(d+1).join('  '); }
+
+function walkText(n, d, out, st){
+  if (!n || typeof n !== 'object') return;
+  if (Array.isArray(n)) { n.forEach(function(x){ walkText(x, d, out, st); }); return; }
+  var line = null;
+  switch (n.t) {
+  case 'screen': break;
+  case 'appbar':
+    line = '[AppBar] ' + (n.title || '(no title)') + (n.back ? '   Back #nav_back' : ''); break;
+  case 'searchbar':
+    line = '[TextField]' + tid(n) + ' placeholder="' + n.placeholder + '" value="' + (n.value||'') +
+           '"   Search button #' + n.goId +
+           (n.clearId ? '   Clear #' + n.clearId : ''); break;
+  case 'inputrow':
+    line = '[TextField]' + tid(n) + ' ' + (n.label||'') + ' value="' + (n.value||'') +
+           '" placeholder="' + (n.placeholder||'') + '"'; break;
+  case 'chip':   line = '[Chip]' + tid(n) + ' ' + n.text + (n.on ? '  [selected]' : ''); break;
+  case 'btn':    line = '[Button]' + (n.id ? ' #'+n.id : '') + ' ' + n.text +
+                        (n.disabled ? '  (disabled)' : ''); break;
+  case 'row': {
+    var s = '[Row]' + tid(n) + ' ' + (n.text||'');
+    if (n.val) s += ' = ' + n.val;
+    if (n.sub) s += '   (' + n.sub + ')';
+    line = s; break;
+  }
+  case 'switch': line = '[Toggle]' + tid(n) + ' ' + (n.on ? 'ON' : 'OFF'); break;
+  case 'radio':  line = '[Radio]' + tid(n) + ' ' + (n.on ? 'selected' : 'not selected'); break;
+  case 'favbtn': line = '[HeartButton]' + tid(n) + ' ' + (n.on ? 'saved' : 'not saved'); break;
+  case 'stepper':
+    line = '[Stepper] value=' + n.value +
+           (n.minusId ? '  minus #'+n.minusId + (n.minusOff?'(disabled)':'') : '') +
+           (n.plusId  ? '  plus #'+n.plusId  + (n.plusOff ?'(disabled)':'') : ''); break;
+  case 'hero':
+    out.push(ind(d) + '[Hero] ' + n.title + ' — ' + n.sub);
+    out.push(ind(d) + '  ' + n.alt);
+    return;
+  case 'art':    line = n.alt; break;
+  case 'gallery':
+    out.push(ind(d) + '[Gallery] ' + n.items.map(function(g){
+      return '#' + g.id + (g.on ? '(showing)' : ''); }).join('  '));
+    n.items.forEach(function(g){ out.push(ind(d+1) + (g.on ? '> ' : '  ') + g.alt); });
+    return;
+  case 'staycard':
+    out.push(ind(d) + '[Stay]' + tid(n) + ' ' + n.name + '  ' + n.nightly + '/night  ' +
+             n.rating + ' (' + n.reviews + ' reviews)  ' + n.city +
+             '  sleeps ' + n.guests + (n.badge ? '  ' + n.badge : '') +
+             '   heart #' + n.favId + (n.faved ? '(saved)' : ''));
+    if (n.tags && n.tags.length)
+      out.push(ind(d+1) + n.tags.map(function(t){ return '[' + t.text + ']'; }).join(' '));
+    out.push(ind(d+1) + n.alt);
+    return;
+  case 'rateline':
+    line = '[Rating]' + tid(n) + ' ' + n.rating + ' stars, ' + n.reviews + ' reviews · ' + n.city
+         + (n.distance ? ' · ' + n.distance : '')
+         + (n.act ? '  (tap to read the reviews)' : ''); break;
+  case 'ratingsummary':
+    out.push(ind(d) + '[RatingSummary] ' + n.rating + ' overall from ' + n.reviews + ' reviews');
+    out.push(ind(d+1) + n.scores.map(function(x){ return x.label + ' ' + x.value.toFixed(1); }).join('  ·  '));
+    return;
+  case 'review':
+    out.push(ind(d) + '[Review] ' + n.author + ' · ' + n.date + ' · ' + n.rating + ' of 5 stars');
+    out.push(ind(d+1) + '"' + n.text + '"');
+    if (n.reply) out.push(ind(d+1) + 'Host reply from ' + n.reply.by + ': "' + n.reply.text + '"');
+    out.push(ind(d+1) + 'Helpful (' + n.count + ')' + (n.helpful ? ' [you voted]' : '') +
+             '  #' + n.helpfulId);
+    return;
+  case 'pills':
+    line = n.items.map(function(p){ return '[' + p.text + ']'; }).join(' '); break;
+  case 'host':   line = '[Host] ' + n.name + ' — ' + n.sub; break;
+  case 'amenities':
+    out.push(ind(d) + '[Amenities] ' + n.items.map(function(a){
+      return a.label + (a.off ? ' (not offered)' : ''); }).join(', '));
+    return;
+  case 'empty':
+    out.push(ind(d) + '[Empty] ' + n.text);
+    out.push(ind(d+1) + n.alt);
+    break;
+  case 'tripsummary':
+    out.push(ind(d) + '[Stay] ' + n.name + ' · ' + n.city + ' · ' + n.rating + ' (' + n.reviews + ')');
+    out.push(ind(d+1) + n.alt);
+    return;
+  case 'tripline':
+    out.push(ind(d) + '[Trip]' + tid(n) + ' ' + n.name + ' · ' + n.city + ' · ' + n.dates +
+             ' · ' + n.status.text + ' · ' + n.total);
+    out.push(ind(d+1) + n.alt);
+    return;
+  case 'calendar':
+    out.push(ind(d) + '[Calendar] ' + n.month + '   prev #' + n.prevId + '   next #' + n.nextId);
+    out.push(ind(d+1) + 'selectable: ' + n.cells.filter(function(c){ return c.act; })
+      .map(function(c){
+        return '#' + c.id + (c.edge ? '*' : '') + (c.inRange && !c.edge ? '~' : '');
+      }).join(' '));
+    out.push(ind(d+1) + '(* = check-in/check-out, ~ = inside the selected range, past dates omitted)');
+    return;
+  case 'barprice':
+    line = '[PriceBar] ' + n.price + ' ' + n.unit + (n.sub ? ' — ' + n.sub : ''); break;
+  case 'kv':      line = '  ' + n.k + ': ' + n.v; break;
+  case 'sec':     line = '— ' + n.text + ' —'; break;
+  case 'text':    line = n.text || null; break;
+  case 'tabbar':
+    out.push(ind(d) + '[TabBar] ' + n.items.map(function(i){
+      return i.text + ' #' + i.id + (i.on ? '(current)' : ''); }).join('  '));
+    return;
+  case 'sheet':   line = '[Sheet] ' + n.title + '   close #' + n.closeId; break;
+  case 'sheetfoot': line = n.label ? '[SheetFooter] ' + n.label : null; break;
+  case 'dialog':  line = '[Dialog] ' + (n.title ? n.title + ' — ' : '') + n.text; break;
+  case 'mask': case 'toast': line = null; break;
+  default:        line = null;
+  }
+  if (line !== null) out.push(ind(d) + line);
+  for (var k in n){
+    if (SKIP_KEYS[k]) continue;
+    var v = n[k];
+    if (v && typeof v === 'object') walkText(v, line !== null ? d+1 : d, out, st);
+  }
+}
+
+/* --------------------------------------------------------- derived view */
+function derive(st){
+  var last = st.bookings.length ? st.bookings[st.bookings.length - 1] : null;
+  return {
+    route: route(st).name,
+    today: st.meta.today,
+    bookingCount: st.bookings.length,
+    lastBooking: last,
+    lastBookingPayment: last ? (byId(st.payments, last.paymentId) || null) : null,
+    lastBookingStay: last ? stay(last.stayId) : null,
+    upcomingIds: st.bookings.filter(function(b){ return b.status==='upcoming'; })
+                            .map(function(b){ return b.id; }),
+    wishlistNames: st.wishlist.map(function(id){ var s = stay(id); return s ? s.name : id; }),
+    helpfulReviewIds: Object.keys(st.reviewHelpful).filter(function(k){ return st.reviewHelpful[k]; }).sort(),
+    helpfulReviewAuthors: Object.keys(st.reviewHelpful)
+      .filter(function(k){ return st.reviewHelpful[k]; })
+      .map(function(k){ var r = review(k); return r ? r.author : k; }).sort(),
+    nearestStay: STAYS.slice().sort(function(a,b){ return a.distanceMi - b.distanceMi; })[0].name,
+    defaultPayment: byId(st.payments, st.defaultPaymentId) || null,
+    paymentBrands: st.payments.map(function(p){ return p.brand; }),
+    draftNights: nightsBetween(st.draft.checkIn, st.draft.checkOut),
+    draftQuote: draftQuote(st),
+    finished: !!st.meta.finished,
+    answer: st.meta.answer
+  };
+}
+function snapshot(st){ var o = clone(st); o.derived = derive(st); return o; }
+
+function applyPatch(st, patch){
+  (patch || []).forEach(function(p){ setPath(st, p.path, clone(p.value)); });
+  return st;
+}
+
+/* ------------------------------------------------------------------ export */
+var ENGINE = {
+  ENV_ID: ENV_ID, VERSION: VERSION, CATALOG: CATALOG,
+  createInitialState: createInitialState,
+  reduce: reduce, step: step, screen: screen, a11y: a11y,
+  elements: elements, findEl: findEl, applyPatch: applyPatch,
+  getPath: getPath, setPath: setPath, clone: clone,
+  derive: derive, snapshot: snapshot,
+  select: SELECT
+};
+root.ROOST_ENGINE = ENGINE;
+root.GUI_ENGINE   = ENGINE;      /* generic alias the harness looks for first */
+
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+</script>
+
+<script id="ui">
+/* ===========================================================================
+ * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
+ *
+ * Part 1 of 2: the artwork. Every picture in this app is an inline SVG scene
+ * drawn from a small vocabulary (sky, ridge, water, foliage, structure), so
+ * the environment needs no image files, no network and no emoji font, and it
+ * renders byte-identically on any machine. Interiors are hue-parameterised so
+ * each stay's gallery is tinted to match its exterior.
+ * ======================================================================== */
+(function(){
+'use strict';
+var E = window.GUI_ENGINE;
+var app = document.getElementById('app');
+var hud = document.getElementById('hud');
+var sb  = document.getElementById('sb');
+
+function esc(s){
+  return String(s === undefined || s === null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ---------------------------------------------------------------- scenes */
+var uidSeq = 0;
+function pines(y, n, x0, gap, h, w, fill, op){
+  var s = '';
+  for (var i = 0; i < n; i++){
+    var x = x0 + i * gap, hh = h * (i % 3 === 1 ? .82 : (i % 3 === 2 ? 1.12 : 1));
+    s += '<path d="M' + x + ' ' + y + ' l' + (w/2) + ' ' + (-hh) + ' l' + (w/2) + ' ' + hh + ' z" fill="' + fill + '"'
+       + (op ? ' opacity="' + op + '"' : '') + '/>';
+  }
+  return s;
+}
+function stars(list){
+  var s = '<g fill="#fff">';
+  for (var i = 0; i < list.length; i += 3)
+    s += '<circle cx="' + list[i] + '" cy="' + list[i+1] + '" r="' + list[i+2] + '" opacity="' + (0.5 + (i%5)/10) + '"/>';
+  return s + '</g>';
+}
+function birds(list, col){
+  var s = '<g fill="none" stroke="' + (col||'#3d4a55') + '" stroke-width="1.6" stroke-linecap="round" opacity=".72">';
+  for (var i = 0; i < list.length; i += 3){
+    var x = list[i], y = list[i+1], k = list[i+2];
+    s += '<path d="M' + (x-k) + ' ' + y + ' q' + k + ' ' + (-k*0.8) + ' ' + (k*2) + ' 0"/>'
+       + '<path d="M' + (x+k) + ' ' + y + ' q' + k + ' ' + (-k*0.8) + ' ' + (k*2) + ' 0"/>';
+  }
+  return s + '</g>';
+}
+function confetti(u){
+  var s = '';
+  var pts = [40,54,-18, 96,34,12, 150,62,28, 232,40,-24, 300,58,16, 348,36,34,
+             62,150,20, 336,142,-14, 118,178,8, 286,186,-30];
+  var cs = ['#ff9d6e','#6fc2a0','#f4c95d','#7fb8d6','#c9a2e0','#ff8fa3','#8fd0c4','#ffc46b','#9db9f0','#f2a0c4'];
+  for (var i = 0; i < pts.length; i += 3){
+    var c = cs[(i/3) % cs.length];
+    s += '<rect x="' + pts[i] + '" y="' + pts[i+1] + '" width="9" height="5" rx="2.5" fill="' + c
+       + '" transform="rotate(' + pts[i+2] + ' ' + (pts[i]+4) + ' ' + (pts[i+1]+2) + ')"/>';
+  }
+  return s;
+}
+
+var ART = {
+
+/* ---- exteriors ------------------------------------------------------- */
+cabin: function(u){ return ''
+  + '<defs>'
+  + '<linearGradient id="' + u + 'sky" x1="0" y1="0" x2="0" y2="1">'
+  +   '<stop offset="0" stop-color="#1d2c4b"/><stop offset=".5" stop-color="#46456e"/>'
+  +   '<stop offset="1" stop-color="#8f7593"/></linearGradient>'
+  + '<linearGradient id="' + u + 'snow" x1="0" y1="0" x2="0" y2="1">'
+  +   '<stop offset="0" stop-color="#f6f9fd"/><stop offset="1" stop-color="#cfdae9"/></linearGradient>'
+  + '</defs>'
+  + '<rect width="400" height="260" fill="url(#' + u + 'sky)"/>'
+  + stars([48,36,1.6, 96,58,1.2, 140,28,1.8, 236,44,1.3, 292,26,1.6, 358,66,1.2, 190,74,1.1])
+  + '<circle cx="322" cy="54" r="18" fill="#fdf6e3" opacity=".96"/>'
+  + '<circle cx="314" cy="48" r="16" fill="#33375c" opacity=".92"/>'
+  + '<path d="M0 156 L64 74 L112 126 L176 52 L232 108 L286 68 L400 158 L400 200 L0 200 Z" fill="#41598a"/>'
+  + '<path d="M176 52 L200 76 L188 80 L178 70 L166 82 L154 74 Z" fill="#eaf1fa" opacity=".92"/>'
+  + '<path d="M286 68 L306 90 L296 92 L288 84 L278 94 L268 88 Z" fill="#eaf1fa" opacity=".85"/>'
+  + '<path d="M0 176 L86 126 L166 176 L246 120 L400 184 L400 260 L0 260 Z" fill="#25344d"/>'
+  + '<path d="M0 202 Q100 188 208 202 T400 198 L400 260 L0 260 Z" fill="url(#' + u + 'snow)"/>'
+  + pines(206, 5, 8, 30, 44, 22, '#16302a')
+  + pines(208, 6, 252, 26, 40, 20, '#16302a')
+  + '<path d="M118 206 L162 128 L206 206 Z" fill="#4b3226"/>'
+  + '<path d="M162 128 L206 206 L196 206 L162 142 Z" fill="#5d4030"/>'
+  + '<path d="M162 152 l16 28 h-32 z" fill="#ffc65c"/>'
+  + '<rect x="154" y="182" width="17" height="24" rx="2" fill="#2a1a12"/>'
+  + '<rect x="177" y="142" width="10" height="26" rx="2" fill="#3a2a20"/>'
+  + '<rect x="175" y="140" width="14" height="5" rx="2" fill="#4b372b"/>'
+  + '<path d="M182 136 q10 -13 0 -24 q-10 -11 2 -20" fill="none" stroke="#cbd4e2" stroke-width="2.4" '
+  +   'stroke-linecap="round" opacity=".5"/>'
+  + '<ellipse cx="162" cy="208" rx="52" ry="6" fill="#ffce7a" opacity=".18"/>'
+  + '<path d="M0 236 Q90 226 190 236 T400 232 L400 260 L0 260 Z" fill="#e2eaf4"/>'
+  + pines(244, 5, -14, 44, 40, 26, '#122a25')
+  + pines(248, 4, 246, 46, 36, 24, '#122a25');
+},
+
+beach: function(u){ return ''
+  + '<defs>'
+  + '<linearGradient id="' + u + 'sky" x1="0" y1="0" x2="0" y2="1">'
+  +   '<stop offset="0" stop-color="#ffd9a0"/><stop offset=".45" stop-color="#ffa877"/>'
+  +   '<stop offset="1" stop-color="#e8695e"/></linearGradient>'
+  + '<linearGradient id="' + u + 'sea" x1="0" y1="0" x2="0" y2="1">'
+  +   '<stop offset="0" stop-color="#e0765f"/><stop offset=".35" stop-color="#4c7f96"/>'
+  +   '<stop offset="1" stop-color="#265a72"/></linearGradient>'
+  + '</defs>'
+  + '<rect width="400" height="260" fill="url(#' + u + 'sky)"/>'
+  + '<circle cx="152" cy="128" r="44" fill="#fff2cd" opacity=".95"/>'
+  + '<g fill="#ffd9a0" opacity=".45">'
+  +   '<rect x="0" y="96" width="400" height="5" rx="2.5"/><rect x="0" y="112" width="400" height="4" rx="2"/>'
+  +   '<rect x="0" y="128" width="400" height="6" rx="3"/></g>'
+  + '<rect x="0" y="150" width="400" height="62" fill="url(#' + u + 'sea)"/>'
+  + '<g fill="#ffe3b0" opacity=".62">'
+  +   '<ellipse cx="152" cy="160" rx="30" ry="2.4"/><ellipse cx="152" cy="170" rx="22" ry="2"/>'
+  +   '<ellipse cx="152" cy="180" rx="34" ry="2.4"/><ellipse cx="152" cy="192" rx="18" ry="1.8"/></g>'
+  + '<path d="M0 206 Q110 194 220 206 T400 200 L400 260 L0 260 Z" fill="#f0d9b0"/>'
+  + '<path d="M0 226 Q120 216 240 228 T400 222 L400 260 L0 260 Z" fill="#e3c89c"/>'
+  + '<g stroke="#4a382a" stroke-width="5" stroke-linecap="round">'
+  +   '<path d="M262 214 v-26"/><path d="M292 216 v-28"/><path d="M330 214 v-26"/><path d="M358 216 v-28"/></g>'
+  + '<rect x="252" y="152" width="118" height="40" rx="4" fill="#f6ecdc"/>'
+  + '<rect x="252" y="188" width="118" height="8" rx="3" fill="#c9a97f"/>'
+  + '<path d="M242 154 L311 122 L380 154 Z" fill="#7a5a44"/>'
+  + '<path d="M311 122 L380 154 L370 154 L311 130 Z" fill="#8d6a50"/>'
+  + '<rect x="266" y="162" width="26" height="22" rx="2" fill="#ffc65c"/>'
+  + '<rect x="302" y="162" width="18" height="22" rx="2" fill="#b8dbe6"/>'
+  + '<rect x="332" y="162" width="26" height="22" rx="2" fill="#ffc65c"/>'
+  + '<path d="M64 216 q-6 -46 8 -66" fill="none" stroke="#5a4432" stroke-width="7" stroke-linecap="round"/>'
+  + '<g fill="#2f6a52">'
+  +   '<path d="M72 150 q-38 -14 -50 6 q30 -2 50 -6"/><path d="M72 150 q-26 -34 -50 -30 q22 14 50 30"/>'
+  +   '<path d="M72 150 q34 -20 54 -2 q-32 -6 -54 2"/><path d="M72 150 q22 -34 48 -30 q-26 12 -48 30"/>'
+  +   '<path d="M72 150 q4 -34 -6 -44 q-6 26 6 44"/></g>'
+  + birds([326,66,7, 352,84,5], '#8a4a44');
+},
+
+city: function(u){
+  var s = ''
+  + '<defs>'
+  + '<linearGradient id="' + u + 'sky" x1="0" y1="0" x2="0" y2="1">'
+  +   '<stop offset="0" stop-color="#f7cba6"/><stop offset=".48" stop-color="#c395ab"/>'
+  +   '<stop offset="1" stop-color="#5f5885"/></linearGradient>'
+  + '</defs>'
+  + '<rect width="400" height="260" fill="url(#' + u + 'sky)"/>'
+  + '<circle cx="318" cy="96" r="26" fill="#fff0cf" opacity=".9"/>'
+  + '<path d="M0 168 L400 168 L400 260 L0 260 Z" fill="#4a6a86"/>'
+  + '<g fill="#e7f0f5" opacity=".22">'
+  +   '<rect x="0" y="182" width="400" height="3" rx="1.5"/><rect x="0" y="196" width="400" height="2" rx="1"/>'
+  +   '<rect x="0" y="210" width="400" height="3" rx="1.5"/></g>';
+  var blocks = [[10,120,52,52,'#e3a578'],[58,100,46,72,'#f0c193'],[100,132,40,40,'#d99672'],
+                [136,88,54,84,'#f3cfa4'],[186,118,42,54,'#e0a97f'],[224,96,50,76,'#eec49a'],
+                [270,128,44,44,'#dda07a'],[310,104,52,68,'#f2cba0'],[358,124,42,48,'#e3aa80']];
+  blocks.forEach(function(b, i){
+    s += '<rect x="' + b[0] + '" y="' + b[1] + '" width="' + b[2] + '" height="' + b[3] + '" fill="' + b[4] + '"/>';
+    s += '<path d="M' + (b[0]-4) + ' ' + b[1] + ' L' + (b[0]+b[2]/2) + ' ' + (b[1]-12) + ' L'
+       + (b[0]+b[2]+4) + ' ' + b[1] + ' Z" fill="#b2604a"/>';
+    for (var r = 0; r < 2; r++) for (var c = 0; c < 2; c++){
+      var lit = ((i + r + c) % 3) !== 0;
+      s += '<rect x="' + (b[0] + 8 + c * (b[2]/2)) + '" y="' + (b[1] + 12 + r * 22) + '" width="10" height="13" rx="1.5" '
+         + 'fill="' + (lit ? '#ffc65c' : '#8d6a63') + '" opacity="' + (lit ? '.95' : '.5') + '"/>';
+    }
+  });
+  s += '<rect x="164" y="52" width="26" height="46" fill="#f6ddbd"/>'
+     + '<path d="M160 52 L177 32 L194 52 Z" fill="#a9584a"/>'
+     + '<rect x="172" y="66" width="10" height="14" rx="5" fill="#7d5a58"/>'
+     + '<rect x="30" y="196" width="52" height="20" rx="6" fill="#f4c95d"/>'
+     + '<rect x="38" y="201" width="12" height="9" rx="2" fill="#cfe6f2"/>'
+     + '<rect x="56" y="201" width="12" height="9" rx="2" fill="#cfe6f2"/>'
+     + '<circle cx="42" cy="218" r="4" fill="#4a3a34"/><circle cx="70" cy="218" r="4" fill="#4a3a34"/>'
+     + birds([252,58,6, 276,44,4, 300,64,5], '#6b5570');
+  return s;
+},
+
+desert: function(u){ return ''
+  + '<defs>'
+  + '<linearGradient id="' + u + 'sky" x1="0" y1="0" x2="0" y2="1">'
+  +   '<stop offset="0" stop-color="#ffe0b0"/><stop offset=".5" stop-color="#f6a96b"/>'
+  +   '<stop offset="1" stop-color="#e07d5f"/></linearGradient>'
+  + '<linearGradient id="' + u + 'gr" x1="0" y1="0" x2="0" y2="1">'
+  +   '<stop offset="0" stop-color="#f0c79c"/><stop offset="1" stop-color="#d9a377"/></linearGradient>'
+  + '</defs>'
+  + '<rect width="400" height="260" fill="url(#' + u + 'sky)"/>'
+  + '<circle cx="292" cy="146" r="50" fill="#fff0c4" opacity=".92"/>'
+  + '<path d="M0 150 L36 122 L86 122 L112 150 L112 176 L0 176 Z" fill="#a9573c" opacity=".95"/>'
+  + '<path d="M132 164 L154 138 L206 138 L226 164 L226 180 L132 180 Z" fill="#8e4732" opacity=".9"/>'
+  + '<path d="M300 158 L322 132 L372 132 L400 158 L400 180 L300 180 Z" fill="#b1603f" opacity=".85"/>'
+  + '<path d="M0 178 Q120 168 240 180 T400 174 L400 260 L0 260 Z" fill="url(#' + u + 'gr)"/>'
+  + '<path d="M0 214 Q140 204 260 216 T400 210 L400 260 L0 260 Z" fill="#cf9a6e" opacity=".55"/>'
+  + '<g>'
+  +   '<path d="M112 214 a56 56 0 0 1 112 0 z" fill="#f6f1e6"/>'
+  +   '<path d="M112 214 a56 56 0 0 1 112 0 z" fill="none" stroke="#d9cdb8" stroke-width="1.4"/>'
+  +   '<path d="M168 158 L124 196 M168 158 L212 196 M132 186 L204 186 M146 172 L190 172" '
+  +     'stroke="#d9cdb8" stroke-width="1.4" fill="none"/>'
+  +   '<path d="M156 214 v-24 a12 12 0 0 1 24 0 v24 z" fill="#3f2f28"/>'
+  +   '<circle cx="168" cy="176" r="9" fill="#8fd0e0" opacity=".85"/>'
+  + '</g>'
+  + '<g fill="#3f7a52">'
+  +   '<rect x="56" y="176" width="13" height="42" rx="6.5"/>'
+  +   '<path d="M46 196 a10 10 0 0 1 10 -10 v10 z"/><rect x="40" y="186" width="8" height="16" rx="4"/>'
+  +   '<path d="M69 190 a10 10 0 0 1 10 -10 v10 z"/><rect x="76" y="176" width="8" height="18" rx="4"/>'
+  + '</g>'
+  + '<g fill="#3f7a52" opacity=".9">'
+  +   '<rect x="322" y="186" width="11" height="34" rx="5.5"/>'
+  +   '<rect x="310" y="192" width="7" height="14" rx="3.5"/>'
+  +   '<path d="M317 200 a7 7 0 0 1 6 -6 v6 z"/></g>'
+  + '<ellipse cx="168" cy="216" rx="66" ry="5" fill="#8b5a3c" opacity=".16"/>';
+},
+
+forest: function(u){ return ''
+  + '<defs>'
+  + '<linearGradient id="' + u + 'sky" x1="0" y1="0" x2="0" y2="1">'
+  +   '<stop offset="0" stop-color="#e6f0ea"/><stop offset="1" stop-color="#b8cfc4"/></linearGradient>'
+  + '</defs>'
+  + '<rect width="400" height="260" fill="url(#' + u + 'sky)"/>'
+  + '<circle cx="86" cy="62" r="30" fill="#fff" opacity=".5"/>'
+  + pines(200, 12, -10, 36, 88, 34, '#9db9ac', '.55')
+  + pines(216, 10, 4, 42, 104, 40, '#6d9382', '.75')
+  + '<rect x="0" y="214" width="400" height="46" fill="#33574a"/>'
+  + pines(226, 8, -6, 54, 96, 48, '#2c4f43')
+  + '<rect x="196" y="70" width="26" height="176" fill="#5a4433"/>'
+  + '<rect x="196" y="70" width="9" height="176" fill="#6e5540" opacity=".8"/>'
+  + '<rect x="132" y="112" width="154" height="66" rx="6" fill="#8a6644"/>'
+  + '<rect x="132" y="112" width="154" height="10" rx="4" fill="#6f5136"/>'
+  + '<path d="M120 114 L209 74 L298 114 Z" fill="#4e6b57"/>'
+  + '<path d="M209 74 L298 114 L286 114 L209 82 Z" fill="#5d7d67"/>'
+  + '<rect x="150" y="130" width="34" height="30" rx="3" fill="#ffc65c"/>'
+  + '<rect x="196" y="130" width="26" height="30" rx="3" fill="#cfe3ea" opacity=".9"/>'
+  + '<rect x="236" y="130" width="34" height="30" rx="3" fill="#ffc65c"/>'
+  + '<rect x="132" y="176" width="154" height="7" rx="3" fill="#6f5136"/>'
+  + '<g stroke="#6f5136" stroke-width="5" stroke-linecap="round" fill="none">'
+  +   '<path d="M136 182 L112 206 L148 206 L124 230 L160 230 L140 248"/></g>'
+  + '<g fill="#2c4f43" opacity=".9">'
+  +   '<path d="M18 250 q16 -26 34 -6 q-18 -4 -34 6"/><path d="M352 252 q18 -28 36 -8 q-20 -4 -36 8"/></g>'
+  + '<g opacity=".5" stroke="#fff" stroke-width="6" stroke-linecap="round">'
+  +   '<path d="M20 158 h96"/><path d="M258 138 h124"/><path d="M60 196 h70"/></g>'
+  + birds([312,54,6, 340,72,4], '#5a6f63');
+},
+
+lake: function(u){ return ''
+  + '<defs>'
+  + '<linearGradient id="' + u + 'sky" x1="0" y1="0" x2="0" y2="1">'
+  +   '<stop offset="0" stop-color="#ffeed4"/><stop offset=".5" stop-color="#dfe9ee"/>'
+  +   '<stop offset="1" stop-color="#aed2e2"/></linearGradient>'
+  + '<linearGradient id="' + u + 'wat" x1="0" y1="0" x2="0" y2="1">'
+  +   '<stop offset="0" stop-color="#9dc8da"/><stop offset="1" stop-color="#6ba3bd"/></linearGradient>'
+  + '</defs>'
+  + '<rect width="400" height="260" fill="url(#' + u + 'sky)"/>'
+  + '<circle cx="286" cy="88" r="24" fill="#fff3d4"/>'
+  + '<path d="M0 148 L74 96 L142 148 Z" fill="#5f8873"/>'
+  + '<path d="M110 152 L196 88 L286 152 Z" fill="#4a7161"/>'
+  + '<path d="M248 150 L322 104 L400 150 Z" fill="#5f8873" opacity=".9"/>'
+  + '<rect x="0" y="150" width="400" height="110" fill="url(#' + u + 'wat)"/>'
+  + '<g opacity=".3">'
+  +   '<path d="M110 148 L196 208 L286 148 Z" fill="#4a7161"/>'
+  +   '<path d="M0 152 L74 200 L142 152 Z" fill="#5f8873"/></g>'
+  + '<g fill="#fff" opacity=".45">'
+  +   '<rect x="30" y="176" width="90" height="3" rx="1.5"/><rect x="180" y="192" width="120" height="3" rx="1.5"/>'
+  +   '<rect x="70" y="208" width="70" height="3" rx="1.5"/><rect x="240" y="222" width="110" height="3" rx="1.5"/></g>'
+  + '<path d="M0 150 Q60 142 120 150 L120 172 L0 172 Z" fill="#6b9280"/>'
+  + '<rect x="24" y="112" width="78" height="42" rx="3" fill="#f7f1e4"/>'
+  + '<path d="M14 114 L63 82 L112 114 Z" fill="#3f6a58"/>'
+  + '<rect x="36" y="124" width="18" height="20" rx="2" fill="#ffc65c"/>'
+  + '<rect x="72" y="124" width="18" height="20" rx="2" fill="#cfe3ea"/>'
+  + '<rect x="30" y="122" width="5" height="24" fill="#3f6a58"/><rect x="55" y="122" width="5" height="24" fill="#3f6a58"/>'
+  + '<rect x="66" y="122" width="5" height="24" fill="#3f6a58"/><rect x="91" y="122" width="5" height="24" fill="#3f6a58"/>'
+  + '<g fill="#8a6a4c">'
+  +   '<rect x="118" y="166" width="96" height="8" rx="2"/>'
+  +   '<rect x="132" y="172" width="5" height="20"/><rect x="166" y="172" width="5" height="22"/>'
+  +   '<rect x="200" y="172" width="5" height="24"/></g>'
+  + '<path d="M222 178 q22 -6 44 0 q-20 12 -44 0 z" fill="#e0764f"/>'
+  + '<path d="M238 172 l6 -10 l4 10" fill="#8a6a4c"/>'
+  + '<g fill="#4f6b78">'
+  +   '<path d="M330 176 q4 -22 12 -26 q-2 -14 10 -16 q-4 8 2 12 q10 4 8 18 q-2 16 -14 20 z"/>'
+  +   '<rect x="336" y="176" width="3" height="16"/><rect x="346" y="176" width="3" height="16"/></g>'
+  + '<g opacity=".5" stroke="#fff" stroke-width="7" stroke-linecap="round">'
+  +   '<path d="M150 132 h120"/><path d="M20 142 h84"/></g>'
+  + birds([330,58,6, 356,74,4], '#6a8b96');
+},
+
+/* ---- home hero -------------------------------------------------------- */
+travel: function(u){ return ''
+  + '<defs>'
+  + '<linearGradient id="' + u + 'sky" x1="0" y1="0" x2="0" y2="1">'
+  +   '<stop offset="0" stop-color="#ffe6bd"/><stop offset=".45" stop-color="#ffb98c"/>'
+  +   '<stop offset="1" stop-color="#f79070"/></linearGradient>'
+  + '<linearGradient id="' + u + 'rd" x1="0" y1="0" x2="0" y2="1">'
+  +   '<stop offset="0" stop-color="#d9cbb4"/><stop offset="1" stop-color="#efe6d4"/></linearGradient>'
+  + '</defs>'
+  + '<rect width="400" height="260" fill="url(#' + u + 'sky)"/>'
+  + '<circle cx="212" cy="126" r="52" fill="#fff4d2" opacity=".95"/>'
+  + '<g fill="#fff" opacity=".55">'
+  +   '<ellipse cx="72" cy="60" rx="34" ry="13"/><ellipse cx="94" cy="52" rx="22" ry="11"/>'
+  +   '<ellipse cx="316" cy="44" rx="28" ry="11"/><ellipse cx="336" cy="38" rx="18" ry="9"/></g>'
+  + '<path d="M0 152 L78 88 L150 152 Z" fill="#7fa896" opacity=".85"/>'
+  + '<path d="M108 156 L204 78 L300 156 Z" fill="#5f8878"/>'
+  + '<path d="M204 78 L228 98 L216 102 L206 92 L192 104 L180 96 Z" fill="#eef5f1" opacity=".9"/>'
+  + '<path d="M258 158 L330 100 L400 158 Z" fill="#4c6f62"/>'
+  + '<path d="M0 160 Q120 148 240 162 T400 156 L400 260 L0 260 Z" fill="#3f6154"/>'
+  + '<path d="M166 260 Q184 206 206 180 Q222 162 240 158 L262 158 Q230 168 218 192 Q204 218 210 260 Z" '
+  +   'fill="url(#' + u + 'rd)"/>'
+  + '<g stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".8">'
+  +   '<path d="M202 252 v-13"/><path d="M210 224 v-11"/><path d="M219 198 v-9"/><path d="M230 178 v-8"/></g>'
+  + pines(178, 6, 12, 26, 34, 18, '#2f5347')
+  + pines(184, 5, 300, 24, 32, 16, '#2f5347')
+  + '<g transform="translate(146 190)">'
+  +   '<rect x="0" y="6" width="72" height="30" rx="7" fill="#f6f1e4"/>'
+  +   '<rect x="0" y="6" width="72" height="12" rx="6" fill="#e2685c"/>'
+  +   '<rect x="46" y="0" width="26" height="20" rx="5" fill="#f6f1e4"/>'
+  +   '<rect x="52" y="5" width="15" height="11" rx="2.5" fill="#9fd0e2"/>'
+  +   '<rect x="10" y="22" width="18" height="12" rx="2" fill="#9fd0e2"/>'
+  +   '<circle cx="18" cy="38" r="7" fill="#3c3630"/><circle cx="18" cy="38" r="3" fill="#cfc8bd"/>'
+  +   '<circle cx="58" cy="38" r="7" fill="#3c3630"/><circle cx="58" cy="38" r="3" fill="#cfc8bd"/>'
+  + '</g>'
+  + birds([300,66,7, 328,50,5, 350,72,4], '#a86a5a');
+},
+
+/* ---- interiors, tinted by the stay's hue ------------------------------ */
+living: function(u, h){ return ''
+  + '<rect width="400" height="260" fill="hsl(' + h + ' 22% 94%)"/>'
+  + '<rect x="0" y="196" width="400" height="64" fill="hsl(32 34% 80%)"/>'
+  + '<g>'
+  +   '<rect x="236" y="34" width="132" height="112" rx="6" fill="#cfe6ef"/>'
+  +   '<path d="M236 118 L288 78 L336 118 Z" fill="hsl(' + h + ' 32% 62%)"/>'
+  +   '<path d="M304 122 L344 88 L368 122 Z" fill="hsl(' + h + ' 30% 52%)"/>'
+  +   '<circle cx="264" cy="62" r="14" fill="#fff2cd"/>'
+  +   '<rect x="236" y="118" width="132" height="28" fill="hsl(' + h + ' 26% 74%)"/>'
+  +   '<rect x="230" y="28" width="144" height="124" rx="8" fill="none" stroke="#e6ded0" stroke-width="7"/>'
+  +   '<rect x="298" y="28" width="8" height="124" fill="#e6ded0"/></g>'
+  + '<ellipse cx="196" cy="222" rx="150" ry="26" fill="hsl(' + h + ' 30% 82%)"/>'
+  + '<ellipse cx="196" cy="222" rx="118" ry="19" fill="none" stroke="hsl(' + h + ' 34% 72%)" stroke-width="3"/>'
+  + '<g>'
+  +   '<rect x="46" y="140" width="164" height="52" rx="12" fill="hsl(' + h + ' 34% 48%)"/>'
+  +   '<rect x="38" y="128" width="26" height="66" rx="11" fill="hsl(' + h + ' 34% 42%)"/>'
+  +   '<rect x="192" y="128" width="26" height="66" rx="11" fill="hsl(' + h + ' 34% 42%)"/>'
+  +   '<rect x="70" y="128" width="52" height="34" rx="8" fill="hsl(' + h + ' 40% 62%)"/>'
+  +   '<rect x="132" y="128" width="52" height="34" rx="8" fill="hsl(' + h + ' 40% 68%)"/>'
+  +   '<rect x="56" y="192" width="10" height="14" rx="3" fill="#8a6a4c"/>'
+  +   '<rect x="190" y="192" width="10" height="14" rx="3" fill="#8a6a4c"/></g>'
+  + '<g>'
+  +   '<path d="M320 210 h44 l-6 -34 h-32 z" fill="#d68b62"/>'
+  +   '<g fill="hsl(140 36% 40%)">'
+  +     '<path d="M342 176 q-30 -12 -34 -42 q26 8 34 42"/><path d="M342 176 q28 -16 30 -44 q-24 12 -30 44"/>'
+  +     '<path d="M342 176 q-6 -34 6 -52 q8 26 -6 52"/></g></g>'
+  + '<g><rect x="18" y="100" width="6" height="104" rx="3" fill="#9a8f7e"/>'
+  +   '<path d="M2 100 h38 l-8 -26 h-22 z" fill="#f4c95d"/></g>';
+},
+
+bed: function(u, h){ return ''
+  + '<rect width="400" height="260" fill="hsl(' + h + ' 18% 95%)"/>'
+  + '<rect x="0" y="200" width="400" height="60" fill="hsl(32 30% 78%)"/>'
+  + '<g><rect x="256" y="30" width="120" height="118" rx="60" fill="#cfe6ef"/>'
+  +   '<path d="M256 120 a60 60 0 0 0 120 0 z" fill="hsl(' + h + ' 30% 66%)"/>'
+  +   '<circle cx="288" cy="66" r="13" fill="#fff2cd"/>'
+  +   '<rect x="250" y="24" width="132" height="130" rx="66" fill="none" stroke="#e8e0d2" stroke-width="7"/></g>'
+  + '<ellipse cx="180" cy="238" rx="150" ry="18" fill="hsl(' + h + ' 26% 86%)"/>'
+  + '<g>'
+  +   '<rect x="34" y="76" width="176" height="70" rx="10" fill="hsl(' + h + ' 30% 40%)"/>'
+  +   '<rect x="46" y="88" width="152" height="46" rx="7" fill="hsl(' + h + ' 30% 48%)"/>'
+  +   '<rect x="26" y="142" width="196" height="70" rx="10" fill="#f6f1e6"/>'
+  +   '<rect x="26" y="172" width="196" height="40" rx="8" fill="hsl(' + h + ' 36% 56%)"/>'
+  +   '<rect x="26" y="168" width="196" height="12" rx="6" fill="hsl(' + h + ' 40% 68%)"/>'
+  +   '<rect x="44" y="126" width="66" height="30" rx="10" fill="#fff"/>'
+  +   '<rect x="120" y="126" width="66" height="30" rx="10" fill="#fff"/>'
+  +   '<rect x="32" y="212" width="12" height="14" rx="3" fill="#8a6a4c"/>'
+  +   '<rect x="204" y="212" width="12" height="14" rx="3" fill="#8a6a4c"/></g>'
+  + '<g><rect x="244" y="168" width="58" height="46" rx="6" fill="#c99b6e"/>'
+  +   '<rect x="252" y="182" width="42" height="4" rx="2" fill="#a87e56"/>'
+  +   '<rect x="266" y="140" width="14" height="28" fill="#9a8f7e"/>'
+  +   '<path d="M254 140 h38 l-7 -22 h-24 z" fill="#f4c95d"/></g>';
+},
+
+/* ---- states ----------------------------------------------------------- */
+empty: function(u){ return ''
+  + '<rect width="400" height="260" fill="#eef3ef"/>'
+  + '<g fill="#fff" opacity=".8">'
+  +   '<ellipse cx="86" cy="58" rx="32" ry="12"/><ellipse cx="108" cy="50" rx="20" ry="10"/>'
+  +   '<ellipse cx="318" cy="72" rx="26" ry="10"/></g>'
+  + '<path d="M0 190 Q110 162 220 190 T400 180 L400 260 L0 260 Z" fill="#cfe0d3"/>'
+  + '<path d="M0 216 Q140 198 260 220 T400 212 L400 260 L0 260 Z" fill="#b3cdb9"/>'
+  + '<rect x="192" y="86" width="10" height="120" rx="4" fill="#8a6a4c"/>'
+  + '<path d="M202 100 h84 l16 15 l-16 15 h-84 z" fill="#5f8878"/>'
+  + '<path d="M192 138 h-76 l-16 15 l16 15 h76 z" fill="#e0876a"/>'
+  + '<rect x="214" y="112" width="52" height="5" rx="2.5" fill="#fff" opacity=".7"/>'
+  + '<rect x="126" y="150" width="46" height="5" rx="2.5" fill="#fff" opacity=".7"/>'
+  + pines(206, 4, 14, 30, 40, 20, '#7ea38d')
+  + pines(210, 3, 320, 28, 36, 18, '#7ea38d')
+  + birds([292,52,6, 316,38,4], '#8fa89a');
+},
+
+/* ---- canyon: sandstone fins, a casita cut into the rock, late afternoon ---- */
+canyon: function(u){ return ''
+  + '<defs>'
+  + '<linearGradient id="' + u + 'sky" x1="0" y1="0" x2="0" y2="1">'
+  +   '<stop offset="0" stop-color="#ffdcb0"/><stop offset=".52" stop-color="#f0a171"/>'
+  +   '<stop offset="1" stop-color="#d9705a"/></linearGradient>'
+  + '</defs>'
+  + '<rect width="400" height="260" fill="url(#' + u + 'sky)"/>'
+  + '<circle cx="86" cy="70" r="26" fill="#fff2cf" opacity=".9"/>'
+  + '<path d="M0 96 L44 60 L78 96 L120 46 L166 96 L166 200 L0 200 Z" fill="#a8543a" opacity=".55"/>'
+  + '<path d="M232 92 L268 52 L308 92 L352 58 L400 100 L400 200 L232 200 Z" fill="#a8543a" opacity=".55"/>'
+  + '<path d="M14 210 L52 104 L96 104 L124 210 Z" fill="#9c4a34"/>'
+  + '<path d="M52 104 L96 104 L104 132 L46 132 Z" fill="#b45c42"/>'
+  + '<path d="M262 214 L296 96 L348 96 L384 214 Z" fill="#8f4230"/>'
+  + '<path d="M296 96 L348 96 L356 128 L290 128 Z" fill="#a85440"/>'
+  + '<path d="M118 214 L152 122 L214 122 L248 214 Z" fill="#b06043"/>'
+  + '<g opacity=".28" stroke="#5e2c1e" stroke-width="2" fill="none">'
+  +   '<path d="M132 200 h100"/><path d="M138 178 h88"/><path d="M144 156 h76"/></g>'
+  + '<path d="M0 214 Q120 204 236 216 T400 210 L400 260 L0 260 Z" fill="#e9bb8b"/>'
+  + '<path d="M0 236 Q140 228 268 240 T400 234 L400 260 L0 260 Z" fill="#d9a273" opacity=".7"/>'
+  + '<g>'
+  +   '<path d="M150 216 v-42 a30 30 0 0 1 60 0 v42 z" fill="#f4ece0"/>'
+  +   '<path d="M150 174 a30 30 0 0 1 60 0 z" fill="#fbf6ee"/>'
+  +   '<rect x="168" y="188" width="24" height="28" rx="2" fill="#4a2f24"/>'
+  +   '<path d="M170 190 h20 v10 h-20 z" fill="#8fd0e0" opacity=".8"/>'
+  +   '<rect x="146" y="170" width="68" height="6" rx="3" fill="#d9cdbb"/>'
+  +   '<rect x="214" y="196" width="26" height="20" rx="3" fill="#c9b79c"/>'
+  + '</g>'
+  + '<g fill="#3f7a52">'
+  +   '<rect x="72" y="196" width="10" height="26" rx="5"/>'
+  +   '<rect x="62" y="200" width="7" height="13" rx="3.5"/><path d="M69 208 a7 7 0 0 1 6 -6 v6 z"/>'
+  + '</g>'
+  + '<g fill="#4a7a54" opacity=".9">'
+  +   '<ellipse cx="300" cy="222" rx="18" ry="8"/><ellipse cx="330" cy="228" rx="12" ry="6"/></g>'
+  + birds([326,52,7, 352,70,5], '#a3563f');
+},
+
+/* ---- mountain: alpine chalet under big peaks, clear morning ---- */
+mountain: function(u){ return ''
+  + '<defs>'
+  + '<linearGradient id="' + u + 'sky" x1="0" y1="0" x2="0" y2="1">'
+  +   '<stop offset="0" stop-color="#8fc4e2"/><stop offset=".58" stop-color="#cfe6f0"/>'
+  +   '<stop offset="1" stop-color="#eef4f2"/></linearGradient>'
+  + '<linearGradient id="' + u + 'sn" x1="0" y1="0" x2="0" y2="1">'
+  +   '<stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#d6e3ec"/></linearGradient>'
+  + '</defs>'
+  + '<rect width="400" height="260" fill="url(#' + u + 'sky)"/>'
+  + '<circle cx="330" cy="48" r="20" fill="#fff6dc"/>'
+  + '<path d="M-10 150 L60 44 L118 108 L156 66 L214 150 Z" fill="#6f88a6"/>'
+  + '<path d="M60 44 L88 84 L74 88 L62 76 L46 90 L32 82 Z" fill="url(#' + u + 'sn)"/>'
+  + '<path d="M156 66 L180 98 L168 100 L158 90 L146 102 L136 94 Z" fill="url(#' + u + 'sn)"/>'
+  + '<path d="M170 156 L246 58 L312 128 L352 92 L410 156 Z" fill="#59728f"/>'
+  + '<path d="M246 58 L274 96 L260 100 L248 88 L232 102 L218 94 Z" fill="url(#' + u + 'sn)"/>'
+  + '<path d="M0 168 L96 126 L196 172 L288 122 L400 176 L400 260 L0 260 Z" fill="#41586f"/>'
+  + '<path d="M0 196 Q110 184 214 198 T400 192 L400 260 L0 260 Z" fill="url(#' + u + 'sn)"/>'
+  + pines(202, 6, 4, 30, 40, 20, '#22443c')
+  + pines(206, 5, 288, 28, 38, 20, '#22443c')
+  + '<g>'
+  +   '<rect x="124" y="164" width="152" height="54" rx="4" fill="#8a6242"/>'
+  +   '<rect x="124" y="164" width="152" height="10" fill="#6f4d34"/>'
+  +   '<path d="M110 166 L200 118 L290 166 Z" fill="#5b4230"/>'
+  +   '<path d="M200 118 L290 166 L276 166 L200 126 Z" fill="#6d5140"/>'
+  +   '<path d="M110 166 L200 118 L200 126 L124 168 Z" fill="#f2f6f8" opacity=".85"/>'
+  +   '<rect x="142" y="180" width="30" height="26" rx="3" fill="#ffc65c"/>'
+  +   '<rect x="186" y="180" width="30" height="26" rx="3" fill="#ffc65c"/>'
+  +   '<rect x="230" y="180" width="30" height="26" rx="3" fill="#bcd9e4"/>'
+  +   '<rect x="188" y="140" width="26" height="18" rx="2" fill="#4a3527"/>'
+  +   '<rect x="124" y="216" width="152" height="8" rx="3" fill="#6f4d34"/>'
+  +   '<rect x="238" y="132" width="12" height="24" rx="2" fill="#4a3527"/>'
+  +   '<path d="M244 128 q10 -12 0 -22" fill="none" stroke="#cfdae2" stroke-width="2.6" stroke-linecap="round" opacity=".7"/>'
+  + '</g>'
+  + '<ellipse cx="200" cy="224" rx="98" ry="7" fill="#9db2c2" opacity=".3"/>';
+},
+
+/* ---- barn: converted dairy barn on the prairie, golden hour ---- */
+barn: function(u){ return ''
+  + '<defs>'
+  + '<linearGradient id="' + u + 'sky" x1="0" y1="0" x2="0" y2="1">'
+  +   '<stop offset="0" stop-color="#ffe9bd"/><stop offset=".55" stop-color="#ffd08a"/>'
+  +   '<stop offset="1" stop-color="#f3ab72"/></linearGradient>'
+  + '</defs>'
+  + '<rect width="400" height="260" fill="url(#' + u + 'sky)"/>'
+  + '<circle cx="308" cy="128" r="34" fill="#fff3cd" opacity=".92"/>'
+  + '<g fill="#fff" opacity=".5">'
+  +   '<ellipse cx="70" cy="52" rx="34" ry="12"/><ellipse cx="96" cy="44" rx="20" ry="9"/>'
+  +   '<ellipse cx="250" cy="42" rx="26" ry="10"/></g>'
+  + '<path d="M0 168 Q100 158 200 168 T400 164 L400 260 L0 260 Z" fill="#cbb15f"/>'
+  + '<path d="M0 196 Q120 186 240 198 T400 192 L400 260 L0 260 Z" fill="#b89a49"/>'
+  + '<g stroke="#a2853c" stroke-width="1.6" opacity=".7">'
+  +   '<path d="M20 232 v-14"/><path d="M44 238 v-16"/><path d="M68 230 v-13"/><path d="M330 236 v-15"/>'
+  +   '<path d="M356 230 v-13"/><path d="M380 240 v-16"/></g>'
+  + '<g>'
+  +   '<rect x="112" y="140" width="164" height="76" fill="#c1503f"/>'
+  +   '<path d="M100 142 L194 84 L288 142 Z" fill="#9d3d30"/>'
+  +   '<path d="M194 84 L288 142 L274 142 L194 94 Z" fill="#b04737"/>'
+  +   '<path d="M150 216 v-52 h88 v52 z" fill="#8f3a2c"/>'
+  +   '<path d="M150 164 h88 M194 164 v52 M150 190 h88" stroke="#e8d7b4" stroke-width="4" fill="none"/>'
+  +   '<path d="M154 168 L234 212 M234 168 L154 212" stroke="#e8d7b4" stroke-width="3.5" opacity=".8"/>'
+  +   '<rect x="182" y="106" width="24" height="24" rx="3" fill="#ffd97a"/>'
+  +   '<rect x="122" y="152" width="20" height="22" rx="2" fill="#ffd97a"/>'
+  +   '<rect x="246" y="152" width="20" height="22" rx="2" fill="#ffd97a"/>'
+  +   '<rect x="112" y="136" width="164" height="7" fill="#e8d7b4"/>'
+  +   '<rect x="182" y="66" width="24" height="20" rx="2" fill="#c1503f"/>'
+  +   '<path d="M176 68 L194 54 L212 68 Z" fill="#9d3d30"/>'
+  +   '<rect x="188" y="72" width="12" height="12" rx="1.5" fill="#ffd97a"/>'
+  +   '<path d="M194 54 v-12" stroke="#7d2f24" stroke-width="2.6"/>'
+  +   '<path d="M182 44 h20 l-6 -4 M202 44 l-6 4" stroke="#7d2f24" stroke-width="2.4" fill="none" stroke-linecap="round"/>'
+  + '</g>'
+  + '<g>'
+  +   '<rect x="30" y="132" width="42" height="92" rx="4" fill="#cfc3a8"/>'
+  +   '<path d="M26 134 a25 22 0 0 1 50 0 z" fill="#9aa3a8"/>'
+  +   '<g stroke="#b6a98d" stroke-width="1.4">'
+  +     '<path d="M30 156 h42"/><path d="M30 180 h42"/><path d="M30 204 h42"/></g>'
+  +   '<rect x="44" y="196" width="14" height="28" rx="2" fill="#8a7f66"/></g>'
+  + '<g fill="#e2b83f">'
+  +   '<circle cx="330" cy="198" r="7"/><rect x="328" y="204" width="3" height="18" fill="#7f9b45"/>'
+  +   '<circle cx="356" cy="208" r="6"/><rect x="354" y="213" width="3" height="15" fill="#7f9b45"/>'
+  +   '<circle cx="308" cy="212" r="5.5"/><rect x="306" y="217" width="3" height="13" fill="#7f9b45"/></g>'
+  + birds([84,66,7, 112,52,5, 138,72,4], '#a2653f');
+},
+
+/* ---- airstream: silver trailer on a juniper flat, red rocks behind ---- */
+airstream: function(u){ return ''
+  + '<defs>'
+  + '<linearGradient id="' + u + 'sky" x1="0" y1="0" x2="0" y2="1">'
+  +   '<stop offset="0" stop-color="#ffd9a8"/><stop offset=".5" stop-color="#f6a97e"/>'
+  +   '<stop offset="1" stop-color="#e07f6a"/></linearGradient>'
+  + '<linearGradient id="' + u + 'al" x1="0" y1="0" x2="0" y2="1">'
+  +   '<stop offset="0" stop-color="#fdfdfd"/><stop offset=".42" stop-color="#d7dde2"/>'
+  +   '<stop offset=".62" stop-color="#f4f6f8"/><stop offset="1" stop-color="#b9c2ca"/></linearGradient>'
+  + '</defs>'
+  + '<rect width="400" height="260" fill="url(#' + u + 'sky)"/>'
+  + '<circle cx="72" cy="86" r="24" fill="#fff3cf" opacity=".9"/>'
+  + '<path d="M132 132 L176 68 L214 132 Z" fill="#b05a3e" opacity=".8"/>'
+  + '<path d="M198 138 L252 56 L312 138 Z" fill="#9c4a34" opacity=".9"/>'
+  + '<path d="M292 140 L336 84 L400 140 L400 176 L292 176 Z" fill="#b05a3e" opacity=".75"/>'
+  + '<path d="M0 154 L58 108 L118 154 Z" fill="#c0684a" opacity=".6"/>'
+  + '<path d="M0 168 Q110 158 214 170 T400 164 L400 260 L0 260 Z" fill="#e5b483"/>'
+  + '<path d="M0 204 Q130 194 250 208 T400 200 L400 260 L0 260 Z" fill="#d29a68" opacity=".8"/>'
+  + '<g>'
+  +   '<rect x="96" y="150" width="196" height="58" rx="29" fill="url(#' + u + 'al)"/>'
+  +   '<rect x="96" y="176" width="196" height="4" fill="#9aa5ad" opacity=".7"/>'
+  +   '<rect x="118" y="162" width="26" height="20" rx="6" fill="#8fd0e0"/>'
+  +   '<rect x="156" y="162" width="26" height="20" rx="6" fill="#8fd0e0"/>'
+  +   '<rect x="196" y="160" width="30" height="34" rx="5" fill="#5f6a72"/>'
+  +   '<rect x="202" y="166" width="18" height="12" rx="3" fill="#ffd97a"/>'
+  +   '<rect x="240" y="162" width="26" height="20" rx="6" fill="#8fd0e0"/>'
+  +   '<circle cx="140" cy="210" r="12" fill="#3c3630"/><circle cx="140" cy="210" r="5" fill="#c9c3ba"/>'
+  +   '<circle cx="248" cy="210" r="12" fill="#3c3630"/><circle cx="248" cy="210" r="5" fill="#c9c3ba"/>'
+  +   '<path d="M292 172 h30 l-4 -12 h-26 z" fill="#aeb7bd"/>'
+  +   '<path d="M96 154 q98 -18 196 0" fill="none" stroke="#fff" stroke-width="4" opacity=".7"/>'
+  + '</g>'
+  + '<g><path d="M318 214 q-6 -16 2 -26 q10 10 6 26 z" fill="#c9622f"/>'
+  +   '<path d="M310 216 q10 -22 22 -18 q-4 12 -12 18 z" fill="#e8913c"/>'
+  +   '<g stroke="#7b5230" stroke-width="4" stroke-linecap="round">'
+  +     '<path d="M304 220 l30 -6"/><path d="M306 214 l28 8"/></g></g>'
+  + '<g fill="#4f7a52">'
+  +   '<ellipse cx="52" cy="196" rx="26" ry="18"/><ellipse cx="34" cy="204" rx="16" ry="11"/>'
+  +   '<rect x="48" y="202" width="7" height="18" fill="#6b5136"/></g>'
+  + birds([336,54,7, 360,72,5], '#a3563f');
+},
+
+/* ---- coast: shingled cottage on a headland above the surf ---- */
+coast: function(u){ return ''
+  + '<defs>'
+  + '<linearGradient id="' + u + 'sky" x1="0" y1="0" x2="0" y2="1">'
+  +   '<stop offset="0" stop-color="#c6dfec"/><stop offset=".55" stop-color="#eef2ef"/>'
+  +   '<stop offset="1" stop-color="#f8eede"/></linearGradient>'
+  + '<linearGradient id="' + u + 'sea" x1="0" y1="0" x2="0" y2="1">'
+  +   '<stop offset="0" stop-color="#84aec2"/><stop offset="1" stop-color="#3d6d87"/></linearGradient>'
+  + '</defs>'
+  + '<rect width="400" height="260" fill="url(#' + u + 'sky)"/>'
+  + '<circle cx="322" cy="60" r="21" fill="#fff8e6" opacity=".92"/>'
+  + '<g fill="#fff" opacity=".6">'
+  +   '<ellipse cx="96" cy="44" rx="34" ry="11"/><ellipse cx="122" cy="37" rx="21" ry="8"/>'
+  +   '<ellipse cx="290" cy="34" rx="26" ry="9"/></g>'
+  + '<rect x="0" y="126" width="400" height="134" fill="url(#' + u + 'sea)"/>'
+  + '<g fill="#2f4f60">'
+  +   '<path d="M300 150 q6 -34 14 -36 q10 2 12 36 z"/>'
+  +   '<path d="M344 154 q5 -22 11 -24 q8 2 9 24 z" opacity=".85"/></g>'
+  + '<g fill="none" stroke="#fff" stroke-linecap="round">'
+  +   '<path d="M232 170 q26 -6 52 2 q26 8 52 -2" stroke-width="3" opacity=".5"/>'
+  +   '<path d="M258 196 q30 -7 60 2 q28 8 52 -3" stroke-width="3.4" opacity=".55"/>'
+  +   '<path d="M222 220 q34 -8 70 3 q30 9 58 -4" stroke-width="4" opacity=".6"/>'
+  +   '<path d="M248 244 q36 -9 74 3 q26 8 48 -3" stroke-width="4.6" opacity=".68"/></g>'
+  + '<path d="M0 148 Q80 130 178 146 Q226 156 246 200 Q262 244 210 260 L0 260 Z" fill="#6f9068"/>'
+  + '<path d="M0 172 Q76 158 162 172 Q208 182 224 214 Q236 248 190 260 L0 260 Z" fill="#587c55"/>'
+  + '<path d="M0 226 Q54 236 104 258 L0 260 Z" fill="#8a7050"/>'
+  + '<path d="M170 168 Q196 194 208 226" fill="none" stroke="#d3bc94" stroke-width="7" stroke-linecap="round"/>'
+  + '<g>'
+  +   '<rect x="70" y="98" width="112" height="50" fill="#c2ae94"/>'
+  +   '<g stroke="#a89madd" stroke-width="0"/>'
+  +   '<path d="M58 100 L126 58 L194 100 Z" fill="#7d6a55"/>'
+  +   '<path d="M126 58 L194 100 L180 100 L126 66 Z" fill="#8c7861"/>'
+  +   '<g stroke="#ab9880" stroke-width="1.5" opacity=".85">'
+  +     '<path d="M70 112 h112"/><path d="M70 126 h112"/><path d="M70 140 h112"/></g>'
+  +   '<rect x="86" y="110" width="24" height="24" rx="2" fill="#ffd97a"/>'
+  +   '<rect x="146" y="110" width="24" height="24" rx="2" fill="#cfe6ef"/>'
+  +   '<rect x="120" y="120" width="18" height="28" rx="1.5" fill="#4d5f66"/>'
+  +   '<rect x="150" y="70" width="12" height="24" rx="2" fill="#6f5d4a"/>'
+  +   '<path d="M156 66 q10 -13 0 -24" fill="none" stroke="#e2e9e9" stroke-width="2.6" '
+  +     'stroke-linecap="round" opacity=".65"/>'
+  + '</g>'
+  + '<g fill="#43663f" opacity=".9">'
+  +   '<path d="M32 176 q11 -20 24 -6 q-13 -1 -24 6"/><path d="M212 196 q10 -18 22 -5 q-12 -1 -22 5"/>'
+  +   '<path d="M8 206 q12 -20 25 -6 q-13 -1 -25 6"/></g>'
+  + birds([262,74,8, 296,92,6, 236,100,5], '#5c6f78');
+},
+
+confirmed: function(u){ return ''
+  + '<defs><linearGradient id="' + u + 'g" x1="0" y1="0" x2="0" y2="1">'
+  +   '<stop offset="0" stop-color="#fff3dc"/><stop offset="1" stop-color="#ffe0c2"/></linearGradient></defs>'
+  + '<rect width="400" height="260" fill="url(#' + u + 'g)"/>'
+  + '<circle cx="200" cy="150" r="92" fill="#ffd9a8" opacity=".55"/>'
+  + '<g stroke="#ffbe7d" stroke-width="5" stroke-linecap="round" opacity=".8">'
+  +   '<path d="M200 30 v18"/><path d="M110 62 l12 14"/><path d="M290 62 l-12 14"/>'
+  +   '<path d="M64 150 h18"/><path d="M318 150 h18"/></g>'
+  + confetti(u)
+  + '<g transform="translate(126 96)">'
+  +   '<rect x="42" y="-16" width="64" height="24" rx="12" fill="none" stroke="#8a6a4c" stroke-width="8"/>'
+  +   '<rect x="0" y="0" width="148" height="112" rx="14" fill="#e0876a"/>'
+  +   '<rect x="0" y="0" width="148" height="112" rx="14" fill="none" stroke="#c96f55" stroke-width="3"/>'
+  +   '<rect x="26" y="0" width="14" height="112" fill="#c96f55" opacity=".7"/>'
+  +   '<rect x="108" y="0" width="14" height="112" fill="#c96f55" opacity=".7"/>'
+  +   '<rect x="52" y="42" width="44" height="26" rx="5" fill="#f6e6cf"/>'
+  +   '<circle cx="62" cy="86" r="11" fill="#f4c95d"/>'
+  +   '<rect x="86" y="76" width="34" height="20" rx="4" fill="#7fb8a4" transform="rotate(-8 103 86)"/>'
+  + '</g>'
+  + '<ellipse cx="200" cy="216" rx="96" ry="10" fill="#d9a97f" opacity=".3"/>';
+}
+};
+
+function artSvg(scene, hue){
+  var fn = ART[scene] || ART.empty;
+  var u = 'a' + (uidSeq++) + '_';
+  return '<svg viewBox="0 0 400 260" preserveAspectRatio="xMidYMid slice" role="img">'
+       + fn(u, hue === undefined ? 170 : hue) + '</svg>';
+}
+
+/* ------------------------------------------------------------- avatars */
+var AVATARS = [
+  {skin:'#f0c9a4', hair:'#3b2a24', shirt:'#4a8f7b'},
+  {skin:'#c98d63', hair:'#241a16', shirt:'#c9714f'},
+  {skin:'#e8b98f', hair:'#6b4a34', shirt:'#5b7fa8'}
+];
+function avatarSvg(i){
+  var a = AVATARS[(i - 1) % AVATARS.length] || AVATARS[0];
+  return '<svg viewBox="0 0 64 64" role="img">'
+    + '<rect width="64" height="64" fill="#f1efe8"/>'
+    + '<circle cx="32" cy="60" r="26" fill="' + a.shirt + '"/>'
+    + '<circle cx="32" cy="27" r="15" fill="' + a.skin + '"/>'
+    + '<path d="M17 26 a15 15 0 0 1 30 0 q-8 -8 -15 -6 q-8 2 -15 6 z" fill="' + a.hair + '"/>'
+    + '<circle cx="26" cy="28" r="1.8" fill="#3b2a24"/><circle cx="38" cy="28" r="1.8" fill="#3b2a24"/>'
+    + '<path d="M27 35 q5 4 10 0" fill="none" stroke="#3b2a24" stroke-width="1.6" stroke-linecap="round"/>'
+    + '</svg>';
+}
+
+/* ---------------------------------------------------------------- icons */
+var SVG = {
+  back:    '<path d="M15 4.5 8 12l7 7.5"/>',
+  arrow:   '<path d="M9 4.5 16 12l-7 7.5"/>',
+  up:      '<path d="M4.5 15 12 8l7.5 7"/>',
+  search:  '<circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.4 15.4 21 21"/>',
+  heart:   '<path d="M12 20.4C6.9 16.6 3.6 13.6 3.6 9.9A4.6 4.6 0 0 1 12 7.3a4.6 4.6 0 0 1 8.4 2.6c0 3.7-3.3 6.7-8.4 10.5z"/>',
+  star:    '<path d="M12 3.6 14.6 9l5.9.8-4.3 4.1 1.1 5.8L12 17l-5.3 2.7 1.1-5.8L3.5 9.8 9.4 9z"/>',
+  calendar:'<rect x="3.4" y="5.2" width="17.2" height="15.4" rx="2.6"/><path d="M3.4 10h17.2M8 3.2v4M16 3.2v4"/>',
+  pin:     '<path d="M12 21.2c4-4.3 6.4-7.6 6.4-10.6a6.4 6.4 0 1 0-12.8 0c0 3 2.4 6.3 6.4 10.6z"/><circle cx="12" cy="10.4" r="2.4"/>',
+  user:    '<circle cx="12" cy="8" r="3.8"/><path d="M4.6 20.6c0-4 3.3-6.6 7.4-6.6s7.4 2.6 7.4 6.6"/>',
+  compass: '<circle cx="12" cy="12" r="8.8"/><path d="M15.3 8.7 13.6 14 8.7 15.3 10.4 10z"/>',
+  suitcase:'<rect x="3" y="7.6" width="18" height="12.8" rx="2.6"/><path d="M8.6 7.6V5.4a1.8 1.8 0 0 1 1.8-1.8h3.2a1.8 1.8 0 0 1 1.8 1.8v2.2M3 13h18"/>',
+  gear:    '<circle cx="12" cy="12" r="3.1"/><path d="M12 2.6v2.2M12 19.2v2.2M4.3 4.3l1.6 1.6M18.1 18.1l1.6 1.6M2.6 12h2.2M19.2 12h2.2M4.3 19.7l1.6-1.6M18.1 5.9l1.6-1.6"/>',
+  card:    '<rect x="2.6" y="5.6" width="18.8" height="12.8" rx="2.4"/><path d="M2.6 10h18.8"/><path d="M6 14.4h4"/>',
+  tag:     '<path d="M11.3 3.4H20v8.7l-8.9 8.9a1.7 1.7 0 0 1-2.4 0l-6.3-6.3a1.7 1.7 0 0 1 0-2.4z"/><circle cx="16.3" cy="7.7" r="1.5"/>',
+  plus:    '<path d="M12 5.6v12.8M5.6 12h12.8"/>',
+  minus:   '<path d="M5.6 12h12.8"/>',
+  close:   '<path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5"/>',
+  check:   '<path d="M4.8 12.6 9.8 17.6 19.2 6.8"/>',
+  wifi:    '<path d="M2.4 8.6a14 14 0 0 1 19.2 0"/><path d="M6 12.4a8.8 8.8 0 0 1 12 0"/><path d="M9.4 16a4 4 0 0 1 5.2 0"/><circle cx="12" cy="19.4" r="1.2"/>',
+  kitchen: '<path d="M6 3v7a2.4 2.4 0 0 0 4.8 0V3M8.4 12.4V21"/><path d="M17.2 3c2.6 2.6 2.6 7.4 0 10V21"/>',
+  fire:    '<path d="M12 21c4 0 6.6-2.6 6.6-6 0-4.4-4.6-6-4.6-11 0 0-3 1.6-3 5.4 0 2 1 3 1 3s-1.4-.6-2-2c-1.6 1.6-2.6 3.4-2.6 4.6 0 3.4 2.6 6 6 6z"/>',
+  car:     '<path d="M4 16.4v2.4a1 1 0 0 1-1 1H2.6"/><path d="M3.4 16.4h17.2v-4l-1.8-4.6a2 2 0 0 0-1.9-1.2H7.1a2 2 0 0 0-1.9 1.2L3.4 12.4z"/><path d="M20 16.4v2.4a1 1 0 0 0 1 1h.4"/><circle cx="7.4" cy="16.4" r="1.4"/><circle cx="16.6" cy="16.4" r="1.4"/>',
+  paw:     '<ellipse cx="7.4" cy="9.4" rx="2" ry="2.6"/><ellipse cx="12" cy="7.4" rx="2" ry="2.8"/><ellipse cx="16.6" cy="9.4" rx="2" ry="2.6"/><path d="M12 12.4c3.2 0 5 2.2 5 4.4S15 20.6 12 20.6 7 19 7 16.8s1.8-4.4 5-4.4z"/>',
+  wave:    '<path d="M2.6 9.4c2 0 2.6-2 4.7-2s2.7 2 4.7 2 2.6-2 4.7-2 2.7 2 4.7 2"/><path d="M2.6 15c2 0 2.6-2 4.7-2s2.7 2 4.7 2 2.6-2 4.7-2 2.7 2 4.7 2"/>',
+  desk:    '<rect x="3" y="4.6" width="18" height="11" rx="2"/><path d="M8 19.4h8M12 15.6v3.8"/>',
+  snow:    '<path d="M12 3v18M3.8 7.4l16.4 9.2M20.2 7.4 3.8 16.6"/>',
+  kayak:   '<path d="M3 15.6c5 3.6 13 3.6 18 0M4.6 12.6 19.4 6"/><path d="M2.6 8.4 6 6M18 18l3.4-2.4"/>',
+  access:  '<circle cx="12" cy="5" r="1.8"/><path d="M6.6 9.2 12 8.4l5.4.8M12 8.4v5.2h4.4l2.4 5.6M12 13.6H8.2L6 19.4"/>',
+  breakfast:'<path d="M4.6 8.4h11v4.4a5.5 5.5 0 0 1-11 0z"/><path d="M15.6 9.4h2.2a2.2 2.2 0 0 1 0 4.4h-2.2"/><path d="M3 19.4h14.4"/><path d="M7.4 5.4V3.6M11 5.4V3.6"/>',
+  clock:   '<circle cx="12" cy="12" r="8.8"/><path d="M12 6.8V12l3.6 2.2"/>',
+  city:    '<path d="M3.4 20.6V9.4l6-3.6v14.8"/><path d="M9.4 20.6V11l7.4-2.6v12.2"/><path d="M16.8 20.6V13l3.8 1.4v6.2"/><path d="M2 20.6h20"/>',
+  sun:     '<circle cx="12" cy="12" r="4.4"/><path d="M12 2.6v2.4M12 19v2.4M4.6 4.6l1.7 1.7M17.7 17.7l1.7 1.7M2.6 12H5M19 12h2.4M4.6 19.4l1.7-1.7M17.7 6.3l1.7-1.7"/>',
+  tree:    '<path d="M12 3 5.6 12h3.2L4 19h16l-4.8-7h3.2z"/><path d="M12 19v2.6"/>',
+  mountain:'<path d="M2.2 19.4 9 7.2l4.3 7.6 2.5-3.4 6 8z"/><path d="M7.2 10.4h3.6"/>'
+};
+function icon(name, size, cls){
+  var d = SVG[name]; if (!d) return '';
+  var filled = (name === 'heart' || name === 'star') && cls && cls.indexOf('fill') >= 0;
+  return '<span class="ico ' + (cls||'') + '" style="width:' + (size||18) + 'px;height:' + (size||18) + 'px;display:inline-flex">'
+    + '<svg viewBox="0 0 24 24" width="100%" height="100%" fill="' + (filled ? 'currentColor' : 'none')
+    + '" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'
+    + d + '</svg></span>';
+}
+
+/* -------------------------------------------------------------- renderer */
+var ACTS = [], TRAJ = [];
+function bind(a){ if (!a) return ''; ACTS.push(a); return ' data-act="' + (ACTS.length-1) + '"'; }
+function bindT(a){ if (!a) return ''; ACTS.push(a); return ' data-actt="' + (ACTS.length-1) + '"'; }
+function tid(id){ return id ? ' data-testid="' + esc(id) + '"' : ''; }
+function R(list){ return (list||[]).map(render).join(''); }
+function starRow(n, size){                 /* NB: `stars()` is the night-sky scene helper */
+  var out = '<span class="stars">';
+  for (var i = 1; i <= 5; i++)
+    out += icon('star', size || 12, i <= n ? 'fill' : '');
+  return out + '</span>';
+}
+function artBox(scene, hue, h, cls, extra){
+  return '<div class="art ' + (cls||'') + '"' + (extra||'') + ' style="height:' + h + 'px">'
+       + artSvg(scene, hue) + '</div>';
+}
+
+function render(n){
+  if (!n || typeof n !== 'object') return '';
+  if (Array.isArray(n)) return R(n);
+  switch (n.t) {
+
+  case 'screen': return R(n.c);
+
+  case 'appbar': {
+    var glassCls = n.cls === 'float' ? ' glass' : '';
+    var left = (n.back
+      ? '<div class="iconbtn' + glassCls + '" data-testid="nav_back"' + bind({type:'BACK'}) + '>' + icon('back',20) + '</div>'
+      : '') + R(n.left);
+    return '<div class="n-appbar ' + esc(n.cls||'') + '"' + tid(n.id) + '>'
+         + '<div class="ab-side">' + left + '</div>'
+         + '<div class="ab-title">' + esc(n.title) + '</div>'
+         + '<div class="ab-side right">' + R(n.right) + '</div></div>';
+  }
+  case 'favbtn':
+    return '<div class="iconbtn glass' + (n.on ? ' on' : '') + '"' + tid(n.id) + bind(n.act) + '>'
+         + icon('heart', 19, n.on ? 'fill' : '') + '</div>';
+
+  case 'searchbar': {
+    /* the submit action is stashed on the input too, so pressing Enter works */
+    var goIdx = n.go ? (ACTS.push(n.go) - 1) : -1;
+    return '<div class="searchbar">' + icon('search', 17, 'muted')
+         + '<input' + tid(n.id) + bindT(n.act) + ' data-enter="' + goIdx + '"'
+         + ' value="' + esc(n.value) + '" placeholder="' + esc(n.placeholder) + '">'
+         + (n.clearId ? '<div class="sb-clear"' + tid(n.clearId) + bind(n.clear) + '>'
+                        + icon('close', 12) + '</div>' : '')
+         + '<div class="sb-go"' + tid(n.goId) + ' data-act="' + goIdx + '">' + icon('arrow', 16) + '</div>'
+         + '</div>';
+  }
+
+  case 'inputrow':
+    return '<div class="n-input">' + '<div class="i-label">' + esc(n.label) + '</div>'
+         + (n.multiline
+            ? '<textarea' + tid(n.id) + bindT(n.act) + ' placeholder="' + esc(n.placeholder) + '">' + esc(n.value) + '</textarea>'
+            : '<input' + tid(n.id) + bindT(n.act) + ' value="' + esc(n.value) + '" placeholder="' + esc(n.placeholder) + '">')
+         + '</div>';
+
+  case 'scroll':  return '<div class="n-scroll ' + esc(n.cls||'') + '"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'chips':   return '<div class="n-chips"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'chip':    return '<div class="n-chip' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '>'
+                       + (n.icon ? icon(n.icon, 15) : '') + esc(n.text) + '</div>';
+  case 'card':    return '<div class="n-card ' + esc(n.cls||'') + (n.act?' tap':'') + '"' + tid(n.id) + bind(n.act) + '>'
+                       + R(n.c) + '</div>';
+  case 'padded':  return '<div style="padding:0 16px">' + R(n.c) + '</div>';
+  case 'sec':     return '<div class="n-sec">' + esc(n.text) + '</div>';
+  case 'text':    return '<div class="n-text ' + esc(n.cls||'') + '">' + esc(n.text) + '</div>';
+  case 'space':   return '<div class="n-space"></div>';
+  case 'divider': return '<div class="n-divider"></div>';
+  case 'label':   return '<span style="flex:1 1 auto;font-size:12px;color:var(--muted)">' + esc(n.text||'') + '</span>';
+
+  case 'row': {
+    var inline = [], below = [];
+    (n.c||[]).forEach(function(ch){
+      (ch.t==='switch'||ch.t==='radio'||ch.t==='stepper'||ch.t==='btn') ? inline.push(ch) : below.push(ch);
+    });
+    return '<div class="n-row' + (n.act?' tap':'') + '"' + tid(n.id) + bind(n.act) + '>'
+      + (n.lead ? '<div class="r-lead">' + icon(n.lead, 19) + '</div>' : '')
+      + '<div class="r-main"><div class="r-label">' + esc(n.text) + '</div>'
+      + (n.sub ? '<div class="r-sub">' + esc(n.sub) + '</div>' : '') + '</div>'
+      + (n.val ? '<div class="r-value ' + esc(n.valCls||'') + '">' + esc(n.val) + '</div>' : '')
+      + R(inline)
+      + (n.arrow && !inline.length ? '<div class="r-arrow">' + icon('arrow', 15) + '</div>' : '')
+      + '</div>' + R(below);
+  }
+
+  case 'btn':
+    return '<div class="n-btn ' + esc(n.cls||'') + (n.disabled?' off':'') + '"' + tid(n.id)
+         + (n.disabled ? '' : bind(n.act)) + '>' + esc(n.text) + '</div>';
+  case 'btnrow': return '<div class="n-btnrow"' + tid(n.id) + '>' + R(n.c) + '</div>';
+
+  case 'stepper':
+    return '<div class="n-stepper"' + tid(n.id) + '>'
+      + '<div class="st-btn' + (n.minusOff?' off':'') + '"' + tid(n.minusId) + (n.minusOff?'':bind(n.minus)) + '>'
+      + icon('minus',14) + '</div>'
+      + '<div class="st-val">' + n.value + '</div>'
+      + '<div class="st-btn' + (n.plusOff?' off':'') + '"' + tid(n.plusId) + (n.plusOff?'':bind(n.plus)) + '>'
+      + icon('plus',14) + '</div></div>';
+  case 'switch': return '<div class="n-switch' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '><i></i></div>';
+  case 'radio':  return '<div class="n-radio' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '></div>';
+
+  case 'tabbar':
+    return '<div class="n-tabbar"' + tid(n.id) + '>' + n.items.map(function(i){
+      return '<div class="tb' + (i.on?' on':'') + '"' + tid(i.id) + bind(i.act) + '>'
+           + '<i>' + icon(i.icon, 21) + '</i>' + esc(i.text) + '</div>';
+    }).join('') + '</div>';
+
+  case 'bar':      return '<div class="n-bar"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'barprice':
+    return '<div class="bar-txt"' + tid(n.id) + '><div class="bar-price">' + esc(n.price)
+         + ' <span style="font:400 12px/1 inherit;color:var(--muted)">' + esc(n.unit) + '</span></div>'
+         + '<div class="bar-sub">' + esc(n.sub||'') + '</div></div>';
+
+  case 'hero':
+    return '<div class="hero art"' + tid(n.id) + '>' + artSvg(n.scene, n.hue) + '<div class="scrim"></div>'
+         + '<div class="hero-txt"><div class="hero-eyebrow">' + esc(n.eyebrow) + '</div>'
+         + '<div class="hero-title">' + esc(n.title) + '</div>'
+         + '<div class="hero-sub">' + esc(n.sub) + '</div></div></div>';
+
+  case 'art': return artBox(n.scene, n.hue, n.h, n.cls, tid(n.id) + bind(n.act));
+
+  case 'gallery':
+    return '<div class="gallery"' + tid(n.id) + '>' + n.items.map(function(g){
+      return '<div class="g-item' + (g.on?' on':'') + '"' + tid(g.id) + bind(g.act) + '>'
+           + artSvg(g.scene, g.hue) + '</div>';
+    }).join('') + '</div>';
+
+  case 'staycard':
+    return '<div class="n-card stay tap"' + tid(n.id) + bind(n.act) + '>'
+      + '<div class="s-art art">' + artSvg(n.scene, n.hue)
+      + (n.badge ? '<div class="s-badge">' + esc(n.badge) + '</div>' : '')
+      + '<div class="s-fav"><div class="iconbtn glass' + (n.faved?' on':'') + '"' + tid(n.favId)
+      + bind(n.favAct) + '>' + icon('heart', 18, n.faved ? 'fill' : '') + '</div></div></div>'
+      + '<div class="s-body"><div class="s-top"><div class="s-name">' + esc(n.name) + '</div>'
+      + '<div class="s-rate">' + icon('star', 13, 'gold') + '<b>' + n.rating + '</b>'
+      + '<span style="color:var(--muted)">(' + n.reviews + ')</span></div></div>'
+      + '<div class="s-meta">' + esc(n.city) + ' · ' + esc(n.type) + ' · sleeps ' + n.guests + '</div>'
+      + '<div class="s-meta" style="display:flex;align-items:center;gap:5px">' + icon('pin', 12)
+      + esc(n.distance) + '</div>'
+      + '<div class="s-price"><b>' + esc(n.nightly) + '</b> <span>night</span></div>'
+      + (n.tags && n.tags.length ? '<div class="s-tags">' + n.tags.map(function(t){
+          return '<span class="pill ' + (t.cls||'') + '">' + esc(t.text) + '</span>'; }).join('') + '</div>' : '')
+      + '</div></div>';
+
+  case 'rateline':
+    return '<div class="n-text"' + tid(n.id) + bind(n.act)
+      + ' style="padding:2px 16px 10px' + (n.act ? ';cursor:pointer' : '') + '">'
+      + '<div style="display:flex;align-items:center;gap:6px">'
+      + icon('star', 14, 'fill') + '<b style="color:var(--ink)">' + n.rating + '</b>'
+      + '<span style="color:var(--muted)">· ' + n.reviews + ' reviews · ' + esc(n.city) + '</span>'
+      + (n.act ? '<span style="margin-left:auto;color:#c3c9c7;display:flex">' + icon('arrow',14) + '</span>' : '')
+      + '</div>'
+      + (n.distance ? '<div style="display:flex;align-items:center;gap:6px;margin-top:6px;color:var(--muted);font-size:12.5px">'
+                      + icon('pin', 13) + esc(n.distance) + '</div>' : '')
+      + '</div>';
+
+  case 'ratingsummary':
+    return '<div class="n-card rsum"' + tid(n.id) + '>'
+      + '<div class="rs-top"><div class="rs-big">' + n.rating + '</div><div>'
+      + starRow(Math.round(n.rating), 14)
+      + '<div class="rs-sub">' + n.reviews + ' reviews</div></div></div>'
+      + '<div class="rs-bars">' + n.scores.map(function(x){
+          return '<div class="rs-row"><span class="lbl">' + esc(x.label) + '</span>'
+               + '<span class="track"><span class="fill" style="width:' + (x.value / 5 * 100) + '%"></span></span>'
+               + '<span class="num">' + x.value.toFixed(1) + '</span></div>';
+        }).join('') + '</div></div>';
+
+  case 'review':
+    return '<div class="rev"' + tid(n.id) + '>'
+      + '<div class="rv-top"><div class="rv-av">' + avatarSvg(n.avatar) + '</div><div>'
+      + '<div class="rv-who">' + esc(n.author) + '</div>'
+      + '<div class="rv-meta">' + starRow(n.rating, 11) + '<span>' + esc(n.date) + '</span></div>'
+      + '</div></div>'
+      + '<div class="rv-text">' + esc(n.text) + '</div>'
+      + (n.reply ? '<div class="rv-reply"><b>Reply from ' + esc(n.reply.by) + '</b><br>'
+                   + esc(n.reply.text) + '</div>' : '')
+      + '<div class="rv-foot"><div class="rv-help' + (n.helpful ? ' on' : '') + '"'
+      + tid(n.helpfulId) + bind(n.helpfulAct) + '>'
+      + icon('check', 13) + 'Helpful (' + n.count + ')</div></div></div>';
+
+  case 'pills':
+    return '<div style="display:flex;gap:6px;flex-wrap:wrap;padding:4px 16px 10px"' + tid(n.id) + '>'
+      + n.items.map(function(p){ return '<span class="pill ' + (p.cls||'') + '">' + esc(p.text) + '</span>'; }).join('')
+      + '</div>';
+
+  case 'host':
+    return '<div class="host"' + tid(n.id) + '><div class="h-av">' + avatarSvg(n.avatar) + '</div>'
+      + '<div><div class="h-name">' + esc(n.name) + '</div><div class="h-sub">' + esc(n.sub) + '</div></div></div>';
+
+  case 'amenities':
+    return '<div class="amen"' + tid(n.id) + '>' + n.items.map(function(a){
+      return '<div class="a-item' + (a.off?' off':'') + '">' + icon(a.icon, 18) + esc(a.label) + '</div>';
+    }).join('') + '</div>';
+
+  case 'empty':
+    return '<div style="padding:24px 16px 8px"' + tid(n.id) + '>'
+      + artBox(n.scene, n.hue, 180, 'rounded')
+      + '<div class="n-text empty">' + esc(n.text) + '</div>'
+      + (n.btn ? '<div style="display:flex;justify-content:center">' + render(n.btn) + '</div>' : '')
+      + '</div>';
+
+  case 'tripsummary':
+    return '<div class="n-card" style="display:flex;gap:12px;padding:12px"' + tid(n.id) + '>'
+      + '<div class="art rounded" style="width:92px;height:80px;flex:0 0 auto">' + artSvg(n.scene, n.hue) + '</div>'
+      + '<div style="min-width:0;display:flex;flex-direction:column;justify-content:center">'
+      + '<div style="font:600 16px/1.3 var(--serif)">' + esc(n.name) + '</div>'
+      + '<div style="color:var(--muted);font-size:12.5px;margin-top:3px">' + esc(n.city) + '</div>'
+      + '<div style="display:flex;align-items:center;gap:4px;font-size:12.5px;margin-top:5px">'
+      + icon('star',12,'gold') + '<b>' + n.rating + '</b><span style="color:var(--muted)">(' + n.reviews + ')</span>'
+      + '</div></div></div>';
+
+  case 'tripline':
+    return '<div style="display:flex;gap:12px;padding:12px;cursor:pointer"' + tid(n.id) + bind(n.act) + '>'
+      + '<div class="art rounded" style="width:88px;height:76px;flex:0 0 auto">' + artSvg(n.scene, n.hue) + '</div>'
+      + '<div style="flex:1 1 auto;min-width:0">'
+      + '<div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline">'
+      + '<div style="font:600 15.5px/1.3 var(--serif);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'
+      + esc(n.name) + '</div><span class="pill ' + n.status.cls + '">' + esc(n.status.text) + '</span></div>'
+      + '<div style="color:var(--muted);font-size:12.5px;margin-top:4px">' + esc(n.city) + '</div>'
+      + '<div style="font-size:13px;margin-top:6px">' + esc(n.dates) + '</div>'
+      + '<div style="font-size:13px;margin-top:3px;color:var(--muted)">' + esc(n.total) + ' total</div>'
+      + '</div></div>';
+
+  case 'calendar': {
+    var cells = n.cells.map(function(c){
+      if (c.blank) return '<div class="c-day blank"></div>';
+      var cls = 'c-day' + (c.past ? ' mute' : '') + (c.inRange ? ' in-range' : '')
+              + (c.edge ? ' edge' : '') + (c.start ? ' start' : '') + (c.end ? ' end' : '');
+      return '<div class="' + cls + '"' + tid(c.id) + (c.act ? bind(c.act) : '') + '><span>' + c.day + '</span></div>';
+    }).join('');
+    return '<div class="cal"' + tid(n.id) + '>'
+      + '<div class="c-head"><div class="iconbtn"' + tid(n.prevId) + bind(n.prev) + '>' + icon('back',18) + '</div>'
+      + '<div class="c-month">' + esc(n.month) + '</div>'
+      + '<div class="iconbtn"' + tid(n.nextId) + bind(n.next) + '>' + icon('arrow',18) + '</div></div>'
+      + '<div class="c-dow">' + n.dow.map(function(d){ return '<div>' + d.charAt(0) + '</div>'; }).join('') + '</div>'
+      + '<div class="c-grid">' + cells + '</div></div>';
+  }
+
+  case 'kv':
+    return '<div class="kv ' + esc(n.cls||'') + '"><span class="k">' + esc(n.k) + '</span>'
+         + '<span class="v">' + esc(n.v) + '</span></div>';
+
+  case 'mask':  return '<div class="n-mask"' + tid(n.id) + bind(n.close) + '>' + R(n.c) + '</div>';
+  case 'sheet':
+    return '<div class="n-sheet"' + tid(n.id) + ' data-stop="1"><div class="sh-hd">'
+      + '<div class="t">' + esc(n.title) + '</div>'
+      + '<div class="iconbtn"' + tid(n.closeId) + bind(n.close) + '>' + icon('close',15) + '</div></div>'
+      + '<div class="sh-bd">' + R(n.c) + '</div>'
+      + (n.footer ? '<div class="sh-ft">' + render(n.footer) + '</div>' : '') + '</div>';
+  case 'sheetfoot':
+    return '<div style="display:flex;align-items:center;gap:10px"' + tid(n.id) + '>'
+      + '<div style="flex:1 1 auto;font-size:12.5px;color:var(--ink2);min-width:0">' + esc(n.label||'') + '</div>'
+      + (n.left ? render(n.left) : '') + render(n.btn) + '</div>';
+  case 'dialog':
+    return '<div class="dialog"' + tid(n.id) + ' data-stop="1">'
+      + '<div style="padding:22px 20px 16px;text-align:center">'
+      + (n.title ? '<div style="font:600 17px/1.3 var(--serif);margin-bottom:8px">' + esc(n.title) + '</div>' : '')
+      + '<div style="font-size:13.5px;color:var(--ink2);line-height:1.55">' + esc(n.text) + '</div></div>'
+      + '<div style="display:flex;gap:10px;padding:0 16px 16px">'
+      + '<div class="n-btn" style="flex:1"' + tid(n.cancel.id) + bind(n.cancel.act) + '>' + esc(n.cancel.text) + '</div>'
+      + '<div class="n-btn primary" style="flex:1"' + tid(n.ok.id) + bind(n.ok.act) + '>' + esc(n.ok.text) + '</div>'
+      + '</div></div>';
+  case 'toast': return '<div class="n-toast"' + tid(n.id) + '>' + esc(n.text) + '</div>';
+  default: return '';
+  }
+}
+
+/* ------------------------------------------------------------------ paint */
+var STATE = null;
+function paint(){
+  ACTS = []; uidSeq = 0;
+  var tree = E.screen(STATE);
+  app.innerHTML = render(tree);
+  document.getElementById('sb-clock').textContent = E.select.clockStr(STATE.meta.clock);
+  sb.className = 'statusbar' + (tree.route === 'stay' ? ' on-art' : '');
+  if (!hud.classList.contains('off')) paintHud();
+}
+
+app.addEventListener('click', function(ev){
+  var el = ev.target.closest('[data-act]');
+  if (!el) return;
+  if (el.classList.contains('n-mask') && ev.target.closest('[data-stop]')) return;
+  var act = ACTS[+el.getAttribute('data-act')];
+  if (!act) return;
+  TRAJ.push({action:'tap', id: el.getAttribute('data-testid') || null});
+  STATE = E.reduce(STATE, act);
+  paint();
+});
+app.addEventListener('keydown', function(ev){
+  if (ev.key !== 'Enter') return;
+  var el = ev.target.closest('[data-enter]');
+  if (!el) return;
+  var idx = +el.getAttribute('data-enter');
+  if (idx < 0) return;
+  ev.preventDefault();
+  var act = ACTS[idx];
+  if (!act) return;
+  TRAJ.push({action:'tap', id:'(enter)'});
+  STATE = E.reduce(STATE, act);
+  paint();
+});
+app.addEventListener('input', function(ev){
+  var el = ev.target.closest('[data-actt]');
+  if (!el) return;
+  var act = JSON.parse(JSON.stringify(ACTS[+el.getAttribute('data-actt')]));
+  for (var k in act) if (act[k] === '$VALUE') act[k] = el.value;
+  var id = el.getAttribute('data-testid'), pos = el.selectionStart;
+  TRAJ.push({action:'type', id:id, text:el.value});
+  STATE = E.reduce(STATE, act);
+  paint();
+  var again = id && app.querySelector('[data-testid="' + id + '"]');
+  if (again && again.focus) { again.focus(); try { again.setSelectionRange(pos, pos); } catch(e){} }
+});
+
+/* ---------------------------------------------------------------- dev HUD */
+function paintHud(){
+  var d = E.derive(STATE);
+  hud.innerHTML = '<h4>__ENV__ · ' + E.ENV_ID + ' v' + E.VERSION + '</h4>'
+    + '<div><span class="k">route</span> ' + d.route + '  <span class="k">step</span> ' + STATE.meta.steps
+    + '  <span class="k">seed</span> ' + STATE.meta.seed + '</div>'
+    + '<div><span class="k">dates</span> ' + (STATE.draft.checkIn || '—') + ' → ' + (STATE.draft.checkOut || '—')
+    + '  <span class="k">bookings</span> ' + d.bookingCount + '</div>'
+    + '<div style="margin-top:8px">'
+    + '<button id="hud-reset">reset</button><button id="hud-a11y">copy a11y</button>'
+    + '<button id="hud-state">copy state</button><button id="hud-traj">copy traj</button>'
+    + '<button id="hud-hide">hide (h)</button></div>'
+    + '<pre>' + esc(E.a11y(STATE)) + '</pre>';
+  hud.querySelector('#hud-reset').onclick = function(){ ENVAPI.reset({seed:STATE.meta.seed}); };
+  hud.querySelector('#hud-a11y').onclick  = function(){ copy(E.a11y(STATE)); };
+  hud.querySelector('#hud-state').onclick = function(){ copy(JSON.stringify(E.snapshot(STATE), null, 2)); };
+  hud.querySelector('#hud-traj').onclick  = function(){ copy(JSON.stringify(TRAJ, null, 2)); };
+  hud.querySelector('#hud-hide').onclick  = function(){ hud.classList.add('off'); };
+}
+function copy(t){ try { navigator.clipboard.writeText(t); } catch(e){} }
+document.addEventListener('keydown', function(e){
+  if (e.key === 'h') { hud.classList.toggle('off'); if (!hud.classList.contains('off')) paintHud(); }
+});
+
+/* ------------------------------------------------------- window.__ENV__ */
+var ENVAPI = {
+  ENV_ID: E.ENV_ID, VERSION: E.VERSION,
+  reset: function(opts){
+    opts = opts || {};
+    STATE = E.createInitialState(opts.seed || 0);
+    if (opts.patch) E.applyPatch(STATE, opts.patch);
+    TRAJ = []; paint();
+    return E.snapshot(STATE);
+  },
+  getState:   function(){ return E.snapshot(STATE); },
+  setState:   function(s){ STATE = JSON.parse(JSON.stringify(s)); paint(); return true; },
+  step:       function(a){ var r = E.step(STATE, a); STATE = r.state; TRAJ.push(a); paint();
+                           return {ok:r.ok, error:r.error || null}; },
+  dispatch:   function(act){ STATE = E.reduce(STATE, act); paint(); return true; },
+  a11y:       function(){ return E.a11y(STATE); },
+  elements:   function(){ return E.elements(STATE); },
+  route:      function(){ return E.select.route(STATE); },
+  trajectory: function(){ return JSON.parse(JSON.stringify(TRAJ)); },
+  bounds: function(){
+    var base = document.getElementById('screen').getBoundingClientRect(), out = {};
+    app.querySelectorAll('[data-testid]').forEach(function(el){
+      var r = el.getBoundingClientRect();
+      out[el.getAttribute('data-testid')] = {
+        x:Math.round(r.left-base.left), y:Math.round(r.top-base.top),
+        w:Math.round(r.width), h:Math.round(r.height),
+        cx:Math.round(r.left-base.left+r.width/2), cy:Math.round(r.top-base.top+r.height/2)};
+    });
+    return out;
+  }
+};
+window.__ENV__ = ENVAPI;
+
+var qs = new URLSearchParams(location.search);
+if (qs.get('bare') === '1') document.body.classList.add('bare');
+if (qs.get('hud')  === '1') hud.classList.remove('off');
+ENVAPI.reset({seed: parseInt(qs.get('seed') || '0', 10) || 0});
+window.__ENV_READY__ = true;
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1249 @@
+{
+  "env": "squirrel_eats",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_set_default_address",
+      "name": "把默认收货地址改成公司",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "settings",
+        "address",
+        "single-screen"
+      ],
+      "instruction": "把我的默认收货地址改成「公司」。",
+      "notes": "最短路径：我的 → 收货地址 → 勾选公司那条地址的单选圈。",
+      "goal": [
+        {
+          "name": "默认地址是「公司」",
+          "path": "derived.defaultAddress.tag",
+          "op": "eq",
+          "value": "公司",
+          "hint": "defaultAddressId 需要指向 a_company；点地址卡片右侧的单选圈即可"
+        },
+        {
+          "name": "没有误删地址",
+          "path": "addresses",
+          "op": "len_eq",
+          "value": 3
+        },
+        {
+          "name": "没有产生新订单",
+          "path": "orders",
+          "op": "len_eq",
+          "value": 2
+        }
+      ]
+    },
+    {
+      "id": "T02_toggle_settings",
+      "name": "关闭优惠推送并开启素食优先",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "settings",
+        "toggle"
+      ],
+      "instruction": "进入设置页，把「优惠推送」关掉，同时把「素食优先」打开。别的开关不要动。",
+      "goal": [
+        {
+          "name": "优惠推送已关闭",
+          "path": "profile.settings.promoPush",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "素食优先已开启",
+          "path": "profile.settings.vegFirst",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "订单通知保持开启",
+          "path": "profile.settings.orderPush",
+          "op": "eq",
+          "value": true,
+          "hint": "这是干扰项：不能顺手把订单通知也关了"
+        },
+        {
+          "name": "自动选券保持关闭",
+          "path": "profile.settings.autoCoupon",
+          "op": "eq",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "T03_simple_order",
+      "name": "老王牛肉面下单",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 22,
+      "tags": [
+        "order",
+        "spec",
+        "checkout"
+      ],
+      "instruction": "在「老王牛肉面」点 1 份招牌红烧牛肉面（辣度选中辣）和 1 个卤蛋，不要用优惠券，用默认地址直接下单付款。",
+      "goal": [
+        {
+          "name": "新建了一笔订单",
+          "path": "orders",
+          "op": "len_eq",
+          "value": 3
+        },
+        {
+          "name": "下单商家是老王牛肉面",
+          "path": "orders[last].shopId",
+          "op": "eq",
+          "value": "s_laowang"
+        },
+        {
+          "name": "商品与规格完全正确",
+          "path": "orders[last].lines",
+          "op": "multiset_eq",
+          "project": [
+            "dishId",
+            "qty",
+            "specs.spice"
+          ],
+          "weight": 2,
+          "value": [
+            {
+              "dishId": "d_lw_beef",
+              "qty": 1,
+              "specs": {
+                "spice": "中辣"
+              }
+            },
+            {
+              "dishId": "d_lw_egg",
+              "qty": 1,
+              "specs": {}
+            }
+          ],
+          "hint": "牛肉面必须是中辣；卤蛋没有规格"
+        },
+        {
+          "name": "没有使用优惠券",
+          "path": "orders[last].couponId",
+          "op": "eq",
+          "value": null
+        },
+        {
+          "name": "送到默认地址（家）",
+          "path": "orders[last].address.id",
+          "op": "eq",
+          "value": "a_home"
+        },
+        {
+          "name": "实付金额正确 ¥26",
+          "path": "orders[last].total",
+          "op": "eq",
+          "value": 26,
+          "hint": "22 + 3 商品 + 1 打包费 + 0 配送费"
+        },
+        {
+          "name": "购物车已清空",
+          "path": "cart.lines",
+          "op": "len_eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T04_query_cheapest_signature",
+      "name": "查询：最便宜的招牌菜",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 28,
+      "answer_expected": true,
+      "tags": [
+        "query",
+        "filter",
+        "compare",
+        "read-only"
+      ],
+      "instruction": "只看「评分 ≥ 4.7 且 免配送费」的商家，在这些店里带「招牌」标签的菜品中，最便宜的一道是多少钱？只回答数字（单位：元），不要下单。",
+      "notes": "满足条件的是蟹岛麻辣香锅(4.8/免配送费)与巷子口小面(4.7/免配送费)；招牌菜分别是 ¥38 与 ¥16。",
+      "goal": [
+        {
+          "name": "答案是 16",
+          "source": "answer",
+          "op": "eq",
+          "value": 16,
+          "extract": "number",
+          "weight": 3,
+          "hint": "用首页的「评分4.7+」「免配送费」两个筛选条件缩小范围再逐店比价"
+        },
+        {
+          "name": "没有下任何订单",
+          "path": "orders",
+          "op": "len_eq",
+          "value": 2,
+          "hint": "这是只读任务，下单即视为失败"
+        },
+        {
+          "name": "购物车是空的",
+          "path": "cart.lines",
+          "op": "len_eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T05_custom_order_flagship",
+      "name": "果茶站定制下单（旗舰任务）",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 45,
+      "tags": [
+        "order",
+        "spec",
+        "coupon",
+        "address",
+        "remark",
+        "long-horizon"
+      ],
+      "instruction": "在「果茶站」下单：两杯蜜桃乌龙——其中一杯要少冰、半糖，另一杯保持默认规格；再加一份芋泥麻薯。结算时使用能省最多钱的那张优惠券，收货地址改成「学校」，订单备注写「放在门卫处」，并且不需要餐具。最后完成支付。",
+      "notes": "小计 39 + 打包 1 + 配送 2 − 满30减8 = 34。可用券里满20减3 只能省 3，满50减15 未达门槛，青竹专享不适用，满15减5 已过期。",
+      "goal": [
+        {
+          "name": "新建了一笔订单",
+          "path": "orders",
+          "op": "len_eq",
+          "value": 3
+        },
+        {
+          "name": "下单商家是果茶站",
+          "path": "orders[last].shopId",
+          "op": "eq",
+          "value": "s_guocha"
+        },
+        {
+          "name": "三件商品与规格完全正确",
+          "path": "orders[last].lines",
+          "op": "multiset_eq",
+          "project": [
+            "dishId",
+            "qty",
+            "specs.ice",
+            "specs.sugar"
+          ],
+          "weight": 3,
+          "value": [
+            {
+              "dishId": "d_gc_peach",
+              "qty": 1,
+              "specs": {
+                "ice": "少冰",
+                "sugar": "半糖"
+              }
+            },
+            {
+              "dishId": "d_gc_peach",
+              "qty": 1,
+              "specs": {
+                "ice": "正常冰",
+                "sugar": "标准糖"
+              }
+            },
+            {
+              "dishId": "d_gc_mochi",
+              "qty": 1,
+              "specs": {}
+            }
+          ],
+          "hint": "两杯规格不同 ⇒ 必须是两条独立的购物车行，不能是同一行 x2"
+        },
+        {
+          "name": "用了最省钱的券（满30减8）",
+          "path": "orders[last].couponId",
+          "op": "eq",
+          "value": "c_30_8",
+          "weight": 2
+        },
+        {
+          "name": "优惠金额是 8 元",
+          "path": "orders[last].discount",
+          "op": "eq",
+          "value": 8
+        },
+        {
+          "name": "收货地址是学校",
+          "path": "orders[last].address.id",
+          "op": "eq",
+          "value": "a_school"
+        },
+        {
+          "name": "备注写了放在门卫处",
+          "path": "orders[last].remark",
+          "op": "contains",
+          "value": "门卫"
+        },
+        {
+          "name": "餐具份数为 0",
+          "path": "orders[last].utensils",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "实付金额是 ¥34",
+          "path": "orders[last].total",
+          "op": "eq",
+          "value": 34,
+          "weight": 2
+        },
+        {
+          "name": "订单已提交（待接单）",
+          "path": "orders[last].status",
+          "op": "eq",
+          "value": "pending"
+        },
+        {
+          "name": "购物车已清空",
+          "path": "cart.lines",
+          "op": "len_eq",
+          "value": 0
+        },
+        {
+          "name": "效率：25 步以内完成",
+          "source": "trajectory",
+          "path": "steps",
+          "op": "lte",
+          "value": 25,
+          "critical": false,
+          "weight": 0.5,
+          "hint": "非必要条件，仅用于打分区分"
+        }
+      ]
+    },
+    {
+      "id": "T06_cancel_order",
+      "name": "取消待接单的订单",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "order",
+        "confirm-dialog"
+      ],
+      "instruction": "我在「果茶站」下的那笔订单商家还没接单，帮我把它取消掉。",
+      "goal": [
+        {
+          "name": "果茶站订单已取消",
+          "path": "orders[?id=o_1002][0].status",
+          "op": "eq",
+          "value": "canceled",
+          "hint": "订单列表 → 取消订单 → 在弹窗里确认"
+        },
+        {
+          "name": "已完成的老王订单没被动过",
+          "path": "orders[?id=o_1001][0].status",
+          "op": "eq",
+          "value": "done",
+          "hint": "干扰项：另一笔订单是已完成状态，不可取消也不该去动"
+        },
+        {
+          "name": "没有产生新订单",
+          "path": "orders",
+          "op": "len_eq",
+          "value": 2
+        }
+      ]
+    },
+    {
+      "id": "T07_add_address_and_default",
+      "name": "新增地址并设为默认",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 24,
+      "tags": [
+        "address",
+        "form",
+        "text-input"
+      ],
+      "instruction": "新增一个收货地址：标签「健身房」，联系人「张小松」，手机号「13800000021」，详细地址「望京体育公园西门 A 区」。保存之后把它设为默认地址。",
+      "goal": [
+        {
+          "name": "地址增加到 4 条",
+          "path": "addresses",
+          "op": "len_eq",
+          "value": 4
+        },
+        {
+          "name": "新地址标签是健身房",
+          "path": "derived.addressTags",
+          "op": "contains",
+          "value": "健身房"
+        },
+        {
+          "name": "详细地址填写正确",
+          "path": "addresses[?tag=健身房][0].detail",
+          "op": "contains",
+          "value": "望京体育公园西门"
+        },
+        {
+          "name": "手机号填写正确",
+          "path": "addresses[?tag=健身房][0].phone",
+          "op": "eq",
+          "value": "13800000021"
+        },
+        {
+          "name": "联系人填写正确",
+          "path": "addresses[?tag=健身房][0].name",
+          "op": "eq",
+          "value": "张小松"
+        },
+        {
+          "name": "健身房已成为默认地址",
+          "path": "derived.defaultAddress.tag",
+          "op": "eq",
+          "value": "健身房",
+          "weight": 2,
+          "hint": "保存后还要回到地址列表勾选它"
+        },
+        {
+          "name": "原有地址没被删掉",
+          "path": "derived.addressTags",
+          "op": "set_eq",
+          "value": [
+            "家",
+            "公司",
+            "学校",
+            "健身房"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "T08_budget_constraint_order",
+      "name": "预算约束下单（多解）",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 32,
+      "unique_solution": false,
+      "tags": [
+        "order",
+        "coupon",
+        "constraint",
+        "multi-solution"
+      ],
+      "instruction": "在「青竹轻食」下单，订单里必须包含「藜麦鸡胸沙拉」，并且最终实付金额不能超过 30 元。送到默认地址即可。",
+      "notes": "沙拉 32 + 打包 1 + 配送 3 = 36，只有全平台「满30减8」能压到 28；本店「满25减5」只能到 31。目标是约束式的，任何满足约束的解都算成功。",
+      "goal": [
+        {
+          "name": "新建了一笔订单",
+          "path": "orders",
+          "op": "len_eq",
+          "value": 3
+        },
+        {
+          "name": "下单商家是青竹轻食",
+          "path": "orders[last].shopId",
+          "op": "eq",
+          "value": "s_qingzhu"
+        },
+        {
+          "name": "订单里有藜麦鸡胸沙拉",
+          "path": "orders[last].lines",
+          "op": "any_where",
+          "where": {
+            "name": "含沙拉",
+            "path": "dishId",
+            "op": "eq",
+            "value": "d_qz_bowl"
+          },
+          "weight": 2
+        },
+        {
+          "name": "实付不超过 30 元",
+          "path": "orders[last].total",
+          "op": "lte",
+          "value": 30,
+          "weight": 2,
+          "hint": "必须选对优惠券才能压到 30 以内"
+        },
+        {
+          "name": "购物车已清空",
+          "path": "cart.lines",
+          "op": "len_eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T09_search_shop",
+      "name": "搜索找店",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "search",
+        "navigation"
+      ],
+      "instruction": "用首页的搜索功能找到卖「红油抄手」的那家店，并打开它的店铺页。别下单。",
+      "goal": [
+        {
+          "name": "确实搜了「抄手」",
+          "path": "ui.query",
+          "op": "eq",
+          "value": "抄手",
+          "weight": 2,
+          "hint": "直接在首页列表里点店不算——这题考的是搜索"
+        },
+        {
+          "name": "停在店铺页",
+          "path": "derived.route",
+          "op": "eq",
+          "value": "shop"
+        },
+        {
+          "name": "是巷子口小面",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "s_xiangzi",
+          "weight": 3
+        },
+        {
+          "name": "没有下单",
+          "path": "orders",
+          "op": "len_eq",
+          "value": 2
+        }
+      ]
+    },
+    {
+      "id": "T10_query_expired_coupon",
+      "name": "问答：哪张券过期了",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "answer_expected": true,
+      "tags": [
+        "coupon",
+        "query",
+        "read-only"
+      ],
+      "instruction": "我的优惠券里有一张已经过期了，是哪一张？把券的名字告诉我。",
+      "goal": [
+        {
+          "name": "是「满15减5」那张",
+          "source": "answer",
+          "op": "contains",
+          "value": "满15减5",
+          "weight": 3,
+          "hint": "有效期 2026-08-01，今天已经是 8 月 24 日了"
+        },
+        {
+          "name": "什么都没动",
+          "path": "orders",
+          "op": "len_eq",
+          "value": 2
+        },
+        {
+          "name": "购物车还是空的",
+          "path": "cart.lines",
+          "op": "len_eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T11_reorder",
+      "name": "再来一单",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "order",
+        "reorder",
+        "history"
+      ],
+      "instruction": "上次在「老王牛肉面」点的那单挺好，一模一样再来一次。不要用优惠券，送默认地址，直接付款。",
+      "goal": [
+        {
+          "name": "新建了一笔订单",
+          "path": "orders",
+          "op": "len_eq",
+          "value": 3
+        },
+        {
+          "name": "还是老王牛肉面",
+          "path": "orders[last].shopId",
+          "op": "eq",
+          "value": "s_laowang"
+        },
+        {
+          "name": "商品和规格跟上次一样",
+          "path": "orders[last].lines",
+          "op": "multiset_eq",
+          "project": [
+            "dishId",
+            "qty",
+            "specs.spice"
+          ],
+          "weight": 3,
+          "value": [
+            {
+              "dishId": "d_lw_beef",
+              "qty": 1,
+              "specs": {
+                "spice": "微辣"
+              }
+            },
+            {
+              "dishId": "d_lw_egg",
+              "qty": 1,
+              "specs": {}
+            }
+          ],
+          "hint": "上一单的牛肉面是微辣，不是默认之外的别的辣度"
+        },
+        {
+          "name": "没有用券",
+          "path": "orders[last].couponId",
+          "op": "eq",
+          "value": null,
+          "weight": 2,
+          "hint": "25 元已经够满 20 减 3 的门槛了，但这题要求不用"
+        },
+        {
+          "name": "实付 26 元",
+          "path": "orders[last].total",
+          "op": "eq",
+          "value": 26,
+          "weight": 2
+        },
+        {
+          "name": "购物车已清空",
+          "path": "cart.lines",
+          "op": "len_eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T12_min_order_constraint",
+      "name": "凑够起送价（多解）",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 26,
+      "unique_solution": false,
+      "tags": [
+        "order",
+        "min-order",
+        "constraint",
+        "multi-solution"
+      ],
+      "instruction": "在「海岛炸鸡」下单，订单里必须有一杯可乐。这家店有起送价，一杯可乐是不够的，你自己看着凑；实付不要超过 40 元，送默认地址。",
+      "notes": "起送价 25 元，打包费 3 元、配送费 5 元都要算进实付。",
+      "goal": [
+        {
+          "name": "新建了一笔订单",
+          "path": "orders",
+          "op": "len_eq",
+          "value": 3
+        },
+        {
+          "name": "下单商家是海岛炸鸡",
+          "path": "orders[last].shopId",
+          "op": "eq",
+          "value": "s_haidao",
+          "weight": 2
+        },
+        {
+          "name": "订单里有可乐",
+          "path": "orders[last].lines",
+          "op": "any_where",
+          "where": {
+            "name": "含可乐",
+            "path": "dishId",
+            "op": "eq",
+            "value": "d_hd_cola"
+          },
+          "weight": 3
+        },
+        {
+          "name": "商品小计到了起送价",
+          "path": "orders[last].subtotal",
+          "op": "gte",
+          "value": 25,
+          "weight": 2,
+          "hint": "不到 25 元结算按钮是点不动的"
+        },
+        {
+          "name": "实付不超过 40 元",
+          "path": "orders[last].total",
+          "op": "lte",
+          "value": 40,
+          "weight": 2
+        },
+        {
+          "name": "购物车已清空",
+          "path": "cart.lines",
+          "op": "len_eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T13_query_fastest_eta",
+      "name": "问答：最快多久送到",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "answer_expected": true,
+      "tags": [
+        "sort",
+        "query",
+        "read-only"
+      ],
+      "instruction": "把首页商家按配送时间从快到慢排一下，最快的那家需要多少分钟？只回答数字。",
+      "goal": [
+        {
+          "name": "确实用了「最快送达」排序",
+          "path": "ui.filter.sort",
+          "op": "eq",
+          "value": "eta",
+          "weight": 2,
+          "hint": "这是过程判据：光靠一家家点进去看不算"
+        },
+        {
+          "name": "答案是 18 分钟",
+          "source": "answer",
+          "op": "eq",
+          "value": 18,
+          "extract": "number",
+          "weight": 3
+        },
+        {
+          "name": "没有下单",
+          "path": "orders",
+          "op": "len_eq",
+          "value": 2
+        }
+      ]
+    },
+    {
+      "id": "T14_edit_and_delete_address",
+      "name": "改地址、删地址",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "address",
+        "form",
+        "text-input",
+        "delete"
+      ],
+      "instruction": "公司搬家了：把「公司」这个地址的详细地址改成「望京SOHO T3 座 2205」，保存。另外「学校」那个地址用不到了，删掉。默认地址不要动。",
+      "goal": [
+        {
+          "name": "公司地址改好了",
+          "path": "addresses[?tag=公司][0].detail",
+          "op": "contains",
+          "value": "T3 座 2205",
+          "weight": 3
+        },
+        {
+          "name": "学校地址删掉了",
+          "path": "derived.addressTags",
+          "op": "not_contains",
+          "value": "学校",
+          "weight": 3
+        },
+        {
+          "name": "只剩两个地址",
+          "path": "addresses",
+          "op": "len_eq",
+          "value": 2,
+          "weight": 2
+        },
+        {
+          "name": "默认地址还是「家」",
+          "path": "derived.defaultAddress.tag",
+          "op": "eq",
+          "value": "家",
+          "weight": 2
+        },
+        {
+          "name": "联系人没被改坏",
+          "path": "addresses[?tag=公司][0].name",
+          "op": "eq",
+          "value": "张小松"
+        }
+      ]
+    },
+    {
+      "id": "T15_switch_shop_cart",
+      "name": "换店要先清空购物车",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 22,
+      "tags": [
+        "cart",
+        "confirm-dialog",
+        "order"
+      ],
+      "instruction": "先在「老王牛肉面」加一份招牌红烧牛肉面（辣度用默认的就行），然后改主意了——去「果茶站」点一杯手打柠檬茶（规格全默认），App 会提示换店要清空购物车，同意它，最后把这杯柠檬茶下单付款，不用优惠券，送默认地址。",
+      "goal": [
+        {
+          "name": "新建了一笔订单",
+          "path": "orders",
+          "op": "len_eq",
+          "value": 3
+        },
+        {
+          "name": "下单的是果茶站",
+          "path": "orders[last].shopId",
+          "op": "eq",
+          "value": "s_guocha",
+          "weight": 2
+        },
+        {
+          "name": "订单里只有那杯柠檬茶",
+          "path": "orders[last].lines",
+          "op": "multiset_eq",
+          "project": [
+            "dishId",
+            "qty"
+          ],
+          "value": [
+            {
+              "dishId": "d_gc_lemon",
+              "qty": 1
+            }
+          ],
+          "weight": 3,
+          "hint": "牛肉面必须随着换店被清掉，不能混在一单里"
+        },
+        {
+          "name": "实付 16 元",
+          "path": "orders[last].total",
+          "op": "eq",
+          "value": 16,
+          "weight": 2,
+          "hint": "13 元 + 打包费 1 + 配送费 2"
+        },
+        {
+          "name": "确实弹过换店确认",
+          "source": "trajectory",
+          "path": "ids",
+          "op": "contains",
+          "value": "confirm_ok",
+          "weight": 2
+        },
+        {
+          "name": "购物车已清空",
+          "path": "cart.lines",
+          "op": "len_eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T16_quantity_edit",
+      "name": "加多了再减回来",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 24,
+      "tags": [
+        "cart",
+        "stepper",
+        "order"
+      ],
+      "instruction": "在「巷子口小面」点红油抄手，手滑加成了 3 份，实际只要 2 份，改回来；再加一杯现磨豆浆。不用优惠券，送默认地址，付款。",
+      "goal": [
+        {
+          "name": "新建了一笔订单",
+          "path": "orders",
+          "op": "len_eq",
+          "value": 3
+        },
+        {
+          "name": "下单商家是巷子口小面",
+          "path": "orders[last].shopId",
+          "op": "eq",
+          "value": "s_xiangzi"
+        },
+        {
+          "name": "抄手 2 份、豆浆 1 杯",
+          "path": "orders[last].lines",
+          "op": "multiset_eq",
+          "project": [
+            "dishId",
+            "qty"
+          ],
+          "weight": 3,
+          "value": [
+            {
+              "dishId": "d_xz_chao",
+              "qty": 2
+            },
+            {
+              "dishId": "d_xz_soy",
+              "qty": 1
+            }
+          ],
+          "hint": "数量要正好是 2，不是 3 也不是 1"
+        },
+        {
+          "name": "没有用券",
+          "path": "orders[last].couponId",
+          "op": "eq",
+          "value": null,
+          "hint": "35 元够满 30 减 8 了，但这题要求不用"
+        },
+        {
+          "name": "实付 36 元",
+          "path": "orders[last].total",
+          "op": "eq",
+          "value": 36,
+          "weight": 2
+        },
+        {
+          "name": "购物车已清空",
+          "path": "cart.lines",
+          "op": "len_eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T17_alipay_remark",
+      "name": "专享券 + 支付宝 + 备注",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 24,
+      "tags": [
+        "order",
+        "coupon",
+        "payment",
+        "remark",
+        "utensils"
+      ],
+      "instruction": "在「青竹轻食」点一份时蔬能量碗，用那张只有这家店能用的专享券，备注写「不要餐具，谢谢」，餐具份数调成 0，用支付宝付款，送默认地址。",
+      "goal": [
+        {
+          "name": "新建了一笔订单",
+          "path": "orders",
+          "op": "len_eq",
+          "value": 3
+        },
+        {
+          "name": "用的是青竹专享券",
+          "path": "orders[last].couponId",
+          "op": "eq",
+          "value": "c_qz_5",
+          "weight": 3,
+          "hint": "满 30 减 8 那张这单用不了：小计只有 26"
+        },
+        {
+          "name": "优惠了 5 元",
+          "path": "orders[last].discount",
+          "op": "eq",
+          "value": 5,
+          "weight": 2
+        },
+        {
+          "name": "实付 25 元",
+          "path": "orders[last].total",
+          "op": "eq",
+          "value": 25,
+          "weight": 2,
+          "hint": "26 + 打包 1 + 配送 3 − 5"
+        },
+        {
+          "name": "付款方式是支付宝",
+          "path": "orders[last].pay",
+          "op": "contains",
+          "value": "支付宝",
+          "weight": 3
+        },
+        {
+          "name": "备注写了",
+          "path": "orders[last].remark",
+          "op": "contains",
+          "value": "不要餐具",
+          "weight": 2
+        },
+        {
+          "name": "餐具份数是 0",
+          "path": "orders[last].utensils",
+          "op": "eq",
+          "value": 0,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T18_spec_coupon_address",
+      "name": "大份特辣，最优券，送公司",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "answer_expected": true,
+      "tags": [
+        "order",
+        "spec",
+        "coupon",
+        "address",
+        "query",
+        "long-horizon"
+      ],
+      "instruction": "在「蟹岛麻辣香锅」点一份招牌麻辣香锅，要大份、特辣，再加一碗东北米饭。结算时用能省最多钱的那张券，收货地址改成「公司」，付款完成后告诉我这单实付了多少钱。",
+      "goal": [
+        {
+          "name": "新建了一笔订单",
+          "path": "orders",
+          "op": "len_eq",
+          "value": 3
+        },
+        {
+          "name": "下单商家是蟹岛麻辣香锅",
+          "path": "orders[last].shopId",
+          "op": "eq",
+          "value": "s_xiedao"
+        },
+        {
+          "name": "香锅是大份特辣，另加一碗米饭",
+          "path": "orders[last].lines",
+          "op": "multiset_eq",
+          "project": [
+            "dishId",
+            "qty",
+            "specs.spice",
+            "specs.size"
+          ],
+          "weight": 3,
+          "value": [
+            {
+              "dishId": "d_xd_guo",
+              "qty": 1,
+              "specs": {
+                "spice": "特辣",
+                "size": "大份"
+              }
+            },
+            {
+              "dishId": "d_xd_rice",
+              "qty": 1,
+              "specs": {}
+            }
+          ],
+          "hint": "大份要加 6 元，小计因此是 46 而不是 40"
+        },
+        {
+          "name": "用了满 30 减 8",
+          "path": "orders[last].couponId",
+          "op": "eq",
+          "value": "c_30_8",
+          "weight": 2,
+          "hint": "满 50 减 15 更大，但小计 46 够不着门槛"
+        },
+        {
+          "name": "送到公司",
+          "path": "orders[last].address.id",
+          "op": "eq",
+          "value": "a_company",
+          "weight": 2
+        },
+        {
+          "name": "实付 40 元",
+          "path": "orders[last].total",
+          "op": "eq",
+          "value": 40,
+          "weight": 2,
+          "hint": "46 + 打包 2 + 配送 0 − 8"
+        },
+        {
+          "name": "回答的金额也是 40",
+          "source": "answer",
+          "op": "eq",
+          "value": 40,
+          "extract": "number",
+          "weight": 2
+        },
+        {
+          "name": "购物车已清空",
+          "path": "cart.lines",
+          "op": "len_eq",
+          "value": 0
+        },
+        {
+          "name": "效率：不超过 18 步",
+          "source": "trajectory",
+          "path": "steps",
+          "op": "lte",
+          "value": 18,
+          "critical": false,
+          "weight": 0.5
+        }
+      ]
+    },
+    {
+      "id": "T19_auto_coupon",
+      "name": "让它自己选券",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 22,
+      "tags": [
+        "settings",
+        "coupon",
+        "order"
+      ],
+      "instruction": "先在设置里把「自动选择最优券」打开，然后在「巷子口小面」点两份招牌豌杂面（辣度默认）和一份红油抄手。结算时不要自己碰优惠券，让它自己选，然后付款，送默认地址。",
+      "goal": [
+        {
+          "name": "自动选券开着",
+          "path": "profile.settings.autoCoupon",
+          "op": "eq",
+          "value": true,
+          "weight": 2
+        },
+        {
+          "name": "新建了一笔订单",
+          "path": "orders",
+          "op": "len_eq",
+          "value": 3
+        },
+        {
+          "name": "商品对得上",
+          "path": "orders[last].lines",
+          "op": "multiset_eq",
+          "project": [
+            "dishId",
+            "qty"
+          ],
+          "value": [
+            {
+              "dishId": "d_xz_wanza",
+              "qty": 2
+            },
+            {
+              "dishId": "d_xz_chao",
+              "qty": 1
+            }
+          ],
+          "weight": 2
+        },
+        {
+          "name": "自动选中了满 30 减 8",
+          "path": "orders[last].couponId",
+          "op": "eq",
+          "value": "c_30_8",
+          "weight": 3,
+          "hint": "小计 47：满 50 减 15 够不着，满 30 减 8 最划算"
+        },
+        {
+          "name": "实付 40 元",
+          "path": "orders[last].total",
+          "op": "eq",
+          "value": 40,
+          "weight": 2,
+          "hint": "47 + 打包 1 + 配送 0 − 8"
+        },
+        {
+          "name": "购物车已清空",
+          "path": "cart.lines",
+          "op": "len_eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T20_clear_reserve_balance",
+      "name": "清空重来 · 预约 · 余额付",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "cart",
+        "delivery-time",
+        "payment",
+        "spec",
+        "address",
+        "long-horizon"
+      ],
+      "instruction": "在「果茶站」先加一杯厚乳拿铁和一份芋泥麻薯，然后改主意——用购物车里的清空把它们全清掉，重新只点一杯满杯白葡萄，要去冰、无糖。结算时选预约配送，用余额支付，收货地址改成「公司」。",
+      "goal": [
+        {
+          "name": "新建了一笔订单",
+          "path": "orders",
+          "op": "len_eq",
+          "value": 3
+        },
+        {
+          "name": "订单里只有那杯白葡萄",
+          "path": "orders[last].lines",
+          "op": "multiset_eq",
+          "project": [
+            "dishId",
+            "qty",
+            "specs.ice",
+            "specs.sugar"
+          ],
+          "weight": 3,
+          "value": [
+            {
+              "dishId": "d_gc_grape",
+              "qty": 1,
+              "specs": {
+                "ice": "去冰",
+                "sugar": "无糖"
+              }
+            }
+          ],
+          "hint": "拿铁和麻薯必须被清掉，规格也要对"
+        },
+        {
+          "name": "确实用了购物车的清空",
+          "source": "trajectory",
+          "path": "ids",
+          "op": "contains",
+          "value": "cart_clear",
+          "weight": 2
+        },
+        {
+          "name": "是预约配送",
+          "path": "orders[last].deliveryTime",
+          "op": "eq",
+          "value": "reserve",
+          "weight": 2
+        },
+        {
+          "name": "用余额支付",
+          "path": "orders[last].pay",
+          "op": "contains",
+          "value": "余额",
+          "weight": 2
+        },
+        {
+          "name": "送到公司",
+          "path": "orders[last].address.id",
+          "op": "eq",
+          "value": "a_company",
+          "weight": 2
+        },
+        {
+          "name": "实付 20 元",
+          "path": "orders[last].total",
+          "op": "eq",
+          "value": 20,
+          "weight": 2,
+          "hint": "17 + 打包 1 + 配送 2，没有券能用"
+        },
+        {
+          "name": "购物车已清空",
+          "path": "cart.lines",
+          "op": "len_eq",
+          "value": 0
+        }
+      ]
+    }
+  ]
+}

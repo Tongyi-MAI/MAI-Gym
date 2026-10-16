@@ -1,0 +1,28 @@
+{
+  "id": "larkspur_fest",
+  "name": "Larkspur",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "viewport": {"width": 390, "height": 844},
+  "description": "A single-file H5 festival planner whose world model is a set of intervals. Every act is a start, an end and a stage, so a plan can be wrong in two ways the app can prove: a clash, where two sets overlap, and a tight change, where the gap between them is shorter than the walk between their stages. The walking times are a real matrix — six minutes from the Chapel to the Sidecar, twenty from the Meadow — so a fifteen minute gap is comfortable in one direction and impossible in another. 6 screens, 16 acts over two days, 4 stages, a per-day timeline and a clash list that suggests which act to drop.",
+  "tasks_file": "tasks.json",
+  "oracle_file": "oracle.json",
+  "action_space": {
+    "tap":    {"id": "test-id of the element"},
+    "type":   {"id": "test-id of a text field", "text": "replaces the whole value"},
+    "back":   {}, "home": {}, "wait": {},
+    "finish": {"answer": "final answer for question tasks; optional for action tasks"},
+    "tap_xy": {"x": "screen pixel x", "y": "screen pixel y", "note": "browser backend only"}
+  },
+  "observation": {
+    "text": "engine.a11y(state) — the timeline prints stage by stage, and every clash and tight change is spelled out with the minutes involved.",
+    "pixels": "390x844 screenshot (browser backend); __ENV__.bounds() maps every test-id to a pixel box",
+    "state": "engine.snapshot(state) — canonical state plus a derived view listing the faults by name. For the verifier only."
+  },
+  "world": {
+    "clash": "two acts in the plan whose times overlap by even a minute",
+    "tight": "no overlap, but the gap is shorter than the walk between the two stages",
+    "walk": "Meadow-Barn 8, Meadow-Chapel 14, Meadow-Sidecar 20, Barn-Chapel 9, Barn-Sidecar 12, Chapel-Sidecar 6",
+    "seeded": "Friday holds three acts and no faults; Saturday is empty"
+  }
+}

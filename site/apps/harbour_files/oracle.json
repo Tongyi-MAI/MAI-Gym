@@ -1,0 +1,410 @@
+{
+  "env": "harbour_files",
+  "note": "Golden action sequences replayed by CI.",
+  "solutions": {
+    "T01_settings": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_showHidden"
+      },
+      {
+        "action": "tap",
+        "id": "set_confirmDelete"
+      }
+    ],
+    "T02_free": [
+      {
+        "action": "finish",
+        "answer": "Internal storage has 2.35 GB free; the SD card has 26.73 GB."
+      }
+    ],
+    "T03_biggest": [
+      {
+        "action": "tap",
+        "id": "tab_analyse"
+      },
+      {
+        "action": "finish",
+        "answer": "WhatsApp, at 9.33 GB."
+      }
+    ],
+    "T04_video": [
+      {
+        "action": "tap",
+        "id": "open_d_wa"
+      },
+      {
+        "action": "tap",
+        "id": "open_d_wam"
+      },
+      {
+        "action": "finish",
+        "answer": "7.91 GB — 8,100 MB."
+      }
+    ],
+    "T05_dupes": [
+      {
+        "action": "tap",
+        "id": "tab_analyse"
+      },
+      {
+        "action": "finish",
+        "answer": "2 groups, wasting 1.18 GB between them."
+      }
+    ],
+    "T06_locked": [
+      {
+        "action": "tap",
+        "id": "tick_d_android"
+      },
+      {
+        "action": "finish",
+        "answer": "It refuses — Android is system storage and cannot be moved."
+      }
+    ],
+    "T07_move_whatsapp": [
+      {
+        "action": "tap",
+        "id": "tick_d_wa"
+      },
+      {
+        "action": "tap",
+        "id": "act_move"
+      },
+      {
+        "action": "tap",
+        "id": "mv_vol_sd"
+      },
+      {
+        "action": "finish",
+        "answer": "11.67 GB free."
+      }
+    ],
+    "T08_move_inside": [
+      {
+        "action": "tap",
+        "id": "tick_d_music"
+      },
+      {
+        "action": "tap",
+        "id": "act_move"
+      },
+      {
+        "action": "tap",
+        "id": "mv_d_dl"
+      },
+      {
+        "action": "finish",
+        "answer": "Nothing at all — still 2.35 GB free. The bytes never left the disc."
+      }
+    ],
+    "T09_copy": [
+      {
+        "action": "tap",
+        "id": "open_d_wa"
+      },
+      {
+        "action": "tap",
+        "id": "open_d_wam"
+      },
+      {
+        "action": "tap",
+        "id": "tick_d_wav"
+      },
+      {
+        "action": "tap",
+        "id": "act_copy"
+      },
+      {
+        "action": "tap",
+        "id": "cp_vol_sd"
+      },
+      {
+        "action": "finish",
+        "answer": "None — 0 bytes. Copying leaves the original where it was — only the card got smaller."
+      }
+    ],
+    "T10_dedupe": [
+      {
+        "action": "tap",
+        "id": "tab_analyse"
+      },
+      {
+        "action": "tap",
+        "id": "dedupe"
+      },
+      {
+        "action": "finish",
+        "answer": "Internal gained 6 MB and the card gained 1.17 GB — the big duplicate was the copy of travel-photos-2024.zip sitting in the card's backup folder."
+      }
+    ],
+    "T11_delete": [
+      {
+        "action": "tap",
+        "id": "open_d_dl"
+      },
+      {
+        "action": "tap",
+        "id": "tick_f_dl1"
+      },
+      {
+        "action": "tap",
+        "id": "act_delete"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "finish",
+        "answer": "It freed 1.17 GB and left one duplicate group — the little beach photo."
+      }
+    ],
+    "T12_navigate": [
+      {
+        "action": "tap",
+        "id": "open_d_doc"
+      },
+      {
+        "action": "tap",
+        "id": "open_d_pers"
+      },
+      {
+        "action": "finish",
+        "answer": "92 MB."
+      }
+    ],
+    "T13_two_folders": [
+      {
+        "action": "tap",
+        "id": "tick_d_dcim"
+      },
+      {
+        "action": "tap",
+        "id": "tick_d_music"
+      },
+      {
+        "action": "tap",
+        "id": "act_move"
+      },
+      {
+        "action": "tap",
+        "id": "mv_vol_sd"
+      },
+      {
+        "action": "finish",
+        "answer": "11.15 GB — 7.44 GB of DCIM plus 3.71 GB of Music."
+      }
+    ],
+    "T14_total": [
+      {
+        "action": "tap",
+        "id": "tick_d_dcim"
+      },
+      {
+        "action": "tap",
+        "id": "act_move"
+      },
+      {
+        "action": "tap",
+        "id": "mv_vol_sd"
+      },
+      {
+        "action": "finish",
+        "answer": "No. Both volumes together still hold 34.93 GB — moving shuffles bytes between discs, it does not remove any."
+      }
+    ],
+    "T15_exact_eight": [
+      {
+        "action": "tap",
+        "id": "open_d_wa"
+      },
+      {
+        "action": "tap",
+        "id": "open_d_wam"
+      },
+      {
+        "action": "tap",
+        "id": "tick_d_wav"
+      },
+      {
+        "action": "tap",
+        "id": "act_move"
+      },
+      {
+        "action": "tap",
+        "id": "mv_vol_sd"
+      },
+      {
+        "action": "tap",
+        "id": "cr_vol_int"
+      },
+      {
+        "action": "tap",
+        "id": "open_d_doc"
+      },
+      {
+        "action": "tap",
+        "id": "open_d_pers"
+      },
+      {
+        "action": "tap",
+        "id": "tick_f_p2"
+      },
+      {
+        "action": "tap",
+        "id": "act_move"
+      },
+      {
+        "action": "tap",
+        "id": "mv_vol_sd"
+      },
+      {
+        "action": "finish",
+        "answer": "WhatsApp/Media/Video at 8,100 MB and tax-2025.pdf at 92 MB — 8,192 MB on the nose."
+      }
+    ],
+    "T16_one_move": [
+      {
+        "action": "tap",
+        "id": "tick_d_wa"
+      },
+      {
+        "action": "tap",
+        "id": "act_move"
+      },
+      {
+        "action": "tap",
+        "id": "mv_vol_sd"
+      },
+      {
+        "action": "finish",
+        "answer": "WhatsApp, at 9.33 GB. It is the only single folder over 8 GB — the next biggest, DCIM, is 7.44 GB and would leave you short."
+      }
+    ],
+    "T17_no_photos": [
+      {
+        "action": "tap",
+        "id": "tick_d_dl"
+      },
+      {
+        "action": "tap",
+        "id": "tick_d_music"
+      },
+      {
+        "action": "tap",
+        "id": "act_move"
+      },
+      {
+        "action": "tap",
+        "id": "mv_vol_sd"
+      },
+      {
+        "action": "finish",
+        "answer": "Download at 4.75 GB and Music at 3.71 GB — 8.46 GB together, just enough."
+      }
+    ],
+    "T18_copy_wrong": [
+      {
+        "action": "tap",
+        "id": "tick_d_wa"
+      },
+      {
+        "action": "tap",
+        "id": "act_copy"
+      },
+      {
+        "action": "tap",
+        "id": "cp_vol_sd"
+      },
+      {
+        "action": "tap",
+        "id": "vol_vol_sd"
+      },
+      {
+        "action": "tap",
+        "id": "tick_d_wa_c1"
+      },
+      {
+        "action": "tap",
+        "id": "act_delete"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "finish",
+        "answer": "Internal storage did not gain a single byte — it still has 2.35 GB. All the copy did was take 9.33 GB off the card. Only moving or deleting frees the source."
+      }
+    ],
+    "T19_everything": [
+      {
+        "action": "tap",
+        "id": "tick_d_dcim"
+      },
+      {
+        "action": "tap",
+        "id": "tick_d_dl"
+      },
+      {
+        "action": "tap",
+        "id": "tick_d_doc"
+      },
+      {
+        "action": "tap",
+        "id": "tick_d_music"
+      },
+      {
+        "action": "tap",
+        "id": "tick_d_wa"
+      },
+      {
+        "action": "tap",
+        "id": "act_move"
+      },
+      {
+        "action": "tap",
+        "id": "mv_vol_sd"
+      },
+      {
+        "action": "finish",
+        "answer": "Only the Android system folder is left, 4.00 GB, so internal has 28.00 GB free. The card is down to 1.08 GB."
+      }
+    ],
+    "T20_clean_and_move": [
+      {
+        "action": "tap",
+        "id": "tab_analyse"
+      },
+      {
+        "action": "tap",
+        "id": "dedupe"
+      },
+      {
+        "action": "tap",
+        "id": "tab_browse"
+      },
+      {
+        "action": "tap",
+        "id": "tick_d_wa"
+      },
+      {
+        "action": "tap",
+        "id": "act_move"
+      },
+      {
+        "action": "tap",
+        "id": "mv_vol_sd"
+      },
+      {
+        "action": "finish",
+        "answer": "11.68 GB — the dedupe gave back 6 MB and WhatsApp gave back 9.33 GB."
+      }
+    ]
+  }
+}

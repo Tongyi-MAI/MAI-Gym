@@ -1,0 +1,735 @@
+{
+  "env": "aperture_cinema",
+  "note": "Golden action sequences replayed by CI.",
+  "solutions": {
+    "T01_settings": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "default_pm_amex"
+      },
+      {
+        "action": "tap",
+        "id": "set_accessibleSeats"
+      }
+    ],
+    "T02_query_points": [
+      {
+        "action": "tap",
+        "id": "tab_member"
+      },
+      {
+        "action": "finish",
+        "answer": "18"
+      }
+    ],
+    "T03_cancel": [
+      {
+        "action": "tap",
+        "id": "tab_bookings"
+      },
+      {
+        "action": "tap",
+        "id": "cancel_bk_9001"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      }
+    ],
+    "T04_simple_booking": [
+      {
+        "action": "tap",
+        "id": "film_f_lighthouse"
+      },
+      {
+        "action": "tap",
+        "id": "show_sw_1"
+      },
+      {
+        "action": "tap",
+        "id": "seat_F5"
+      },
+      {
+        "action": "tap",
+        "id": "seat_F6"
+      },
+      {
+        "action": "tap",
+        "id": "seats_continue"
+      },
+      {
+        "action": "tap",
+        "id": "tk_adult_inc"
+      },
+      {
+        "action": "tap",
+        "id": "tk_adult_inc"
+      },
+      {
+        "action": "tap",
+        "id": "tickets_continue"
+      },
+      {
+        "action": "tap",
+        "id": "extras_continue"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_pay"
+      }
+    ],
+    "T05_query_row": [
+      {
+        "action": "tap",
+        "id": "film_f_lighthouse"
+      },
+      {
+        "action": "tap",
+        "id": "show_sw_1"
+      },
+      {
+        "action": "finish",
+        "answer": "3"
+      }
+    ],
+    "T06_ticket_mix": [
+      {
+        "action": "tap",
+        "id": "film_f_lighthouse"
+      },
+      {
+        "action": "tap",
+        "id": "show_sw_1"
+      },
+      {
+        "action": "tap",
+        "id": "seat_A4"
+      },
+      {
+        "action": "tap",
+        "id": "seat_A5"
+      },
+      {
+        "action": "tap",
+        "id": "seat_A6"
+      },
+      {
+        "action": "tap",
+        "id": "seats_continue"
+      },
+      {
+        "action": "tap",
+        "id": "tk_adult_inc"
+      },
+      {
+        "action": "tap",
+        "id": "tk_adult_inc"
+      },
+      {
+        "action": "tap",
+        "id": "tk_child_inc"
+      },
+      {
+        "action": "tap",
+        "id": "tickets_continue"
+      },
+      {
+        "action": "tap",
+        "id": "extras_continue"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_pay"
+      }
+    ],
+    "T07_premium_row": [
+      {
+        "action": "tap",
+        "id": "film_f_lighthouse"
+      },
+      {
+        "action": "tap",
+        "id": "show_sw_1"
+      },
+      {
+        "action": "tap",
+        "id": "seat_D7"
+      },
+      {
+        "action": "tap",
+        "id": "seat_D8"
+      },
+      {
+        "action": "tap",
+        "id": "seats_continue"
+      },
+      {
+        "action": "tap",
+        "id": "tk_adult_inc"
+      },
+      {
+        "action": "tap",
+        "id": "tk_adult_inc"
+      },
+      {
+        "action": "tap",
+        "id": "tickets_continue"
+      },
+      {
+        "action": "tap",
+        "id": "extras_continue"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_pay"
+      }
+    ],
+    "T08_deluxe_screen": [
+      {
+        "action": "tap",
+        "id": "film_f_lighthouse"
+      },
+      {
+        "action": "tap",
+        "id": "show_sw_2"
+      },
+      {
+        "action": "tap",
+        "id": "seat_A5"
+      },
+      {
+        "action": "tap",
+        "id": "seat_A6"
+      },
+      {
+        "action": "tap",
+        "id": "seats_continue"
+      },
+      {
+        "action": "tap",
+        "id": "tk_adult_inc"
+      },
+      {
+        "action": "tap",
+        "id": "tk_adult_inc"
+      },
+      {
+        "action": "tap",
+        "id": "tickets_continue"
+      },
+      {
+        "action": "tap",
+        "id": "extras_continue"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_pay"
+      }
+    ],
+    "T09_snacks": [
+      {
+        "action": "tap",
+        "id": "film_f_lighthouse"
+      },
+      {
+        "action": "tap",
+        "id": "show_sw_1"
+      },
+      {
+        "action": "tap",
+        "id": "seat_F5"
+      },
+      {
+        "action": "tap",
+        "id": "seat_F6"
+      },
+      {
+        "action": "tap",
+        "id": "seats_continue"
+      },
+      {
+        "action": "tap",
+        "id": "tk_adult_inc"
+      },
+      {
+        "action": "tap",
+        "id": "tk_adult_inc"
+      },
+      {
+        "action": "tap",
+        "id": "tickets_continue"
+      },
+      {
+        "action": "tap",
+        "id": "extra_combo"
+      },
+      {
+        "action": "tap",
+        "id": "extra_nachos"
+      },
+      {
+        "action": "tap",
+        "id": "extras_continue"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_pay"
+      }
+    ],
+    "T10_spend_points": [
+      {
+        "action": "tap",
+        "id": "film_f_lighthouse"
+      },
+      {
+        "action": "tap",
+        "id": "show_sw_1"
+      },
+      {
+        "action": "tap",
+        "id": "seat_F5"
+      },
+      {
+        "action": "tap",
+        "id": "seat_F6"
+      },
+      {
+        "action": "tap",
+        "id": "seats_continue"
+      },
+      {
+        "action": "tap",
+        "id": "tk_adult_inc"
+      },
+      {
+        "action": "tap",
+        "id": "tk_adult_inc"
+      },
+      {
+        "action": "tap",
+        "id": "tickets_continue"
+      },
+      {
+        "action": "tap",
+        "id": "extras_continue"
+      },
+      {
+        "action": "tap",
+        "id": "use_points"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_pay"
+      }
+    ],
+    "T11_query_busiest": [
+      {
+        "action": "tap",
+        "id": "film_f_orbit"
+      },
+      {
+        "action": "finish",
+        "answer": "19:15"
+      }
+    ],
+    "T12_search_book": [
+      {
+        "action": "tap",
+        "id": "open_search"
+      },
+      {
+        "action": "type",
+        "id": "search_input",
+        "text": "animation"
+      },
+      {
+        "action": "tap",
+        "id": "search_go"
+      },
+      {
+        "action": "tap",
+        "id": "found_f_paperbirds"
+      },
+      {
+        "action": "tap",
+        "id": "show_sw_11"
+      },
+      {
+        "action": "tap",
+        "id": "seat_C4"
+      },
+      {
+        "action": "tap",
+        "id": "seat_C5"
+      },
+      {
+        "action": "tap",
+        "id": "seats_continue"
+      },
+      {
+        "action": "tap",
+        "id": "tk_child_inc"
+      },
+      {
+        "action": "tap",
+        "id": "tk_child_inc"
+      },
+      {
+        "action": "tap",
+        "id": "tickets_continue"
+      },
+      {
+        "action": "tap",
+        "id": "extras_continue"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_pay"
+      }
+    ],
+    "T13_day_filter": [
+      {
+        "action": "tap",
+        "id": "day_Tomorrow"
+      }
+    ],
+    "T14_query_cert": [
+      {
+        "action": "tap",
+        "id": "film_f_thorn"
+      },
+      {
+        "action": "finish",
+        "answer": "18"
+      }
+    ],
+    "T15_full_booking": [
+      {
+        "action": "tap",
+        "id": "film_f_lighthouse"
+      },
+      {
+        "action": "tap",
+        "id": "show_sw_2"
+      },
+      {
+        "action": "tap",
+        "id": "seat_D7"
+      },
+      {
+        "action": "tap",
+        "id": "seat_D8"
+      },
+      {
+        "action": "tap",
+        "id": "seat_E8"
+      },
+      {
+        "action": "tap",
+        "id": "seats_continue"
+      },
+      {
+        "action": "tap",
+        "id": "tk_adult_inc"
+      },
+      {
+        "action": "tap",
+        "id": "tk_adult_inc"
+      },
+      {
+        "action": "tap",
+        "id": "tk_senior_inc"
+      },
+      {
+        "action": "tap",
+        "id": "tickets_continue"
+      },
+      {
+        "action": "tap",
+        "id": "extra_combo"
+      },
+      {
+        "action": "tap",
+        "id": "extra_water"
+      },
+      {
+        "action": "tap",
+        "id": "extras_continue"
+      },
+      {
+        "action": "tap",
+        "id": "pay_pm_amex"
+      },
+      {
+        "action": "tap",
+        "id": "use_points"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_pay"
+      }
+    ],
+    "T16_cancel_then_book": [
+      {
+        "action": "tap",
+        "id": "tab_bookings"
+      },
+      {
+        "action": "tap",
+        "id": "cancel_bk_9001"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "tap",
+        "id": "tab_films"
+      },
+      {
+        "action": "tap",
+        "id": "film_f_tide"
+      },
+      {
+        "action": "tap",
+        "id": "show_sw_9"
+      },
+      {
+        "action": "tap",
+        "id": "seat_B2"
+      },
+      {
+        "action": "tap",
+        "id": "seat_B3"
+      },
+      {
+        "action": "tap",
+        "id": "seats_continue"
+      },
+      {
+        "action": "tap",
+        "id": "tk_student_inc"
+      },
+      {
+        "action": "tap",
+        "id": "tk_student_inc"
+      },
+      {
+        "action": "tap",
+        "id": "tickets_continue"
+      },
+      {
+        "action": "tap",
+        "id": "extras_continue"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_pay"
+      }
+    ],
+    "T17_adjacent_seats": [
+      {
+        "action": "tap",
+        "id": "film_f_lighthouse"
+      },
+      {
+        "action": "tap",
+        "id": "show_sw_1"
+      },
+      {
+        "action": "tap",
+        "id": "seat_A5"
+      },
+      {
+        "action": "tap",
+        "id": "seat_A6"
+      },
+      {
+        "action": "tap",
+        "id": "seats_continue"
+      },
+      {
+        "action": "tap",
+        "id": "tk_adult_inc"
+      },
+      {
+        "action": "tap",
+        "id": "tk_adult_inc"
+      },
+      {
+        "action": "tap",
+        "id": "tickets_continue"
+      },
+      {
+        "action": "tap",
+        "id": "extras_continue"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_pay"
+      }
+    ],
+    "T18_budget_four": [
+      {
+        "action": "tap",
+        "id": "day_Tomorrow"
+      },
+      {
+        "action": "tap",
+        "id": "film_f_marmalade"
+      },
+      {
+        "action": "tap",
+        "id": "show_sw_7"
+      },
+      {
+        "action": "tap",
+        "id": "seat_B4"
+      },
+      {
+        "action": "tap",
+        "id": "seat_B5"
+      },
+      {
+        "action": "tap",
+        "id": "seat_B6"
+      },
+      {
+        "action": "tap",
+        "id": "seat_B7"
+      },
+      {
+        "action": "tap",
+        "id": "seats_continue"
+      },
+      {
+        "action": "tap",
+        "id": "tk_child_inc"
+      },
+      {
+        "action": "tap",
+        "id": "tk_child_inc"
+      },
+      {
+        "action": "tap",
+        "id": "tk_child_inc"
+      },
+      {
+        "action": "tap",
+        "id": "tk_child_inc"
+      },
+      {
+        "action": "tap",
+        "id": "tickets_continue"
+      },
+      {
+        "action": "tap",
+        "id": "extras_continue"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_pay"
+      }
+    ],
+    "T19_accessible": [
+      {
+        "action": "tap",
+        "id": "film_f_tide"
+      },
+      {
+        "action": "tap",
+        "id": "show_sw_9"
+      },
+      {
+        "action": "tap",
+        "id": "seat_F1"
+      },
+      {
+        "action": "tap",
+        "id": "seat_F2"
+      },
+      {
+        "action": "tap",
+        "id": "seats_continue"
+      },
+      {
+        "action": "tap",
+        "id": "tk_adult_inc"
+      },
+      {
+        "action": "tap",
+        "id": "tk_senior_inc"
+      },
+      {
+        "action": "tap",
+        "id": "tickets_continue"
+      },
+      {
+        "action": "tap",
+        "id": "extras_continue"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_pay"
+      }
+    ],
+    "T20_repick_seats": [
+      {
+        "action": "tap",
+        "id": "film_f_lighthouse"
+      },
+      {
+        "action": "tap",
+        "id": "show_sw_1"
+      },
+      {
+        "action": "tap",
+        "id": "seat_C1"
+      },
+      {
+        "action": "tap",
+        "id": "seat_C2"
+      },
+      {
+        "action": "tap",
+        "id": "seats_clear"
+      },
+      {
+        "action": "tap",
+        "id": "seat_E9"
+      },
+      {
+        "action": "tap",
+        "id": "seat_E10"
+      },
+      {
+        "action": "tap",
+        "id": "seats_continue"
+      },
+      {
+        "action": "tap",
+        "id": "tk_senior_inc"
+      },
+      {
+        "action": "tap",
+        "id": "tk_senior_inc"
+      },
+      {
+        "action": "tap",
+        "id": "tickets_continue"
+      },
+      {
+        "action": "tap",
+        "id": "extras_continue"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_pay"
+      }
+    ]
+  }
+}

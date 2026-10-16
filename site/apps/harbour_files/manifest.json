@@ -1,0 +1,32 @@
+{
+  "id": "harbour_files",
+  "name": "Files",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "viewport": {"width": 390, "height": 844},
+  "description": "A single-file H5 stock file manager. Every size on screen is a roll-up: a folder has no size of its own, it is the sum of its whole subtree, recomputed on every action, so moving one folder subtracts an entire subtree from one ancestor chain and adds it to another. And there are two volumes, which is where the real lesson lives — moving within a volume changes nothing at all, moving across volumes moves both bars by the same amount, copying only grows the destination, and deleting is the only thing that reduces the total. Internal storage is down to 2.35 GB free and eight gigabytes have to come off it; the WhatsApp video folder is 8,100 MB, ninety-two short, and there is exactly one 92 MB file on the phone. 3 screens, 2 volumes, 40 nodes, a duplicate finder and a locked system folder.",
+  "tasks_file": "tasks.json",
+  "oracle_file": "oracle.json",
+  "action_space": {
+    "tap":    {"id": "test-id of the element"},
+    "type":   {"id": "test-id of a text field", "text": "replaces the whole value"},
+    "back":   {}, "home": {}, "wait": {},
+    "finish": {"answer": "final answer for question tasks; optional for action tasks"},
+    "tap_xy": {"x": "screen pixel x", "y": "screen pixel y", "note": "browser backend only"}
+  },
+  "observation": {
+    "text": "engine.a11y(state) — both volume bars print used and free, the breadcrumb prints the path with a tappable id per level, and every row prints its rolled-up size, its item count and whether it is locked. Fully navigable without pixels.",
+    "pixels": "390x844 screenshot (browser backend); __ENV__.bounds() maps every test-id to a pixel box",
+    "state": "engine.snapshot(state) — canonical state plus a derived view with folder sizes and which volume each folder currently sits on. For the verifier only."
+  },
+  "world": {
+    "clock": "16:41",
+    "sizes": "integer megabytes; a folder's size is the sum of its subtree, never stored",
+    "volumes": "internal storage 32 GB with 30,365 MB used (2,403 MB free); SD card 32 GB with 5,400 MB used",
+    "actions": "move within a volume = no change; move across volumes = both bars; copy = destination only; delete = the only thing that reduces the total",
+    "seeded": "WhatsApp 9,550 · DCIM 7,620 · Download 4,860 · Android 4,100 (locked) · Music 3,800 · Documents 435",
+    "exact_eight": "WhatsApp/Media/Video is 8,100 MB and tax-2025.pdf is 92 MB — together exactly 8,192",
+    "single_move": "WhatsApp at 9,550 is the only single folder over 8,192; DCIM at 7,620 falls short",
+    "duplicates": "two hash groups wasting 1,206 MB: travel-photos-2024.zip in Download and on the card, and a 6 MB photo in DCIM and WhatsApp"
+  }
+}

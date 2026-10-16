@@ -1,0 +1,562 @@
+{
+  "env": "kitbag_pack",
+  "note": "Golden action sequences replayed by CI.",
+  "solutions": {
+    "T01_settings": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_showGrams"
+      },
+      {
+        "action": "tap",
+        "id": "set_warnHeavy"
+      }
+    ],
+    "T02_fee_now": [
+      {
+        "action": "finish",
+        "answer": "£45.00"
+      }
+    ],
+    "T03_over_by": [
+      {
+        "action": "finish",
+        "answer": "2.36 kg over — 17.36 kg in a 15 kg allowance"
+      }
+    ],
+    "T04_band": [
+      {
+        "action": "tap",
+        "id": "bag_b_hold"
+      },
+      {
+        "action": "finish",
+        "answer": "Up to 3 kg over — £45.00"
+      }
+    ],
+    "T05_wrong_bag": [
+      {
+        "action": "tap",
+        "id": "tab_items"
+      },
+      {
+        "action": "tap",
+        "id": "f_wrong"
+      },
+      {
+        "action": "finish",
+        "answer": "The laptop and the power bank — both have batteries, so both have to fly in the cabin."
+      }
+    ],
+    "T06_refused": [
+      {
+        "action": "tap",
+        "id": "tab_items"
+      },
+      {
+        "action": "tap",
+        "id": "it_i_knife"
+      },
+      {
+        "action": "tap",
+        "id": "put_b_cabin"
+      },
+      {
+        "action": "finish",
+        "answer": "It refused — anything sharp has to go in the hold."
+      }
+    ],
+    "T07_fix_rules_only": [
+      {
+        "action": "tap",
+        "id": "tab_items"
+      },
+      {
+        "action": "tap",
+        "id": "move_i_laptop"
+      },
+      {
+        "action": "tap",
+        "id": "to_b_cabin"
+      },
+      {
+        "action": "tap",
+        "id": "move_i_power"
+      },
+      {
+        "action": "tap",
+        "id": "to_b_cabin"
+      },
+      {
+        "action": "finish",
+        "answer": "Still £45.00 — the hold is 260 g over, which is the same band."
+      }
+    ],
+    "T08_hold_under": [
+      {
+        "action": "tap",
+        "id": "tab_items"
+      },
+      {
+        "action": "tap",
+        "id": "move_i_laptop"
+      },
+      {
+        "action": "tap",
+        "id": "to_b_cabin"
+      },
+      {
+        "action": "tap",
+        "id": "move_i_power"
+      },
+      {
+        "action": "tap",
+        "id": "to_b_cabin"
+      },
+      {
+        "action": "tap",
+        "id": "move_i_towel"
+      },
+      {
+        "action": "tap",
+        "id": "to_b_cabin"
+      }
+    ],
+    "T09_zero_total": [
+      {
+        "action": "tap",
+        "id": "tab_items"
+      },
+      {
+        "action": "tap",
+        "id": "move_i_laptop"
+      },
+      {
+        "action": "tap",
+        "id": "to_b_cabin"
+      },
+      {
+        "action": "tap",
+        "id": "move_i_power"
+      },
+      {
+        "action": "tap",
+        "id": "to_b_cabin"
+      },
+      {
+        "action": "tap",
+        "id": "move_i_towel"
+      },
+      {
+        "action": "tap",
+        "id": "to_b_cabin"
+      }
+    ],
+    "T10_lightest_move": [
+      {
+        "action": "tap",
+        "id": "tab_items"
+      },
+      {
+        "action": "tap",
+        "id": "move_i_laptop"
+      },
+      {
+        "action": "tap",
+        "id": "to_b_cabin"
+      },
+      {
+        "action": "tap",
+        "id": "move_i_power"
+      },
+      {
+        "action": "tap",
+        "id": "to_b_cabin"
+      },
+      {
+        "action": "tap",
+        "id": "move_i_towel"
+      },
+      {
+        "action": "tap",
+        "id": "to_b_cabin"
+      },
+      {
+        "action": "finish",
+        "answer": "The travel towel, 380 g — the lighter things left in the hold are liquids or sharp, so they cannot go in the cabin at all."
+      }
+    ],
+    "T11_priority_no": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_priority"
+      },
+      {
+        "action": "tap",
+        "id": "set_priority"
+      },
+      {
+        "action": "finish",
+        "answer": "No — the cabin is 4.46 kg under already; it is the hold that is over, so the £12 buys allowance where there is no problem."
+      }
+    ],
+    "T12_second_bag_no": [
+      {
+        "action": "tap",
+        "id": "add_extra"
+      },
+      {
+        "action": "tap",
+        "id": "bag_b_extra"
+      },
+      {
+        "action": "tap",
+        "id": "drop_extra"
+      },
+      {
+        "action": "finish",
+        "answer": "Neither — £50 is worse than the £45, and moving the batteries to the cabin and one light thing after them costs nothing at all."
+      }
+    ],
+    "T13_battery_rule": [
+      {
+        "action": "tap",
+        "id": "tab_rules"
+      },
+      {
+        "action": "tap",
+        "id": "rule_battery"
+      },
+      {
+        "action": "tap",
+        "id": "move_i_laptop"
+      },
+      {
+        "action": "tap",
+        "id": "to_b_cabin"
+      },
+      {
+        "action": "tap",
+        "id": "move_i_power"
+      },
+      {
+        "action": "tap",
+        "id": "to_b_cabin"
+      }
+    ],
+    "T14_rules_only_pack": [
+      {
+        "action": "tap",
+        "id": "unpack_all"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "tap",
+        "id": "tab_items"
+      },
+      {
+        "action": "tap",
+        "id": "f_rules"
+      },
+      {
+        "action": "tap",
+        "id": "move_i_laptop"
+      },
+      {
+        "action": "tap",
+        "id": "to_b_cabin"
+      },
+      {
+        "action": "tap",
+        "id": "move_i_power"
+      },
+      {
+        "action": "tap",
+        "id": "to_b_cabin"
+      },
+      {
+        "action": "tap",
+        "id": "move_i_camera"
+      },
+      {
+        "action": "tap",
+        "id": "to_b_cabin"
+      },
+      {
+        "action": "tap",
+        "id": "move_i_washbag"
+      },
+      {
+        "action": "tap",
+        "id": "to_b_hold"
+      },
+      {
+        "action": "tap",
+        "id": "move_i_sun"
+      },
+      {
+        "action": "tap",
+        "id": "to_b_hold"
+      },
+      {
+        "action": "tap",
+        "id": "move_i_shampoo"
+      },
+      {
+        "action": "tap",
+        "id": "to_b_hold"
+      },
+      {
+        "action": "tap",
+        "id": "move_i_knife"
+      },
+      {
+        "action": "tap",
+        "id": "to_b_hold"
+      },
+      {
+        "action": "tap",
+        "id": "move_i_tripod"
+      },
+      {
+        "action": "tap",
+        "id": "to_b_hold"
+      }
+    ],
+    "T15_leave_behind": [
+      {
+        "action": "tap",
+        "id": "tab_items"
+      },
+      {
+        "action": "tap",
+        "id": "move_i_laptop"
+      },
+      {
+        "action": "tap",
+        "id": "to_b_cabin"
+      },
+      {
+        "action": "tap",
+        "id": "move_i_power"
+      },
+      {
+        "action": "tap",
+        "id": "to_b_cabin"
+      },
+      {
+        "action": "tap",
+        "id": "move_i_shampoo"
+      },
+      {
+        "action": "tap",
+        "id": "to_home"
+      },
+      {
+        "action": "finish",
+        "answer": "The shampoo, 260 g — the hold was exactly 260 g over and the shampoo weighs exactly that."
+      }
+    ],
+    "T16_cabin_headroom": [
+      {
+        "action": "tap",
+        "id": "tab_rules"
+      },
+      {
+        "action": "tap",
+        "id": "rule_battery"
+      },
+      {
+        "action": "finish",
+        "answer": "4.26 kg — the cabin allows 7 kg and the laptop, power bank and camera take 2.74 kg of it."
+      }
+    ],
+    "T17_both_extras": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_priority"
+      },
+      {
+        "action": "tap",
+        "id": "set_extra"
+      },
+      {
+        "action": "tap",
+        "id": "set_extra"
+      },
+      {
+        "action": "tap",
+        "id": "set_priority"
+      },
+      {
+        "action": "tap",
+        "id": "tab_items"
+      },
+      {
+        "action": "tap",
+        "id": "move_i_laptop"
+      },
+      {
+        "action": "tap",
+        "id": "to_b_cabin"
+      },
+      {
+        "action": "tap",
+        "id": "move_i_power"
+      },
+      {
+        "action": "tap",
+        "id": "to_b_cabin"
+      },
+      {
+        "action": "tap",
+        "id": "move_i_towel"
+      },
+      {
+        "action": "tap",
+        "id": "to_b_cabin"
+      },
+      {
+        "action": "finish",
+        "answer": "£107.00 — £12 priority plus £50 for the bag plus the £45 excess that adding a bag does not remove. The other way round costs nothing, so the difference is £107.00."
+      }
+    ],
+    "T18_hold_window": [
+      {
+        "action": "tap",
+        "id": "tab_items"
+      },
+      {
+        "action": "tap",
+        "id": "move_i_laptop"
+      },
+      {
+        "action": "tap",
+        "id": "to_b_cabin"
+      },
+      {
+        "action": "tap",
+        "id": "move_i_power"
+      },
+      {
+        "action": "tap",
+        "id": "to_b_cabin"
+      },
+      {
+        "action": "tap",
+        "id": "move_i_towel"
+      },
+      {
+        "action": "tap",
+        "id": "to_b_cabin"
+      }
+    ],
+    "T19_priority_yes": [
+      {
+        "action": "tap",
+        "id": "tab_items"
+      },
+      {
+        "action": "tap",
+        "id": "move_i_laptop"
+      },
+      {
+        "action": "tap",
+        "id": "to_b_cabin"
+      },
+      {
+        "action": "tap",
+        "id": "move_i_power"
+      },
+      {
+        "action": "tap",
+        "id": "to_b_cabin"
+      },
+      {
+        "action": "tap",
+        "id": "move_i_wetsuit"
+      },
+      {
+        "action": "tap",
+        "id": "to_b_cabin"
+      },
+      {
+        "action": "tap",
+        "id": "move_i_snorkel"
+      },
+      {
+        "action": "tap",
+        "id": "to_b_cabin"
+      },
+      {
+        "action": "tap",
+        "id": "move_i_coat"
+      },
+      {
+        "action": "tap",
+        "id": "to_b_cabin"
+      },
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_priority"
+      },
+      {
+        "action": "finish",
+        "answer": "£12.00 — the three of them put the cabin at 8.64 kg, so priority boarding's 9 kg is the cheap way to make it legal; the hold drops to 11.26 kg and costs nothing."
+      }
+    ],
+    "T20_spare_room": [
+      {
+        "action": "tap",
+        "id": "tab_items"
+      },
+      {
+        "action": "tap",
+        "id": "move_i_laptop"
+      },
+      {
+        "action": "tap",
+        "id": "to_b_cabin"
+      },
+      {
+        "action": "tap",
+        "id": "move_i_power"
+      },
+      {
+        "action": "tap",
+        "id": "to_b_cabin"
+      },
+      {
+        "action": "tap",
+        "id": "move_i_towel"
+      },
+      {
+        "action": "tap",
+        "id": "to_b_cabin"
+      },
+      {
+        "action": "finish",
+        "answer": "2.1 kg — 15 kg and 7 kg of allowance is 22 kg, and everything you own weighs 19.9 kg, so however you arrange it there is 2.1 kg spare."
+      }
+    ]
+  }
+}

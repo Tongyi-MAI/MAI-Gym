@@ -1,0 +1,458 @@
+{
+  "env": "trellis_build",
+  "note": "Golden action sequences replayed by CI.",
+  "solutions": {
+    "T01_settings": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_workWeekends"
+      },
+      {
+        "action": "tap",
+        "id": "set_showFloat"
+      }
+    ],
+    "T02_finish": [
+      {
+        "action": "finish",
+        "answer": "23 working days, finishing Wed 6 May."
+      }
+    ],
+    "T03_critical": [
+      {
+        "action": "tap",
+        "id": "f_crit"
+      },
+      {
+        "action": "finish",
+        "answer": "Six of the twelve."
+      }
+    ],
+    "T04_tiling_float": [
+      {
+        "action": "tap",
+        "id": "job_t_tile"
+      },
+      {
+        "action": "finish",
+        "answer": "Four days of float."
+      }
+    ],
+    "T05_holds_up": [
+      {
+        "action": "tap",
+        "id": "tab_chain"
+      },
+      {
+        "action": "tap",
+        "id": "node_t_plaster"
+      },
+      {
+        "action": "finish",
+        "answer": "Kitchen units, tiling and painting all wait on the plastering."
+      }
+    ],
+    "T06_cannot_buy": [
+      {
+        "action": "tap",
+        "id": "job_t_dry"
+      },
+      {
+        "action": "finish",
+        "answer": "Nothing — there is no money option on it. It dries when it dries."
+      }
+    ],
+    "T07_float_trap": [
+      {
+        "action": "tap",
+        "id": "job_t_paint"
+      },
+      {
+        "action": "tap",
+        "id": "crash_t_paint_inc"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "finish",
+        "answer": "Nothing at all — painting has a day of float, so the build is still 23 days and finishes Wed 6 May. £110 wasted."
+      }
+    ],
+    "T08_one_day": [
+      {
+        "action": "tap",
+        "id": "job_t_strip"
+      },
+      {
+        "action": "tap",
+        "id": "crash_t_strip_inc"
+      },
+      {
+        "action": "back"
+      }
+    ],
+    "T09_two_days": [
+      {
+        "action": "tap",
+        "id": "job_t_strip"
+      },
+      {
+        "action": "tap",
+        "id": "crash_t_strip_inc"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "job_t_plaster"
+      },
+      {
+        "action": "tap",
+        "id": "crash_t_plaster_inc"
+      },
+      {
+        "action": "back"
+      }
+    ],
+    "T10_undo": [
+      {
+        "action": "tap",
+        "id": "job_t_strip"
+      },
+      {
+        "action": "tap",
+        "id": "crash_t_strip_inc"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "job_t_plaster"
+      },
+      {
+        "action": "tap",
+        "id": "crash_t_plaster_inc"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "reset_crash"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "finish",
+        "answer": "Back to 23 working days, finishing Wed 6 May."
+      }
+    ],
+    "T11_weekend_date": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_workWeekends"
+      },
+      {
+        "action": "finish",
+        "answer": "Tue 28 Apr — the same 23 working days, but they no longer step over weekends."
+      }
+    ],
+    "T12_drop_alone": [
+      {
+        "action": "tap",
+        "id": "tab_chain"
+      },
+      {
+        "action": "tap",
+        "id": "sw_t_paint_t_dry"
+      },
+      {
+        "action": "finish",
+        "answer": "No. The finish is still 23 days — painting was not on the critical path, so freeing it changes nothing until the path through the plastering gets shorter."
+      }
+    ],
+    "T13_trade_days": [
+      {
+        "action": "tap",
+        "id": "tab_trades"
+      },
+      {
+        "action": "tap",
+        "id": "trade_electrics"
+      },
+      {
+        "action": "finish",
+        "answer": "Seven days — five on the rewire and two on the second fix."
+      }
+    ],
+    "T14_worst_value": [
+      {
+        "action": "tap",
+        "id": "tab_trades"
+      },
+      {
+        "action": "finish",
+        "answer": "Painting, at £110 a day — but it has a day of float, so shortening it does not move the finish at all."
+      }
+    ],
+    "T15_twenty_cheap": [
+      {
+        "action": "tap",
+        "id": "tab_chain"
+      },
+      {
+        "action": "tap",
+        "id": "sw_t_paint_t_dry"
+      },
+      {
+        "action": "tap",
+        "id": "tab_plan"
+      },
+      {
+        "action": "tap",
+        "id": "job_t_strip"
+      },
+      {
+        "action": "tap",
+        "id": "crash_t_strip_inc"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "job_t_plaster"
+      },
+      {
+        "action": "tap",
+        "id": "crash_t_plaster_inc"
+      },
+      {
+        "action": "tap",
+        "id": "crash_t_plaster_inc"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "finish",
+        "answer": "£510 — a day off the strip out at £150 and two off the plastering at £180 each, with the painting-after-drying preference dropped so painting stops binding."
+      }
+    ],
+    "T16_twenty_strict": [
+      {
+        "action": "tap",
+        "id": "job_t_strip"
+      },
+      {
+        "action": "tap",
+        "id": "crash_t_strip_inc"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "job_t_plaster"
+      },
+      {
+        "action": "tap",
+        "id": "crash_t_plaster_inc"
+      },
+      {
+        "action": "tap",
+        "id": "crash_t_plaster_inc"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "job_t_paint"
+      },
+      {
+        "action": "tap",
+        "id": "crash_t_paint_inc"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "finish",
+        "answer": "£620 — £150, £360 on the plastering and £110 on the painting, because with the preference kept there are two chains arriving on the last day and both have to move."
+      }
+    ],
+    "T17_deadline": [
+      {
+        "action": "tap",
+        "id": "tab_chain"
+      },
+      {
+        "action": "tap",
+        "id": "sw_t_paint_t_dry"
+      },
+      {
+        "action": "tap",
+        "id": "tab_plan"
+      },
+      {
+        "action": "tap",
+        "id": "job_t_strip"
+      },
+      {
+        "action": "tap",
+        "id": "crash_t_strip_inc"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "job_t_plaster"
+      },
+      {
+        "action": "tap",
+        "id": "crash_t_plaster_inc"
+      },
+      {
+        "action": "tap",
+        "id": "crash_t_plaster_inc"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "job_t_rewire"
+      },
+      {
+        "action": "tap",
+        "id": "crash_t_rewire_inc"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "finish",
+        "answer": "£730. On five-day weeks the build has to come down to 19 working days to land on Thu 30 Apr, and 19 days costs £730 with the painting preference dropped."
+      }
+    ],
+    "T18_impossible": [
+      {
+        "action": "tap",
+        "id": "tab_chain"
+      },
+      {
+        "action": "finish",
+        "answer": "No. Even with everything bought and every preference dropped the build cannot go below 15 working days, which on seven-day weeks is Mon 20 Apr — three days past the date asked for."
+      }
+    ],
+    "T19_budget": [
+      {
+        "action": "tap",
+        "id": "job_t_strip"
+      },
+      {
+        "action": "tap",
+        "id": "crash_t_strip_inc"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "job_t_plaster"
+      },
+      {
+        "action": "tap",
+        "id": "crash_t_plaster_inc"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "finish",
+        "answer": "21 working days for £330. The twentieth day would cost another £290 with the preferences kept, which is over the £500."
+      }
+    ],
+    "T20_eighteen": [
+      {
+        "action": "tap",
+        "id": "tab_chain"
+      },
+      {
+        "action": "tap",
+        "id": "sw_t_paint_t_dry"
+      },
+      {
+        "action": "tap",
+        "id": "tab_plan"
+      },
+      {
+        "action": "tap",
+        "id": "job_t_strip"
+      },
+      {
+        "action": "tap",
+        "id": "crash_t_strip_inc"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "job_t_plaster"
+      },
+      {
+        "action": "tap",
+        "id": "crash_t_plaster_inc"
+      },
+      {
+        "action": "tap",
+        "id": "crash_t_plaster_inc"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "job_t_rewire"
+      },
+      {
+        "action": "tap",
+        "id": "crash_t_rewire_inc"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "job_t_joinery"
+      },
+      {
+        "action": "tap",
+        "id": "crash_t_joinery_inc"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "finish",
+        "answer": "£1,030, finishing Wed 29 Apr."
+      }
+    ]
+  }
+}

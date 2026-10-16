@@ -1,0 +1,745 @@
+{
+  "env": "pitchside_league",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_settings",
+      "name": "Two settings",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "settings"
+      ],
+      "instruction": "Turn off highlighting the clubs you follow, and turn off the result notifications.",
+      "goal": [
+        {
+          "name": "No highlight",
+          "path": "derived.settings.highlightFollowed",
+          "op": "eq",
+          "value": false,
+          "weight": 2
+        },
+        {
+          "name": "No result alerts",
+          "path": "derived.settings.notifyResults",
+          "op": "eq",
+          "value": false,
+          "weight": 2
+        },
+        {
+          "name": "Form still shown",
+          "path": "derived.settings.showForm",
+          "op": "eq",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "T02_query_leader",
+      "name": "Question: who is top",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "answer_expected": true,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "Who is top of the table, and on how many points?",
+      "goal": [
+        {
+          "name": "Larkfield Town",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Ll]arkfield",
+          "weight": 3
+        },
+        {
+          "name": "Ten points",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)10(?!\\d)",
+          "weight": 2
+        },
+        {
+          "name": "Nothing was predicted",
+          "path": "derived.predictionCount",
+          "op": "eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T03_follow",
+      "name": "Follow Ironwood",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "clubs"
+      ],
+      "instruction": "Start following Ironwood FC.",
+      "goal": [
+        {
+          "name": "Following them",
+          "path": "derived.following",
+          "op": "contains",
+          "value": "Ironwood FC",
+          "weight": 3
+        },
+        {
+          "name": "Four clubs followed",
+          "path": "derived.followCount",
+          "op": "eq",
+          "value": 4,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T04_predict_one",
+      "name": "Predict one result",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "predictions"
+      ],
+      "instruction": "Predict an away win for Fenwold Rovers at Bellrope United.",
+      "goal": [
+        {
+          "name": "One prediction",
+          "path": "derived.predictionCount",
+          "op": "eq",
+          "value": 1,
+          "weight": 2
+        },
+        {
+          "name": "It is that match",
+          "path": "derived.predictions.Bellrope United v Fenwold Rovers",
+          "op": "eq",
+          "value": "0-2",
+          "weight": 3
+        },
+        {
+          "name": "Which would put Fenwold top",
+          "path": "derived.predictedLeader",
+          "op": "eq",
+          "value": "Fenwold Rovers",
+          "weight": 3,
+          "hint": "twelve points against Larkfield's ten"
+        },
+        {
+          "name": "The real table has not moved",
+          "path": "derived.leader",
+          "op": "eq",
+          "value": "Larkfield Town",
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T05_query_gap",
+      "name": "Question: the gap at the top",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "answer_expected": true,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "How many points are Fenwold Rovers behind the leaders? Answer with just the number.",
+      "goal": [
+        {
+          "name": "One",
+          "source": "answer",
+          "op": "eq",
+          "value": 1,
+          "extract": "number",
+          "weight": 3,
+          "hint": "ten against nine"
+        },
+        {
+          "name": "Nothing was predicted",
+          "path": "derived.predictionCount",
+          "op": "eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T06_whatif",
+      "name": "See what it would do",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "predictions",
+        "navigation"
+      ],
+      "instruction": "Predict a home win for Larkfield Town against Marshside, then open the what-if table.",
+      "goal": [
+        {
+          "name": "On the what-if table",
+          "path": "derived.route",
+          "op": "eq",
+          "value": "whatif",
+          "weight": 2
+        },
+        {
+          "name": "Larkfield would be on 13",
+          "path": "derived.predictedPoints.Larkfield Town",
+          "op": "eq",
+          "value": 13,
+          "weight": 3
+        },
+        {
+          "name": "And still top",
+          "path": "derived.predictedLeader",
+          "op": "eq",
+          "value": "Larkfield Town",
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T07_clear",
+      "name": "Predict then clear",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "predictions",
+        "confirm-dialog"
+      ],
+      "instruction": "Predict any two of the coming fixtures, then clear all your predictions again.",
+      "goal": [
+        {
+          "name": "Nothing predicted now",
+          "path": "derived.predictionCount",
+          "op": "eq",
+          "value": 0,
+          "weight": 3
+        },
+        {
+          "name": "You did predict first",
+          "source": "trajectory",
+          "path": "ids",
+          "op": "regex",
+          "value": "pick_f",
+          "weight": 2
+        },
+        {
+          "name": "And used the clear button",
+          "source": "trajectory",
+          "path": "ids",
+          "op": "contains",
+          "value": "confirm_ok",
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T08_query_gd",
+      "name": "Question: best goal difference",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "answer_expected": true,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "Two clubs share the best goal difference in the league. What is that goal difference? Answer with just the number.",
+      "goal": [
+        {
+          "name": "Plus five",
+          "source": "answer",
+          "op": "eq",
+          "value": 5,
+          "extract": "number",
+          "weight": 3,
+          "hint": "Larkfield and Fenwold are level on it"
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.predictionCount",
+          "op": "eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T09_team_page",
+      "name": "Open a club",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "clubs",
+        "navigation"
+      ],
+      "instruction": "Open Quay Street's club page from the table.",
+      "goal": [
+        {
+          "name": "On a club page",
+          "path": "derived.route",
+          "op": "eq",
+          "value": "team"
+        },
+        {
+          "name": "It is Quay Street",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "t_quay",
+          "weight": 3
+        },
+        {
+          "name": "You did not follow them",
+          "path": "derived.following",
+          "op": "not_contains",
+          "value": "Quay Street"
+        }
+      ]
+    },
+    {
+      "id": "T10_flagship",
+      "name": "Put Fenwold top (flagship, many valid answers)",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 28,
+      "unique_solution": false,
+      "tags": [
+        "predictions",
+        "constraint",
+        "multi-solution"
+      ],
+      "instruction": "Predict results for the coming round that would put Fenwold Rovers top of the table, without predicting a Larkfield win. Use exactly two predictions and leave the real table alone. Finish on the what-if table so you can see that it worked.",
+      "goal": [
+        {
+          "name": "Fenwold would be top",
+          "path": "derived.predictedLeader",
+          "op": "eq",
+          "value": "Fenwold Rovers",
+          "weight": 3
+        },
+        {
+          "name": "You predicted their match",
+          "path": "derived.predictions.Bellrope United v Fenwold Rovers",
+          "op": "eq",
+          "value": "0-2",
+          "weight": 3,
+          "hint": "they have to win it — a draw leaves them a point short"
+        },
+        {
+          "name": "The real table is untouched",
+          "path": "derived.leader",
+          "op": "eq",
+          "value": "Larkfield Town",
+          "weight": 2
+        },
+        {
+          "name": "And Larkfield's points are as they were",
+          "path": "derived.points.Larkfield Town",
+          "op": "eq",
+          "value": 10,
+          "weight": 2
+        },
+        {
+          "name": "Exactly two predictions",
+          "path": "derived.predictionCount",
+          "op": "eq",
+          "value": 2,
+          "weight": 2,
+          "hint": "their match and the Larkfield one — nothing else needs guessing"
+        },
+        {
+          "name": "You checked the what-if table",
+          "path": "derived.route",
+          "op": "eq",
+          "value": "whatif",
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T11_query_position",
+      "name": "Question: where Marshside sit",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "answer_expected": true,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "What position are Marshside in? Answer with just the number.",
+      "goal": [
+        {
+          "name": "Fourth",
+          "source": "answer",
+          "op": "eq",
+          "value": 4,
+          "extract": "number",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was predicted",
+          "path": "derived.predictionCount",
+          "op": "eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T12_predict_all",
+      "name": "Predict the whole round",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 22,
+      "tags": [
+        "predictions"
+      ],
+      "instruction": "Predict a home win in every one of the four fixtures.",
+      "goal": [
+        {
+          "name": "All four predicted",
+          "path": "derived.predictionCount",
+          "op": "eq",
+          "value": 4,
+          "weight": 3
+        },
+        {
+          "name": "Larkfield on 13",
+          "path": "derived.predictedPoints.Larkfield Town",
+          "op": "eq",
+          "value": 13,
+          "weight": 2
+        },
+        {
+          "name": "Quay Street on 6",
+          "path": "derived.predictedPoints.Quay Street",
+          "op": "eq",
+          "value": 6,
+          "weight": 2
+        },
+        {
+          "name": "The real table is untouched",
+          "path": "derived.points.Quay Street",
+          "op": "eq",
+          "value": 3,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T13_unfollow",
+      "name": "Stop following one",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "clubs"
+      ],
+      "instruction": "Stop following Marshside and start following Bellrope United instead.",
+      "goal": [
+        {
+          "name": "Marshside dropped",
+          "path": "derived.following",
+          "op": "not_contains",
+          "value": "Marshside",
+          "weight": 3
+        },
+        {
+          "name": "Bellrope added",
+          "path": "derived.following",
+          "op": "contains",
+          "value": "Bellrope United",
+          "weight": 3
+        },
+        {
+          "name": "Still three followed",
+          "path": "derived.followCount",
+          "op": "eq",
+          "value": 3,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T14_two_views",
+      "name": "Both tables",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "predictions",
+        "navigation",
+        "process-check"
+      ],
+      "instruction": "Predict a draw in the Larkfield match, then switch the main table over to the version that includes your predictions.",
+      "goal": [
+        {
+          "name": "The what-if view is on",
+          "path": "derived.showingPredicted",
+          "op": "eq",
+          "value": true,
+          "weight": 3
+        },
+        {
+          "name": "Larkfield would be on 11",
+          "path": "derived.predictedPoints.Larkfield Town",
+          "op": "eq",
+          "value": 11,
+          "weight": 3
+        },
+        {
+          "name": "But they are still on 10 really",
+          "path": "derived.points.Larkfield Town",
+          "op": "eq",
+          "value": 10,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T15_query_scorer",
+      "name": "Question: most goals",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "answer_expected": true,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "Which club has scored the most goals so far?",
+      "goal": [
+        {
+          "name": "Larkfield Town",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Ll]arkfield",
+          "weight": 3,
+          "hint": "eight of them"
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.predictionCount",
+          "op": "eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T16_swing",
+      "name": "Lift Pipit above Quay Street",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 24,
+      "tags": [
+        "predictions",
+        "arithmetic"
+      ],
+      "instruction": "Predict the Pipit Wanderers match and the Quay Street match so that Pipit would finish the round above Quay Street. Leave the other two alone.",
+      "goal": [
+        {
+          "name": "Pipit predicted to win",
+          "path": "derived.predictions.Pipit Wanderers v Millgate Athletic",
+          "op": "eq",
+          "value": "2-0",
+          "weight": 3,
+          "hint": "they are on one point; three more takes them past Millgate and Quay Street"
+        },
+        {
+          "name": "The Quay Street match was predicted too",
+          "path": "derived.predictions.Quay Street v Ironwood FC",
+          "op": "exists",
+          "weight": 3
+        },
+        {
+          "name": "Pipit sixth or better",
+          "path": "derived.predictedPositions.Pipit Wanderers",
+          "op": "lte",
+          "value": 6,
+          "weight": 3
+        },
+        {
+          "name": "And above Quay Street",
+          "path": "derived.predictedPositions.Quay Street",
+          "op": "gte",
+          "value": 7,
+          "weight": 3
+        },
+        {
+          "name": "Only those two",
+          "path": "derived.predictionCount",
+          "op": "eq",
+          "value": 2,
+          "weight": 2
+        },
+        {
+          "name": "The real table is untouched",
+          "path": "derived.positions.Pipit Wanderers",
+          "op": "eq",
+          "value": 8,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T17_undo_one",
+      "name": "Take one prediction back",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "predictions",
+        "undo"
+      ],
+      "instruction": "Predict all four fixtures as away wins, then take back just the Larkfield one.",
+      "goal": [
+        {
+          "name": "Three left",
+          "path": "derived.predictionCount",
+          "op": "eq",
+          "value": 3,
+          "weight": 3
+        },
+        {
+          "name": "The Larkfield one is gone",
+          "path": "derived.predictions.Larkfield Town v Marshside",
+          "op": "absent",
+          "weight": 3
+        },
+        {
+          "name": "The Quay Street one is still there",
+          "path": "derived.predictions.Quay Street v Ironwood FC",
+          "op": "eq",
+          "value": "0-2",
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T18_team_form",
+      "name": "Read a club's results",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "answer_expected": true,
+      "tags": [
+        "clubs",
+        "query"
+      ],
+      "instruction": "Open Millgate Athletic and tell me how many of their four matches they have lost.",
+      "goal": [
+        {
+          "name": "Three",
+          "source": "answer",
+          "op": "eq",
+          "value": 3,
+          "extract": "number",
+          "weight": 3
+        },
+        {
+          "name": "You were on their page",
+          "source": "trajectory",
+          "path": "ids",
+          "op": "contains",
+          "value": "club_t_mill",
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T19_top_two",
+      "name": "Predict a swap at the top",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "predictions",
+        "arithmetic",
+        "long-horizon"
+      ],
+      "instruction": "Predict results so that Fenwold Rovers finish the round top and Larkfield Town drop to second, using only the two matches those clubs are involved in. Finish on the what-if table so you can see that it worked.",
+      "goal": [
+        {
+          "name": "Fenwold top",
+          "path": "derived.predictedPositions.Fenwold Rovers",
+          "op": "eq",
+          "value": 1,
+          "weight": 3
+        },
+        {
+          "name": "Larkfield second",
+          "path": "derived.predictedPositions.Larkfield Town",
+          "op": "eq",
+          "value": 2,
+          "weight": 3
+        },
+        {
+          "name": "Only two predictions",
+          "path": "derived.predictionCount",
+          "op": "eq",
+          "value": 2,
+          "weight": 2
+        },
+        {
+          "name": "The real table is untouched",
+          "path": "derived.leader",
+          "op": "eq",
+          "value": "Larkfield Town",
+          "weight": 2
+        },
+        {
+          "name": "You checked the what-if table",
+          "path": "derived.route",
+          "op": "eq",
+          "value": "whatif",
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T20_follow_leader",
+      "name": "Down to just the leaders",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "clubs",
+        "query"
+      ],
+      "instruction": "You follow three clubs. Stop following Fenwold Rovers and Marshside, so that only the club at the top of the table is left.",
+      "goal": [
+        {
+          "name": "Only Larkfield",
+          "path": "derived.following",
+          "op": "set_eq",
+          "value": [
+            "Larkfield Town"
+          ],
+          "weight": 3
+        },
+        {
+          "name": "One club followed",
+          "path": "derived.followCount",
+          "op": "eq",
+          "value": 1,
+          "weight": 2
+        },
+        {
+          "name": "Nothing was predicted on the way",
+          "path": "derived.predictionCount",
+          "op": "eq",
+          "value": 0,
+          "weight": 2
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,729 @@
+{
+  "env": "sam_phone",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_most_unread",
+      "name": "未读最多的那个",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "tags": [
+        "home",
+        "read"
+      ],
+      "instruction": "哪个 app 的未读最多？把它打开。",
+      "goal": [
+        {
+          "name": "打开了邮件",
+          "path": "derived.appOpen",
+          "op": "eq",
+          "value": "marlin_mail"
+        },
+        {
+          "name": "在 app 详情页",
+          "path": "derived.route",
+          "op": "eq",
+          "value": "app"
+        }
+      ]
+    },
+    {
+      "id": "T02_low_power",
+      "name": "先把低电量模式打开",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "tags": [
+        "battery",
+        "settings"
+      ],
+      "instruction": "把低电量模式打开。别的什么都不要动。",
+      "goal": [
+        {
+          "name": "低电量模式开了",
+          "path": "derived.lowPower",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "没顺手关掉谁的后台",
+          "path": "derived.bgOnCount",
+          "op": "eq",
+          "value": 15
+        },
+        {
+          "name": "通知没动",
+          "path": "derived.notifCount",
+          "op": "eq",
+          "value": 13
+        }
+      ]
+    },
+    {
+      "id": "T03_sleep_focus",
+      "name": "切到睡眠",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "tags": [
+        "notifications"
+      ],
+      "instruction": "他要睡了。把专注模式切到「睡眠」。",
+      "goal": [
+        {
+          "name": "睡眠模式",
+          "path": "derived.focus",
+          "op": "eq",
+          "value": "sleep"
+        },
+        {
+          "name": "一条通知都没清掉",
+          "path": "derived.notifCount",
+          "op": "eq",
+          "value": 13
+        }
+      ]
+    },
+    {
+      "id": "T04_owner",
+      "name": "问一句：谁是紧急联系人",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 8,
+      "tags": [
+        "query",
+        "read-only",
+        "owner"
+      ],
+      "instruction": "这台手机的机主是谁？他的紧急联系人里，跟他最亲的那位叫什么、是什么关系？",
+      "goal": [
+        {
+          "name": "张三",
+          "source": "answer",
+          "op": "contains",
+          "value": "张三"
+        },
+        {
+          "name": "王倩",
+          "source": "answer",
+          "op": "contains",
+          "value": "王倩"
+        },
+        {
+          "name": "爱人",
+          "source": "answer",
+          "op": "regex",
+          "value": "爱人|妻子|老婆|太太"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T05_bg_off_all",
+      "name": "全关",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "battery"
+      ],
+      "instruction": "把所有 app 的后台刷新一次性全关掉。通知别动。",
+      "goal": [
+        {
+          "name": "没有 app 在后台跑了",
+          "path": "derived.bgOnCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "没顺手开低电量",
+          "path": "derived.lowPower",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "通知还在",
+          "path": "derived.notifCount",
+          "op": "eq",
+          "value": 13
+        }
+      ]
+    },
+    {
+      "id": "T06_screen_today",
+      "name": "问一句：今天一共用了多久",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "query",
+        "read-only",
+        "usage"
+      ],
+      "instruction": "把四十个 app 加在一起，他今天一共盯了多久屏幕？说清楚是多少小时多少分钟。",
+      "goal": [
+        {
+          "name": "446 分钟",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)446(?!\\d)"
+        },
+        {
+          "name": "7 小时",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)7(?!\\d)"
+        },
+        {
+          "name": "26 分钟",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)26(?!\\d)"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T07_dies",
+      "name": "问一句：几点没电",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "query",
+        "read-only",
+        "battery"
+      ],
+      "instruction": "什么都不改的话，这块电池几点没电？离 06:40 的闹钟差多久？",
+      "goal": [
+        {
+          "name": "02:51",
+          "source": "answer",
+          "op": "regex",
+          "value": "0?2[:.]?51"
+        },
+        {
+          "name": "差 3 小时 49 分钟",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)49(?!\\d)"
+        },
+        {
+          "name": "什么都没改",
+          "path": "derived.rateCp",
+          "op": "eq",
+          "value": 565
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T08_low_only",
+      "name": "只开低电量够不够",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "battery",
+        "query"
+      ],
+      "instruction": "先把低电量模式打开，然后回答：光靠它，电量撑得到 06:40 的闹钟吗？撑到几点？差多少？",
+      "goal": [
+        {
+          "name": "低电量模式开了",
+          "path": "derived.lowPower",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "确实撑不到",
+          "path": "derived.survivesToAlarm",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "不够",
+          "source": "answer",
+          "op": "regex",
+          "value": "不够|不行|撑不到|还差|差了"
+        },
+        {
+          "name": "05:47",
+          "source": "answer",
+          "op": "regex",
+          "value": "0?5[:.]?47"
+        },
+        {
+          "name": "差 53 分钟",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)53(?!\\d)"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T09_move_sudoku",
+      "name": "把数独挪到第一页",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "home",
+        "layout"
+      ],
+      "instruction": "「数独」现在埋在第二页的「消遣」文件夹里。把它挪到第一页去，别的 app 都留在原地。",
+      "goal": [
+        {
+          "name": "数独在第一页",
+          "path": "derived.place.grid_puzzle",
+          "op": "eq",
+          "value": "p1"
+        },
+        {
+          "name": "阅读还在消遣里",
+          "path": "derived.place.foxglove_reader",
+          "op": "eq",
+          "value": "f_play"
+        },
+        {
+          "name": "文件夹关上了",
+          "path": "derived.openFolder",
+          "op": "eq",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "id": "T10_dock_swap",
+      "name": "换 Dock",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "home",
+        "layout"
+      ],
+      "instruction": "他想把「银行」放进 Dock。Dock 只放得下四个，所以先把「相机」挪到第二页，再把银行放进去。",
+      "goal": [
+        {
+          "name": "银行进了 Dock",
+          "path": "derived.dock",
+          "op": "contains",
+          "value": "kestrel_bank"
+        },
+        {
+          "name": "相机出了 Dock",
+          "path": "derived.dock",
+          "op": "not_contains",
+          "value": "lumen_camera"
+        },
+        {
+          "name": "相机在第二页",
+          "path": "derived.place.lumen_camera",
+          "op": "eq",
+          "value": "p2"
+        },
+        {
+          "name": "Dock 还是四个",
+          "path": "derived.dockCount",
+          "op": "eq",
+          "value": 4
+        }
+      ]
+    },
+    {
+      "id": "T11_sleep_count",
+      "name": "睡眠模式下几条会响",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "notifications",
+        "query"
+      ],
+      "instruction": "切到「睡眠」，然后告诉我：通知中心这些，今晚还有几条会把他吵醒？",
+      "goal": [
+        {
+          "name": "睡眠模式",
+          "path": "derived.focus",
+          "op": "eq",
+          "value": "sleep"
+        },
+        {
+          "name": "确实是 4 条",
+          "path": "derived.deliveredCount",
+          "op": "eq",
+          "value": 4
+        },
+        {
+          "name": "4 条",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)4(?!\\d)"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T12_work_count",
+      "name": "工作模式下几条会响",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "notifications",
+        "query"
+      ],
+      "instruction": "切到「工作」，然后告诉我这十三条里有几条会响。",
+      "goal": [
+        {
+          "name": "工作模式",
+          "path": "derived.focus",
+          "op": "eq",
+          "value": "work"
+        },
+        {
+          "name": "确实是 7 条",
+          "path": "derived.deliveredCount",
+          "op": "eq",
+          "value": 7
+        },
+        {
+          "name": "7 条",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)7(?!\\d)"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T13_gavel_why",
+      "name": "问一句：拍卖那条为什么永远不响",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "notifications",
+        "query"
+      ],
+      "instruction": "「拍卖」那条通知，不管切到哪个专注模式都不会响。为什么？（别去改它，只告诉我原因。）",
+      "goal": [
+        {
+          "name": "说到通知开关关着",
+          "source": "answer",
+          "op": "regex",
+          "value": "(通知.{0,10}关|关.{0,10}通知)"
+        },
+        {
+          "name": "提到拍卖",
+          "source": "answer",
+          "op": "contains",
+          "value": "拍卖"
+        },
+        {
+          "name": "没有去把它打开",
+          "path": "derived.notifyOffIds",
+          "op": "contains",
+          "value": "gavel_auction"
+        },
+        {
+          "name": "专注模式也没动",
+          "path": "derived.focus",
+          "op": "eq",
+          "value": "none"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T14_allow_zhangwei",
+      "name": "让张伟的消息穿过睡眠模式",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "notifications"
+      ],
+      "instruction": "睡眠模式下王倩的消息能响，但张伟那两条被拦住了。用最少的改动让张伟的消息今晚也能响——别去动别的模式的放行名单。",
+      "goal": [
+        {
+          "name": "睡眠模式",
+          "path": "derived.focus",
+          "op": "eq",
+          "value": "sleep"
+        },
+        {
+          "name": "睡眠只放行了信息",
+          "path": "derived.allowSleep",
+          "op": "set_eq",
+          "value": [
+            "quill_messages"
+          ]
+        },
+        {
+          "name": "现在 6 条会响",
+          "path": "derived.deliveredCount",
+          "op": "eq",
+          "value": 6
+        },
+        {
+          "name": "工作模式的名单没动",
+          "path": "derived.allowWork",
+          "op": "set_eq",
+          "value": [
+            "marlin_mail",
+            "rota_shifts",
+            "trellis_build"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "T15_mute_and_clear",
+      "name": "先闭嘴，再清空",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "notifications"
+      ],
+      "instruction": "「音乐」老是推播客更新，把它的通知彻底关掉；然后把通知中心清空。它的后台刷新先留着别动。",
+      "goal": [
+        {
+          "name": "音乐的通知关了",
+          "path": "derived.notifyOffIds",
+          "op": "contains",
+          "value": "sonora_music"
+        },
+        {
+          "name": "通知中心空了",
+          "path": "derived.notifCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "音乐还在后台跑",
+          "path": "derived.bgOnIds",
+          "op": "contains",
+          "value": "sonora_music"
+        },
+        {
+          "name": "后台一个都没关",
+          "path": "derived.bgOnCount",
+          "op": "eq",
+          "value": 15
+        }
+      ]
+    },
+    {
+      "id": "T16_survive_min",
+      "name": "低电量 + 关一个",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "battery",
+        "planning"
+      ],
+      "instruction": "他明早 06:40 必须被闹钟叫醒。打开低电量模式，再关掉尽可能少的 app 的后台刷新，让电撑到闹钟响。多关一个都不行。",
+      "goal": [
+        {
+          "name": "低电量模式开了",
+          "path": "derived.lowPower",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "撑得到闹钟",
+          "path": "derived.survivesToAlarm",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "只关了一个",
+          "path": "derived.bgOnCount",
+          "op": "eq",
+          "value": 14
+        },
+        {
+          "name": "通知没动",
+          "path": "derived.notifCount",
+          "op": "eq",
+          "value": 13
+        }
+      ]
+    },
+    {
+      "id": "T17_count_without_low",
+      "name": "问一句：不开低电量要关几个",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "battery",
+        "query",
+        "read-only"
+      ],
+      "instruction": "假设他不肯开低电量模式（那样收不到推送）。光靠关后台刷新，至少要关掉几个 app 才能撑到 06:40？只回答数字，什么都别改。",
+      "goal": [
+        {
+          "name": "6 个",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)6(?!\\d)"
+        },
+        {
+          "name": "没开低电量",
+          "path": "derived.lowPower",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "一个都没真去关",
+          "path": "derived.bgOnCount",
+          "op": "eq",
+          "value": 15
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T18_do_without_low",
+      "name": "不开低电量，硬关",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "battery",
+        "planning"
+      ],
+      "instruction": "别开低电量模式。只靠关后台刷新，把电撑到 06:40，而且关掉的 app 个数要最少。",
+      "goal": [
+        {
+          "name": "没开低电量",
+          "path": "derived.lowPower",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "撑得到闹钟",
+          "path": "derived.survivesToAlarm",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "正好关了六个",
+          "path": "derived.bgOnCount",
+          "op": "eq",
+          "value": 9
+        },
+        {
+          "name": "通知没动",
+          "path": "derived.notifCount",
+          "op": "eq",
+          "value": 13
+        }
+      ]
+    },
+    {
+      "id": "T19_compass_saving",
+      "name": "地图关掉能多撑多久",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "battery",
+        "query"
+      ],
+      "instruction": "把「地图」的后台刷新关掉（低电量模式别开），然后告诉我这一下多撑了多少分钟、没电时间推到了几点。",
+      "goal": [
+        {
+          "name": "地图的后台关了",
+          "path": "derived.bgOnIds",
+          "op": "not_contains",
+          "value": "compass_maps"
+        },
+        {
+          "name": "只动了这一个",
+          "path": "derived.bgOnCount",
+          "op": "eq",
+          "value": 14
+        },
+        {
+          "name": "没开低电量",
+          "path": "derived.lowPower",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "多 29 分钟",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)29(?!\\d)"
+        },
+        {
+          "name": "03:20",
+          "source": "answer",
+          "op": "regex",
+          "value": "0?3[:.]?20"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T20_night",
+      "name": "把今晚安排明白",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "battery",
+        "notifications",
+        "planning"
+      ],
+      "instruction": "把他这一晚安排明白：电要撑到 06:40 的闹钟（开低电量模式，再关掉尽量少的 app 后台），睡觉时只想被家里人和真正紧急的事吵醒。都办完之后，告诉我今晚还有几条通知会响。",
+      "goal": [
+        {
+          "name": "低电量模式开了",
+          "path": "derived.lowPower",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "撑得到闹钟",
+          "path": "derived.survivesToAlarm",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "只关了一个后台",
+          "path": "derived.bgOnCount",
+          "op": "eq",
+          "value": 14
+        },
+        {
+          "name": "睡眠模式",
+          "path": "derived.focus",
+          "op": "eq",
+          "value": "sleep"
+        },
+        {
+          "name": "确实是 4 条",
+          "path": "derived.deliveredCount",
+          "op": "eq",
+          "value": 4
+        },
+        {
+          "name": "4 条",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)4(?!\\d)"
+        }
+      ],
+      "answer_expected": true
+    }
+  ]
+}

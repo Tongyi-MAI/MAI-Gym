@@ -1,0 +1,306 @@
+{
+  "env": "lumen_camera",
+  "note": "Golden action sequences replayed by CI.",
+  "solutions": {
+    "T01_settings": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_gridLines"
+      },
+      {
+        "action": "tap",
+        "id": "set_saveLocation"
+      }
+    ],
+    "T02_off": [
+      {
+        "action": "finish",
+        "answer": "Two stops under."
+      }
+    ],
+    "T03_settings_now": [
+      {
+        "action": "finish",
+        "answer": "f/2, 1/30, ISO 800."
+      }
+    ],
+    "T04_thresholds": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "finish",
+        "answer": "Anything slower than 1/30 smears, and anything above ISO 1600 goes grainy."
+      }
+    ],
+    "T05_shots": [
+      {
+        "action": "tap",
+        "id": "tab_quality"
+      },
+      {
+        "action": "finish",
+        "answer": "1,215 — 4,860 MB free at 4 MB a frame."
+      }
+    ],
+    "T06_locked_dial": [
+      {
+        "action": "tap",
+        "id": "mode_ap"
+      },
+      {
+        "action": "tap",
+        "id": "sh_4"
+      },
+      {
+        "action": "finish",
+        "answer": "It says the shutter is the camera's to choose in aperture priority."
+      }
+    ],
+    "T07_expose": [
+      {
+        "action": "tap",
+        "id": "iso_6"
+      }
+    ],
+    "T08_iso_cost": [
+      {
+        "action": "tap",
+        "id": "iso_6"
+      },
+      {
+        "action": "finish",
+        "answer": "Exposure is right, but ISO 3200 is past the grain line — the frame is noisy now."
+      }
+    ],
+    "T09_shutter_cost": [
+      {
+        "action": "tap",
+        "id": "iso_6"
+      },
+      {
+        "action": "tap",
+        "id": "iso_4"
+      },
+      {
+        "action": "tap",
+        "id": "sh_8"
+      },
+      {
+        "action": "finish",
+        "answer": "Exposure is right, but 1/8 handheld will smear."
+      }
+    ],
+    "T10_ap_mode": [
+      {
+        "action": "tap",
+        "id": "mode_ap"
+      },
+      {
+        "action": "finish",
+        "answer": "It picks 1/8, which is three stops slower than the handheld line — it will smear."
+      }
+    ],
+    "T11_auto": [
+      {
+        "action": "tap",
+        "id": "mode_auto"
+      },
+      {
+        "action": "finish",
+        "answer": "f/1.4, 1/30, ISO 1600 — exposed correctly, no smear, no grain."
+      }
+    ],
+    "T12_raw": [
+      {
+        "action": "tap",
+        "id": "tab_quality"
+      },
+      {
+        "action": "tap",
+        "id": "fmt_r48"
+      },
+      {
+        "action": "finish",
+        "answer": "62 — 4,860 MB at 78 MB a frame."
+      }
+    ],
+    "T13_park": [
+      {
+        "action": "tap",
+        "id": "sc_park"
+      },
+      {
+        "action": "finish",
+        "answer": "Six stops over — completely blown out. The park needs 3 stops and the dials are giving 9."
+      }
+    ],
+    "T14_night_market": [
+      {
+        "action": "tap",
+        "id": "sc_street"
+      },
+      {
+        "action": "finish",
+        "answer": "Yes — the market needs 9 stops and f/2 · 1/30 · ISO 800 gives exactly 9. Nothing to change."
+      }
+    ],
+    "T15_only_clean": [
+      {
+        "action": "tap",
+        "id": "ap_0"
+      },
+      {
+        "action": "tap",
+        "id": "iso_5"
+      },
+      {
+        "action": "finish",
+        "answer": "f/1.4 at 1/30 and ISO 1600."
+      }
+    ],
+    "T16_why_unique": [
+      {
+        "action": "tap",
+        "id": "ap_0"
+      },
+      {
+        "action": "tap",
+        "id": "iso_5"
+      },
+      {
+        "action": "finish",
+        "answer": "The room wants 11 stops. The shutter cannot be slower than 1/30, which is 6; the ISO cannot be higher than 1600, which is 5; 6 + 5 = 11, so both have to be sitting exactly on their limits, and that forces the aperture to 0 — f/1.4. Move any one of them and either the exposure or a line breaks."
+      }
+    ],
+    "T17_ap_priority_fix": [
+      {
+        "action": "tap",
+        "id": "mode_ap"
+      },
+      {
+        "action": "tap",
+        "id": "ap_0"
+      },
+      {
+        "action": "tap",
+        "id": "iso_5"
+      },
+      {
+        "action": "finish",
+        "answer": "Opened up to f/1.4 and raised the ISO to 1600. That leaves the camera choosing 1/30, which is right on the handheld line."
+      }
+    ],
+    "T18_raw_burst": [
+      {
+        "action": "tap",
+        "id": "tab_quality"
+      },
+      {
+        "action": "tap",
+        "id": "fmt_r48"
+      },
+      {
+        "action": "tap",
+        "id": "burst_inc"
+      },
+      {
+        "action": "tap",
+        "id": "burst_inc"
+      },
+      {
+        "action": "tap",
+        "id": "burst_inc"
+      },
+      {
+        "action": "tap",
+        "id": "burst_inc"
+      },
+      {
+        "action": "tap",
+        "id": "burst_inc"
+      },
+      {
+        "action": "tap",
+        "id": "burst_inc"
+      },
+      {
+        "action": "tap",
+        "id": "burst_inc"
+      },
+      {
+        "action": "tap",
+        "id": "burst_inc"
+      },
+      {
+        "action": "tap",
+        "id": "burst_inc"
+      },
+      {
+        "action": "tap",
+        "id": "tab_shoot"
+      },
+      {
+        "action": "tap",
+        "id": "shutter"
+      },
+      {
+        "action": "finish",
+        "answer": "780 MB for the press, and 52 shots' worth of room left afterwards."
+      }
+    ],
+    "T19_good_frame": [
+      {
+        "action": "tap",
+        "id": "ap_0"
+      },
+      {
+        "action": "tap",
+        "id": "iso_5"
+      },
+      {
+        "action": "tap",
+        "id": "tab_quality"
+      },
+      {
+        "action": "tap",
+        "id": "fmt_r48"
+      },
+      {
+        "action": "tap",
+        "id": "tab_shoot"
+      },
+      {
+        "action": "tap",
+        "id": "shutter"
+      },
+      {
+        "action": "finish",
+        "answer": "61 shots' worth — one 78 MB frame off 4,860."
+      }
+    ],
+    "T20_park_fix": [
+      {
+        "action": "tap",
+        "id": "sc_park"
+      },
+      {
+        "action": "tap",
+        "id": "iso_0"
+      },
+      {
+        "action": "tap",
+        "id": "sh_4"
+      },
+      {
+        "action": "finish",
+        "answer": "Dropped the ISO from 800 to 50, which is four stops, and took the shutter from 1/30 to 1/125, which is the other two. f/2 stays, so the background is still soft."
+      }
+    ]
+  }
+}

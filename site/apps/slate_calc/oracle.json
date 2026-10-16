@@ -1,0 +1,850 @@
+{
+  "env": "slate_calc",
+  "note": "Golden action sequences replayed by CI.",
+  "solutions": {
+    "T01_settings": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_groupDigits"
+      },
+      {
+        "action": "tap",
+        "id": "set_keepTape"
+      }
+    ],
+    "T02_add": [
+      {
+        "action": "tap",
+        "id": "k_1"
+      },
+      {
+        "action": "tap",
+        "id": "k_2"
+      },
+      {
+        "action": "tap",
+        "id": "k_add"
+      },
+      {
+        "action": "tap",
+        "id": "k_3"
+      },
+      {
+        "action": "tap",
+        "id": "k_4"
+      },
+      {
+        "action": "tap",
+        "id": "k_eq"
+      },
+      {
+        "action": "finish",
+        "answer": "46"
+      }
+    ],
+    "T03_pct_rule": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "finish",
+        "answer": "不一样。挂在加减后面，它是「左边那个数的百分之几」；挂在乘除后面，它只是除以一百。"
+      }
+    ],
+    "T04_third": [
+      {
+        "action": "tap",
+        "id": "k_1"
+      },
+      {
+        "action": "tap",
+        "id": "k_div"
+      },
+      {
+        "action": "tap",
+        "id": "k_3"
+      },
+      {
+        "action": "tap",
+        "id": "k_eq"
+      },
+      {
+        "action": "finish",
+        "answer": "0.3333333333"
+      }
+    ],
+    "T05_float": [
+      {
+        "action": "tap",
+        "id": "k_0"
+      },
+      {
+        "action": "tap",
+        "id": "k_dot"
+      },
+      {
+        "action": "tap",
+        "id": "k_1"
+      },
+      {
+        "action": "tap",
+        "id": "k_add"
+      },
+      {
+        "action": "tap",
+        "id": "k_0"
+      },
+      {
+        "action": "tap",
+        "id": "k_dot"
+      },
+      {
+        "action": "tap",
+        "id": "k_2"
+      },
+      {
+        "action": "tap",
+        "id": "k_eq"
+      },
+      {
+        "action": "finish",
+        "answer": "0.3"
+      }
+    ],
+    "T06_div_zero": [
+      {
+        "action": "tap",
+        "id": "k_9"
+      },
+      {
+        "action": "tap",
+        "id": "k_div"
+      },
+      {
+        "action": "tap",
+        "id": "k_0"
+      },
+      {
+        "action": "tap",
+        "id": "k_eq"
+      },
+      {
+        "action": "finish",
+        "answer": "它直接报错：不能除以零。"
+      }
+    ],
+    "T07_precedence": [
+      {
+        "action": "tap",
+        "id": "k_2"
+      },
+      {
+        "action": "tap",
+        "id": "k_add"
+      },
+      {
+        "action": "tap",
+        "id": "k_3"
+      },
+      {
+        "action": "tap",
+        "id": "k_mul"
+      },
+      {
+        "action": "tap",
+        "id": "k_4"
+      },
+      {
+        "action": "tap",
+        "id": "k_eq"
+      },
+      {
+        "action": "finish",
+        "answer": "14。这台计算器是按优先级算的，先做 3 × 4 再加 2；从左往右一路算才会得 20。"
+      }
+    ],
+    "T08_pct_add": [
+      {
+        "action": "tap",
+        "id": "k_5"
+      },
+      {
+        "action": "tap",
+        "id": "k_0"
+      },
+      {
+        "action": "tap",
+        "id": "k_add"
+      },
+      {
+        "action": "tap",
+        "id": "k_1"
+      },
+      {
+        "action": "tap",
+        "id": "k_0"
+      },
+      {
+        "action": "tap",
+        "id": "k_pct"
+      },
+      {
+        "action": "tap",
+        "id": "k_eq"
+      },
+      {
+        "action": "finish",
+        "answer": "55 —— 那个 10% 被当成了 50 的百分之十，也就是 5。"
+      }
+    ],
+    "T09_pct_mul": [
+      {
+        "action": "tap",
+        "id": "k_5"
+      },
+      {
+        "action": "tap",
+        "id": "k_0"
+      },
+      {
+        "action": "tap",
+        "id": "k_mul"
+      },
+      {
+        "action": "tap",
+        "id": "k_1"
+      },
+      {
+        "action": "tap",
+        "id": "k_0"
+      },
+      {
+        "action": "tap",
+        "id": "k_pct"
+      },
+      {
+        "action": "tap",
+        "id": "k_eq"
+      },
+      {
+        "action": "finish",
+        "answer": "5。挂在乘号后面，10% 只是 0.1；挂在加号后面它才是「50 的百分之十」，所以那边得 55。"
+      }
+    ],
+    "T10_repeat_eq": [
+      {
+        "action": "tap",
+        "id": "k_5"
+      },
+      {
+        "action": "tap",
+        "id": "k_add"
+      },
+      {
+        "action": "tap",
+        "id": "k_3"
+      },
+      {
+        "action": "tap",
+        "id": "k_eq"
+      },
+      {
+        "action": "tap",
+        "id": "k_eq"
+      },
+      {
+        "action": "finish",
+        "answer": "11 —— 第二次等号把「+3」又做了一遍。"
+      }
+    ],
+    "T11_memory": [
+      {
+        "action": "tap",
+        "id": "k_7"
+      },
+      {
+        "action": "tap",
+        "id": "k_mul"
+      },
+      {
+        "action": "tap",
+        "id": "k_8"
+      },
+      {
+        "action": "tap",
+        "id": "k_eq"
+      },
+      {
+        "action": "tap",
+        "id": "m_plus"
+      },
+      {
+        "action": "tap",
+        "id": "k_ac"
+      },
+      {
+        "action": "tap",
+        "id": "k_6"
+      },
+      {
+        "action": "tap",
+        "id": "k_mul"
+      },
+      {
+        "action": "tap",
+        "id": "k_7"
+      },
+      {
+        "action": "tap",
+        "id": "k_eq"
+      },
+      {
+        "action": "tap",
+        "id": "m_plus"
+      },
+      {
+        "action": "tap",
+        "id": "m_r"
+      },
+      {
+        "action": "finish",
+        "answer": "98 —— 56 加 42。"
+      }
+    ],
+    "T12_tape": [
+      {
+        "action": "tap",
+        "id": "k_1"
+      },
+      {
+        "action": "tap",
+        "id": "k_2"
+      },
+      {
+        "action": "tap",
+        "id": "k_mul"
+      },
+      {
+        "action": "tap",
+        "id": "k_1"
+      },
+      {
+        "action": "tap",
+        "id": "k_2"
+      },
+      {
+        "action": "tap",
+        "id": "k_eq"
+      },
+      {
+        "action": "tap",
+        "id": "k_ac"
+      },
+      {
+        "action": "tap",
+        "id": "k_2"
+      },
+      {
+        "action": "tap",
+        "id": "k_5"
+      },
+      {
+        "action": "tap",
+        "id": "k_mul"
+      },
+      {
+        "action": "tap",
+        "id": "k_4"
+      },
+      {
+        "action": "tap",
+        "id": "k_eq"
+      },
+      {
+        "action": "tap",
+        "id": "k_ac"
+      },
+      {
+        "action": "tap",
+        "id": "k_9"
+      },
+      {
+        "action": "tap",
+        "id": "k_mul"
+      },
+      {
+        "action": "tap",
+        "id": "k_9"
+      },
+      {
+        "action": "tap",
+        "id": "k_eq"
+      },
+      {
+        "action": "tap",
+        "id": "tab_tape"
+      },
+      {
+        "action": "tap",
+        "id": "tape_1"
+      }
+    ],
+    "T13_disk": [
+      {
+        "action": "tap",
+        "id": "tab_conv"
+      },
+      {
+        "action": "tap",
+        "id": "cat_data"
+      },
+      {
+        "action": "tap",
+        "id": "un_GB"
+      },
+      {
+        "action": "type",
+        "id": "conv_value",
+        "text": "500"
+      },
+      {
+        "action": "finish",
+        "answer": "465.6612873 GiB —— 所以标 500 GB 的盘在系统里只显示 465 GB 出头。"
+      }
+    ],
+    "T14_temp": [
+      {
+        "action": "tap",
+        "id": "tab_conv"
+      },
+      {
+        "action": "tap",
+        "id": "cat_temp"
+      },
+      {
+        "action": "tap",
+        "id": "un_C"
+      },
+      {
+        "action": "type",
+        "id": "conv_value",
+        "text": "37"
+      },
+      {
+        "action": "finish",
+        "answer": "98.6 °F，310.15 K。"
+      }
+    ],
+    "T15_discount": [
+      {
+        "action": "tap",
+        "id": "k_1"
+      },
+      {
+        "action": "tap",
+        "id": "k_2"
+      },
+      {
+        "action": "tap",
+        "id": "k_8"
+      },
+      {
+        "action": "tap",
+        "id": "k_0"
+      },
+      {
+        "action": "tap",
+        "id": "k_mul"
+      },
+      {
+        "action": "tap",
+        "id": "k_8"
+      },
+      {
+        "action": "tap",
+        "id": "k_0"
+      },
+      {
+        "action": "tap",
+        "id": "k_pct"
+      },
+      {
+        "action": "tap",
+        "id": "k_eq"
+      },
+      {
+        "action": "tap",
+        "id": "k_sub"
+      },
+      {
+        "action": "tap",
+        "id": "k_1"
+      },
+      {
+        "action": "tap",
+        "id": "k_0"
+      },
+      {
+        "action": "tap",
+        "id": "k_0"
+      },
+      {
+        "action": "tap",
+        "id": "k_eq"
+      },
+      {
+        "action": "finish",
+        "answer": "924 元 —— 八折之后 1024，再减 100。"
+      }
+    ],
+    "T16_markup": [
+      {
+        "action": "tap",
+        "id": "k_1"
+      },
+      {
+        "action": "tap",
+        "id": "k_2"
+      },
+      {
+        "action": "tap",
+        "id": "k_8"
+      },
+      {
+        "action": "tap",
+        "id": "k_0"
+      },
+      {
+        "action": "tap",
+        "id": "k_add"
+      },
+      {
+        "action": "tap",
+        "id": "k_2"
+      },
+      {
+        "action": "tap",
+        "id": "k_5"
+      },
+      {
+        "action": "tap",
+        "id": "k_pct"
+      },
+      {
+        "action": "tap",
+        "id": "k_eq"
+      },
+      {
+        "action": "tap",
+        "id": "k_mul"
+      },
+      {
+        "action": "tap",
+        "id": "k_8"
+      },
+      {
+        "action": "tap",
+        "id": "k_0"
+      },
+      {
+        "action": "tap",
+        "id": "k_pct"
+      },
+      {
+        "action": "tap",
+        "id": "k_eq"
+      },
+      {
+        "action": "finish",
+        "answer": "1280，正好回到原价 —— 1.25 乘 0.8 正好是 1。"
+      }
+    ],
+    "T17_one_tb": [
+      {
+        "action": "tap",
+        "id": "tab_conv"
+      },
+      {
+        "action": "tap",
+        "id": "cat_data"
+      },
+      {
+        "action": "tap",
+        "id": "un_GB"
+      },
+      {
+        "action": "type",
+        "id": "conv_value",
+        "text": "1000"
+      },
+      {
+        "action": "finish",
+        "answer": "931.3225746 GiB。厂商按十进制算，1 TB 就是一万亿字节；系统按 1024 一档算，一个 GiB 是 1073741824 字节，除下来就只剩九百三十一个多。"
+      }
+    ],
+    "T18_pace": [
+      {
+        "action": "tap",
+        "id": "k_2"
+      },
+      {
+        "action": "tap",
+        "id": "k_4"
+      },
+      {
+        "action": "tap",
+        "id": "k_0"
+      },
+      {
+        "action": "tap",
+        "id": "k_div"
+      },
+      {
+        "action": "tap",
+        "id": "k_4"
+      },
+      {
+        "action": "tap",
+        "id": "k_2"
+      },
+      {
+        "action": "tap",
+        "id": "k_dot"
+      },
+      {
+        "action": "tap",
+        "id": "k_1"
+      },
+      {
+        "action": "tap",
+        "id": "k_9"
+      },
+      {
+        "action": "tap",
+        "id": "k_5"
+      },
+      {
+        "action": "tap",
+        "id": "k_eq"
+      },
+      {
+        "action": "tap",
+        "id": "k_ac"
+      },
+      {
+        "action": "tap",
+        "id": "k_0"
+      },
+      {
+        "action": "tap",
+        "id": "k_dot"
+      },
+      {
+        "action": "tap",
+        "id": "k_6"
+      },
+      {
+        "action": "tap",
+        "id": "k_8"
+      },
+      {
+        "action": "tap",
+        "id": "k_7"
+      },
+      {
+        "action": "tap",
+        "id": "k_8"
+      },
+      {
+        "action": "tap",
+        "id": "k_7"
+      },
+      {
+        "action": "tap",
+        "id": "k_7"
+      },
+      {
+        "action": "tap",
+        "id": "k_7"
+      },
+      {
+        "action": "tap",
+        "id": "k_1"
+      },
+      {
+        "action": "tap",
+        "id": "k_1"
+      },
+      {
+        "action": "tap",
+        "id": "k_mul"
+      },
+      {
+        "action": "tap",
+        "id": "k_6"
+      },
+      {
+        "action": "tap",
+        "id": "k_0"
+      },
+      {
+        "action": "tap",
+        "id": "k_eq"
+      },
+      {
+        "action": "finish",
+        "answer": "每公里 5.687877711 分钟，小数部分乘 60 得 41.27 秒，也就是 5 分 41 秒左右。"
+      }
+    ],
+    "T19_weight": [
+      {
+        "action": "tap",
+        "id": "tab_conv"
+      },
+      {
+        "action": "tap",
+        "id": "cat_mass"
+      },
+      {
+        "action": "tap",
+        "id": "un_lb"
+      },
+      {
+        "action": "type",
+        "id": "conv_value",
+        "text": "150"
+      },
+      {
+        "action": "tap",
+        "id": "tab_calc"
+      },
+      {
+        "action": "tap",
+        "id": "k_6"
+      },
+      {
+        "action": "tap",
+        "id": "k_8"
+      },
+      {
+        "action": "tap",
+        "id": "k_5"
+      },
+      {
+        "action": "tap",
+        "id": "k_0"
+      },
+      {
+        "action": "tap",
+        "id": "k_0"
+      },
+      {
+        "action": "tap",
+        "id": "k_sub"
+      },
+      {
+        "action": "tap",
+        "id": "k_6"
+      },
+      {
+        "action": "tap",
+        "id": "k_8"
+      },
+      {
+        "action": "tap",
+        "id": "k_0"
+      },
+      {
+        "action": "tap",
+        "id": "k_3"
+      },
+      {
+        "action": "tap",
+        "id": "k_8"
+      },
+      {
+        "action": "tap",
+        "id": "k_dot"
+      },
+      {
+        "action": "tap",
+        "id": "k_8"
+      },
+      {
+        "action": "tap",
+        "id": "k_5"
+      },
+      {
+        "action": "tap",
+        "id": "k_5"
+      },
+      {
+        "action": "tap",
+        "id": "k_5"
+      },
+      {
+        "action": "tap",
+        "id": "k_eq"
+      },
+      {
+        "action": "finish",
+        "answer": "体检表那个重。150 磅是 68038.8555 克，68.5 公斤是 68500 克，差 461.1445 克。"
+      }
+    ],
+    "T20_aa": [
+      {
+        "action": "tap",
+        "id": "k_3"
+      },
+      {
+        "action": "tap",
+        "id": "k_8"
+      },
+      {
+        "action": "tap",
+        "id": "k_6"
+      },
+      {
+        "action": "tap",
+        "id": "k_div"
+      },
+      {
+        "action": "tap",
+        "id": "k_5"
+      },
+      {
+        "action": "tap",
+        "id": "k_eq"
+      },
+      {
+        "action": "tap",
+        "id": "k_add"
+      },
+      {
+        "action": "tap",
+        "id": "k_1"
+      },
+      {
+        "action": "tap",
+        "id": "k_0"
+      },
+      {
+        "action": "tap",
+        "id": "k_pct"
+      },
+      {
+        "action": "tap",
+        "id": "k_eq"
+      },
+      {
+        "action": "finish",
+        "answer": "每人 84.92 元 —— 不加服务费是 77.2，加一成是 84.92。"
+      }
+    ]
+  }
+}

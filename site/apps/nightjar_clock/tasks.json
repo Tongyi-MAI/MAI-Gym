@@ -1,0 +1,823 @@
+{
+  "env": "nightjar_clock",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_settings",
+      "name": "两个开关",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "settings"
+      ],
+      "instruction": "在「就寝」页最下面的设置里，关掉「24 小时制」和「睡前提醒」。贪睡那一栏别动。",
+      "goal": [
+        {
+          "name": "24 小时制关了",
+          "path": "derived.settings.show24",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "睡前提醒关了",
+          "path": "derived.settings.bedtimeReminder",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "贪睡没动",
+          "path": "derived.settings.snoozeAll",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "闹钟没动",
+          "path": "derived.onCount",
+          "op": "eq",
+          "value": 5
+        }
+      ]
+    },
+    {
+      "id": "T02_next",
+      "name": "问一句：下一个响的是哪个",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "下一个会响的闹钟是哪个？几点响？",
+      "goal": [
+        {
+          "name": "上班",
+          "source": "answer",
+          "op": "contains",
+          "value": "上班",
+          "weight": 3
+        },
+        {
+          "name": "周五 06:40",
+          "source": "answer",
+          "op": "regex",
+          "value": "0?6[:.]?40",
+          "weight": 3
+        },
+        {
+          "name": "闹钟没动",
+          "path": "derived.nextLabel",
+          "op": "eq",
+          "value": "上班"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T03_sleep",
+      "name": "问一句：还能睡多久",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "现在到下一个闹钟响，还能睡多久？",
+      "goal": [
+        {
+          "name": "7 小时 53 分钟",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:7)(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "53 分",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)53(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "闹钟没动",
+          "path": "derived.nextInMinutes",
+          "op": "eq",
+          "value": 473
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T04_why_not",
+      "name": "问一句：05:30 那个为什么不响",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "query",
+        "navigate"
+      ],
+      "instruction": "列表里「早班」是 05:30，比 06:40 早，可它不是下一个响的。打开它看看，把原因说给我听，顺便说它下次到底什么时候响。",
+      "goal": [
+        {
+          "name": "停在早班的详情页",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "a_early"
+        },
+        {
+          "name": "跳过下一次",
+          "source": "answer",
+          "op": "regex",
+          "value": "(跳过|skip)",
+          "weight": 3
+        },
+        {
+          "name": "下次是周一",
+          "source": "answer",
+          "op": "regex",
+          "value": "(周一|下周)",
+          "weight": 3
+        },
+        {
+          "name": "什么都没改",
+          "path": "derived.skipping",
+          "op": "set_eq",
+          "value": [
+            "早班"
+          ]
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T05_count",
+      "name": "问一句：几个开着",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "一共有几个闹钟，其中几个是开着的？",
+      "goal": [
+        {
+          "name": "6 个",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)6(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "5 个开着",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)5(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "闹钟没动",
+          "path": "derived.onCount",
+          "op": "eq",
+          "value": 5
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T06_skip_off",
+      "name": "关着的闹钟没有下一次可跳",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "refusal"
+      ],
+      "instruction": "「跑步」是关着的。打开它的详情页，试着给它打开「跳过下一次」，把应用的说法讲给我听。",
+      "goal": [
+        {
+          "name": "跑步还是关着的",
+          "path": "derived.enabled.跑步",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "跳过的还是只有早班",
+          "path": "derived.skipping",
+          "op": "set_eq",
+          "value": [
+            "早班"
+          ]
+        },
+        {
+          "name": "它是关着的，没有下一次",
+          "source": "answer",
+          "op": "regex",
+          "value": "(关|没有下一次|不会响)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T07_unskip",
+      "name": "把跳过取消掉",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "multi-step"
+      ],
+      "instruction": "把「早班」的「跳过下一次」关掉，然后告诉我下一个响的变成了哪个、还能睡多久。",
+      "goal": [
+        {
+          "name": "没有闹钟在跳过了",
+          "path": "derived.skipping",
+          "op": "len_eq",
+          "value": 0
+        },
+        {
+          "name": "下一个变成早班",
+          "path": "derived.nextLabel",
+          "op": "eq",
+          "value": "早班"
+        },
+        {
+          "name": "只剩 6 小时 43 分",
+          "path": "derived.nextInMinutes",
+          "op": "eq",
+          "value": 403
+        },
+        {
+          "name": "早班 05:30",
+          "source": "answer",
+          "op": "regex",
+          "value": "0?5[:.]?30",
+          "weight": 3
+        },
+        {
+          "name": "6 小时 43 分",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)43(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T08_off_work",
+      "name": "把上班闹钟关了",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "multi-step"
+      ],
+      "instruction": "明天请假，把「上班」这个闹钟关掉，然后告诉我下一个响的是哪个、什么时候。",
+      "goal": [
+        {
+          "name": "上班关掉了",
+          "path": "derived.enabled.上班",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "下一个是吃药",
+          "path": "derived.nextLabel",
+          "op": "eq",
+          "value": "吃药"
+        },
+        {
+          "name": "周五 22:00",
+          "path": "derived.nextAt",
+          "op": "contains",
+          "value": "22:00"
+        },
+        {
+          "name": "吃药",
+          "source": "answer",
+          "op": "contains",
+          "value": "吃药",
+          "weight": 3
+        },
+        {
+          "name": "周五 22:00",
+          "source": "answer",
+          "op": "regex",
+          "value": "22[:.]?00",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T09_weekend",
+      "name": "周末想多睡",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "multi-step"
+      ],
+      "instruction": "把「周末」闹钟从 07:15 改到 09:00，别的都不要动。",
+      "goal": [
+        {
+          "name": "周末改到 09:00",
+          "path": "derived.alarmTimes.周末",
+          "op": "eq",
+          "value": "09:00"
+        },
+        {
+          "name": "重复还是周末",
+          "path": "derived.alarmDays.周末",
+          "op": "eq",
+          "value": "周末"
+        },
+        {
+          "name": "还是开着的",
+          "path": "derived.enabled.周末",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "别的闹钟没动",
+          "path": "derived.alarmTimes.上班",
+          "op": "eq",
+          "value": "06:40"
+        }
+      ]
+    },
+    {
+      "id": "T10_london",
+      "name": "问一句：伦敦几点",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "query",
+        "timezone"
+      ],
+      "instruction": "伦敦现在几点？为什么不是比上海慢整整八个小时？",
+      "goal": [
+        {
+          "name": "15:47",
+          "source": "answer",
+          "op": "regex",
+          "value": "15[:.]?47",
+          "weight": 3
+        },
+        {
+          "name": "因为在夏令时",
+          "source": "answer",
+          "op": "regex",
+          "value": "(夏令时|DST|UTC\\+1)",
+          "weight": 3
+        },
+        {
+          "name": "什么都没改",
+          "path": "derived.nextInMinutes",
+          "op": "eq",
+          "value": 473
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T11_delhi",
+      "name": "问一句：新德里几点",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "query",
+        "timezone"
+      ],
+      "instruction": "新德里现在几点？和上海差多少？",
+      "goal": [
+        {
+          "name": "20:17",
+          "source": "answer",
+          "op": "regex",
+          "value": "20[:.]?17",
+          "weight": 3
+        },
+        {
+          "name": "差两个半小时",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:(2[.,]5|两个半|2 小时 30|150))(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "什么都没改",
+          "path": "derived.nextInMinutes",
+          "op": "eq",
+          "value": 473
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T12_timer_first",
+      "name": "问一句：哪个计时器先响",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "三个计时器里哪个会先响？大概几点？",
+      "goal": [
+        {
+          "name": "泡面",
+          "source": "answer",
+          "op": "contains",
+          "value": "泡面",
+          "weight": 3
+        },
+        {
+          "name": "22:49",
+          "source": "answer",
+          "op": "regex",
+          "value": "22[:.]?49",
+          "weight": 3
+        },
+        {
+          "name": "计时器没动",
+          "path": "derived.firstTimerLeft",
+          "op": "eq",
+          "value": 72
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T13_lap",
+      "name": "问一句：最快的一圈",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "秒表上记了四圈，最快的是第几圈？多少？",
+      "goal": [
+        {
+          "name": "第 2 圈",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)2(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "9:58",
+          "source": "answer",
+          "op": "regex",
+          "value": "9[:.]?58",
+          "weight": 3
+        },
+        {
+          "name": "什么都没改",
+          "path": "derived.timerCount",
+          "op": "eq",
+          "value": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T14_add_city",
+      "name": "把东京加进来",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "multi-step"
+      ],
+      "instruction": "把东京加到关注的城市里，然后告诉我东京现在几点。",
+      "goal": [
+        {
+          "name": "东京在列表里",
+          "path": "derived.cities",
+          "op": "contains",
+          "value": "东京"
+        },
+        {
+          "name": "原来四个城市还在",
+          "path": "derived.cities",
+          "op": "len_eq",
+          "value": 5
+        },
+        {
+          "name": "23:47",
+          "source": "answer",
+          "op": "regex",
+          "value": "23[:.]?47",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T15_bed_goal",
+      "name": "把睡眠窗口调够八小时",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 24,
+      "tags": [
+        "optimise",
+        "multi-step"
+      ],
+      "instruction": "就寝页上的睡眠窗口现在不到八小时。在不动起床时间的前提下，把睡觉时间往前调，调到窗口够八小时为止。调完告诉我睡觉时间变成了几点、窗口有多长。",
+      "goal": [
+        {
+          "name": "起床时间没动",
+          "path": "derived.bedWake",
+          "op": "eq",
+          "value": "06:40"
+        },
+        {
+          "name": "睡觉时间提到 22:30",
+          "path": "derived.bedSleep",
+          "op": "eq",
+          "value": "22:30"
+        },
+        {
+          "name": "窗口够八小时",
+          "path": "derived.bedWindowMinutes",
+          "op": "gte",
+          "value": 480
+        },
+        {
+          "name": "22:30",
+          "source": "answer",
+          "op": "regex",
+          "value": "22[:.]?30",
+          "weight": 3
+        },
+        {
+          "name": "8 小时 10 分",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)10(?!\\d)",
+          "weight": 3,
+          "hint": "这个步进器一次挪十五分钟，所以正好八小时那个点是踩不到的"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T16_seven_hours",
+      "name": "今晚要睡满七小时",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "optimise",
+        "arithmetic"
+      ],
+      "instruction": "先把「早班」的跳过取消掉。这样它就成了下一个响的，可是那样睡不满七个小时。在不删也不关这个闹钟的前提下，把它往后挪到刚好能睡满七小时的最早那一分钟。",
+      "goal": [
+        {
+          "name": "跳过已经取消",
+          "path": "derived.skipping",
+          "op": "len_eq",
+          "value": 0
+        },
+        {
+          "name": "早班还开着",
+          "path": "derived.enabled.早班",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "挪到了 05:47",
+          "path": "derived.alarmTimes.早班",
+          "op": "eq",
+          "value": "05:47"
+        },
+        {
+          "name": "下一个还是早班",
+          "path": "derived.nextLabel",
+          "op": "eq",
+          "value": "早班"
+        },
+        {
+          "name": "正好七小时",
+          "path": "derived.nextInMinutes",
+          "op": "eq",
+          "value": 420,
+          "hint": "现在 22:47，加七小时是几点？"
+        }
+      ]
+    },
+    {
+      "id": "T17_ny_meeting",
+      "name": "上海周五上午十点的会",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 22,
+      "tags": [
+        "timezone",
+        "reasoning"
+      ],
+      "instruction": "你要约纽约的同事在上海时间周五上午 10:00 开会。对他们来说那是星期几、几点？先把纽约加进关注列表（如果还没有的话）再回答。",
+      "goal": [
+        {
+          "name": "纽约在列表里",
+          "path": "derived.cities",
+          "op": "contains",
+          "value": "纽约"
+        },
+        {
+          "name": "周四",
+          "source": "answer",
+          "op": "contains",
+          "value": "周四",
+          "weight": 3
+        },
+        {
+          "name": "22:00",
+          "source": "answer",
+          "op": "regex",
+          "value": "22[:.]?00",
+          "weight": 3
+        },
+        {
+          "name": "什么闹钟都没动",
+          "path": "derived.onCount",
+          "op": "eq",
+          "value": 5
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T18_la_window",
+      "name": "洛杉矶那边的上班时间",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "timezone",
+        "reasoning"
+      ],
+      "instruction": "洛杉矶的同事只在他们那边周五 09:00 到 17:00 之间接电话。换算成上海时间，是星期几的几点到几点？把洛杉矶加到关注列表里再回答。",
+      "goal": [
+        {
+          "name": "洛杉矶在列表里",
+          "path": "derived.cities",
+          "op": "contains",
+          "value": "洛杉矶"
+        },
+        {
+          "name": "周六",
+          "source": "answer",
+          "op": "contains",
+          "value": "周六",
+          "weight": 3
+        },
+        {
+          "name": "00:00 开始",
+          "source": "answer",
+          "op": "regex",
+          "value": "0?0[:.]?00",
+          "weight": 3
+        },
+        {
+          "name": "08:00 结束",
+          "source": "answer",
+          "op": "regex",
+          "value": "0?8[:.]?00",
+          "weight": 3,
+          "hint": "洛杉矶现在是 PDT，比上海慢 15 小时"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T19_oven",
+      "name": "烤箱再加五分钟",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "arithmetic",
+        "multi-step"
+      ],
+      "instruction": "烤箱计时器现在响会是几点？给它再加五分钟之后又是几点？加完再告诉我这两个时刻之间有没有闹钟会响。",
+      "goal": [
+        {
+          "name": "烤箱加到了 1420 秒",
+          "path": "derived.timerLeft.烤箱",
+          "op": "eq",
+          "value": 1420
+        },
+        {
+          "name": "还在跑",
+          "path": "derived.timerRunning.烤箱",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "别的计时器没动",
+          "path": "derived.timerLeft.泡面",
+          "op": "eq",
+          "value": 72
+        },
+        {
+          "name": "原本 23:06",
+          "source": "answer",
+          "op": "regex",
+          "value": "23[:.]?0?6",
+          "weight": 3
+        },
+        {
+          "name": "加完 23:11",
+          "source": "answer",
+          "op": "regex",
+          "value": "23[:.]?11",
+          "weight": 3
+        },
+        {
+          "name": "没有闹钟会响",
+          "source": "answer",
+          "op": "regex",
+          "value": "(没有|不会|无)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T20_early_flight",
+      "name": "明早四点半的飞机",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 34,
+      "tags": [
+        "multi-step",
+        "constraint"
+      ],
+      "instruction": "明天（周五）要赶早班飞机，必须 04:30 起。把关着的「跑步」闹钟改成周五 04:30 并打开 —— 它原来是周一三五重复的，只留周五。然后把「上班」和「早班」都关掉，免得吵到你补觉。最后告诉我还能睡多久。",
+      "goal": [
+        {
+          "name": "跑步改到 04:30",
+          "path": "derived.alarmTimes.跑步",
+          "op": "eq",
+          "value": "04:30"
+        },
+        {
+          "name": "只在周五",
+          "path": "derived.alarmDays.跑步",
+          "op": "eq",
+          "value": "周五"
+        },
+        {
+          "name": "跑步开着",
+          "path": "derived.enabled.跑步",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "上班关了",
+          "path": "derived.enabled.上班",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "早班关了",
+          "path": "derived.enabled.早班",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "下一个就是跑步",
+          "path": "derived.nextLabel",
+          "op": "eq",
+          "value": "跑步"
+        },
+        {
+          "name": "还能睡 5 小时 43 分",
+          "path": "derived.nextInMinutes",
+          "op": "eq",
+          "value": 343
+        },
+        {
+          "name": "5 小时 43 分",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)43(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    }
+  ]
+}

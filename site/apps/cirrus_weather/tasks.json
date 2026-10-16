@@ -1,0 +1,810 @@
+{
+  "env": "cirrus_weather",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_settings",
+      "name": "两个开关",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "settings"
+      ],
+      "instruction": "在设置里关掉「显示体感温度」和「显示空气质量」。下雨提醒别动。",
+      "goal": [
+        {
+          "name": "体感关了",
+          "path": "derived.settings.showFeels",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "空气质量关了",
+          "path": "derived.settings.showAqi",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "下雨提醒没动",
+          "path": "derived.settings.notifyRain",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "单位没动",
+          "path": "derived.tempUnit",
+          "op": "eq",
+          "value": "C"
+        }
+      ]
+    },
+    {
+      "id": "T02_today",
+      "name": "问一句：今天多少度",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "今天的最高和最低温分别是多少？",
+      "goal": [
+        {
+          "name": "最高 18",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)18(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "最低 2",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)2(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "什么都没改",
+          "path": "derived.todayHi",
+          "op": "eq",
+          "value": 18
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T03_tomorrow",
+      "name": "问一句：明天呢",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "明天的最高温和最大降水概率各是多少？",
+      "goal": [
+        {
+          "name": "最高 15",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)15(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "概率 90%",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)90(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "什么都没改",
+          "path": "derived.tomorrowHi",
+          "op": "eq",
+          "value": 15
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T04_hour",
+      "name": "问一句：明早七点",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "query",
+        "navigate"
+      ],
+      "instruction": "点开明天 07:00 那一格，告诉我温度和体感各是多少。",
+      "goal": [
+        {
+          "name": "选中的是明早七点",
+          "path": "derived.selectedHour",
+          "op": "eq",
+          "value": 31
+        },
+        {
+          "name": "7 度",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)7(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "体感 3 度",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)3(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T05_aqi",
+      "name": "问一句：空气质量",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "现在的空气质量指数是多少？属于哪一档？",
+      "goal": [
+        {
+          "name": "63",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)63(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "良",
+          "source": "answer",
+          "op": "contains",
+          "value": "良",
+          "weight": 3
+        },
+        {
+          "name": "什么都没改",
+          "path": "derived.aqi",
+          "op": "eq",
+          "value": 63
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T06_bad_window",
+      "name": "开始不能晚于结束",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "refusal"
+      ],
+      "instruction": "到时间窗页，试着把「开始」往后挪，一直挪到超过结束时间为止，看看应用怎么说。",
+      "goal": [
+        {
+          "name": "窗口没被弄坏",
+          "path": "derived.windowFrom",
+          "op": "lte",
+          "value": 33
+        },
+        {
+          "name": "还是三小时",
+          "path": "derived.windowHours",
+          "op": "gte",
+          "value": 1
+        },
+        {
+          "name": "开始不能晚于结束",
+          "source": "answer",
+          "op": "regex",
+          "value": "(不能|晚于|开始|结束)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T07_commute",
+      "name": "明早通勤要带伞吗",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "window"
+      ],
+      "instruction": "看看「明早通勤 07–09」这个时间窗：要带伞吗？最大降水概率和累计雨量各是多少？",
+      "goal": [
+        {
+          "name": "窗口是明早通勤",
+          "path": "derived.windowLabel",
+          "op": "contains",
+          "value": "明早通勤"
+        },
+        {
+          "name": "要带伞",
+          "path": "derived.umbrella",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "要带",
+          "source": "answer",
+          "op": "regex",
+          "value": "(要带|带伞|需要)",
+          "weight": 3
+        },
+        {
+          "name": "90%",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)90(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "4.2 毫米",
+          "source": "answer",
+          "op": "regex",
+          "value": "4[.,]2",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T08_evening",
+      "name": "今晚回家呢",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "window",
+        "reasoning"
+      ],
+      "instruction": "换成「今晚回家 18–20」这个窗，要不要带伞？这次的概率和雨量是多少？",
+      "goal": [
+        {
+          "name": "窗口是今晚回家",
+          "path": "derived.windowLabel",
+          "op": "contains",
+          "value": "今晚回家"
+        },
+        {
+          "name": "不用带伞",
+          "path": "derived.umbrella",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "雨量是零",
+          "path": "derived.windowRainTenths",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "不用带",
+          "source": "answer",
+          "op": "regex",
+          "value": "(不用|不需要|不带)",
+          "weight": 3
+        },
+        {
+          "name": "概率 50%",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)50(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "雨量是 0",
+          "source": "answer",
+          "op": "regex",
+          "value": "(0[.,]0|没有|零|一滴)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T09_fahrenheit",
+      "name": "换成华氏",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "units"
+      ],
+      "instruction": "把温度单位改成华氏，然后告诉我今天和明天的最高温各是多少。",
+      "goal": [
+        {
+          "name": "单位是华氏",
+          "path": "derived.tempUnit",
+          "op": "eq",
+          "value": "F"
+        },
+        {
+          "name": "今天 64",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)64(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "明天 59",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)59(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T10_inches",
+      "name": "换成英寸",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "units"
+      ],
+      "instruction": "把降水单位改成英寸，然后回到时间窗页，说明早通勤那三个小时是多少英寸。",
+      "goal": [
+        {
+          "name": "单位是英寸",
+          "path": "derived.rainUnit",
+          "op": "eq",
+          "value": "in"
+        },
+        {
+          "name": "窗口没动",
+          "path": "derived.windowRainTenths",
+          "op": "eq",
+          "value": 42
+        },
+        {
+          "name": "0.17 英寸",
+          "source": "answer",
+          "op": "regex",
+          "value": "0[.,]17",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T11_wind",
+      "name": "风速换单位",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "units"
+      ],
+      "instruction": "把风速改成米每秒。明天最大风速 30 km/h，换成米每秒是多少？",
+      "goal": [
+        {
+          "name": "单位是米每秒",
+          "path": "derived.windUnit",
+          "op": "eq",
+          "value": "ms"
+        },
+        {
+          "name": "8.3",
+          "source": "answer",
+          "op": "regex",
+          "value": "8[.,]3",
+          "weight": 3
+        },
+        {
+          "name": "什么数据都没变",
+          "path": "derived.tomorrowHi",
+          "op": "eq",
+          "value": 15
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T12_saturday",
+      "name": "周六白天",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "window"
+      ],
+      "instruction": "看看「周六白天 09–17」这个窗，那天适合出门吗？最高温多少？",
+      "goal": [
+        {
+          "name": "窗口是周六白天",
+          "path": "derived.windowLabel",
+          "op": "contains",
+          "value": "周六"
+        },
+        {
+          "name": "不用带伞",
+          "path": "derived.umbrella",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "适合",
+          "source": "answer",
+          "op": "regex",
+          "value": "(适合|可以|好|不用)",
+          "weight": 3
+        },
+        {
+          "name": "22 度",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)22(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T13_day_fold",
+      "name": "逐日的数是怎么来的",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "query",
+        "reasoning"
+      ],
+      "instruction": "在逐日页选中明天，说说那一行的「最高温」和「降水概率」分别是对二十四个小时做了什么。",
+      "goal": [
+        {
+          "name": "选中的是明天",
+          "path": "derived.day",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "最高温取最大值",
+          "source": "answer",
+          "op": "regex",
+          "value": "(最大|max|最高)",
+          "weight": 3
+        },
+        {
+          "name": "概率也是取最大值不是平均",
+          "source": "answer",
+          "op": "regex",
+          "value": "(最大|max|不是平均|不是加)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T14_nudge",
+      "name": "把窗口往前挪一小时",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "window",
+        "arithmetic"
+      ],
+      "instruction": "把明早通勤那个窗的开始时间往前挪一小时、结束时间往后挪一小时（变成 06:00–10:00），然后说累计雨量变成多少。",
+      "goal": [
+        {
+          "name": "从 06:00 开始",
+          "path": "derived.windowFrom",
+          "op": "eq",
+          "value": 30
+        },
+        {
+          "name": "到 10:00 结束",
+          "path": "derived.windowTo",
+          "op": "eq",
+          "value": 34
+        },
+        {
+          "name": "累计 5.6 毫米",
+          "path": "derived.windowRainTenths",
+          "op": "eq",
+          "value": 56
+        },
+        {
+          "name": "5.6 毫米",
+          "source": "answer",
+          "op": "regex",
+          "value": "5[.,]6",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T15_prob_vs_amount",
+      "name": "概率高不等于会淋湿",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "reasoning"
+      ],
+      "instruction": "今天最大降水概率有 50%，明早通勤窗只有 90%，可是要带伞的是后者。把两个窗都看一遍，说清楚为什么。",
+      "goal": [
+        {
+          "name": "最后停在明早通勤",
+          "path": "derived.windowLabel",
+          "op": "contains",
+          "value": "明早通勤"
+        },
+        {
+          "name": "要带伞",
+          "path": "derived.umbrella",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "今晚一滴雨都没有",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:(0|零|没有|一滴))(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "明早有 4.2 毫米",
+          "source": "answer",
+          "op": "regex",
+          "value": "4[.,]2",
+          "weight": 3,
+          "hint": "概率是「会不会下」，雨量是「下多少」，这两个数是分开的"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T16_feels",
+      "name": "体感为什么低四度",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "reasoning",
+        "arithmetic"
+      ],
+      "instruction": "点开明早 07:00。那一刻温度 7 度，体感只有 3 度。按设置页写的规则算一遍，说清楚这 4 度是怎么来的。",
+      "goal": [
+        {
+          "name": "选中的是明早七点",
+          "path": "derived.selectedHour",
+          "op": "eq",
+          "value": 31
+        },
+        {
+          "name": "体感是 3 度",
+          "path": "derived.selectedFeels",
+          "op": "eq",
+          "value": 3
+        },
+        {
+          "name": "风速 30",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)30(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "除以 8 再四舍五入是 4",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)8(?!\\d)|(?<!\\d)4(?!\\d)",
+          "weight": 3,
+          "hint": "规则是：温度 ≤10℃ 且风 ≥12 km/h 时，体感 = 温度 − round(风速/8)"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T17_worst_hour",
+      "name": "明天哪个小时最难受",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "search"
+      ],
+      "instruction": "明天雨量最大的是哪一个小时？那一小时下多少？把那一格选中。",
+      "goal": [
+        {
+          "name": "选中的是明早八点",
+          "path": "derived.selectedHour",
+          "op": "eq",
+          "value": 32
+        },
+        {
+          "name": "08:00",
+          "source": "answer",
+          "op": "regex",
+          "value": "0?8[:.]?00|(?<!\\d)8(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "2.1 毫米",
+          "source": "answer",
+          "op": "regex",
+          "value": "2[.,]1",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T18_dry_window",
+      "name": "找一个不用带伞的通勤窗",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "search",
+        "constraint"
+      ],
+      "instruction": "明天早上必须出门两小时。在明天 05:00 到 12:00 之间，找一个连续两小时、累计雨量为零的窗，并把窗口设成它。",
+      "goal": [
+        {
+          "name": "窗口在明天",
+          "path": "derived.windowFrom",
+          "op": "gte",
+          "value": 24
+        },
+        {
+          "name": "两个小时",
+          "path": "derived.windowHours",
+          "op": "eq",
+          "value": 2
+        },
+        {
+          "name": "一滴雨都没有",
+          "path": "derived.windowRainTenths",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "不用带伞",
+          "path": "derived.umbrella",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "11 点到 12 点",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:(11|12))(?!\\d)",
+          "weight": 3,
+          "hint": "雨在 05:00 到 10:00 之间，11:00 以后就停了"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T19_all_units",
+      "name": "全部换成美制",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 28,
+      "tags": [
+        "units",
+        "multi-step"
+      ],
+      "instruction": "把三个单位都换成美制（华氏、英寸、英里每小时），然后告诉我明天的最高温、明早通勤窗的累计雨量和明天的最大风速。",
+      "goal": [
+        {
+          "name": "华氏",
+          "path": "derived.tempUnit",
+          "op": "eq",
+          "value": "F"
+        },
+        {
+          "name": "英寸",
+          "path": "derived.rainUnit",
+          "op": "eq",
+          "value": "in"
+        },
+        {
+          "name": "英里每小时",
+          "path": "derived.windUnit",
+          "op": "eq",
+          "value": "mph"
+        },
+        {
+          "name": "59 华氏度",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)59(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "0.17 英寸",
+          "source": "answer",
+          "op": "regex",
+          "value": "0[.,]17",
+          "weight": 3
+        },
+        {
+          "name": "19 mph",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)19(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T20_whole_day",
+      "name": "整个明天要带伞吗",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "window",
+        "arithmetic"
+      ],
+      "instruction": "把窗口拉成覆盖明天一整天（00:00 到 23:00），然后对比一下：整天的累计雨量、和只看通勤那三小时的雨量，差多少？",
+      "goal": [
+        {
+          "name": "窗口从明天 00:00 开始",
+          "path": "derived.windowFrom",
+          "op": "eq",
+          "value": 24
+        },
+        {
+          "name": "到明天 23:00 结束",
+          "path": "derived.windowTo",
+          "op": "eq",
+          "value": 47
+        },
+        {
+          "name": "整天 6.0 毫米",
+          "path": "derived.windowRainTenths",
+          "op": "eq",
+          "value": 60
+        },
+        {
+          "name": "要带伞",
+          "path": "derived.umbrella",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "整天 6.0 毫米",
+          "source": "answer",
+          "op": "regex",
+          "value": "6[.,]0",
+          "weight": 3
+        },
+        {
+          "name": "通勤那三小时 4.2",
+          "source": "answer",
+          "op": "regex",
+          "value": "4[.,]2",
+          "weight": 3
+        },
+        {
+          "name": "差 1.8",
+          "source": "answer",
+          "op": "regex",
+          "value": "1[.,]8",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    }
+  ]
+}

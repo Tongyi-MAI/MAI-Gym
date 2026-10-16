@@ -1,0 +1,30 @@
+{
+  "id": "tideline_screen",
+  "name": "屏幕使用时间",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "viewport": {"width": 390, "height": 844},
+  "description": "一个单文件 H5「屏幕使用时间」——手机设置里的那一页（界面为中文）。一个 App 还能用多久，是好几条并不属于它的上限取最小：它自己的限额、它所在类别和所有同类共用的那一份、以及 22:00 那道停用时间的墙。谁先咬到就是答案。所以这个页面可以完全正确而看上去像坏了：Reels 自己有 90 分钟的限额、还剩 14 分没用，可它显示 0，因为 Chatter 已经把社交那一类吃光了；Slate Docs 一条限额都没设，也显示 85，因为那是离停用时间的距离。把错的那个数字调高一点用都没有，而这正是它要教的东西。4 个界面，9 个 App，6 个类别，时钟停在 20:35。",
+  "tasks_file": "tasks.json",
+  "oracle_file": "oracle.json",
+  "action_space": {
+    "tap":    {"id": "test-id of the element"},
+    "type":   {"id": "test-id of a text field", "text": "replaces the whole value"},
+    "back":   {}, "home": {}, "wait": {},
+    "finish": {"answer": "final answer for question tasks; optional for action tasks"},
+    "tap_xy": {"x": "screen pixel x", "y": "screen pixel y", "note": "browser backend only"}
+  },
+  "observation": {
+    "text": "engine.a11y(state) — 每个 App 页上有一张「为什么」的表，把三条上限各剩多少逐行列出并标出当前卡住它的那一条；限额页把每个类别的成员和各自占了多少都打出来。纯文本也能推完。",
+    "pixels": "390x844 screenshot (browser backend); __ENV__.bounds() maps every test-id to a pixel box",
+    "state": "engine.snapshot(state) — canonical state 加上按 App 名索引的剩余时间和「谁在卡它」。仅供校验器使用。"
+  },
+  "world": {
+    "clock": "20:35",
+    "rule": "可用时间 = min(自己的限额剩余, 类别限额剩余, 离停用时间的距离)；没有任何一条时为不限",
+    "seeded": "今天共 582 分钟、161 次拿起；社交 174/150（已超 24）、视频 156/180、游戏 87/90",
+    "traps": "Reels 自己的限额还剩 14 分却显示 0（社交类别卡的）；Slate Docs 没有限额却显示 85（停用时间卡的）；Questa 的两条同时卡在 3 分",
+    "downtime": "22:00 起，白名单里是 Mailbox 和 Pages",
+    "steps": "限额每档 15 分钟；「今天临时加时间」加在每一条剩余之上"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "id": "willow_meds",
+  "name": "Willow",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "viewport": {"width": 390, "height": 844},
+  "description": "A single-file H5 medicine tracker whose world model is subtraction with consequences. Each medicine has a number of tablets left and a schedule, and those two produce a third figure — how many days before it runs out — which is never stored, only divided. Marking a dose taken removes a tablet and brings that date closer; skipping leaves the count alone and dents the adherence figure instead; ordering a repeat adds a whole pack; adding a second dose time halves the days remaining. Six medicines are seeded at deliberately different depths, so 'which runs out first' has to be worked out. 6 screens, 3 dose times, a repeat-ordering flow and a week of history.",
+  "tasks_file": "tasks.json",
+  "oracle_file": "oracle.json",
+  "action_space": {
+    "tap":    {"id": "test-id of the element"},
+    "type":   {"id": "test-id of a text field", "text": "replaces the whole value"},
+    "back":   {}, "home": {}, "wait": {},
+    "finish": {"answer": "final answer for question tasks; optional for action tasks"},
+    "tap_xy": {"x": "screen pixel x", "y": "screen pixel y", "note": "browser backend only"}
+  },
+  "observation": {
+    "text": "engine.a11y(state) — every dose row, the tablets left and the days remaining serialise, and the take/skip buttons appear only when they are actually on screen.",
+    "pixels": "390x844 screenshot (browser backend); __ENV__.bounds() maps every test-id to a pixel box",
+    "state": "engine.snapshot(state) — canonical state plus a derived view keyed by medicine name. For the verifier only."
+  },
+  "world": {
+    "today": "Tuesday, 08:15 — the morning doses are due",
+    "days_left": "tablets left divided by the daily dose, rounded down",
+    "taken_vs_skipped": "taking removes a tablet, skipping does not; both close the dose for the day",
+    "repeats": "a medicine is 'low' at or under the warning threshold in Settings, and a repeat adds one whole pack",
+    "caution": "one seeded interaction: leave four hours between Levothyroxine and Vitamin D"
+  }
+}

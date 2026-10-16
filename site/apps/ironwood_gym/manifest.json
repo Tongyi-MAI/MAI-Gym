@@ -1,0 +1,30 @@
+{
+  "id": "ironwood_gym",
+  "name": "Ironwood",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "viewport": {"width": 390, "height": 844},
+  "description": "A single-file H5 strength-training log. Unlike the browse-and-commit environments here, this one has a workout that is running: an exercise you are on, a set you are about to log, and a duration that grows out of what you did rather than how many taps it took. Every mass is an integer in grams, so kilograms and pounds are two renderings of one number; volume is sets x reps x mass; a personal best is the heaviest completed set ever logged; and the plate calculator is greedy arithmetic on a 20 kg bar that refuses weights the rack cannot make. 11 screens, 16 exercises, 3 routines, 6 sessions of history.",
+  "tasks_file": "tasks.json",
+  "oracle_file": "oracle.json",
+  "action_space": {
+    "tap":    {"id": "test-id of the element"},
+    "type":   {"id": "test-id of a text field", "text": "replaces the whole value"},
+    "back":   {}, "home": {}, "wait": {},
+    "finish": {"answer": "final answer for question tasks; optional for action tasks"},
+    "tap_xy": {"x": "screen pixel x", "y": "screen pixel y", "note": "browser backend only"}
+  },
+  "observation": {
+    "text": "engine.a11y(state) — the live session line reports the exercise, the sets done, the elapsed time and the set about to be logged, so a text-only agent can run a whole workout.",
+    "pixels": "390x844 screenshot (browser backend); __ENV__.bounds() maps every test-id to a pixel box",
+    "state": "engine.snapshot(state) — canonical state plus a derived view with masses in grams. For the verifier only.",
+    "note": "the weight stepper moves 2.5 kg whichever unit is on display, because the unit is a view and the gram is the fact"
+  },
+  "world": {
+    "clock": "18:40, frozen — a session's duration comes from its sets and rests, not from the wall clock",
+    "mass": "integers in grams; 82.5 kg is 82500 and 181.9 lb is the same number seen differently",
+    "duration": "45 seconds a set plus the configured rest each time you take one",
+    "volume": "the sum of mass x reps over completed sets; bodyweight work counts zero volume and is ranked on reps",
+    "plates": "a 20 kg bar and pairs of 25, 20, 15, 10, 5, 2.5 and 1.25 kg plates, loaded greedily"
+  }
+}

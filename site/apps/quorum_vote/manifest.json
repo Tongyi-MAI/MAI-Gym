@@ -1,0 +1,30 @@
+{
+  "id": "quorum_vote",
+  "name": "Quorum",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "viewport": {"width": 390, "height": 844},
+  "description": "A single-file H5 ranked-ballot app drawn as a polling-station paper. Twenty ballots are already in, grouped into six blocs, and the app runs an instant runoff over them — count first preferences, eliminate the lowest, move those papers to their next surviving choice, repeat — re-running the entire count on every action. Yours is the twenty-first paper and it is drawn up by ranking rather than picking, which makes the whole thing a fixed point rather than a lookup. On the twenty seeded papers the last round is a dead heat, so one ballot decides it, but not in the obvious way: who you put first is often irrelevant because your paper ends up wherever your later preferences send it. 5 screens, 5 candidates, a round-by-round table, exhausting ballots, and a deterministic tie-break.",
+  "tasks_file": "tasks.json",
+  "oracle_file": "oracle.json",
+  "action_space": {
+    "tap":    {"id": "test-id of the element"},
+    "type":   {"id": "test-id of a text field", "text": "replaces the whole value"},
+    "back":   {}, "home": {}, "wait": {},
+    "finish": {"answer": "final answer for question tasks; optional for action tasks"},
+    "tap_xy": {"x": "screen pixel x", "y": "screen pixel y", "note": "browser backend only"}
+  },
+  "observation": {
+    "text": "engine.a11y(state) — the ballot paper, every round's counts, the majority needed, exhausted papers and where each eliminated candidate's votes went all serialise, so the count is fully checkable without pixels.",
+    "pixels": "390x844 screenshot (browser backend); __ENV__.bounds() maps every test-id to a pixel box",
+    "state": "engine.snapshot(state) — canonical state plus a derived view holding both the live preview result and the official one. For the verifier only."
+  },
+  "world": {
+    "clock": "20:12",
+    "method": "instant runoff: lowest count eliminated each round, papers move to their next surviving preference, a majority of the live (non-exhausted) papers wins",
+    "ties": "elimination ties break on round-one first preferences, then on the earlier name; the same rule settles a two-way dead heat at the end",
+    "seeded": "20 papers in six blocs; first preferences Morag 6, Esi 5, Tan 4, Priya 3, Jude 2; eliminated in the order Jude, Priya, Esi; the last round is 10–10",
+    "quorum": "21 papers, so without yours the poll does not stand",
+    "pivot": "Morag first elects Morag and Tan first elects Tan, but Esi, Priya or Jude first elects whichever of Morag and Tan you put next — and no paper without Tan on it anywhere can elect Tan"
+  }
+}

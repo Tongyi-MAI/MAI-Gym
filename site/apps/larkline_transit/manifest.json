@@ -1,0 +1,30 @@
+{
+  "id": "larkline_transit",
+  "name": "Larkline",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "viewport": {"width": 390, "height": 844},
+  "description": "A single-file H5 city transit app. Nothing here is a catalogue: four lines are defined by a first departure and a headway, and every journey, every departure board and every calling list is computed from them. The planner finds direct services first, then one-change itineraries with a four-minute connection; the step-free filter removes changes at stations without a lift; the Amber line's delay is added to any leg that rides it and the suspended Coral segment removes the journeys that would have crossed it. 13 screens, 9 stations, 3 zones, a fare table and a ticket wallet.",
+  "tasks_file": "tasks.json",
+  "oracle_file": "oracle.json",
+  "action_space": {
+    "tap":    {"id": "test-id of the element"},
+    "type":   {"id": "test-id of a text field", "text": "replaces the whole value"},
+    "back":   {}, "home": {}, "wait": {},
+    "finish": {"answer": "final answer for question tasks; optional for action tasks"},
+    "tap_xy": {"x": "screen pixel x", "y": "screen pixel y", "note": "browser backend only"}
+  },
+  "observation": {
+    "text": "engine.a11y(state) — the plan, every journey option, the departure board and the fare breakdown all serialise, so a text-only agent can read times and platforms without pixels.",
+    "pixels": "390x844 screenshot (browser backend); __ENV__.bounds() maps every test-id to a pixel box",
+    "state": "engine.snapshot(state) — canonical state plus a derived view with times as HH:MM and fares in pence. For the verifier only."
+  },
+  "world": {
+    "clock": "14:26, frozen",
+    "why_frozen": "every departure on screen is a function of the timetable and the plan time, never of how many steps an agent took to get there, so two agents that reach the same screen by different routes read the same trains",
+    "time": "integers, minutes since midnight; the time stepper snaps to the five-minute grid on its first tap",
+    "money": "integers in pence; fares depend on the highest zone the route touches, and a peak fare is anything before 09:30",
+    "connections": "four minutes to change; a delayed first leg pushes the connection later",
+    "disruption": "the Amber line runs six minutes late in both directions; the Coral line has no service between Cinder Street and Brindle Park, so trains from Quay Street terminate at Cinder Street"
+  }
+}

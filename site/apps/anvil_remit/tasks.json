@@ -1,0 +1,837 @@
+{
+  "env": "anvil_remit",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_settings",
+      "name": "Two switches",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "settings"
+      ],
+      "instruction": "In Settings, stop the app printing the mid-market rate and let it pick the cheapest route for you from now on. Leave the arrival notification alone.",
+      "goal": [
+        {
+          "name": "The mid-market rate is hidden",
+          "path": "derived.settings.showMid",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "The app picks the route",
+          "path": "derived.settings.autoBest",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Notifications untouched",
+          "path": "derived.settings.notifyArrival",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Nothing was sent",
+          "path": "derived.sentCount",
+          "op": "eq",
+          "value": 2
+        }
+      ]
+    },
+    {
+      "id": "T02_receives",
+      "name": "Question: what arrives?",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "Exactly how much does Asha receive on the transfer as it is set up right now?",
+      "goal": [
+        {
+          "name": "₹20,914.37",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)20(?!\\d)[,.]?(?<!\\d)914(?!\\d)[.,]?(?<!\\d)37(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.sendPence",
+          "op": "eq",
+          "value": 20000
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T03_total",
+      "name": "Question: what do you pay?",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "What is the total you have to pay for the transfer as it stands, fee included?",
+      "goal": [
+        {
+          "name": "£203.99",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)203(?!\\d)[.,]?(?<!\\d)99(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.payPence",
+          "op": "eq",
+          "value": 20399
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T04_cheapest_now",
+      "name": "Question: which route is cheapest here?",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "query",
+        "compare"
+      ],
+      "instruction": "At £200, which of the four routes costs you the least in total once the fee and the rate margin are both counted, and what does it cost?",
+      "goal": [
+        {
+          "name": "the debit card",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Dd]ebit",
+          "weight": 3
+        },
+        {
+          "name": "£2.80",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)2(?!\\d)[.,]?(?<!\\d)80(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was sent",
+          "path": "derived.sentCount",
+          "op": "eq",
+          "value": 2
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T05_pln_rate",
+      "name": "Question: the złoty rate",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "query",
+        "navigate"
+      ],
+      "instruction": "Go to People and tell me the mid-market rate for the Polish złoty.",
+      "goal": [
+        {
+          "name": "5.1280",
+          "source": "answer",
+          "op": "regex",
+          "value": "5[.,]?1280?",
+          "weight": 3
+        },
+        {
+          "name": "You are on the people screen",
+          "path": "derived.route",
+          "op": "eq",
+          "value": "people"
+        },
+        {
+          "name": "Nothing was sent",
+          "path": "derived.sentCount",
+          "op": "eq",
+          "value": 2
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T06_wallet_cap",
+      "name": "Too much for the wallet",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "refusal"
+      ],
+      "instruction": "Put £1,200 in the send box and try to send it by mobile wallet. If the app will not have it, leave the route as it was and tell me why.",
+      "goal": [
+        {
+          "name": "£1,200 is in the box",
+          "path": "derived.sendPence",
+          "op": "eq",
+          "value": 120000
+        },
+        {
+          "name": "The route did not change",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "r_cash"
+        },
+        {
+          "name": "over the £1,000 limit",
+          "source": "answer",
+          "op": "regex",
+          "value": "((?<!\\d)1(?!\\d)[,.]?(?<!\\d)000(?!\\d)|limit|cap)",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was sent",
+          "path": "derived.sentCount",
+          "op": "eq",
+          "value": 2
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T07_reverse",
+      "name": "Work backwards from what she needs",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "reverse-solve"
+      ],
+      "instruction": "Asha needs exactly ₹50,000.00 in her account. Leaving the route as it is, set the transfer up so that is what arrives, and tell me what you have to send.",
+      "goal": [
+        {
+          "name": "The target is ₹50,000",
+          "path": "derived.askedMinor",
+          "op": "eq",
+          "value": 5000000
+        },
+        {
+          "name": "You send £478.14",
+          "path": "derived.sendPence",
+          "op": "eq",
+          "value": 47814
+        },
+        {
+          "name": "She gets ₹50,000.00",
+          "path": "derived.receiveMinor",
+          "op": "gte",
+          "value": 5000000
+        },
+        {
+          "name": "Still cash pickup",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "r_cash"
+        },
+        {
+          "name": "£478.14",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)478(?!\\d)[.,]?(?<!\\d)14(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T08_least_send",
+      "name": "Same target, four routes",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 22,
+      "tags": [
+        "reverse-solve",
+        "compare"
+      ],
+      "instruction": "Still ₹50,000.00 for Asha. Which route means you have to hand over the smallest amount before the fee, and how much is it? Leave that route selected.",
+      "goal": [
+        {
+          "name": "Bank transfer is selected",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "r_bank"
+        },
+        {
+          "name": "The target is still ₹50,000",
+          "path": "derived.askedMinor",
+          "op": "eq",
+          "value": 5000000
+        },
+        {
+          "name": "You send £474.07",
+          "path": "derived.sendPence",
+          "op": "eq",
+          "value": 47407
+        },
+        {
+          "name": "£474.07",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)474(?!\\d)[.,]?(?<!\\d)07(?!\\d)",
+          "weight": 3,
+          "hint": "the bank transfer takes the least out of the rate"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T09_switch_person",
+      "name": "A different country",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "navigate",
+        "compare"
+      ],
+      "instruction": "Switch the transfer over to Kasia in Poland, make it £250, and put it on whichever of the four routes gets her the most złoty. Do not send it.",
+      "goal": [
+        {
+          "name": "Kasia is the recipient",
+          "path": "derived.recipient",
+          "op": "eq",
+          "value": "Kasia Wróbel"
+        },
+        {
+          "name": "The currency is złoty",
+          "path": "derived.currency",
+          "op": "eq",
+          "value": "PLN"
+        },
+        {
+          "name": "£250 is in the box",
+          "path": "derived.sendPence",
+          "op": "eq",
+          "value": 25000
+        },
+        {
+          "name": "The debit card is selected",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "r_card"
+        },
+        {
+          "name": "Nothing was sent",
+          "path": "derived.sentCount",
+          "op": "eq",
+          "value": 2
+        }
+      ]
+    },
+    {
+      "id": "T10_promo",
+      "name": "A code that kills the fee",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "multi-step"
+      ],
+      "instruction": "Apply the code FIRST0 and tell me what the total to pay becomes.",
+      "goal": [
+        {
+          "name": "FIRST0 is applied",
+          "path": "derived.promo",
+          "op": "eq",
+          "value": "FIRST0"
+        },
+        {
+          "name": "No fee is charged",
+          "path": "derived.feePence",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "The total is £200",
+          "path": "derived.payPence",
+          "op": "eq",
+          "value": 20000
+        },
+        {
+          "name": "£200.00",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)200(?!\\d)([.,]00)?",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T11_bad_promo",
+      "name": "A code that is not a code",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "refusal"
+      ],
+      "instruction": "Someone told you SUMMER50 works here. Try it, and tell me what the app said.",
+      "goal": [
+        {
+          "name": "No promotion is applied",
+          "path": "derived.promo",
+          "op": "eq",
+          "value": null
+        },
+        {
+          "name": "The fee is unchanged",
+          "path": "derived.feePence",
+          "op": "eq",
+          "value": 399
+        },
+        {
+          "name": "it is not a code the app knows",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![A-Za-z])(?:not a code|no such code|unknown code|invalid|not recognis|not recogniz|doesn|isn|not applied|no promotion)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T12_send_lito",
+      "name": "Send it",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 22,
+      "tags": [
+        "multi-step",
+        "commit"
+      ],
+      "instruction": "Send £150 to Lito Ramos by debit card, and put it through.",
+      "goal": [
+        {
+          "name": "A third transfer exists",
+          "path": "derived.sentCount",
+          "op": "eq",
+          "value": 3
+        },
+        {
+          "name": "It went to Lito",
+          "path": "derived.lastSent.to",
+          "op": "eq",
+          "value": "Lito Ramos"
+        },
+        {
+          "name": "By debit card",
+          "path": "derived.lastSent.route",
+          "op": "eq",
+          "value": "Debit card"
+        },
+        {
+          "name": "£150 was sent",
+          "path": "derived.lastSent.send",
+          "op": "eq",
+          "value": 15000
+        },
+        {
+          "name": "In pesos",
+          "path": "derived.lastSent.ccy",
+          "op": "eq",
+          "value": "PHP"
+        }
+      ]
+    },
+    {
+      "id": "T13_auto_route",
+      "name": "Let it choose",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 22,
+      "tags": [
+        "multi-step",
+        "compare"
+      ],
+      "instruction": "Turn on the setting that always uses the cheapest route. Then try £50 and then £600, and tell me which route it landed on each time. Leave £600 in the box.",
+      "goal": [
+        {
+          "name": "The app picks the route",
+          "path": "derived.settings.autoBest",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "£600 is in the box",
+          "path": "derived.sendPence",
+          "op": "eq",
+          "value": 60000
+        },
+        {
+          "name": "It settled on the bank transfer",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "r_bank"
+        },
+        {
+          "name": "the wallet at £50",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Ww]allet",
+          "weight": 3
+        },
+        {
+          "name": "the bank transfer at £600",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Bb]ank",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T14_nine_hundred",
+      "name": "Nine hundred, by hand",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 22,
+      "tags": [
+        "compare",
+        "optimise"
+      ],
+      "instruction": "Send £900 to Asha the cheapest way there is — but pick the route yourself, do not let the app do it. Set it up; do not put it through.",
+      "goal": [
+        {
+          "name": "£900 is in the box",
+          "path": "derived.sendPence",
+          "op": "eq",
+          "value": 90000
+        },
+        {
+          "name": "Bank transfer is selected",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "r_bank"
+        },
+        {
+          "name": "The app is not choosing",
+          "path": "derived.settings.autoBest",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Nothing was sent",
+          "path": "derived.sentCount",
+          "op": "eq",
+          "value": 2
+        }
+      ]
+    },
+    {
+      "id": "T15_crossover",
+      "name": "Where the two routes cross",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 34,
+      "tags": [
+        "search",
+        "optimise"
+      ],
+      "instruction": "Below a certain amount the debit card costs you less than the bank transfer, and above it the bank transfer wins. Find the smallest send amount, to the penny, at which the bank transfer is strictly cheaper. Leave that amount in the send box and tell me what it is.",
+      "goal": [
+        {
+          "name": "The amount is £475.30",
+          "path": "derived.sendPence",
+          "op": "eq",
+          "value": 47530
+        },
+        {
+          "name": "The bank transfer is now the cheapest",
+          "path": "derived.cheapestRoute",
+          "op": "eq",
+          "value": "Bank transfer"
+        },
+        {
+          "name": "£475.30",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)475(?!\\d)[.,]?(?<!\\d)30(?!\\d)",
+          "weight": 3,
+          "hint": "the card is a flat percentage; the bank's fee steps at £250 and £1,000"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T16_seventy_five_k",
+      "name": "Seventy-five thousand rupees, as cheap as possible",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "reverse-solve",
+        "optimise"
+      ],
+      "instruction": "Asha needs ₹75,000.00. Set the transfer up on whichever route leaves you paying the least in total, fee included, and tell me that total. Do not send it.",
+      "goal": [
+        {
+          "name": "The target is ₹75,000",
+          "path": "derived.askedMinor",
+          "op": "eq",
+          "value": 7500000
+        },
+        {
+          "name": "Bank transfer is selected",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "r_bank"
+        },
+        {
+          "name": "She gets at least ₹75,000",
+          "path": "derived.receiveMinor",
+          "op": "gte",
+          "value": 7500000
+        },
+        {
+          "name": "The total to pay is £716.09",
+          "path": "derived.payPence",
+          "op": "eq",
+          "value": 71609
+        },
+        {
+          "name": "Nothing was sent",
+          "path": "derived.sentCount",
+          "op": "eq",
+          "value": 2
+        },
+        {
+          "name": "£716.09",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)716(?!\\d)[.,]?(?<!\\d)09(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T17_deposit",
+      "name": "A deposit in złoty",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "reverse-solve",
+        "optimise"
+      ],
+      "instruction": "Kasia needs zł 12,000.00 for a deposit. Set it up the cheapest way you can and tell me what you end up paying in total. Do not send it.",
+      "goal": [
+        {
+          "name": "Kasia is the recipient",
+          "path": "derived.recipient",
+          "op": "eq",
+          "value": "Kasia Wróbel"
+        },
+        {
+          "name": "The target is zł 12,000",
+          "path": "derived.askedMinor",
+          "op": "eq",
+          "value": 1200000
+        },
+        {
+          "name": "Bank transfer is selected",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "r_bank"
+        },
+        {
+          "name": "The total to pay is £2,348.32",
+          "path": "derived.payPence",
+          "op": "eq",
+          "value": 234832
+        },
+        {
+          "name": "Nothing was sent",
+          "path": "derived.sentCount",
+          "op": "eq",
+          "value": 2
+        },
+        {
+          "name": "£2,348.32",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)2(?!\\d)[,.]?(?<!\\d)348(?!\\d)[.,]?(?<!\\d)32(?!\\d)",
+          "weight": 3,
+          "hint": "two of the four routes are off the table at this size, and the bank's fee disappears above £1,000"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T18_too_big",
+      "name": "More than the app can do",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 28,
+      "tags": [
+        "reasoning",
+        "impossible"
+      ],
+      "instruction": "Ravi needs ₹600,000.00. Work out whether this app can send it at all, and tell me what stops it. Do not send anything.",
+      "goal": [
+        {
+          "name": "Ravi is the recipient",
+          "path": "derived.recipient",
+          "op": "eq",
+          "value": "Ravi Nair"
+        },
+        {
+          "name": "The amount is over £5,000",
+          "path": "derived.sendPence",
+          "op": "gte",
+          "value": 500000
+        },
+        {
+          "name": "The app is blocking it",
+          "path": "derived.blockedReason",
+          "op": "exists"
+        },
+        {
+          "name": "Nothing was sent",
+          "path": "derived.sentCount",
+          "op": "eq",
+          "value": 2
+        },
+        {
+          "name": "it cannot",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![A-Za-z])(?:(no|not|cannot|can't|can not|blocked|refus))",
+          "weight": 3
+        },
+        {
+          "name": "identity checks over £5,000",
+          "source": "answer",
+          "op": "regex",
+          "value": "(identit|verif|(?<!\\d)5(?!\\d)[,.]?(?<!\\d)000(?!\\d)|check)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T19_two_codes",
+      "name": "Which code is worth having",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 34,
+      "tags": [
+        "compare",
+        "trap"
+      ],
+      "instruction": "You have two codes, FIRST0 and RATE25. Sending £1,500 to Asha by bank transfer, which one saves you more and by how much? Leave the better one applied.",
+      "goal": [
+        {
+          "name": "£1,500 is in the box",
+          "path": "derived.sendPence",
+          "op": "eq",
+          "value": 150000
+        },
+        {
+          "name": "Bank transfer is selected",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "r_bank"
+        },
+        {
+          "name": "RATE25 is the one left applied",
+          "path": "derived.promo",
+          "op": "eq",
+          "value": "RATE25"
+        },
+        {
+          "name": "RATE25",
+          "source": "answer",
+          "op": "contains",
+          "value": "RATE25",
+          "weight": 3
+        },
+        {
+          "name": "£3.75 better",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)3(?!\\d)[.,]?(?<!\\d)75(?!\\d)",
+          "weight": 3,
+          "hint": "what is the bank transfer's fee at £1,500 before any code?"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T20_hundred_k",
+      "name": "A hundred thousand rupees, and send it",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 40,
+      "tags": [
+        "optimise",
+        "commit"
+      ],
+      "instruction": "Ravi needs ₹100,000.00 and not a rupee less. Set it up on whichever route and code leave you paying the least in total, then put it through and tell me what you paid.",
+      "goal": [
+        {
+          "name": "A third transfer exists",
+          "path": "derived.sentCount",
+          "op": "eq",
+          "value": 3
+        },
+        {
+          "name": "It went to Ravi",
+          "path": "derived.lastSent.to",
+          "op": "eq",
+          "value": "Ravi Nair"
+        },
+        {
+          "name": "By bank transfer",
+          "path": "derived.lastSent.route",
+          "op": "eq",
+          "value": "Bank transfer"
+        },
+        {
+          "name": "He got at least ₹100,000",
+          "path": "derived.lastSent.got",
+          "op": "gte",
+          "value": 10000000
+        },
+        {
+          "name": "You sent £948.13",
+          "path": "derived.lastSent.send",
+          "op": "eq",
+          "value": 94813
+        },
+        {
+          "name": "No fee was charged",
+          "path": "derived.lastSent.fee",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "£948.13",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)948(?!\\d)[.,]?(?<!\\d)13(?!\\d)",
+          "weight": 3,
+          "hint": "one code kills a £4.99 fee, the other shaves the rate — work out which is worth more at this size"
+        }
+      ],
+      "answer_expected": true
+    }
+  ]
+}

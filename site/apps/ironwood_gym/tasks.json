@@ -1,0 +1,784 @@
+{
+  "env": "ironwood_gym",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_settings",
+      "name": "Pounds, no plate helper",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "settings",
+        "units"
+      ],
+      "instruction": "Switch the app to pounds and turn the plate calculator off.",
+      "goal": [
+        {
+          "name": "Pounds",
+          "path": "settings.units",
+          "op": "eq",
+          "value": "lb",
+          "weight": 2
+        },
+        {
+          "name": "Plate calculator off",
+          "path": "settings.plateHelper",
+          "op": "eq",
+          "value": false,
+          "weight": 2
+        },
+        {
+          "name": "Rest length untouched",
+          "path": "settings.restSeconds",
+          "op": "eq",
+          "value": 90
+        }
+      ]
+    },
+    {
+      "id": "T02_query_pb",
+      "name": "Question: your best bench",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "answer_expected": true,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "What is your personal best on the bench press? Give the weight.",
+      "goal": [
+        {
+          "name": "82.5 kg",
+          "source": "answer",
+          "op": "contains",
+          "value": "82.5",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was logged",
+          "path": "derived.sessionCount",
+          "op": "eq",
+          "value": 6
+        }
+      ]
+    },
+    {
+      "id": "T03_add_exercise",
+      "name": "Add a lift to Pull A",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "routine",
+        "library"
+      ],
+      "instruction": "Add the hanging leg raise to the Pull A workout.",
+      "goal": [
+        {
+          "name": "It is in Pull A",
+          "path": "derived.routineExercises.Pull A",
+          "op": "contains",
+          "value": "Hanging leg raise",
+          "weight": 3
+        },
+        {
+          "name": "Pull A now has five lifts",
+          "path": "derived.routineExercises.Pull A",
+          "op": "len_eq",
+          "value": 5
+        },
+        {
+          "name": "Push A untouched",
+          "path": "derived.routineExercises.Push A",
+          "op": "len_eq",
+          "value": 5
+        }
+      ]
+    },
+    {
+      "id": "T04_first_set",
+      "name": "Log the first set",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "session",
+        "logging"
+      ],
+      "instruction": "Start today's workout and log the first set exactly as the routine prescribes.",
+      "goal": [
+        {
+          "name": "A workout is running",
+          "path": "derived.sessionLive",
+          "op": "eq",
+          "value": true,
+          "weight": 2
+        },
+        {
+          "name": "On the bench press",
+          "path": "derived.session.exercise",
+          "op": "eq",
+          "value": "Bench press"
+        },
+        {
+          "name": "One set logged",
+          "path": "derived.session.setsLogged",
+          "op": "eq",
+          "value": 1,
+          "weight": 2
+        },
+        {
+          "name": "82.5 kg for 5",
+          "path": "derived.session.volume",
+          "op": "eq",
+          "value": 412500,
+          "weight": 3,
+          "hint": "82500 grams times 5 reps"
+        }
+      ]
+    },
+    {
+      "id": "T05_new_pb",
+      "name": "Beat the bench best",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "session",
+        "personal-best"
+      ],
+      "instruction": "Start today's workout, log one bench set at 85 kg for 5 reps, then finish and save the session.",
+      "goal": [
+        {
+          "name": "The best is now 85 kg",
+          "path": "derived.pbs.Bench press",
+          "op": "eq",
+          "value": 85000,
+          "weight": 3,
+          "hint": "a best only counts once the session is saved"
+        },
+        {
+          "name": "The session was saved",
+          "path": "derived.sessionCount",
+          "op": "eq",
+          "value": 7,
+          "weight": 2
+        },
+        {
+          "name": "Two sessions this week",
+          "path": "derived.thisWeekSessions",
+          "op": "eq",
+          "value": 2
+        },
+        {
+          "name": "425 kg moved",
+          "path": "derived.lastSession.volume",
+          "op": "eq",
+          "value": 425000,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T06_units",
+      "name": "The same lift in pounds",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "answer_expected": true,
+      "tags": [
+        "units",
+        "query"
+      ],
+      "instruction": "Switch to pounds, then tell me what the app shows as your best back squat.",
+      "goal": [
+        {
+          "name": "Pounds",
+          "path": "settings.units",
+          "op": "eq",
+          "value": "lb",
+          "weight": 2
+        },
+        {
+          "name": "231.5 lb",
+          "source": "answer",
+          "op": "contains",
+          "value": "231.5",
+          "weight": 3,
+          "hint": "105 kg is 231.5 lb"
+        },
+        {
+          "name": "Nothing was logged",
+          "path": "derived.sessionCount",
+          "op": "eq",
+          "value": 6
+        }
+      ]
+    },
+    {
+      "id": "T07_plates",
+      "name": "Question: what goes on the bar",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "answer_expected": true,
+      "tags": [
+        "session",
+        "plates",
+        "arithmetic"
+      ],
+      "instruction": "Start Legs A and set the squat to 100 kg. How many plates does the app want on each side? Answer with just the number.",
+      "goal": [
+        {
+          "name": "The bar is set to 100 kg",
+          "path": "derived.session.weightGrams",
+          "op": "eq",
+          "value": 100000,
+          "weight": 2
+        },
+        {
+          "name": "Two plates a side",
+          "source": "answer",
+          "op": "eq",
+          "value": 2,
+          "extract": "number",
+          "weight": 3,
+          "hint": "a 25 and a 15 make the 40 kg each side"
+        },
+        {
+          "name": "Nothing was logged",
+          "path": "derived.session.setsLogged",
+          "op": "eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T08_rest",
+      "name": "Two sets and a rest",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "session",
+        "duration",
+        "arithmetic"
+      ],
+      "instruction": "Start today's workout, log two bench sets as prescribed with one rest between them, then finish and save.",
+      "notes": "A set counts as 45 seconds and the rest is set to 1:30.",
+      "goal": [
+        {
+          "name": "Two sets",
+          "path": "derived.lastSession.sets",
+          "op": "eq",
+          "value": 2,
+          "weight": 2
+        },
+        {
+          "name": "Three minutes",
+          "path": "derived.lastSession.duration",
+          "op": "eq",
+          "value": 180,
+          "weight": 3,
+          "hint": "45 + 90 + 45"
+        },
+        {
+          "name": "825 kg moved",
+          "path": "derived.lastSession.volume",
+          "op": "eq",
+          "value": 825000,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T09_undo",
+      "name": "Take a set back",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "session",
+        "undo"
+      ],
+      "instruction": "Start today's workout and log three bench sets as prescribed. The third was a miscount, so take it back off, then finish and save.",
+      "goal": [
+        {
+          "name": "Only two sets survived",
+          "path": "derived.lastSession.sets",
+          "op": "eq",
+          "value": 2,
+          "weight": 3
+        },
+        {
+          "name": "825 kg moved",
+          "path": "derived.lastSession.volume",
+          "op": "eq",
+          "value": 825000,
+          "weight": 2
+        },
+        {
+          "name": "The undone set gave its time back",
+          "path": "derived.lastSession.duration",
+          "op": "eq",
+          "value": 90,
+          "weight": 2,
+          "hint": "three sets logged, one removed"
+        }
+      ]
+    },
+    {
+      "id": "T10_move_on",
+      "name": "Skip ahead to the press",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "session",
+        "navigation"
+      ],
+      "instruction": "Start today's workout, log the first bench set as prescribed, then move to the overhead press and log a set of 50 kg for 8.",
+      "goal": [
+        {
+          "name": "On the overhead press",
+          "path": "derived.session.exercise",
+          "op": "eq",
+          "value": "Overhead press",
+          "weight": 2
+        },
+        {
+          "name": "Two sets in the session",
+          "path": "derived.session.setsLogged",
+          "op": "eq",
+          "value": 2,
+          "weight": 2
+        },
+        {
+          "name": "50 kg on the bar",
+          "path": "derived.session.weightGrams",
+          "op": "eq",
+          "value": 50000,
+          "weight": 2
+        },
+        {
+          "name": "Eight reps",
+          "path": "derived.session.reps",
+          "op": "eq",
+          "value": 8
+        },
+        {
+          "name": "812.5 kg so far",
+          "path": "derived.session.volume",
+          "op": "eq",
+          "value": 812500,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T11_remove",
+      "name": "Drop the lateral raise",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "routine",
+        "delete"
+      ],
+      "instruction": "Take the lateral raise out of Push A.",
+      "goal": [
+        {
+          "name": "It is gone",
+          "path": "derived.routineExercises.Push A",
+          "op": "not_contains",
+          "value": "Lateral raise",
+          "weight": 3
+        },
+        {
+          "name": "Four lifts left",
+          "path": "derived.routineExercises.Push A",
+          "op": "len_eq",
+          "value": 4,
+          "weight": 2
+        },
+        {
+          "name": "The bench is still there",
+          "path": "derived.routineExercises.Push A",
+          "op": "contains",
+          "value": "Bench press"
+        }
+      ]
+    },
+    {
+      "id": "T12_target_sets",
+      "name": "Five sets of bench",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "routine",
+        "stepper"
+      ],
+      "instruction": "Push A asks for four sets of bench press. Make it five.",
+      "goal": [
+        {
+          "name": "Seventeen sets planned",
+          "path": "derived.routineSets.Push A",
+          "op": "eq",
+          "value": 17,
+          "weight": 3,
+          "hint": "4+3+3+3+3 becomes 5+3+3+3+3"
+        },
+        {
+          "name": "Still five lifts",
+          "path": "derived.routineExercises.Push A",
+          "op": "len_eq",
+          "value": 5
+        },
+        {
+          "name": "Legs A untouched",
+          "path": "derived.routineSets.Legs A",
+          "op": "eq",
+          "value": 14
+        }
+      ]
+    },
+    {
+      "id": "T13_query_volume",
+      "name": "Question: volume of the last leg day",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "answer_expected": true,
+      "tags": [
+        "history",
+        "query",
+        "read-only"
+      ],
+      "instruction": "How much volume did you move in your most recent Legs A session? Answer in kilograms.",
+      "goal": [
+        {
+          "name": "10,425 kg",
+          "source": "answer",
+          "op": "regex",
+          "value": "10[,.]?425",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was logged",
+          "path": "derived.sessionCount",
+          "op": "eq",
+          "value": 6
+        }
+      ]
+    },
+    {
+      "id": "T14_search_add",
+      "name": "Find it, then file it",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "library",
+        "search",
+        "routine"
+      ],
+      "instruction": "Find the front squat in the exercise library and add it to Legs A.",
+      "goal": [
+        {
+          "name": "Front squat is in Legs A",
+          "path": "derived.routineExercises.Legs A",
+          "op": "contains",
+          "value": "Front squat",
+          "weight": 3
+        },
+        {
+          "name": "Five lifts in Legs A",
+          "path": "derived.routineExercises.Legs A",
+          "op": "len_eq",
+          "value": 5,
+          "weight": 2
+        },
+        {
+          "name": "It went nowhere else",
+          "path": "derived.routineExercises.Push A",
+          "op": "not_contains",
+          "value": "Front squat"
+        }
+      ]
+    },
+    {
+      "id": "T15_flagship",
+      "name": "A whole bench session (flagship)",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "session",
+        "logging",
+        "duration",
+        "personal-best",
+        "long-horizon"
+      ],
+      "instruction": "Do today's bench work properly: start the workout, put 85 kg on the bar and log all four sets of 5, resting once between each set. Then finish and save the session. Do not log anything on the other exercises.",
+      "goal": [
+        {
+          "name": "Four sets",
+          "path": "derived.lastSession.sets",
+          "op": "eq",
+          "value": 4,
+          "weight": 2
+        },
+        {
+          "name": "1,700 kg moved",
+          "path": "derived.lastSession.volume",
+          "op": "eq",
+          "value": 1700000,
+          "weight": 3,
+          "hint": "85 kg x 5 x 4"
+        },
+        {
+          "name": "Seven and a half minutes",
+          "path": "derived.lastSession.duration",
+          "op": "eq",
+          "value": 450,
+          "weight": 3,
+          "hint": "four sets at 45 s and three rests at 90 s"
+        },
+        {
+          "name": "A new bench best",
+          "path": "derived.pbs.Bench press",
+          "op": "eq",
+          "value": 85000,
+          "weight": 2
+        },
+        {
+          "name": "The week now holds 12,125 kg",
+          "path": "derived.thisWeekVolume",
+          "op": "eq",
+          "value": 12125000,
+          "weight": 2
+        },
+        {
+          "name": "Nothing is still running",
+          "path": "derived.sessionLive",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Efficiency: 14 steps or fewer",
+          "source": "trajectory",
+          "path": "steps",
+          "op": "lte",
+          "value": 14,
+          "critical": false,
+          "weight": 0.5
+        }
+      ]
+    },
+    {
+      "id": "T16_discard",
+      "name": "Throw a workout away",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "session",
+        "confirm-dialog"
+      ],
+      "instruction": "You start Legs A by mistake. Get rid of that workout without saving anything.",
+      "goal": [
+        {
+          "name": "A workout really was started",
+          "source": "trajectory",
+          "path": "ids",
+          "op": "contains",
+          "value": "start_routine",
+          "weight": 2,
+          "hint": "the task is the start-and-bin round trip, not the empty state you began in"
+        },
+        {
+          "name": "And discarded",
+          "source": "trajectory",
+          "path": "ids",
+          "op": "contains",
+          "value": "discard_session",
+          "weight": 2
+        },
+        {
+          "name": "Nothing is running",
+          "path": "derived.sessionLive",
+          "op": "eq",
+          "value": false,
+          "weight": 2
+        },
+        {
+          "name": "Nothing was written to the log",
+          "path": "derived.sessionCount",
+          "op": "eq",
+          "value": 6,
+          "weight": 3
+        },
+        {
+          "name": "Back on Today",
+          "path": "derived.route",
+          "op": "eq",
+          "value": "today"
+        }
+      ]
+    },
+    {
+      "id": "T17_target",
+      "name": "Raise the weekly target",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "answer_expected": true,
+      "tags": [
+        "settings",
+        "stepper",
+        "query"
+      ],
+      "instruction": "Set your weekly target to five sessions, then tell me how many more you need this week to reach it. Answer with just the number.",
+      "goal": [
+        {
+          "name": "Target is five",
+          "path": "settings.weeklyTarget",
+          "op": "eq",
+          "value": 5,
+          "weight": 3
+        },
+        {
+          "name": "Four to go",
+          "source": "answer",
+          "op": "eq",
+          "value": 4,
+          "extract": "number",
+          "weight": 3,
+          "hint": "one is done already"
+        }
+      ]
+    },
+    {
+      "id": "T18_filter",
+      "name": "Core only",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "library",
+        "filter",
+        "process-check"
+      ],
+      "instruction": "In the exercise library, filter down to core exercises and open the plank.",
+      "goal": [
+        {
+          "name": "On an exercise page",
+          "path": "derived.route",
+          "op": "eq",
+          "value": "exercise"
+        },
+        {
+          "name": "It is the plank",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "ex_plank",
+          "weight": 3
+        },
+        {
+          "name": "The core filter was used",
+          "source": "trajectory",
+          "path": "ids",
+          "op": "contains",
+          "value": "grp_core",
+          "weight": 2,
+          "hint": "a process check — scrolling to it does not count"
+        }
+      ]
+    },
+    {
+      "id": "T19_any_pb",
+      "name": "Push the bench best past 85 (many valid answers)",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 24,
+      "unique_solution": false,
+      "tags": [
+        "session",
+        "constraint",
+        "multi-solution"
+      ],
+      "instruction": "Get your bench press personal best above 85 kg and make it stick. The weight, the reps and how many sets you do are up to you.",
+      "goal": [
+        {
+          "name": "The best beats 85 kg",
+          "path": "derived.pbs.Bench press",
+          "op": "gt",
+          "value": 85000,
+          "weight": 3
+        },
+        {
+          "name": "It was saved, not left running",
+          "path": "derived.sessionLive",
+          "op": "eq",
+          "value": false,
+          "weight": 2
+        },
+        {
+          "name": "One new session in the log",
+          "path": "derived.sessionCount",
+          "op": "eq",
+          "value": 7,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T20_pull_day",
+      "name": "A short pull day",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 26,
+      "answer_expected": true,
+      "tags": [
+        "session",
+        "navigation",
+        "query",
+        "long-horizon"
+      ],
+      "instruction": "Run Pull A but only do one set on each of the first three exercises, exactly as prescribed. Finish, save it, and tell me the total volume in kilograms.",
+      "goal": [
+        {
+          "name": "Three sets",
+          "path": "derived.lastSession.sets",
+          "op": "eq",
+          "value": 3,
+          "weight": 2
+        },
+        {
+          "name": "970 kg",
+          "path": "derived.lastSession.volume",
+          "op": "eq",
+          "value": 970000,
+          "weight": 3,
+          "hint": "70x6 plus 55x10 plus a bodyweight set, which moves no bar"
+        },
+        {
+          "name": "The answer says so",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:970)(?!\\d)",
+          "weight": 2
+        },
+        {
+          "name": "It was Pull A",
+          "path": "derived.lastSession.name",
+          "op": "eq",
+          "value": "Pull A"
+        }
+      ]
+    }
+  ]
+}

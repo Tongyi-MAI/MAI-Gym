@@ -1,0 +1,774 @@
+{
+  "env": "grid_puzzle",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_settings",
+      "name": "两个开关",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "settings"
+      ],
+      "instruction": "在设置里打开「空格里显示候选数」，关掉「高亮同一个数」。标红那一栏别动。",
+      "goal": [
+        {
+          "name": "候选数开了",
+          "path": "derived.settings.showCandidates",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "同数字高亮关了",
+          "path": "derived.settings.highlightSame",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "标红没动",
+          "path": "derived.settings.flagMistakes",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "棋盘没动",
+          "path": "derived.filled",
+          "op": "eq",
+          "value": 14
+        }
+      ]
+    },
+    {
+      "id": "T02_count",
+      "name": "问一句：现在什么情况",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "这一盘现在填了多少格，有几格撞上了？",
+      "goal": [
+        {
+          "name": "14 格",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)14(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "3 格撞了",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)3(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "棋盘没动",
+          "path": "derived.filled",
+          "op": "eq",
+          "value": 14
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T03_clues",
+      "name": "问一句：题目给了几个",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "这一盘题目本身给了几个数？",
+      "goal": [
+        {
+          "name": "12 个",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)12(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "棋盘没动",
+          "path": "derived.filled",
+          "op": "eq",
+          "value": 14
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T04_cell_cands",
+      "name": "问一句：这一格能填几",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "query",
+        "navigate"
+      ],
+      "instruction": "点开 r3c3 这一格，告诉我它还能填哪些数。",
+      "goal": [
+        {
+          "name": "选中的是 r3c3",
+          "path": "derived.selected",
+          "op": "eq",
+          "value": "r3c3"
+        },
+        {
+          "name": "它只剩一个候选",
+          "path": "derived.selectedCandidates",
+          "op": "set_eq",
+          "value": [
+            1
+          ]
+        },
+        {
+          "name": "只能填 1",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![\\d-])1(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "棋盘没动",
+          "path": "derived.filled",
+          "op": "eq",
+          "value": 14
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T05_row_missing",
+      "name": "问一句：第一行还缺什么",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "第 1 行还缺哪几个数？",
+      "goal": [
+        {
+          "name": "4",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)4(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "5",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)5(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "6",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)6(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "棋盘没动",
+          "path": "derived.filled",
+          "op": "eq",
+          "value": 14
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T06_clue_locked",
+      "name": "题目给的数改不了",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "refusal"
+      ],
+      "instruction": "试着把 r1c2 那个 2 改成 5，看看会怎么样，把应用的说法讲给我听。",
+      "goal": [
+        {
+          "name": "r1c2 还是 2",
+          "path": "derived.cells.r1c2",
+          "op": "eq",
+          "value": 2
+        },
+        {
+          "name": "棋盘没动",
+          "path": "derived.filled",
+          "op": "eq",
+          "value": 14
+        },
+        {
+          "name": "题目给的改不了",
+          "source": "answer",
+          "op": "regex",
+          "value": "(题目|改不了|固定|不能)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T07_find_wrong",
+      "name": "把错的那一格擦掉",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "fix"
+      ],
+      "instruction": "这一盘有一格是别人填错的，而且已经跟别的数撞上了。找到它，擦掉，别的什么都不要动。",
+      "goal": [
+        {
+          "name": "r2c2 空了",
+          "path": "derived.cells.r2c2",
+          "op": "eq",
+          "value": null
+        },
+        {
+          "name": "一处都不撞了",
+          "path": "derived.conflictCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "没有填错的了",
+          "path": "derived.wrongCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "剩下 13 格",
+          "path": "derived.filled",
+          "op": "eq",
+          "value": 13
+        }
+      ]
+    },
+    {
+      "id": "T08_fix_it",
+      "name": "把它填对",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 24,
+      "tags": [
+        "fix"
+      ],
+      "instruction": "把那格错的擦掉，再填上正确的数。",
+      "goal": [
+        {
+          "name": "r2c2 是 5",
+          "path": "derived.cells.r2c2",
+          "op": "eq",
+          "value": 5
+        },
+        {
+          "name": "一处都不撞",
+          "path": "derived.conflictCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "没有填错的",
+          "path": "derived.wrongCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "回到 14 格",
+          "path": "derived.filled",
+          "op": "eq",
+          "value": 14
+        }
+      ]
+    },
+    {
+      "id": "T09_hint",
+      "name": "跟着提示走一步",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 22,
+      "tags": [
+        "multi-step"
+      ],
+      "instruction": "先把错的那格擦掉，然后用提示按钮找出一个只剩一个候选的格子，把它填上。",
+      "goal": [
+        {
+          "name": "用过提示",
+          "path": "derived.hints",
+          "op": "gte",
+          "value": 1
+        },
+        {
+          "name": "r2c3 填了 6",
+          "path": "derived.cells.r2c3",
+          "op": "eq",
+          "value": 6
+        },
+        {
+          "name": "没有填错的",
+          "path": "derived.wrongCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "一处都不撞",
+          "path": "derived.conflictCount",
+          "op": "eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T10_notes",
+      "name": "把候选记下来",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "multi-step",
+        "notes"
+      ],
+      "instruction": "把错的那格擦掉之后，用笔记模式在 r2c2 上把它剩下的两个候选都记上。别真的填数进去。",
+      "goal": [
+        {
+          "name": "r2c2 还是空的",
+          "path": "derived.cells.r2c2",
+          "op": "eq",
+          "value": null
+        },
+        {
+          "name": "笔记记的是 5 和 6",
+          "path": "derived.notes.r2c2",
+          "op": "set_eq",
+          "value": [
+            5,
+            6
+          ]
+        },
+        {
+          "name": "笔记模式开着",
+          "path": "derived.noteMode",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "棋盘上还是 13 格",
+          "path": "derived.filled",
+          "op": "eq",
+          "value": 13
+        }
+      ]
+    },
+    {
+      "id": "T11_check",
+      "name": "按一下检查",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "query"
+      ],
+      "instruction": "按检查按钮，把它报出来的结果讲给我听：几处撞了，都是哪几格。",
+      "goal": [
+        {
+          "name": "3 处",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)3(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "r2c2",
+          "source": "answer",
+          "op": "contains",
+          "value": "r2c2",
+          "weight": 3
+        },
+        {
+          "name": "棋盘没动",
+          "path": "derived.filled",
+          "op": "eq",
+          "value": 14
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T12_singles_count",
+      "name": "问一句：几个格子能一步定下来",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "query",
+        "reasoning"
+      ],
+      "instruction": "把错的那格擦掉之后，看推理页：现在有几个格子是「只剩一个候选」的？",
+      "goal": [
+        {
+          "name": "r2c2 空了",
+          "path": "derived.cells.r2c2",
+          "op": "eq",
+          "value": null
+        },
+        {
+          "name": "确实是三个",
+          "path": "derived.nakedSingleCount",
+          "op": "eq",
+          "value": 3
+        },
+        {
+          "name": "3 个",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)3(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T13_reset",
+      "name": "推倒重来",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 24,
+      "tags": [
+        "reset",
+        "multi-step"
+      ],
+      "instruction": "把整盘清干净，只留题目给的十二个数，连笔记也不留。然后把原来那两格重新填上 —— 这次两格都要填对的数。",
+      "goal": [
+        {
+          "name": "回到十四格",
+          "path": "derived.filled",
+          "op": "eq",
+          "value": 14
+        },
+        {
+          "name": "r1c1 是 1",
+          "path": "derived.cells.r1c1",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "r2c2 这次是 5",
+          "path": "derived.cells.r2c2",
+          "op": "eq",
+          "value": 5
+        },
+        {
+          "name": "没有填错的",
+          "path": "derived.wrongCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "笔记清光了",
+          "path": "derived.notes",
+          "op": "len_eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T14_hidden_row",
+      "name": "第 3 行的 1 放哪儿",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 22,
+      "tags": [
+        "reasoning"
+      ],
+      "instruction": "把错的那格擦掉。第 1 列里，1 到 6 中有一个数只剩一个位置放得下 —— 是 2，它只能放 r3c1。把它填上。",
+      "goal": [
+        {
+          "name": "r3c1 填了 2",
+          "path": "derived.cells.r3c1",
+          "op": "eq",
+          "value": 2
+        },
+        {
+          "name": "没有填错的",
+          "path": "derived.wrongCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "一处都不撞",
+          "path": "derived.conflictCount",
+          "op": "eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T15_three_singles",
+      "name": "把能一步定的都填了",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 34,
+      "tags": [
+        "reasoning",
+        "multi-step"
+      ],
+      "instruction": "擦掉错的那格，然后把当时所有「只剩一个候选」的格子全部填上 —— 一个不多一个不少。",
+      "goal": [
+        {
+          "name": "r2c3 是 6",
+          "path": "derived.cells.r2c3",
+          "op": "eq",
+          "value": 6
+        },
+        {
+          "name": "r3c3 是 1",
+          "path": "derived.cells.r3c3",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "r5c1 是 3",
+          "path": "derived.cells.r5c1",
+          "op": "eq",
+          "value": 3
+        },
+        {
+          "name": "一共十六格",
+          "path": "derived.filled",
+          "op": "eq",
+          "value": 16
+        },
+        {
+          "name": "没有填错的",
+          "path": "derived.wrongCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "一处都不撞",
+          "path": "derived.conflictCount",
+          "op": "eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T16_hidden_single",
+      "name": "两个候选，却只有一个答案",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "reasoning"
+      ],
+      "instruction": "擦掉错的那格。r1c4 这一格有两个候选，光看它自己定不下来。可是在第 4 列里，4 只有这一个地方放得下。把 r1c4 填上，并说清楚为什么不能填另一个候选。",
+      "goal": [
+        {
+          "name": "r1c4 是 4",
+          "path": "derived.cells.r1c4",
+          "op": "eq",
+          "value": 4
+        },
+        {
+          "name": "没有填错的",
+          "path": "derived.wrongCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "一处都不撞",
+          "path": "derived.conflictCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "第 4 列里 4 只能放这儿",
+          "source": "answer",
+          "op": "regex",
+          "value": "(第.?4.?列|列|唯一|只能|只有)",
+          "weight": 3,
+          "hint": "第 4 列另外五格分别在哪些行、哪些宫里，各自还容不容得下 4"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T17_row_one",
+      "name": "把第一行填满",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "multi-step",
+        "reasoning"
+      ],
+      "instruction": "擦掉错的那格，然后把第 1 行剩下的三格全部填对。",
+      "goal": [
+        {
+          "name": "r1c4 是 4",
+          "path": "derived.cells.r1c4",
+          "op": "eq",
+          "value": 4
+        },
+        {
+          "name": "r1c5 是 5",
+          "path": "derived.cells.r1c5",
+          "op": "eq",
+          "value": 5
+        },
+        {
+          "name": "r1c6 是 6",
+          "path": "derived.cells.r1c6",
+          "op": "eq",
+          "value": 6
+        },
+        {
+          "name": "没有填错的",
+          "path": "derived.wrongCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "一处都不撞",
+          "path": "derived.conflictCount",
+          "op": "eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T18_first_box",
+      "name": "把左上那个宫填满",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "multi-step",
+        "reasoning"
+      ],
+      "instruction": "擦掉错的那格，然后把左上角那个宫（第 1、2 行的前三格）填满且填对。",
+      "goal": [
+        {
+          "name": "r2c2 是 5",
+          "path": "derived.cells.r2c2",
+          "op": "eq",
+          "value": 5
+        },
+        {
+          "name": "r2c3 是 6",
+          "path": "derived.cells.r2c3",
+          "op": "eq",
+          "value": 6
+        },
+        {
+          "name": "一处都不撞",
+          "path": "derived.conflictCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "没有填错的",
+          "path": "derived.wrongCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "一共十五格",
+          "path": "derived.filled",
+          "op": "eq",
+          "value": 15
+        }
+      ]
+    },
+    {
+      "id": "T19_solve",
+      "name": "整盘解出来",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 60,
+      "tags": [
+        "solve",
+        "long"
+      ],
+      "instruction": "把这一盘数独整个解出来 —— 六行六列六宫，1 到 6 各一次，一格都不许错。",
+      "goal": [
+        {
+          "name": "做完了",
+          "path": "derived.solved",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "三十六格全满",
+          "path": "derived.filled",
+          "op": "eq",
+          "value": 36
+        },
+        {
+          "name": "一处都不撞",
+          "path": "derived.conflictCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "没有填错的",
+          "path": "derived.wrongCount",
+          "op": "eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T20_solve_and_report",
+      "name": "解完再报一格",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 60,
+      "tags": [
+        "solve",
+        "long"
+      ],
+      "instruction": "把整盘解出来，然后告诉我最右下角那一格 r6c6 是几。",
+      "goal": [
+        {
+          "name": "做完了",
+          "path": "derived.solved",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "r6c6 是 2",
+          "path": "derived.cells.r6c6",
+          "op": "eq",
+          "value": 2
+        },
+        {
+          "name": "没用过提示",
+          "path": "derived.hints",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "2",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)2(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    }
+  ]
+}

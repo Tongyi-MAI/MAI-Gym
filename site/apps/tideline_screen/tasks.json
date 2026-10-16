@@ -1,0 +1,803 @@
+{
+  "env": "tideline_screen",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_settings",
+      "name": "两个开关",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "settings"
+      ],
+      "instruction": "在停用页最下面的设置里，打开「跨设备合并统计」，关掉「显示拿起次数」。「到点就拦住」别动。",
+      "goal": [
+        {
+          "name": "跨设备开了",
+          "path": "derived.settings.shareAcrossDevices",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "拿起次数关了",
+          "path": "derived.settings.showPickups",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "拦截没动",
+          "path": "derived.settings.blockAtLimit",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "限额没动",
+          "path": "derived.categoryLimit.社交",
+          "op": "eq",
+          "value": 150
+        }
+      ]
+    },
+    {
+      "id": "T02_total",
+      "name": "问一句：今天用了多久",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "今天一共用了多少屏幕时间？拿起手机多少次？",
+      "goal": [
+        {
+          "name": "9 小时 42 分",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)9(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "42 分",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)42(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "161 次",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)161(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "什么都没改",
+          "path": "derived.totalUsed",
+          "op": "eq",
+          "value": 582
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T03_blocked",
+      "name": "问一句：哪些已经用不了了",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "现在哪几个 App 的可用时间已经是 0 了？",
+      "goal": [
+        {
+          "name": "Chatter",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Cc]hatter",
+          "weight": 3
+        },
+        {
+          "name": "Reels",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Rr]eels",
+          "weight": 3
+        },
+        {
+          "name": "什么都没改",
+          "path": "derived.blockedApps",
+          "op": "len_eq",
+          "value": 2
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T04_social",
+      "name": "问一句：社交超了多少",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "社交这一类今天用了多少？限额多少？超了多少？",
+      "goal": [
+        {
+          "name": "174 分",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)174(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "限额 150",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)150(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "超 24",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)24(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "什么都没改",
+          "path": "derived.categoryUsed.社交",
+          "op": "eq",
+          "value": 174
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T05_downtime",
+      "name": "问一句：还有多久停用",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "停用时间几点开始？离现在还有多久？",
+      "goal": [
+        {
+          "name": "22:00",
+          "source": "answer",
+          "op": "regex",
+          "value": "22[:.]?00",
+          "weight": 3
+        },
+        {
+          "name": "还有 85 分钟",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)85(?!\\d)|1 小时 25",
+          "weight": 3
+        },
+        {
+          "name": "什么都没改",
+          "path": "derived.minutesToDowntime",
+          "op": "eq",
+          "value": 85
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T06_no_effect",
+      "name": "调高了却没用",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "refusal",
+        "trap"
+      ],
+      "instruction": "打开 Reels，把它自己的限额往上调两档（每档 15 分钟），然后告诉我它的可用时间变了没有。",
+      "goal": [
+        {
+          "name": "单独限额升到 120",
+          "path": "derived.appLimit.Reels",
+          "op": "eq",
+          "value": 120
+        },
+        {
+          "name": "可用时间还是 0",
+          "path": "derived.remaining.Reels",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "没变，还是 0",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)0(?!\\d)|没变|不变|没有",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T07_why_reels",
+      "name": "为什么 Reels 是 0",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "reasoning"
+      ],
+      "instruction": "打开 Reels 看那张「为什么」的表。它自己的限额还剩多少？真正卡住它的是哪一条？",
+      "goal": [
+        {
+          "name": "停在 Reels 上",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "a_reels"
+        },
+        {
+          "name": "卡住它的是类别",
+          "path": "derived.bindingKind.Reels",
+          "op": "eq",
+          "value": "cat"
+        },
+        {
+          "name": "自己还剩 14 分",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)14(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "卡住它的是社交类别",
+          "source": "answer",
+          "op": "regex",
+          "value": "(社交|类别|category)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T08_chatter",
+      "name": "问一句：谁把社交吃完了",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "query"
+      ],
+      "instruction": "社交这一类里是哪个 App 用得最多？用了多少？",
+      "goal": [
+        {
+          "name": "Chatter",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Cc]hatter",
+          "weight": 3
+        },
+        {
+          "name": "98 分",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)98(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "什么都没改",
+          "path": "derived.categoryUsed.社交",
+          "op": "eq",
+          "value": 174
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T09_slate",
+      "name": "为什么 Slate 只剩 85",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "reasoning"
+      ],
+      "instruction": "Slate Docs 一条限额都没设，为什么还是只剩 85 分钟？",
+      "goal": [
+        {
+          "name": "停在 Slate 上",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "a_slate"
+        },
+        {
+          "name": "卡住它的是停用时间",
+          "path": "derived.bindingKind.Slate Docs",
+          "op": "eq",
+          "value": "downtime"
+        },
+        {
+          "name": "停用时间",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:(停用|22|downtime))(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T10_raise_social",
+      "name": "把社交额度提上去",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "limits"
+      ],
+      "instruction": "把社交类别的限额往上调两档（每档 15 分钟），然后说 Chatter 和 Reels 各变成多少可用。",
+      "goal": [
+        {
+          "name": "社交限额 180",
+          "path": "derived.categoryLimit.社交",
+          "op": "eq",
+          "value": 180
+        },
+        {
+          "name": "Chatter 有 6 分",
+          "path": "derived.remaining.Chatter",
+          "op": "eq",
+          "value": 6
+        },
+        {
+          "name": "Reels 也是 6 分",
+          "path": "derived.remaining.Reels",
+          "op": "eq",
+          "value": 6
+        },
+        {
+          "name": "各 6 分钟",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)6(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T11_allow",
+      "name": "把 Slate 放进白名单",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "downtime"
+      ],
+      "instruction": "把 Slate Docs 加进停用时间的白名单，然后说它的可用时间变成了什么。",
+      "goal": [
+        {
+          "name": "Slate 在白名单里",
+          "path": "derived.allowlist",
+          "op": "contains",
+          "value": "Slate Docs"
+        },
+        {
+          "name": "它不再有上限",
+          "path": "derived.remaining.Slate Docs",
+          "op": "eq",
+          "value": -1
+        },
+        {
+          "name": "不限",
+          "source": "answer",
+          "op": "regex",
+          "value": "(不限|无限|没有限|unlimited)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T12_streamly",
+      "name": "Streamly 卡在哪",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "reasoning"
+      ],
+      "instruction": "Streamly 还剩 8 分钟。是它自己的限额卡的，还是视频类别卡的？说清楚两边各剩多少。",
+      "goal": [
+        {
+          "name": "停在 Streamly 上",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "a_streamly"
+        },
+        {
+          "name": "是它自己的限额",
+          "path": "derived.bindingKind.Streamly",
+          "op": "eq",
+          "value": "app"
+        },
+        {
+          "name": "自己的限额",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:(自己|单独|app|120))(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "类别还剩 24",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)24(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T13_downtime_off",
+      "name": "把停用时间关了",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "downtime"
+      ],
+      "instruction": "关掉停用时间，然后说 Browser 的可用时间变成了什么。",
+      "goal": [
+        {
+          "name": "停用时间关了",
+          "path": "derived.downtimeOn",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Browser 不再有上限",
+          "path": "derived.remaining.Browser",
+          "op": "eq",
+          "value": -1
+        },
+        {
+          "name": "不限",
+          "source": "answer",
+          "op": "regex",
+          "value": "(不限|无限|没有限)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T14_extra",
+      "name": "今天临时加点时间",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "limits"
+      ],
+      "instruction": "给 Questa 今天临时加 30 分钟（两档），然后说它的可用时间变成多少。",
+      "goal": [
+        {
+          "name": "加了 30 分钟",
+          "path": "derived.extras.Questa",
+          "op": "eq",
+          "value": 30
+        },
+        {
+          "name": "可用变成 33 分",
+          "path": "derived.remaining.Questa",
+          "op": "eq",
+          "value": 33
+        },
+        {
+          "name": "33 分",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)33(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T15_reels_15",
+      "name": "让 Reels 还能刷一刻钟",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "optimise",
+        "reasoning"
+      ],
+      "instruction": "想让 Reels 今晚还能用满 15 分钟。只改限额（不许用临时加时间、不许动停用时间），最少要动几条？改到能用为止，并说清楚为什么只改一条不行。",
+      "goal": [
+        {
+          "name": "Reels 至少还有 15 分",
+          "path": "derived.remaining.Reels",
+          "op": "gte",
+          "value": 15
+        },
+        {
+          "name": "它自己的限额提上去了",
+          "path": "derived.appLimit.Reels",
+          "op": "gte",
+          "value": 105
+        },
+        {
+          "name": "社交类别也提上去了",
+          "path": "derived.categoryLimit.社交",
+          "op": "gte",
+          "value": 195
+        },
+        {
+          "name": "没有用临时加时间",
+          "path": "derived.extras",
+          "op": "len_eq",
+          "value": 0
+        },
+        {
+          "name": "停用时间还开着",
+          "path": "derived.downtimeOn",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "两条都得动",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)2(?!\\d)|两条|两个|both",
+          "weight": 3,
+          "hint": "它自己的限额只剩 14 分，就算类别放开也过不了 15"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T16_cheapest_fix",
+      "name": "只动一条，让 Chatter 能用",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "optimise",
+        "reasoning"
+      ],
+      "instruction": "只改一个数字，让 Chatter 至少还剩 20 分钟可用。改完说你动的是哪个、为什么这一条就够。",
+      "goal": [
+        {
+          "name": "Chatter 至少 20 分",
+          "path": "derived.remaining.Chatter",
+          "op": "gte",
+          "value": 20
+        },
+        {
+          "name": "社交限额提到了 195 以上",
+          "path": "derived.categoryLimit.社交",
+          "op": "gte",
+          "value": 195
+        },
+        {
+          "name": "Chatter 还是没有单独限额",
+          "path": "derived.appLimit.Chatter",
+          "op": "eq",
+          "value": null
+        },
+        {
+          "name": "社交类别限额",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:(社交|类别|195))(?!\\d)",
+          "weight": 3,
+          "hint": "Chatter 本来就没有单独限额，所以它只受两条约束"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T17_all_zero",
+      "name": "让整个社交类都停下来",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "limits",
+        "reasoning"
+      ],
+      "instruction": "把社交类别限额一路降到 0（也就是取消不了、只能降），看看会怎样。如果降到 0 就等于取消，那就用取消那个按钮，并说明取消之后 Chatter 变成多少。",
+      "goal": [
+        {
+          "name": "社交类别不限了",
+          "path": "derived.categoryLimit.社交",
+          "op": "eq",
+          "value": null
+        },
+        {
+          "name": "Chatter 变成 85 分",
+          "path": "derived.remaining.Chatter",
+          "op": "eq",
+          "value": 85
+        },
+        {
+          "name": "Reels 也变了",
+          "path": "derived.remaining.Reels",
+          "op": "eq",
+          "value": 14
+        },
+        {
+          "name": "85 分",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)85(?!\\d)|1 小时 25",
+          "weight": 3
+        },
+        {
+          "name": "被停用时间接管",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:(停用|22|downtime))(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T18_two_hours",
+      "name": "社交今天总共两小时",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "limits",
+        "arithmetic"
+      ],
+      "instruction": "把社交类别限额设成正好两小时，别的都不要动。设完说这一类超了多少。",
+      "goal": [
+        {
+          "name": "社交限额 120",
+          "path": "derived.categoryLimit.社交",
+          "op": "eq",
+          "value": 120
+        },
+        {
+          "name": "别的类别没动",
+          "path": "derived.categoryLimit.视频",
+          "op": "eq",
+          "value": 180
+        },
+        {
+          "name": "两个社交 App 都是 0",
+          "path": "derived.remaining.Chatter",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "超了 54 分",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)54(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T19_video_night",
+      "name": "今晚还想看半小时视频",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "optimise",
+        "arithmetic"
+      ],
+      "instruction": "今晚想再看 30 分钟 Streamly。只用「今天临时加时间」这一个办法，最少加几档（每档 15 分钟）？加到够为止。",
+      "goal": [
+        {
+          "name": "Streamly 至少 30 分",
+          "path": "derived.remaining.Streamly",
+          "op": "gte",
+          "value": 30
+        },
+        {
+          "name": "临时加了 30 分钟",
+          "path": "derived.extras.Streamly",
+          "op": "eq",
+          "value": 30
+        },
+        {
+          "name": "限额一条都没动",
+          "path": "derived.appLimit.Streamly",
+          "op": "eq",
+          "value": 120
+        },
+        {
+          "name": "类别限额也没动",
+          "path": "derived.categoryLimit.视频",
+          "op": "eq",
+          "value": 180
+        },
+        {
+          "name": "两档",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)2(?!\\d)|两档|两次",
+          "weight": 3,
+          "hint": "临时时间是加在每一条剩余上的，所以原来的 8 分会变成 8 加上加的量"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T20_tidy",
+      "name": "把今晚安排明白",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 34,
+      "tags": [
+        "constraint",
+        "multi-step"
+      ],
+      "instruction": "今晚的要求：Reels 至少还能用 15 分钟，Slate Docs 要能一直用到睡觉、不受停用时间影响，而且游戏那一类一分钟都不许再加。改完告诉我 Reels 最后到底剩多少。",
+      "goal": [
+        {
+          "name": "Reels 至少 15 分",
+          "path": "derived.remaining.Reels",
+          "op": "gte",
+          "value": 15
+        },
+        {
+          "name": "Reels 正好剩 21 分",
+          "path": "derived.remaining.Reels",
+          "op": "eq",
+          "value": 21
+        },
+        {
+          "name": "Slate 进了白名单",
+          "path": "derived.allowlist",
+          "op": "contains",
+          "value": "Slate Docs"
+        },
+        {
+          "name": "Slate 不限",
+          "path": "derived.remaining.Slate Docs",
+          "op": "eq",
+          "value": -1
+        },
+        {
+          "name": "游戏限额没动",
+          "path": "derived.categoryLimit.游戏",
+          "op": "eq",
+          "value": 90
+        },
+        {
+          "name": "Questa 还是 3 分",
+          "path": "derived.remaining.Questa",
+          "op": "eq",
+          "value": 3
+        },
+        {
+          "name": "21 分钟",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)21(?!\\d)",
+          "weight": 3,
+          "hint": "三条线各剩多少？取最小的那个才是答案"
+        }
+      ],
+      "answer_expected": true
+    }
+  ]
+}

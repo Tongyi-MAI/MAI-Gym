@@ -1,0 +1,483 @@
+{
+  "env": "meter_energy",
+  "note": "Golden action sequences replayed by CI.",
+  "solutions": {
+    "T01_settings": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_showYearly"
+      },
+      {
+        "action": "tap",
+        "id": "set_remind"
+      }
+    ],
+    "T02_last": [
+      {
+        "action": "finish",
+        "answer": "峰时 12486，谷时 5204。"
+      }
+    ],
+    "T03_ytd": [
+      {
+        "action": "tap",
+        "id": "tab_use"
+      },
+      {
+        "action": "finish",
+        "answer": "2380 度，离 2520 度的第一档上限还剩 140 度。"
+      }
+    ],
+    "T04_peak_month": [
+      {
+        "action": "tap",
+        "id": "tab_use"
+      },
+      {
+        "action": "finish",
+        "answer": "1月，412 度。"
+      }
+    ],
+    "T05_tariff": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "finish",
+        "answer": "0.5583、0.6083、0.8583 元/度。"
+      }
+    ],
+    "T06_too_low": [
+      {
+        "action": "type",
+        "id": "rd_m_elec_peak",
+        "text": "12000"
+      },
+      {
+        "action": "finish",
+        "answer": "它不收 —— 12000 比上次的 12486 还小，电表不会倒着走。"
+      }
+    ],
+    "T07_read_all": [
+      {
+        "action": "type",
+        "id": "rd_m_elec_peak",
+        "text": "12672"
+      },
+      {
+        "action": "type",
+        "id": "rd_m_elec_off",
+        "text": "5322"
+      },
+      {
+        "action": "type",
+        "id": "rd_m_water_main",
+        "text": "500"
+      },
+      {
+        "action": "type",
+        "id": "rd_m_gas_main",
+        "text": "1254"
+      },
+      {
+        "action": "finish",
+        "answer": "¥241.52"
+      }
+    ],
+    "T08_tier_split": [
+      {
+        "action": "type",
+        "id": "rd_m_elec_peak",
+        "text": "12672"
+      },
+      {
+        "action": "type",
+        "id": "rd_m_elec_off",
+        "text": "5322"
+      },
+      {
+        "action": "type",
+        "id": "rd_m_water_main",
+        "text": "500"
+      },
+      {
+        "action": "type",
+        "id": "rd_m_gas_main",
+        "text": "1254"
+      },
+      {
+        "action": "tap",
+        "id": "tab_bill"
+      },
+      {
+        "action": "finish",
+        "answer": "140 度按第一档 0.5583，164 度按第二档 0.6083 —— 年度累计从 2380 度跨过了 2520 度这条线。"
+      }
+    ],
+    "T09_water": [
+      {
+        "action": "type",
+        "id": "rd_m_elec_peak",
+        "text": "12672"
+      },
+      {
+        "action": "type",
+        "id": "rd_m_elec_off",
+        "text": "5322"
+      },
+      {
+        "action": "type",
+        "id": "rd_m_water_main",
+        "text": "500"
+      },
+      {
+        "action": "type",
+        "id": "rd_m_gas_main",
+        "text": "1254"
+      },
+      {
+        "action": "tap",
+        "id": "tab_bill"
+      },
+      {
+        "action": "finish",
+        "answer": "14 立方米，39.20 元 —— 没超 17 方，都在第一档。"
+      }
+    ],
+    "T10_balance": [
+      {
+        "action": "type",
+        "id": "rd_m_elec_peak",
+        "text": "12672"
+      },
+      {
+        "action": "type",
+        "id": "rd_m_elec_off",
+        "text": "5322"
+      },
+      {
+        "action": "type",
+        "id": "rd_m_water_main",
+        "text": "500"
+      },
+      {
+        "action": "type",
+        "id": "rd_m_gas_main",
+        "text": "1254"
+      },
+      {
+        "action": "tap",
+        "id": "tab_bill"
+      },
+      {
+        "action": "finish",
+        "answer": "够，付完还剩 8.48 元。"
+      }
+    ],
+    "T11_tou_on": [
+      {
+        "action": "type",
+        "id": "rd_m_elec_peak",
+        "text": "12672"
+      },
+      {
+        "action": "type",
+        "id": "rd_m_elec_off",
+        "text": "5322"
+      },
+      {
+        "action": "type",
+        "id": "rd_m_water_main",
+        "text": "500"
+      },
+      {
+        "action": "type",
+        "id": "rd_m_gas_main",
+        "text": "1254"
+      },
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_timeOfUse"
+      },
+      {
+        "action": "finish",
+        "answer": "198.32 元，比原来多了 20.40 元 —— 峰时 186 度比谷时 118 度多，加的比减的多。"
+      }
+    ],
+    "T12_gas_cliff": [
+      {
+        "action": "type",
+        "id": "rd_m_elec_peak",
+        "text": "12672"
+      },
+      {
+        "action": "type",
+        "id": "rd_m_elec_off",
+        "text": "5322"
+      },
+      {
+        "action": "type",
+        "id": "rd_m_water_main",
+        "text": "500"
+      },
+      {
+        "action": "type",
+        "id": "rd_m_gas_main",
+        "text": "1257"
+      },
+      {
+        "action": "tap",
+        "id": "tab_bill"
+      },
+      {
+        "action": "finish",
+        "answer": "账单 250.67 元，差 0.67 元 —— 可是充值最小一档就是 50 元，差六毛七也得充五十。"
+      }
+    ],
+    "T13_typo": [
+      {
+        "action": "type",
+        "id": "rd_m_elec_peak",
+        "text": "12672"
+      },
+      {
+        "action": "type",
+        "id": "rd_m_elec_off",
+        "text": "5322"
+      },
+      {
+        "action": "type",
+        "id": "rd_m_water_main",
+        "text": "500"
+      },
+      {
+        "action": "type",
+        "id": "rd_m_gas_main",
+        "text": "1254"
+      },
+      {
+        "action": "type",
+        "id": "rd_m_elec_off",
+        "text": "5300"
+      },
+      {
+        "action": "tap",
+        "id": "tab_bill"
+      },
+      {
+        "action": "finish",
+        "answer": "¥228.14"
+      }
+    ],
+    "T14_absurd": [
+      {
+        "action": "type",
+        "id": "rd_m_elec_peak",
+        "text": "99999"
+      },
+      {
+        "action": "finish",
+        "answer": "它不收 —— 一个月走 87513 度，不像是真的。"
+      }
+    ],
+    "T15_tou_decision": [
+      {
+        "action": "type",
+        "id": "rd_m_elec_peak",
+        "text": "12672"
+      },
+      {
+        "action": "type",
+        "id": "rd_m_elec_off",
+        "text": "5322"
+      },
+      {
+        "action": "type",
+        "id": "rd_m_water_main",
+        "text": "500"
+      },
+      {
+        "action": "type",
+        "id": "rd_m_gas_main",
+        "text": "1254"
+      },
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_timeOfUse"
+      },
+      {
+        "action": "tap",
+        "id": "set_timeOfUse"
+      },
+      {
+        "action": "finish",
+        "answer": "不划算，关掉。峰时每度加 0.30、谷时每度减 0.30 是一样的数，所以只有谷时用量超过一半才划算；这个月峰 186 度、谷 118 度，峰多得多。"
+      }
+    ],
+    "T16_no_cross": [
+      {
+        "action": "type",
+        "id": "rd_m_elec_peak",
+        "text": "12586"
+      },
+      {
+        "action": "type",
+        "id": "rd_m_elec_off",
+        "text": "5244"
+      },
+      {
+        "action": "type",
+        "id": "rd_m_water_main",
+        "text": "500"
+      },
+      {
+        "action": "type",
+        "id": "rd_m_gas_main",
+        "text": "1254"
+      },
+      {
+        "action": "tap",
+        "id": "tab_bill"
+      },
+      {
+        "action": "finish",
+        "answer": "78.16 元。年度累计 2380 加 140 正好是 2520，一度都没越过第一档的线，所以整整 140 度都按 0.5583 算。"
+      }
+    ],
+    "T17_max_first_tier": [
+      {
+        "action": "type",
+        "id": "rd_m_elec_peak",
+        "text": "12586"
+      },
+      {
+        "action": "type",
+        "id": "rd_m_elec_off",
+        "text": "5244"
+      },
+      {
+        "action": "finish",
+        "answer": "140 度 —— 年度累计 2380，第一档到 2520。"
+      }
+    ],
+    "T18_budget": [
+      {
+        "action": "type",
+        "id": "rd_m_elec_peak",
+        "text": "12686"
+      },
+      {
+        "action": "type",
+        "id": "rd_m_elec_off",
+        "text": "5321"
+      },
+      {
+        "action": "type",
+        "id": "rd_m_water_main",
+        "text": "500"
+      },
+      {
+        "action": "type",
+        "id": "rd_m_gas_main",
+        "text": "1254"
+      },
+      {
+        "action": "tap",
+        "id": "tab_bill"
+      },
+      {
+        "action": "finish",
+        "answer": "317 度，账单 249.43 元。再多一度就是 250.04，超了四分钱。"
+      }
+    ],
+    "T19_water_tier": [
+      {
+        "action": "type",
+        "id": "rd_m_elec_peak",
+        "text": "12586"
+      },
+      {
+        "action": "type",
+        "id": "rd_m_elec_off",
+        "text": "5244"
+      },
+      {
+        "action": "type",
+        "id": "rd_m_water_main",
+        "text": "504"
+      },
+      {
+        "action": "type",
+        "id": "rd_m_gas_main",
+        "text": "1254"
+      },
+      {
+        "action": "tap",
+        "id": "tab_bill"
+      },
+      {
+        "action": "finish",
+        "answer": "读到 504，也就是 18 方 —— 第一档只到 17 方，第 18 方按 3.70 算，水费 51.30 元。"
+      }
+    ],
+    "T20_forced_tou": [
+      {
+        "action": "type",
+        "id": "rd_m_elec_peak",
+        "text": "12672"
+      },
+      {
+        "action": "type",
+        "id": "rd_m_elec_off",
+        "text": "5322"
+      },
+      {
+        "action": "type",
+        "id": "rd_m_water_main",
+        "text": "500"
+      },
+      {
+        "action": "type",
+        "id": "rd_m_gas_main",
+        "text": "1254"
+      },
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_timeOfUse"
+      },
+      {
+        "action": "tap",
+        "id": "tab_bill"
+      },
+      {
+        "action": "tap",
+        "id": "go_topup"
+      },
+      {
+        "action": "tap",
+        "id": "topup_50"
+      },
+      {
+        "action": "finish",
+        "answer": "账单 261.92 元。原来差 11.92 元，最小一档就是 50，充完余额 300，付完还剩 38.08 元。"
+      }
+    ]
+  }
+}

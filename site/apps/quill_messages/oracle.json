@@ -1,0 +1,293 @@
+{
+  "env": "quill_messages",
+  "note": "Golden action sequences replayed by CI.",
+  "solutions": {
+    "T01_settings": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_showSegments"
+      },
+      {
+        "action": "tap",
+        "id": "set_deliveryReport"
+      }
+    ],
+    "T02_plan": [
+      {
+        "action": "finish",
+        "answer": "已经用掉 198 段，套餐一共 200 段，还剩 2 段。"
+      }
+    ],
+    "T03_unread": [
+      {
+        "action": "finish",
+        "answer": "3 条 —— 王倩 1 条，张伟 2 条。"
+      }
+    ],
+    "T04_draft": [
+      {
+        "action": "tap",
+        "id": "thread_t_wang"
+      },
+      {
+        "action": "finish",
+        "answer": "1 段，GSM-7 编码，148 个字符 —— 一段能装 160 个，还有富余。"
+      }
+    ],
+    "T05_blocked": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "finish",
+        "answer": "400 8888 6666。"
+      }
+    ],
+    "T06_blocked_send": [
+      {
+        "action": "tap",
+        "id": "thread_t_spam"
+      },
+      {
+        "action": "type",
+        "id": "msg_t_spam",
+        "text": "别再发了"
+      },
+      {
+        "action": "tap",
+        "id": "send_now"
+      },
+      {
+        "action": "finish",
+        "answer": "它说这个号码在拦截名单里，发不出去。"
+      }
+    ],
+    "T07_one_char": [
+      {
+        "action": "tap",
+        "id": "thread_t_wang"
+      },
+      {
+        "action": "tap",
+        "id": "ins_xie"
+      },
+      {
+        "action": "finish",
+        "answer": "变成 3 段，编码从 GSM-7 转成了 UCS-2，要多花 ¥0.15 —— 就因为多了一个汉字。"
+      }
+    ],
+    "T08_undo_char": [
+      {
+        "action": "tap",
+        "id": "thread_t_wang"
+      },
+      {
+        "action": "tap",
+        "id": "ins_xie"
+      },
+      {
+        "action": "tap",
+        "id": "del_char"
+      },
+      {
+        "action": "tap",
+        "id": "ins_dot"
+      }
+    ],
+    "T09_english": [
+      {
+        "action": "tap",
+        "id": "thread_t_wang"
+      },
+      {
+        "action": "tap",
+        "id": "ins_thanks_en"
+      },
+      {
+        "action": "finish",
+        "answer": "还是 1 段，一分钱不多花 —— 155 个字符还在 GSM-7 一段 160 的额度里。"
+      }
+    ],
+    "T10_emoji": [
+      {
+        "action": "tap",
+        "id": "thread_t_wang"
+      },
+      {
+        "action": "tap",
+        "id": "ins_emoji"
+      },
+      {
+        "action": "finish",
+        "answer": "一个表情在 UTF-16 里占两个码元，所以从 148 变成 150，而且整条转成 UCS-2，一下子变成 3 段。"
+      }
+    ],
+    "T11_tidy_up": [
+      {
+        "action": "tap",
+        "id": "read_all"
+      },
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "blk_t_spam"
+      }
+    ],
+    "T12_scheduled": [
+      {
+        "action": "tap",
+        "id": "tab_later"
+      },
+      {
+        "action": "finish",
+        "answer": "各 1 段，一共 2 段。发完正好到 200，把套餐用满。"
+      }
+    ],
+    "T13_schedule": [
+      {
+        "action": "tap",
+        "id": "thread_t_wang"
+      },
+      {
+        "action": "tap",
+        "id": "sched_7"
+      }
+    ],
+    "T14_block_bank": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "blk_t_bank"
+      }
+    ],
+    "T15_free_thanks": [
+      {
+        "action": "tap",
+        "id": "thread_t_wang"
+      },
+      {
+        "action": "tap",
+        "id": "ins_thanks_en"
+      }
+    ],
+    "T16_send_free": [
+      {
+        "action": "tap",
+        "id": "thread_t_wang"
+      },
+      {
+        "action": "tap",
+        "id": "ins_thanks_en"
+      },
+      {
+        "action": "tap",
+        "id": "send_now"
+      },
+      {
+        "action": "finish",
+        "answer": "本月用到 199 段，还在套餐里，这条一分钱没多花。"
+      }
+    ],
+    "T17_price_of_chinese": [
+      {
+        "action": "tap",
+        "id": "thread_t_wang"
+      },
+      {
+        "action": "tap",
+        "id": "ins_ok"
+      },
+      {
+        "action": "tap",
+        "id": "del_char"
+      },
+      {
+        "action": "tap",
+        "id": "del_char"
+      },
+      {
+        "action": "finish",
+        "answer": "要 3 段，多花 ¥0.15 —— 两个汉字把 148 个字符从一段变成了三段。"
+      }
+    ],
+    "T18_over_plan": [
+      {
+        "action": "tap",
+        "id": "tab_later"
+      },
+      {
+        "action": "tap",
+        "id": "now_s_1"
+      },
+      {
+        "action": "tap",
+        "id": "now_s_2"
+      },
+      {
+        "action": "tap",
+        "id": "tab_chats"
+      },
+      {
+        "action": "tap",
+        "id": "thread_t_mum"
+      },
+      {
+        "action": "type",
+        "id": "msg_t_mum",
+        "text": "好的，明天见"
+      },
+      {
+        "action": "tap",
+        "id": "send_now"
+      },
+      {
+        "action": "finish",
+        "answer": "一共 201 段，超出 1 段，要多付 ¥0.15。"
+      }
+    ],
+    "T19_no_cheap_chinese": [
+      {
+        "action": "tap",
+        "id": "thread_t_wang"
+      },
+      {
+        "action": "finish",
+        "answer": "不对。只要有一个汉字，整条就得按 UCS-2 编码，一段只装 70 个字符 —— 可这条本身就有 148 个，无论加哪六个汉字都得拆成 3 段。挑字挑不出便宜来。"
+      }
+    ],
+    "T20_short_chinese": [
+      {
+        "action": "tap",
+        "id": "thread_t_wang"
+      },
+      {
+        "action": "tap",
+        "id": "clear_draft"
+      },
+      {
+        "action": "type",
+        "id": "msg_t_wang",
+        "text": "落地了，行李也拿到了，一会儿到家跟你说一声"
+      },
+      {
+        "action": "tap",
+        "id": "send_now"
+      },
+      {
+        "action": "finish",
+        "answer": "199 段 —— 中文一段能装 70 个字符，这条二十来个字，绰绰有余。"
+      }
+    ]
+  }
+}

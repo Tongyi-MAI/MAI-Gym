@@ -1,0 +1,802 @@
+{
+  "env": "quorum_vote",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_settings",
+      "name": "Two switches",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "settings"
+      ],
+      "instruction": "On the Poll tab, stop the app printing where the transfers went and switch the count over to percentages. Leave the notification setting alone.",
+      "goal": [
+        {
+          "name": "Transfers are hidden",
+          "path": "derived.settings.showTransfers",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Percentages are shown",
+          "path": "derived.settings.showPercent",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Notifications untouched",
+          "path": "derived.settings.notifyResult",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Nothing was cast",
+          "path": "derived.submitted",
+          "op": "eq",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "T02_first_prefs",
+      "name": "Question: who leads on first preferences?",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "Who has the most first preferences on the twenty papers already in, and how many?",
+      "goal": [
+        {
+          "name": "Morag Bain",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Mm]orag",
+          "weight": 3
+        },
+        {
+          "name": "six",
+          "source": "answer",
+          "op": "regex",
+          "value": "((?<!\\d)6(?!\\d)|[Ss]ix)",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was marked",
+          "path": "derived.ballotLength",
+          "op": "eq",
+          "value": 0
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T03_first_out",
+      "name": "Question: who goes first?",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "Which candidate is eliminated in the first round, and on how many votes?",
+      "goal": [
+        {
+          "name": "Jude Fenwick",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Jj]ude",
+          "weight": 3
+        },
+        {
+          "name": "two",
+          "source": "answer",
+          "op": "regex",
+          "value": "((?<!\\d)2(?!\\d)|[Tt]wo)",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was cast",
+          "path": "derived.submitted",
+          "op": "eq",
+          "value": false
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T04_tan_page",
+      "name": "Open Tan Wei",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "query",
+        "navigate"
+      ],
+      "instruction": "Open Tan Wei's page and tell me how many first preferences Tan has.",
+      "goal": [
+        {
+          "name": "four",
+          "source": "answer",
+          "op": "regex",
+          "value": "((?<!\\d)4(?!\\d)|[Ff]our)",
+          "weight": 3
+        },
+        {
+          "name": "You are on Tan Wei's page",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "c_wei"
+        },
+        {
+          "name": "Nothing was marked",
+          "path": "derived.ballotLength",
+          "op": "eq",
+          "value": 0
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T05_quorum",
+      "name": "Question: does the poll stand?",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "How many papers are in the box, and how many does this poll need before the result counts?",
+      "goal": [
+        {
+          "name": "twenty in",
+          "source": "answer",
+          "op": "regex",
+          "value": "((?<!\\d)20(?!\\d)|[Tt]wenty)",
+          "weight": 3
+        },
+        {
+          "name": "twenty-one needed",
+          "source": "answer",
+          "op": "regex",
+          "value": "((?<!\\d)21(?!\\d)|[Tt]wenty[- ]one)",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was cast",
+          "path": "derived.submitted",
+          "op": "eq",
+          "value": false
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T06_locked",
+      "name": "Once it is in the box",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "refusal"
+      ],
+      "instruction": "Mark Esi Owusu and put the paper in. Then try to add Tan Wei to it, and tell me what the app said.",
+      "goal": [
+        {
+          "name": "It is in the box",
+          "path": "derived.submitted",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "The paper is still Esi alone",
+          "path": "derived.ballotIds",
+          "op": "eq",
+          "value": [
+            "c_owusu"
+          ]
+        },
+        {
+          "name": "it is cast and has to be withdrawn first",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![A-Za-z])(?:[Ww]ithdraw|in the box|cast|lock|refus)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T07_cast_morag",
+      "name": "Mark one and cast it",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "ballot",
+        "commit"
+      ],
+      "instruction": "Put Morag Bain down as your only preference and put the paper in the box.",
+      "goal": [
+        {
+          "name": "Your paper is Morag alone",
+          "path": "derived.ballot",
+          "op": "set_eq",
+          "value": [
+            "Morag Bain"
+          ]
+        },
+        {
+          "name": "It is in the box",
+          "path": "derived.submitted",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Twenty-one papers",
+          "path": "derived.turnout",
+          "op": "eq",
+          "value": 21
+        },
+        {
+          "name": "Morag is elected",
+          "path": "derived.officialWinner",
+          "op": "eq",
+          "value": "Morag Bain"
+        }
+      ]
+    },
+    {
+      "id": "T08_reorder",
+      "name": "Change your mind",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "ballot",
+        "reorder"
+      ],
+      "instruction": "Mark Esi Owusu, then Tan Wei, then move Tan above Esi so Tan is your first preference. Do not cast it.",
+      "goal": [
+        {
+          "name": "Tan is first, Esi second",
+          "path": "derived.ballotIds",
+          "op": "eq",
+          "value": [
+            "c_wei",
+            "c_owusu"
+          ]
+        },
+        {
+          "name": "Not cast",
+          "path": "derived.submitted",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "On that paper Tan would take it",
+          "path": "derived.previewWinner",
+          "op": "eq",
+          "value": "Tan Wei"
+        }
+      ]
+    },
+    {
+      "id": "T09_withdraw",
+      "name": "Take it back out",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 22,
+      "tags": [
+        "commit",
+        "undo"
+      ],
+      "instruction": "Cast a paper with Tan Wei on it, then think better of it and withdraw it. Tell me what that does to the poll.",
+      "goal": [
+        {
+          "name": "Nothing is in the box",
+          "path": "derived.submitted",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Back to twenty papers",
+          "path": "derived.turnout",
+          "op": "eq",
+          "value": 20
+        },
+        {
+          "name": "The quorum is not met",
+          "path": "derived.hasQuorum",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "it drops below quorum",
+          "source": "answer",
+          "op": "regex",
+          "value": "(quorum|(?<!\\d)21(?!\\d)|twenty[- ]one|short|not stand|invalid)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T10_round_of_esi",
+      "name": "Question: when does Esi go?",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "query",
+        "multi-step"
+      ],
+      "instruction": "Mark Tan Wei as your first preference, then look at the count and tell me which round Esi Owusu is knocked out in. Leave the mark on the paper.",
+      "goal": [
+        {
+          "name": "Tan is your first preference",
+          "path": "derived.ballotIds[0]",
+          "op": "eq",
+          "value": "c_wei"
+        },
+        {
+          "name": "round three",
+          "source": "answer",
+          "op": "regex",
+          "value": "((?<!\\d)3(?!\\d)|[Tt]hree)",
+          "weight": 3
+        },
+        {
+          "name": "Esi is eliminated at some point",
+          "path": "derived.previewOrder",
+          "op": "contains",
+          "value": "Esi Owusu"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T11_tiebreak",
+      "name": "Question: who wins the dead heat?",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "query",
+        "rules"
+      ],
+      "instruction": "With only the twenty papers already in, the last round is level. Who does the app give it to, and on what grounds? Do not mark anything.",
+      "goal": [
+        {
+          "name": "Nothing was marked",
+          "path": "derived.ballotLength",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Nothing was cast",
+          "path": "derived.submitted",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Morag Bain",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Mm]orag",
+          "weight": 3
+        },
+        {
+          "name": "on first preferences",
+          "source": "answer",
+          "op": "regex",
+          "value": "(first preference|first-preference|(?<!\\d)6(?!\\d)|[Ss]ix)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T12_elect_tan",
+      "name": "Elect Tan Wei",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "ballot",
+        "commit"
+      ],
+      "instruction": "Cast a paper that elects Tan Wei, with Tan as your first preference.",
+      "goal": [
+        {
+          "name": "Tan is your first preference",
+          "path": "derived.ballotIds[0]",
+          "op": "eq",
+          "value": "c_wei"
+        },
+        {
+          "name": "It is in the box",
+          "path": "derived.submitted",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Tan is elected",
+          "path": "derived.officialWinner",
+          "op": "eq",
+          "value": "Tan Wei"
+        },
+        {
+          "name": "The poll stands",
+          "path": "derived.hasQuorum",
+          "op": "eq",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "T13_strike_out",
+      "name": "Cross one off",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 24,
+      "tags": [
+        "ballot",
+        "edit"
+      ],
+      "instruction": "Mark Priya Raman, then Jude Fenwick, then Esi Owusu, in that order. Then take Jude back off the paper without disturbing the other two, and cast what is left.",
+      "goal": [
+        {
+          "name": "Priya then Esi, and no Jude",
+          "path": "derived.ballotIds",
+          "op": "eq",
+          "value": [
+            "c_raman",
+            "c_owusu"
+          ]
+        },
+        {
+          "name": "It is in the box",
+          "path": "derived.submitted",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Twenty-one papers",
+          "path": "derived.turnout",
+          "op": "eq",
+          "value": 21
+        },
+        {
+          "name": "Morag is elected on it",
+          "path": "derived.officialWinner",
+          "op": "eq",
+          "value": "Morag Bain"
+        }
+      ]
+    },
+    {
+      "id": "T14_priya_transfer",
+      "name": "Question: where do Priya's papers go?",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "query",
+        "transfers"
+      ],
+      "instruction": "When Priya Raman is knocked out, where do her three papers end up? Say who gets them and how many. Do not mark anything on your own paper.",
+      "goal": [
+        {
+          "name": "Tan Wei",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Tt]an",
+          "weight": 3
+        },
+        {
+          "name": "all three",
+          "source": "answer",
+          "op": "regex",
+          "value": "((?<!\\d)3(?!\\d)|[Tt]hree|all)",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was marked",
+          "path": "derived.ballotLength",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Nothing was cast",
+          "path": "derived.submitted",
+          "op": "eq",
+          "value": false
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T15_esi_then_tan",
+      "name": "Esi first, Tan elected",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "reasoning",
+        "commit"
+      ],
+      "instruction": "Put Esi Owusu first on your paper. Without moving Esi off the top, make the paper elect Tan Wei, and cast it. Tell me which mark is doing the work.",
+      "goal": [
+        {
+          "name": "Esi is first",
+          "path": "derived.ballotIds[0]",
+          "op": "eq",
+          "value": "c_owusu"
+        },
+        {
+          "name": "It is in the box",
+          "path": "derived.submitted",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Tan is elected",
+          "path": "derived.officialWinner",
+          "op": "eq",
+          "value": "Tan Wei"
+        },
+        {
+          "name": "the second preference",
+          "source": "answer",
+          "op": "regex",
+          "value": "(second|2nd|Tan)",
+          "weight": 3,
+          "hint": "Esi is knocked out in round three, so your paper never stays with Esi"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T16_esi_then_morag",
+      "name": "Esi first, Morag elected",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "reasoning",
+        "commit"
+      ],
+      "instruction": "Same first preference — Esi Owusu at the top — but this time the paper has to elect Morag Bain outright, not on a tie-break. Mark a real second preference and cast it.",
+      "goal": [
+        {
+          "name": "Esi is first",
+          "path": "derived.ballotIds[0]",
+          "op": "eq",
+          "value": "c_owusu"
+        },
+        {
+          "name": "There is a second preference",
+          "path": "derived.ballotLength",
+          "op": "gte",
+          "value": 2
+        },
+        {
+          "name": "It is in the box",
+          "path": "derived.submitted",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Morag is elected",
+          "path": "derived.officialWinner",
+          "op": "eq",
+          "value": "Morag Bain"
+        },
+        {
+          "name": "Not on a tie-break",
+          "path": "derived.wonOnTieBreak",
+          "op": "eq",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "T17_exhausted",
+      "name": "A paper that runs out",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 24,
+      "tags": [
+        "reasoning",
+        "exhaustion"
+      ],
+      "instruction": "Mark only Jude Fenwick and cast it. Jude goes out in the first round — tell me what becomes of your paper after that, and who ends up elected.",
+      "goal": [
+        {
+          "name": "Your paper is Jude alone",
+          "path": "derived.ballotIds",
+          "op": "eq",
+          "value": [
+            "c_fen"
+          ]
+        },
+        {
+          "name": "It is in the box",
+          "path": "derived.submitted",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Morag is elected",
+          "path": "derived.officialWinner",
+          "op": "eq",
+          "value": "Morag Bain"
+        },
+        {
+          "name": "And on the tie-break",
+          "path": "derived.wonOnTieBreak",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "the paper runs out",
+          "source": "answer",
+          "op": "regex",
+          "value": "(exhaust|ran out|runs out|no further|nowhere)",
+          "weight": 3
+        },
+        {
+          "name": "Morag on the tie-break",
+          "source": "answer",
+          "op": "regex",
+          "value": "(tie|Morag)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T18_impossible",
+      "name": "Elect Tan without writing Tan",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "reasoning",
+        "impossible"
+      ],
+      "instruction": "Is there any paper you could cast that elects Tan Wei without Tan Wei appearing on it anywhere? Work it out. If there is not, leave your paper blank and say why.",
+      "goal": [
+        {
+          "name": "The paper is blank",
+          "path": "derived.ballotLength",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Nothing was cast",
+          "path": "derived.submitted",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "there is not",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![A-Za-z])(?:([Nn]o|not|cannot|can't|impossible|none))",
+          "weight": 3
+        },
+        {
+          "name": "because the last round is Morag against Tan",
+          "source": "answer",
+          "op": "regex",
+          "value": "(last round|final|Morag|two left|exhaust)",
+          "weight": 3,
+          "hint": "the last round is always Morag against Tan; where can your paper be by then?"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T19_shortest_change",
+      "name": "The shortest paper that changes the chair",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 24,
+      "tags": [
+        "optimise",
+        "commit"
+      ],
+      "instruction": "The poll has to stand, and the sitting chair Morag Bain must not be re-elected. Do it with the fewest marks you can, and tell me how many marks that was.",
+      "goal": [
+        {
+          "name": "Exactly one mark",
+          "path": "derived.ballotLength",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "It is in the box",
+          "path": "derived.submitted",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "The poll stands",
+          "path": "derived.hasQuorum",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Morag is not elected",
+          "path": "derived.officialWinner",
+          "op": "ne",
+          "value": "Morag Bain"
+        },
+        {
+          "name": "one mark",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![A-Za-z])(?:((?<![\\d-])1(?!\\d)|[Oo]ne|single))",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T20_full_ranking",
+      "name": "Rank all five",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "reasoning",
+        "commit"
+      ],
+      "instruction": "Rank all five candidates, in an order that elects Tan Wei, and cast it. Then tell me which position on your paper is the one that actually decides the election.",
+      "goal": [
+        {
+          "name": "All five are ranked",
+          "path": "derived.ballotLength",
+          "op": "eq",
+          "value": 5
+        },
+        {
+          "name": "It is in the box",
+          "path": "derived.submitted",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Tan is elected",
+          "path": "derived.officialWinner",
+          "op": "eq",
+          "value": "Tan Wei"
+        },
+        {
+          "name": "The poll stands",
+          "path": "derived.hasQuorum",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "the highest position Tan holds above Morag",
+          "source": "answer",
+          "op": "regex",
+          "value": "(second|2nd|Tan|first)",
+          "weight": 3,
+          "hint": "three of your five marks are on candidates who are eliminated anyway"
+        }
+      ],
+      "answer_expected": true
+    }
+  ]
+}

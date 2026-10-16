@@ -1,0 +1,32 @@
+{
+  "id": "bastion_loan",
+  "name": "Bastion",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "viewport": {"width": 390, "height": 844},
+  "description": "A single-file H5 debt planner where nothing on screen is a formula — it is a simulation. Three levers (how much you can find each month, which of two debts the surplus goes to, and whether to move the card onto an interest-free deal) are fed through a month-by-month run of both balances, and every figure comes back out of that run. The obvious answer is wrong twice: aiming at the dearer debt is right but by less than the rates suggest, and once the 0% transfer is taken it stops being right at all, because a debt charging nothing is not worth rushing. 5 screens, a tap-along budget slider, a balance chart and a month-by-month schedule.",
+  "tasks_file": "tasks.json",
+  "oracle_file": "oracle.json",
+  "action_space": {
+    "tap":    {"id": "test-id of the element"},
+    "type":   {"id": "test-id of a text field", "text": "replaces the whole value"},
+    "back":   {}, "home": {}, "wait": {},
+    "finish": {"answer": "final answer for question tasks; optional for action tasks"},
+    "tap_xy": {"x": "screen pixel x", "y": "screen pixel y", "note": "browser backend only"}
+  },
+  "observation": {
+    "text": "engine.a11y(state) — the slider prints every stop and which are too small to work, each option prints its own outcome, and the schedule serialises month by month, so the whole comparison is legible without pixels.",
+    "pixels": "390x844 screenshot (browser backend); __ENV__.bounds() maps every test-id to a pixel box",
+    "state": "engine.snapshot(state) — canonical state plus a derived view holding the cost of every alternative. For the verifier only."
+  },
+  "world": {
+    "clock": "21:38",
+    "debts": "credit card £2,400 at 1.825% a month, minimum 2.5% or £25; car loan £18,000 at 0.492% a month with a fixed £348 payment",
+    "simulation": "interest is floored onto the balance at the start of each month, then the loan payment and card minimum come out, and the surplus is aimed by the chosen option",
+    "seeded": "£520 a month with the surplus on the loan — 47 months and £3,718.41, with the card clearing last despite being the dearer debt",
+    "transfer": "2.9% fee onto the balance, 18 months at nothing, then 24.9%",
+    "budget": "£400 to £700 in £20 steps; below £408 the loan payment and card minimum do not both fit",
+    "surprise": "at £520 the cheapest single change is aiming at the card (£2,688.76), but with the transfer taken splitting is cheaper still (£2,288.96)",
+    "floor": "the fastest any combination clears both debts is 32 months, at £700 split with the transfer"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "id": "kitbag_pack",
+  "name": "Kitbag",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "viewport": {"width": 390, "height": 844},
+  "description": "A single-file H5 baggage planner. The world is capacity under two opposed constraints and a charge that jumps rather than scales: each bag has an allowance, going over costs £45 up to 3 kg, £75 up to 8 kg and £120 beyond, so 260 g over costs exactly what 2.9 kg over costs. On top sit placement rules that pull the other way — anything with a battery must fly in the cabin, liquids over 100 ml and anything sharp must go in the hold — and two paid extras whose value depends entirely on which bag is actually the binding one. 6 screens, 3 bags, 20 items, 4 rules, 3 fee bands.",
+  "tasks_file": "tasks.json",
+  "oracle_file": "oracle.json",
+  "action_space": {
+    "tap":    {"id": "test-id of the element"},
+    "type":   {"id": "test-id of a text field", "text": "replaces the whole value"},
+    "back":   {}, "home": {}, "wait": {},
+    "finish": {"answer": "final answer for question tasks; optional for action tasks"},
+    "tap_xy": {"x": "screen pixel x", "y": "screen pixel y", "note": "browser backend only"}
+  },
+  "observation": {
+    "text": "engine.a11y(state) — every bag prints its weight, its allowance, how far over it is and which fee band that lands in, so the whole optimisation is legible without pixels.",
+    "pixels": "390x844 screenshot (browser backend); __ENV__.bounds() maps every test-id to a pixel box",
+    "state": "engine.snapshot(state) — canonical state plus a derived view keyed by item and bag name. For the verifier only."
+  },
+  "world": {
+    "clock": "06:20",
+    "weight": "every weight is an integer in grams; money is an integer in pence",
+    "allowances": "hold 15 kg, cabin 7 kg, an optional second hold bag 15 kg for £50",
+    "bands": "excess is charged per bag by band, not by weight: £45 up to 3 kg over, £75 up to 8 kg, £120 beyond",
+    "rules": "battery → cabin only; liquid over 100 ml → hold only; sharp → hold only; oversized → hold only",
+    "priority": "priority boarding costs £12 and adds 2 kg to the cabin allowance — worth it only when the cabin is the binding bag",
+    "seeded": "the hold starts 2.36 kg over with the laptop and the power bank illegally in it; fixing only the rules leaves it 260 g over and the fee unchanged",
+    "totals": "the twenty items weigh 19.9 kg against 22 kg of allowance, so a zero-charge packing exists"
+  }
+}

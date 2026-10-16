@@ -1,0 +1,753 @@
+{
+  "env": "umber_photos",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_settings",
+      "name": "Three across, no badges",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "settings"
+      ],
+      "instruction": "Put the library into a three-across grid and stop marking edited photos with a tag.",
+      "goal": [
+        {
+          "name": "Three columns",
+          "path": "derived.settings.cols",
+          "op": "eq",
+          "value": 3,
+          "weight": 2
+        },
+        {
+          "name": "No edited badge",
+          "path": "derived.settings.showEdited",
+          "op": "eq",
+          "value": false,
+          "weight": 2
+        },
+        {
+          "name": "Originals still kept",
+          "path": "derived.settings.keepOriginals",
+          "op": "eq",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "T02_query_edited",
+      "name": "Question: how many are edited",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "answer_expected": true,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "How many photos in the library have had something done to them? Answer with just the number.",
+      "goal": [
+        {
+          "name": "Two",
+          "source": "answer",
+          "op": "eq",
+          "value": 2,
+          "extract": "number",
+          "weight": 3
+        },
+        {
+          "name": "You did not add a third",
+          "path": "derived.editedCount",
+          "op": "eq",
+          "value": 2
+        }
+      ]
+    },
+    {
+      "id": "T03_favourite",
+      "name": "Favourite the frost",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "library"
+      ],
+      "instruction": "Add \"Frost on the gate\" to your favourites.",
+      "goal": [
+        {
+          "name": "It is a favourite now",
+          "path": "derived.favourites",
+          "op": "contains",
+          "value": "Frost on the gate",
+          "weight": 3
+        },
+        {
+          "name": "Five favourites in total",
+          "path": "derived.favourites",
+          "op": "len_eq",
+          "value": 5
+        }
+      ]
+    },
+    {
+      "id": "T04_adjust",
+      "name": "Brighter and warmer",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "editor",
+        "stack"
+      ],
+      "instruction": "Open \"Salt marsh\" in the editor and give it two stops more exposure and one more of warmth.",
+      "goal": [
+        {
+          "name": "Exposure +2",
+          "path": "derived.looks.Salt marsh.exposure",
+          "op": "eq",
+          "value": 2,
+          "weight": 3
+        },
+        {
+          "name": "Warmth +1",
+          "path": "derived.looks.Salt marsh.warmth",
+          "op": "eq",
+          "value": 1,
+          "weight": 3,
+          "hint": "the slider edits whichever tool is selected — switch to warmth first"
+        },
+        {
+          "name": "Three entries on the stack",
+          "path": "derived.editCounts.Salt marsh",
+          "op": "eq",
+          "value": 3,
+          "weight": 2,
+          "hint": "every tap is its own entry"
+        },
+        {
+          "name": "Nothing else was touched",
+          "path": "derived.editedCount",
+          "op": "eq",
+          "value": 3
+        }
+      ]
+    },
+    {
+      "id": "T05_filter_crop",
+      "name": "Noir and square",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "editor",
+        "filter",
+        "crop"
+      ],
+      "instruction": "Give \"Late tram\" the Noir filter and crop it square.",
+      "goal": [
+        {
+          "name": "Noir",
+          "path": "derived.looks.Late tram.filter",
+          "op": "eq",
+          "value": "noir",
+          "weight": 3
+        },
+        {
+          "name": "Square",
+          "path": "derived.looks.Late tram.crop",
+          "op": "eq",
+          "value": "square",
+          "weight": 3
+        },
+        {
+          "name": "Two entries",
+          "path": "derived.editCounts.Late tram",
+          "op": "eq",
+          "value": 2
+        }
+      ]
+    },
+    {
+      "id": "T06_undo",
+      "name": "One tap too many",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "editor",
+        "undo",
+        "stack"
+      ],
+      "instruction": "Give \"Long tide out\" three taps of exposure, decide that is one too many, and take the last one back.",
+      "goal": [
+        {
+          "name": "Exposure ends at +2",
+          "path": "derived.looks.Long tide out.exposure",
+          "op": "eq",
+          "value": 2,
+          "weight": 3
+        },
+        {
+          "name": "Two entries left on the stack",
+          "path": "derived.editCounts.Long tide out",
+          "op": "eq",
+          "value": 2,
+          "weight": 3,
+          "hint": "undo takes one entry, not the whole lot"
+        },
+        {
+          "name": "You actually used undo",
+          "source": "trajectory",
+          "path": "ids",
+          "op": "contains",
+          "value": "undo",
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T07_reset",
+      "name": "Back to the original",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "editor",
+        "reset",
+        "confirm-dialog"
+      ],
+      "instruction": "\"Bridge, blue hour\" has been over-edited. Put it back to exactly how it came off the camera.",
+      "goal": [
+        {
+          "name": "Nothing on the stack",
+          "path": "derived.editCounts.Bridge, blue hour",
+          "op": "eq",
+          "value": 0,
+          "weight": 3
+        },
+        {
+          "name": "No filter left on it",
+          "path": "derived.looks.Bridge, blue hour.filter",
+          "op": "eq",
+          "value": "none",
+          "weight": 2
+        },
+        {
+          "name": "Only one edited photo left",
+          "path": "derived.editedCount",
+          "op": "eq",
+          "value": 1,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T08_copy_paste",
+      "name": "Same look on the neon",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "clipboard",
+        "stack"
+      ],
+      "instruction": "Copy everything that has been done to \"Bridge, blue hour\" and put the same look on \"Neon, wet road\".",
+      "goal": [
+        {
+          "name": "Exposure came across",
+          "path": "derived.looks.Neon, wet road.exposure",
+          "op": "eq",
+          "value": -1,
+          "weight": 2
+        },
+        {
+          "name": "So did the filter",
+          "path": "derived.looks.Neon, wet road.filter",
+          "op": "eq",
+          "value": "vivid",
+          "weight": 3
+        },
+        {
+          "name": "Both entries",
+          "path": "derived.editCounts.Neon, wet road",
+          "op": "eq",
+          "value": 2,
+          "weight": 2
+        },
+        {
+          "name": "The original is unchanged",
+          "path": "derived.editCounts.Bridge, blue hour",
+          "op": "eq",
+          "value": 2
+        }
+      ]
+    },
+    {
+      "id": "T09_bulk_fav",
+      "name": "Favourite two at once",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "select",
+        "bulk"
+      ],
+      "instruction": "Using select mode, favourite both \"Groynes\" and \"Beach huts\" in one go.",
+      "goal": [
+        {
+          "name": "Groynes is a favourite",
+          "path": "derived.favourites",
+          "op": "contains",
+          "value": "Groynes",
+          "weight": 2
+        },
+        {
+          "name": "So are the beach huts",
+          "path": "derived.favourites",
+          "op": "contains",
+          "value": "Beach huts",
+          "weight": 2
+        },
+        {
+          "name": "Six favourites now",
+          "path": "derived.favourites",
+          "op": "len_eq",
+          "value": 6,
+          "weight": 2
+        },
+        {
+          "name": "Select mode is finished with",
+          "path": "derived.selecting",
+          "op": "eq",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "T10_album",
+      "name": "File the rain photo",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "albums",
+        "sheet"
+      ],
+      "instruction": "Put \"Rain on the window\" into the \"Around home\" album.",
+      "goal": [
+        {
+          "name": "It is in Around home",
+          "path": "derived.photoAlbum.Rain on the window",
+          "op": "eq",
+          "value": "Around home",
+          "weight": 3
+        },
+        {
+          "name": "That album has four now",
+          "path": "derived.albumCounts.Around home",
+          "op": "eq",
+          "value": 4,
+          "weight": 2
+        },
+        {
+          "name": "Coast is untouched",
+          "path": "derived.albumCounts.Coast, April",
+          "op": "eq",
+          "value": 4
+        }
+      ]
+    },
+    {
+      "id": "T11_bin",
+      "name": "Bin the beach huts",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "bin"
+      ],
+      "instruction": "Move \"Beach huts\" to the bin.",
+      "goal": [
+        {
+          "name": "It is in the bin",
+          "path": "derived.binTitles",
+          "op": "contains",
+          "value": "Beach huts",
+          "weight": 3
+        },
+        {
+          "name": "Eleven left in the library",
+          "path": "derived.libraryCount",
+          "op": "eq",
+          "value": 11,
+          "weight": 2
+        },
+        {
+          "name": "Coast, April is down to three",
+          "path": "derived.albumCounts.Coast, April",
+          "op": "eq",
+          "value": 3
+        }
+      ]
+    },
+    {
+      "id": "T12_restore",
+      "name": "Bin it, then change your mind",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "bin",
+        "undo"
+      ],
+      "instruction": "Move \"Washing line\" to the bin, then think better of it and put it back in the library.",
+      "goal": [
+        {
+          "name": "The bin is empty again",
+          "path": "derived.binCount",
+          "op": "eq",
+          "value": 0,
+          "weight": 3
+        },
+        {
+          "name": "All twelve photos are back",
+          "path": "derived.libraryCount",
+          "op": "eq",
+          "value": 12,
+          "weight": 2
+        },
+        {
+          "name": "You did bin it first",
+          "source": "trajectory",
+          "path": "ids",
+          "op": "contains",
+          "value": "do_delete",
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T13_query_most",
+      "name": "Question: the most worked-on photo",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "answer_expected": true,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "Which photo has had the most adjustments made to it?",
+      "goal": [
+        {
+          "name": "The bridge at blue hour",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Bb]ridge",
+          "weight": 3
+        },
+        {
+          "name": "Nothing new was edited",
+          "path": "derived.editedCount",
+          "op": "eq",
+          "value": 2
+        }
+      ]
+    },
+    {
+      "id": "T14_flagship",
+      "name": "Make the city set match (flagship)",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 28,
+      "tags": [
+        "clipboard",
+        "select",
+        "bulk",
+        "long-horizon"
+      ],
+      "instruction": "The three City at night photos should look like one set. Copy the look from \"Bridge, blue hour\" and paste it onto the other two in a single go using select mode.",
+      "goal": [
+        {
+          "name": "The neon matches",
+          "path": "derived.looks.Neon, wet road.filter",
+          "op": "eq",
+          "value": "vivid",
+          "weight": 3
+        },
+        {
+          "name": "The tram matches",
+          "path": "derived.looks.Late tram.filter",
+          "op": "eq",
+          "value": "vivid",
+          "weight": 3
+        },
+        {
+          "name": "Exposure came across too",
+          "path": "derived.looks.Late tram.exposure",
+          "op": "eq",
+          "value": -1,
+          "weight": 2
+        },
+        {
+          "name": "Four edited photos now",
+          "path": "derived.editedCount",
+          "op": "eq",
+          "value": 4,
+          "weight": 2,
+          "hint": "the three city ones plus the Groynes shot that was already edited"
+        },
+        {
+          "name": "You pasted onto a selection",
+          "source": "trajectory",
+          "path": "ids",
+          "op": "contains",
+          "value": "bulk_paste",
+          "weight": 2,
+          "hint": "doing them one at a time is not what was asked"
+        },
+        {
+          "name": "Efficiency: 10 steps or fewer",
+          "source": "trajectory",
+          "path": "steps",
+          "op": "lte",
+          "value": 10,
+          "critical": false,
+          "weight": 0.5
+        }
+      ]
+    },
+    {
+      "id": "T15_compare",
+      "name": "Look at it before and after",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "editor",
+        "compare",
+        "process-check"
+      ],
+      "instruction": "Open \"Groynes\" in the editor, give it the Fade filter, and use the compare control to check it against the original. Leave the filter on.",
+      "goal": [
+        {
+          "name": "Fade is on",
+          "path": "derived.looks.Groynes.filter",
+          "op": "eq",
+          "value": "fade",
+          "weight": 3
+        },
+        {
+          "name": "You compared it",
+          "source": "trajectory",
+          "path": "ids",
+          "op": "contains",
+          "value": "compare",
+          "weight": 3
+        },
+        {
+          "name": "The contrast it already had is still there",
+          "path": "derived.looks.Groynes.contrast",
+          "op": "eq",
+          "value": 1,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T16_empty_bin",
+      "name": "Two out for good",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 22,
+      "tags": [
+        "bin",
+        "confirm-dialog"
+      ],
+      "instruction": "Bin \"Washing line\" and \"Kitchen table\", then empty the bin so they are gone for good.",
+      "goal": [
+        {
+          "name": "The bin is empty",
+          "path": "derived.binCount",
+          "op": "eq",
+          "value": 0,
+          "weight": 2
+        },
+        {
+          "name": "Ten photos left",
+          "path": "derived.libraryCount",
+          "op": "eq",
+          "value": 10,
+          "weight": 3
+        },
+        {
+          "name": "Around home is down to one",
+          "path": "derived.albumCounts.Around home",
+          "op": "eq",
+          "value": 1,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T17_free_look",
+      "name": "Give the frost a look (many valid answers)",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 26,
+      "unique_solution": false,
+      "tags": [
+        "editor",
+        "constraint",
+        "multi-solution"
+      ],
+      "instruction": "Work \"Frost on the gate\" up into something: at least three stops of exposure on it, and any filter you like as long as it is not the original.",
+      "goal": [
+        {
+          "name": "Exposure of +3 or more",
+          "path": "derived.looks.Frost on the gate.exposure",
+          "op": "gte",
+          "value": 3,
+          "weight": 3
+        },
+        {
+          "name": "Some filter is on it",
+          "path": "derived.looks.Frost on the gate.filter",
+          "op": "ne",
+          "value": "none",
+          "weight": 3
+        },
+        {
+          "name": "At least four entries on the stack",
+          "path": "derived.editCounts.Frost on the gate",
+          "op": "gte",
+          "value": 4,
+          "weight": 2
+        },
+        {
+          "name": "Nothing else got edited",
+          "path": "derived.editedCount",
+          "op": "eq",
+          "value": 3,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T18_filter_view",
+      "name": "The ones with no album",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "library",
+        "filter"
+      ],
+      "instruction": "Filter the library down to photos that are not in any album, and open the frost one.",
+      "goal": [
+        {
+          "name": "The no-album filter is on",
+          "path": "derived.filter",
+          "op": "eq",
+          "value": "unsorted",
+          "weight": 3
+        },
+        {
+          "name": "On a photo page",
+          "path": "derived.route",
+          "op": "eq",
+          "value": "photo"
+        },
+        {
+          "name": "It is the frost",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "ph_12",
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T19_three_chores",
+      "name": "Three small jobs",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 34,
+      "tags": [
+        "editor",
+        "albums",
+        "reset",
+        "long-horizon"
+      ],
+      "instruction": "Three things: put \"Bridge, blue hour\" back to its original, give \"Groynes\" the Sepia filter, and file \"Frost on the gate\" into the \"Coast, April\" album.",
+      "goal": [
+        {
+          "name": "The bridge is original again",
+          "path": "derived.editCounts.Bridge, blue hour",
+          "op": "eq",
+          "value": 0,
+          "weight": 3
+        },
+        {
+          "name": "Groynes is sepia",
+          "path": "derived.looks.Groynes.filter",
+          "op": "eq",
+          "value": "sepia",
+          "weight": 3
+        },
+        {
+          "name": "The frost is filed",
+          "path": "derived.photoAlbum.Frost on the gate",
+          "op": "eq",
+          "value": "Coast, April",
+          "weight": 3
+        },
+        {
+          "name": "Coast, April has five now",
+          "path": "derived.albumCounts.Coast, April",
+          "op": "eq",
+          "value": 5,
+          "weight": 2
+        },
+        {
+          "name": "Nothing went in the bin",
+          "path": "derived.binCount",
+          "op": "eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T20_query_stack",
+      "name": "Question: what is on the stack",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "answer_expected": true,
+      "tags": [
+        "stack",
+        "query",
+        "read-only"
+      ],
+      "instruction": "Open \"Bridge, blue hour\" and tell me which single adjustment the undo button would take back.",
+      "goal": [
+        {
+          "name": "The vivid filter",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Vv]ivid|filter",
+          "weight": 3,
+          "hint": "the last entry on the stack is the one undo takes"
+        },
+        {
+          "name": "You did not actually undo it",
+          "path": "derived.editCounts.Bridge, blue hour",
+          "op": "eq",
+          "value": 2,
+          "weight": 2
+        }
+      ]
+    }
+  ]
+}

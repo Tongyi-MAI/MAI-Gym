@@ -1,0 +1,1393 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Bastion (mocked GUI env)</title>
+<!--
+  ============================================================================
+  Bastion — a single-file H5 debt planner for agent research.
+
+  Same two-block contract as every environment here: script#engine is a pure,
+  DOM-free state machine on globalThis.GUI_ENGINE; script#ui renders its screen
+  tree and exposes window.__ENV__.
+
+  What is new: nothing on screen is a formula, it is a simulation. Three
+  settings — how much you can find each month, which debt the surplus goes to,
+  and whether to move the card onto an interest-free deal — are fed through a
+  month-by-month run of both balances, and everything the app shows comes back
+  out of that run: when each debt clears, how much interest each one costs,
+  what the whole thing comes to.
+
+  The interesting part is that the obvious answer is wrong twice over. Paying
+  the expensive debt first is right, but only just, and the interest-free
+  transfer costs a fee up front and reverts to a worse rate afterwards, so
+  whether it is worth taking depends on how fast you were going to clear the
+  card anyway — which depends on the budget, which is the thing you were
+  trying to decide.
+
+  Money is integer pence and every month's interest is floored, so the figures
+  are exactly reproducible.
+  ============================================================================
+-->
+<style>
+:root{
+  --outer:#e3e6ee;
+  --bezel:#12151f;
+  --bg:#f4f4f8;
+  --card:#ffffff;
+  --card2:#f2f4f9;
+  --line:#e2e2ec;
+  --line2:#c9c9dc;
+  --press:#ececf4;
+  --chev:#b6b6cc;
+  --ink:#14142b;
+  --ink2:#4c4c66;
+  --muted:#82829c;
+  --accent:#4c3bcf;
+  --accent-d:#382a9e;
+  --accent-s:#e9e6fb;
+  --on-accent:#ffffff;
+  --good:#1f7a4d;
+  --good-s:#e2f1ea;
+  --warn:#8a6300;
+  --warn-s:#f8f0da;
+  --bad:#b5253c;
+  --bad-s:#fbe8eb;
+  --bad-line:#e7c4cc;
+  --btn:#ececf4;
+  --btn-off:#e2e2ec;
+  --off:#c2c2d4;
+  --appbar:#ffffff;
+  --appbar-ink:#161a27;
+  --appbar-line:#e2e2ec;
+  --tabbar:#ffffff;
+  --scrim:rgba(20,20,43,.44);
+  --toast:#14142b;
+  --toast-ink:#ffffff;
+  --hero:linear-gradient(140deg,#241d6b,#5544e0);
+  --hero-line:transparent;
+  --hero-ink:#ffffff;
+  --disp:"SF Pro Display",-apple-system,"Segoe UI",Roboto,sans-serif;
+  --r:18px; --r2:12px;
+  --shadow:0 1px 2px rgba(16,18,26,.05),0 10px 26px rgba(16,18,26,.07);
+  --ui:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;height:100%}
+body{background:var(--outer);color:var(--ink);font:14px/1.55 var(--ui);
+  display:flex;align-items:center;justify-content:center;overflow:hidden}
+
+#device{position:relative;width:390px;height:844px;background:var(--bezel);border-radius:46px;padding:5px;
+  box-shadow:0 30px 70px rgba(0,0,0,.34);flex:0 0 auto}
+#screen{position:relative;width:100%;height:100%;background:var(--bg);border-radius:41px;
+  overflow:hidden;display:flex;flex-direction:column}
+#notch{position:absolute;top:5px;left:50%;transform:translateX(-50%);width:118px;height:30px;
+  background:var(--bezel);border-radius:0 0 18px 18px;z-index:60}
+body.bare{background:var(--bg)}
+body.bare #device{width:390px;height:844px;padding:0;border-radius:0;box-shadow:none;background:var(--bg)}
+body.bare #screen{border-radius:0}
+body.bare #notch{display:none}
+body.bare .n-sheet{animation:none}
+
+.statusbar{height:44px;flex:0 0 44px;display:flex;align-items:flex-end;justify-content:space-between;
+  padding:0 22px 6px;font-size:13px;font-weight:600;z-index:50;color:var(--ink)}
+.statusbar .sb-r{display:flex;gap:5px;align-items:center}
+.sb-bat{width:22px;height:11px;border:1.3px solid currentColor;border-radius:3px;position:relative;opacity:.9}
+.sb-bat:after{content:"";position:absolute;right:-3px;top:3px;width:2px;height:5px;background:currentColor;border-radius:0 1px 1px 0}
+.sb-bat i{position:absolute;left:1.3px;top:1.3px;bottom:1.3px;width:78%;background:currentColor;border-radius:1px}
+
+#app{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;position:relative}
+
+.n-appbar{flex:0 0 auto;min-height:52px;display:flex;align-items:center;gap:8px;padding:6px 12px;
+  background:var(--appbar);color:var(--appbar-ink);z-index:20;border-bottom:1px solid var(--appbar-line)}
+.n-appbar .ab-title{flex:1 1 auto;text-align:center;font:650 17px/1.3 var(--disp);letter-spacing:-.2px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.n-appbar .ab-side{flex:0 0 auto;min-width:56px;display:flex;align-items:center;gap:2px}
+.n-appbar .ab-side.right{justify-content:flex-end}
+.n-appbar .iconbtn{color:var(--appbar-ink);opacity:.85}
+.iconbtn{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  color:var(--ink2);cursor:pointer}
+.iconbtn:active{background:var(--press)}
+
+.n-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding-bottom:10px}
+.n-scroll::-webkit-scrollbar{width:0}
+
+.n-text{padding:2px 18px;color:var(--ink2)}
+.n-text.h1{font:700 26px/1.18 var(--disp);color:var(--ink);padding:10px 18px 6px;letter-spacing:-.6px}
+.n-text.h2{font:650 18px/1.3 var(--disp);color:var(--ink);padding:12px 18px 2px}
+.n-text.body{font-size:13.5px;padding:5px 18px;line-height:1.7}
+.n-text.muted{font-size:12.5px;color:var(--muted);padding:6px 18px;line-height:1.6}
+.n-text.empty{padding:14px 18px 40px;text-align:center;color:var(--muted);font-size:13.5px}
+.n-sec{padding:18px 18px 6px;font:700 11.5px/1 var(--ui);color:var(--muted);letter-spacing:1.3px;
+  text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.n-space{height:16px}
+
+.n-card{background:var(--card);border-radius:var(--r);margin:9px 16px;overflow:hidden;border:1px solid var(--line)}
+.n-card.flush{padding:0}
+.n-card.pad{padding:14px 16px}
+.n-card.tap{cursor:pointer}
+.n-card.tap:active{background:var(--press)}
+
+.n-row{display:flex;align-items:center;gap:13px;padding:12px 16px;border-bottom:1px solid var(--line);min-height:54px}
+.n-row:last-child{border-bottom:none}
+.n-row.tap{cursor:pointer}
+.n-row.tap:active{background:var(--press)}
+.n-row .r-lead{flex:0 0 auto;width:26px;color:var(--ink2);display:flex;align-items:center;justify-content:center}
+.n-row .r-main{flex:1 1 auto;min-width:0}
+.n-row .r-label{font-size:14.5px}
+.n-row .r-label.strike{text-decoration:line-through;color:var(--muted)}
+.n-row .r-sub{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.5}
+.n-row .r-value{flex:0 0 auto;font-size:14px;color:var(--ink2);text-align:right;font-variant-numeric:tabular-nums}
+.n-row .r-value.strong{color:var(--ink);font-weight:700}
+.n-row .r-value.acc{color:var(--accent);font-weight:700}
+.n-row .r-value.good{color:var(--good);font-weight:700}
+.n-row .r-value.warn{color:var(--warn);font-weight:700}
+.n-row .r-value.bad{color:var(--bad);font-weight:700}
+.n-row .r-arrow{flex:0 0 auto;color:var(--chev);display:flex}
+
+.n-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:47px;padding:0 20px;
+  border-radius:13px;font:650 15px/1 var(--ui);background:var(--btn);color:var(--ink);
+  border:none;cursor:pointer;user-select:none}
+.n-btn:active{filter:brightness(.97)}
+.n-btn.primary{background:var(--accent);color:var(--on-accent)}
+.n-btn.primary.off{background:var(--btn-off);color:var(--muted);cursor:not-allowed}
+.n-btn.ghost{background:transparent;border:1px solid var(--line2);height:37px;font-size:13px;padding:0 14px;color:var(--ink2)}
+.n-btn.danger{background:transparent;border:1px solid var(--bad-line);color:var(--bad);height:37px;font-size:13px;padding:0 14px}
+.n-btn.block{display:flex;width:100%}
+.n-btnrow{display:flex;gap:10px;padding:12px 16px;justify-content:flex-end;align-items:center;flex-wrap:wrap}
+
+.n-chips{display:flex;gap:8px;padding:8px 16px;overflow-x:auto}
+.n-chips::-webkit-scrollbar{height:0}
+.n-chip{flex:0 0 auto;height:34px;padding:0 14px;border-radius:11px;background:var(--card);
+  border:1px solid var(--line2);display:flex;align-items:center;font-size:13px;
+  color:var(--ink2);cursor:pointer;white-space:nowrap;font-weight:600}
+.n-chip.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+
+.n-input{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line);background:var(--card)}
+.n-input .i-label{flex:0 0 78px;font-size:13px;color:var(--muted)}
+.n-input input{flex:1 1 auto;border:none;outline:none;background:transparent;font-size:14.5px;
+  font-family:inherit;color:var(--ink);min-width:0}
+.n-input input::placeholder{color:var(--muted)}
+.n-switch{flex:0 0 auto;width:46px;height:27px;border-radius:14px;background:var(--off);position:relative;cursor:pointer;transition:background .16s}
+.n-switch.on{background:var(--accent)}
+.n-switch i{position:absolute;top:2.5px;left:2.5px;width:22px;height:22px;border-radius:50%;background:#fff;
+  transition:transform .16s;box-shadow:0 1px 3px rgba(0,0,0,.22)}
+.n-switch.on i{transform:translateX(19px)}
+.n-check{flex:0 0 auto;width:23px;height:23px;border-radius:7px;border:1.8px solid var(--off);position:relative;background:var(--card)}
+.n-check.on{border-color:var(--accent);background:var(--accent)}
+.n-check.on:after{content:"";position:absolute;left:7.5px;top:4px;width:5px;height:10px;
+  border:2px solid var(--on-accent);border-top:0;border-left:0;transform:rotate(42deg)}
+.n-radio{flex:0 0 auto;width:22px;height:22px;border-radius:50%;border:1.8px solid var(--off);position:relative}
+.n-radio.on{border-color:var(--accent);background:var(--accent)}
+.n-radio.on:after{content:"";position:absolute;left:7px;top:4px;width:5px;height:9px;
+  border:2px solid var(--on-accent);border-top:0;border-left:0;transform:rotate(42deg)}
+
+.tag{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11px;
+  font-weight:700;background:var(--btn);color:var(--ink2)}
+.tag.acc{background:var(--accent-s);color:var(--accent)}
+.tag.good{background:var(--good-s);color:var(--good)}
+.tag.warn{background:var(--warn-s);color:var(--warn)}
+.tag.bad{background:var(--bad-s);color:var(--bad)}
+
+.n-tabbar{flex:0 0 auto;height:58px;background:var(--tabbar);border-top:1px solid var(--line);display:flex;z-index:30}
+.n-tabbar .tb{flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  color:var(--muted);font-size:10.5px;cursor:pointer;font-weight:600}
+.n-tabbar .tb i{display:flex}
+.n-tabbar .tb.on{color:var(--accent)}
+
+.n-mask{position:absolute;inset:0;background:var(--scrim);z-index:70;display:flex;align-items:flex-end}
+.n-sheet{width:100%;max-height:80%;background:var(--card);border-radius:22px 22px 0 0;display:flex;
+  flex-direction:column;overflow:hidden;animation:up .18s ease-out}
+@keyframes up{from{transform:translateY(24px)}to{transform:none}}
+.n-sheet .sh-hd{padding:16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
+.n-sheet .sh-hd .t{font:650 17px/1.2 var(--disp)}
+.n-sheet .sh-bd{flex:1 1 auto;overflow-y:auto;min-height:0}
+.n-sheet .sh-bd::-webkit-scrollbar{width:0}
+.n-toast{position:absolute;left:50%;bottom:118px;transform:translateX(-50%);background:var(--toast);
+  color:var(--toast-ink);padding:11px 18px;border-radius:11px;font-size:13px;z-index:90;max-width:84%;text-align:center}
+.dialog{margin:auto;width:82%;background:var(--card);border-radius:18px;overflow:hidden;border:1px solid var(--line)}
+
+.stats{display:flex;gap:9px;padding:4px 16px}
+.stat{flex:1 1 0;background:var(--card);border:1px solid var(--line);border-radius:var(--r2);padding:13px 12px}
+.stat.tap{cursor:pointer}
+.stat .st-n{font:800 19px/1.1 var(--disp);letter-spacing:-.5px;font-variant-numeric:tabular-nums}
+.stat .st-l{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.4}
+.stat.acc .st-n{color:var(--accent)}
+
+.hero{margin:8px 16px 4px;padding:18px;border-radius:var(--r);background:var(--hero);
+  border:1px solid var(--hero-line);color:var(--hero-ink)}
+.hero.tap{cursor:pointer}
+.hero .he-k{font-size:11px;letter-spacing:1.3px;text-transform:uppercase;font-weight:800;opacity:.85}
+.hero .he-t{font:800 25px/1.16 var(--disp);margin-top:9px;letter-spacing:-.7px}
+.hero .he-s{font-size:13px;margin-top:8px;line-height:1.6;opacity:.9}
+
+
+.out{margin:12px 16px;padding:17px 16px;background:var(--card);border:1px solid var(--line2);
+  border-radius:var(--r);box-shadow:var(--shadow)}
+.out .ou-k{font-size:11px;color:var(--muted);letter-spacing:.8px;text-transform:uppercase}
+.out .ou-n{font:800 32px/1 var(--disp);letter-spacing:-1.2px;margin-top:10px}
+.out .ou-s{font-size:12.5px;color:var(--ink2);margin-top:9px;line-height:1.6}
+.out .ou-g{display:flex;gap:18px;margin-top:15px;padding-top:14px;border-top:1px solid var(--line)}
+.out .ou-i .v{font:700 16px/1 var(--disp);font-variant-numeric:tabular-nums}
+.out .ou-i .l{font-size:10.5px;color:var(--muted);margin-top:5px}
+.out .ou-i.hi .v{color:var(--accent)}
+
+.slid{margin:0 16px}
+.sl-t{display:flex;gap:3px}
+.sl-t div{flex:1 1 0;height:38px;border-radius:4px;background:var(--btn);cursor:pointer;
+  position:relative}
+.sl-t div:active{background:var(--press)}
+.sl-t div.lo{background:var(--btn-off)}
+.sl-t div.on{background:var(--accent)}
+.sl-t div.pre{background:var(--accent-s)}
+.sl-l{display:flex;justify-content:space-between;margin-top:8px;font-size:11px;color:var(--muted)}
+.sl-v{text-align:center;font:800 24px/1 var(--disp);margin:11px 0 3px;letter-spacing:-.6px}
+.sl-c{text-align:center;font-size:11.5px;color:var(--muted)}
+
+.opt{display:flex;align-items:flex-start;gap:11px;padding:13px 15px;border-bottom:1px solid var(--line);
+  cursor:pointer}
+.opt:last-child{border-bottom:none}
+.opt:active{background:var(--press)}
+.opt.on{background:var(--accent-s)}
+.op-r{flex:0 0 auto;width:18px;height:18px;border-radius:9px;border:1.5px solid var(--off);
+  margin-top:2px}
+.opt.on .op-r{border-color:var(--accent);background:var(--accent);box-shadow:inset 0 0 0 3px #fff}
+.op-m{flex:1 1 auto;min-width:0}
+.op-n{font-size:14px;font-weight:700}
+.op-s{font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.5}
+.op-v{flex:0 0 auto;text-align:right}
+.op-a{font:700 13.5px/1 var(--disp);font-variant-numeric:tabular-nums}
+.op-b{font-size:10.5px;margin-top:4px;color:var(--muted)}
+.op-b.best{color:var(--good);font-weight:700}
+
+.chart{margin:0 16px;padding:13px 12px 8px;background:var(--card);border:1px solid var(--line);
+  border-radius:var(--r);overflow-x:auto}
+.chart .ch-b{display:flex;align-items:flex-end;gap:1px;height:104px}
+.chart .ch-b span{flex:1 1 0;min-width:2px;display:flex;flex-direction:column;
+  justify-content:flex-end}
+.chart .ch-b i{display:block;background:var(--accent);border-radius:1px 1px 0 0}
+.chart .ch-b u{display:block;background:var(--bad);border-radius:1px 1px 0 0}
+.chart .ch-x{display:flex;justify-content:space-between;margin-top:8px;font-size:10.5px;
+  color:var(--muted)}
+.chart .ch-k{display:flex;gap:14px;margin-top:9px;font-size:10.5px;color:var(--muted)}
+.chart .ch-k span{display:flex;align-items:center;gap:5px}
+.chart .ch-k b{width:9px;height:9px;border-radius:2px;display:block}
+
+.sched{margin:0 16px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+  overflow-x:auto}
+.sched table{border-collapse:collapse;width:100%;min-width:342px}
+.sched th,.sched td{padding:7px 8px;font-size:11.5px;text-align:right;
+  border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+.sched th{font-size:9.5px;letter-spacing:.7px;text-transform:uppercase;color:var(--muted);
+  border-bottom:1px solid var(--line2)}
+.sched td.m,.sched th.m{text-align:left;color:var(--muted)}
+.sched tr.gone td{color:var(--good)}
+.sched tr.mark td{background:var(--accent-s);font-weight:700}
+
+</style>
+</head>
+<body>
+<div id="device">
+  <div id="notch"></div>
+  <div id="screen">
+    <div class="statusbar" id="sb">
+      <div id="sb-clock">21:38</div>
+      <div class="sb-r">
+        <svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="4.6" y="5.5" width="3" height="6.5" rx="1"/><rect x="9.2" y="3" width="3" height="9" rx="1"/><rect x="13.8" y="0" width="3" height="12" rx="1"/></svg>
+        <svg width="15" height="12" viewBox="0 0 15 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 4.2a9 9 0 0 1 13 0"/><path d="M3.4 6.9a5.6 5.6 0 0 1 8.2 0"/><circle cx="7.5" cy="10" r=".9" fill="currentColor" stroke="none"/></svg>
+        <span class="sb-bat"><i></i></span>
+      </div>
+    </div>
+    <div id="app"></div>
+  </div>
+</div>
+<div id="hud" class="off"></div>
+
+<script id="engine">
+/* ===========================================================================
+ * ENGINE — pure, deterministic, DOM-free.
+ * Money is integer pence and every month's interest is floored, so the
+ * simulation reproduces exactly. Nothing here is a closed-form formula.
+ * ======================================================================== */
+(function(root){
+'use strict';
+
+var ENV_ID  = 'bastion_loan';
+var VERSION = '1.0.0';
+
+/* ------------------------------------------------------------- utilities */
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+function pad2(n){ return (n < 10 ? '0' : '') + n; }
+function hhmm(m){ m = ((m % 1440) + 1440) % 1440; return pad2(Math.floor(m/60)) + ':' + pad2(m%60); }
+function sum(a){ var s = 0; for (var i=0;i<a.length;i++) s += a[i]; return s; }
+function clamp(v, lo, hi){ return v < lo ? lo : (v > hi ? hi : v); }
+function lcg(seed){ var s=(seed>>>0)||1; return function(){ s=(s*1664525+1013904223)>>>0; return s/4294967296; }; }
+function shuffled(list, seed){
+  if (!seed) return list.slice();
+  var r = lcg(seed), a = list.slice();
+  for (var i=a.length-1;i>0;i--){ var j = Math.floor(r()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; }
+  return a;
+}
+function money(p, sym){
+  var neg = p < 0; p = Math.abs(p);
+  return (neg ? '-' : '') + (sym === undefined ? '\u00a3' : sym) +
+         (Math.floor(p/100)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '.' + pad2(p%100);
+}
+function getPath(o, path){
+  var cur = o, parts = String(path).split('.');
+  for (var i=0;i<parts.length;i++){
+    var k = parts[i], m = k.match(/^(.*?)\[(\d+)\]$/);
+    if (m){ cur = cur ? cur[m[1]] : undefined; cur = cur ? cur[+m[2]] : undefined; }
+    else cur = cur ? cur[k] : undefined;
+    if (cur === undefined) return undefined;
+  }
+  return cur;
+}
+function setPath(o, path, value){
+  var parts = String(path).split('.'), cur = o;
+  for (var i=0;i<parts.length-1;i++){
+    var k = parts[i], m = k.match(/^(.*?)\[(\d+)\]$/);
+    cur = m ? cur[m[1]][+m[2]] : (cur[k] = cur[k] || {});
+  }
+  var lastK = parts[parts.length-1], lm = lastK.match(/^(.*?)\[(\d+)\]$/);
+  if (lm) cur[lm[1]][+lm[2]] = value; else cur[lastK] = value;
+  return o;
+}
+
+/* ------------------------------------------- screen-tree node constructors */
+function N(t, o){ o = o || {}; o.t = t; return o; }
+function txt(s, cls){ return N('text', {text:s, cls:cls || ''}); }
+function row(id, text, o){
+  o = o || {}; o.id = id; o.text = text;
+  if (o.arrow === undefined) o.arrow = !!o.act;
+  return N('row', o);
+}
+function btn(id, text, act, cls, disabled){
+  return N('btn', {id:id, text:text, act:act, cls:cls || '', disabled:!!disabled});
+}
+function iconbtn(id, ic, act, cls){ return N('iconbtn', {id:id, icon:ic, act:act, cls:cls || ''}); }
+function appbar(title, o){ o = o || {}; o.title = title; return N('appbar', o); }
+function stepper(id, value, minus, plus){
+  return N('stepper', {id:id, value:value, minusId:id + '_dec', plusId:id + '_inc',
+                       minus:minus, plus:plus});
+}
+function sheet(id, title, kids){
+  return N('sheet', {id:id, title:title, closeId:id + '_close', close:{type:'CLOSE_SHEET'}, c:kids});
+}
+function route(st){ return st.ui.stack[st.ui.stack.length - 1]; }
+function push(st, name, params){ st.ui.stack.push({name:name, params:params || {}}); st.ui.sheet = null; }
+function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
+function toast(st, t){ st.ui.toast = t; }
+
+/* ------------------------------------------------------------ the debts
+ * rates are monthly, in hundred-thousandths, so interest is an exact floor */
+var CARD = {id:'d_card', name:'Credit card', start:240000, rate:1825, minPct:250, minFloor:2500,
+            apr:'21.9% APR', note:'The minimum is 2.5% of the balance or £25, whichever is more.'};
+var LOAN = {id:'d_loan', name:'Car loan', start:1800000, rate:492, payment:34800,
+            apr:'5.9% APR', note:'£348 a month, contractual. You cannot pay it less.'};
+/* the balance-transfer deal */
+var XFER = {fee:290, months:18, after:2075, cap:250000,
+            note:'Nothing to pay in interest for 18 months, then 24.9%. The fee is 2.9% of what '
+                 + 'you move and it goes straight onto the balance.'};
+
+var BUDGETS = [];
+for (var _b = 40000; _b <= 70000; _b += 2000) BUDGETS.push(_b);
+
+var TARGETS = [
+  {id:'card', name:'Everything spare at the card',
+   note:'The dearer debt first. Once it is gone the whole surplus falls on the loan.'},
+  {id:'loan', name:'Everything spare at the loan',
+   note:'The bigger debt first, and the one with the payment you cannot dodge.'},
+  {id:'split', name:'Split the surplus down the middle',
+   note:'Half each, until one of them clears.'}
+];
+function targetOf(id){ for (var i=0;i<TARGETS.length;i++) if (TARGETS[i].id === id) return TARGETS[i]; return null; }
+
+function cardMin(bal){
+  if (bal <= 0) return 0;
+  var m = Math.max(CARD.minFloor, Math.ceil(bal * CARD.minPct / 10000));
+  return Math.min(bal, m);
+}
+var HORIZON = 180;
+
+/* the whole world: run both balances forward a month at a time */
+function simulate(budget, target, transfer){
+  var card = transfer ? CARD.start + Math.ceil(CARD.start * XFER.fee / 10000) : CARD.start;
+  var loan = LOAN.start;
+  var iCard = 0, iLoan = 0, paid = 0;
+  var cardMonth = 0, loanMonth = 0, rows = [], feasible = true;
+  var m;
+  for (m = 1; m <= HORIZON; m++){
+    if (card <= 0 && loan <= 0) break;
+    var rate = transfer ? (m <= XFER.months ? 0 : XFER.after) : CARD.rate;
+    var ci = card > 0 ? Math.floor(card * rate / 100000) : 0;
+    var li = loan > 0 ? Math.floor(loan * LOAN.rate / 100000) : 0;
+    card += ci; loan += li; iCard += ci; iLoan += li;
+    var loanPay = Math.min(loan, LOAN.payment);
+    var minPay = cardMin(card);
+    var must = loanPay + minPay;
+    if (must > budget) { feasible = false; break; }
+    var spare = budget - must;
+    var toCard = 0, toLoan = 0;
+    if (card <= 0) toLoan = spare;
+    else if (loan <= 0) toCard = spare;
+    else if (target === 'card') toCard = spare;
+    else if (target === 'loan') toLoan = spare;
+    else { toCard = Math.floor(spare / 2); toLoan = spare - toCard; }
+    var payCard = Math.min(card, minPay + toCard);
+    var payLoan = Math.min(loan, loanPay + toLoan);
+    card -= payCard; loan -= payLoan;
+    if (card < 0) card = 0;
+    if (loan < 0) loan = 0;
+    paid += payCard + payLoan;
+    if (card === 0 && !cardMonth) cardMonth = m;
+    if (loan === 0 && !loanMonth) loanMonth = m;
+    rows.push({m:m, card:card, loan:loan, ci:ci, li:li, payCard:payCard, payLoan:payLoan,
+               out:payCard + payLoan});
+  }
+  return {rows:rows, months:rows.length, cardMonth:cardMonth, loanMonth:loanMonth,
+          interestCard:iCard, interestLoan:iLoan, interest:iCard + iLoan,
+          fee:transfer ? Math.ceil(CARD.start * XFER.fee / 10000) : 0,
+          totalPaid:paid, feasible:feasible,
+          cost:iCard + iLoan + (transfer ? Math.ceil(CARD.start * XFER.fee / 10000) : 0)};
+}
+function run(st){ return simulate(st.budget, st.target, st.transfer); }
+function runWith(st, o){
+  return simulate(o.budget === undefined ? st.budget : o.budget,
+                  o.target === undefined ? st.target : o.target,
+                  o.transfer === undefined ? st.transfer : o.transfer);
+}
+function bestTarget(st){
+  var best = null;
+  TARGETS.forEach(function(t){
+    var r = runWith(st, {target:t.id});
+    if (!r.feasible) return;
+    if (!best || r.cost < best.r.cost) best = {t:t, r:r};
+  });
+  return best;
+}
+function years(m){
+  if (!m) return 'never';
+  var y = Math.floor(m / 12), r = m % 12;
+  return (y ? y + 'y' : '') + (y && r ? ' ' : '') + (r ? r + 'm' : (y ? '' : '0m'));
+}
+function money(n){
+  var neg = n < 0; if (neg) n = -n;
+  var w = '' + Math.floor(n / 100), c = n % 100, g = '';
+  for (var i = 0; i < w.length; i++){
+    if (i > 0 && (w.length - i) % 3 === 0) g += ',';
+    g += w[i];
+  }
+  return (neg ? '-' : '') + '£' + g + '.' + (c < 10 ? '0' : '') + c;
+}
+
+/* =========================================================== state */
+function createInitialState(seed){
+  seed = seed || 0;
+  return {
+    meta:{env:ENV_ID, version:VERSION, seed:seed, steps:0, finished:false, answer:null},
+    budget:52000,            /* £520 a month */
+    target:'loan',           /* the wrong one, on purpose */
+    transfer:false,
+    /* the seed permutes the order the shortcuts are offered in, nothing else */
+    order:shuffled(['card', 'loan', 'split'], seed),
+    ui:{tab:'plan', stack:[{name:'plan', params:{}}], sheet:null, confirm:null, inputs:{},
+        toast:null, month:1},
+    settings:{showSchedule:true, showFee:true, notifyCleared:true}
+  };
+}
+var SELECT = {
+  simulate:simulate, run:run, runWith:runWith, bestTarget:bestTarget, cardMin:cardMin,
+  years:years, money:money, budgets:BUDGETS, targets:TARGETS, card:CARD, loan:LOAN, xfer:XFER,
+  route:route
+};
+
+/* =========================================================== reducer */
+function reduce(prev, action){
+  var st = clone(prev), A = action || {};
+  st.ui.toast = null;
+  st.meta.steps += 1;
+
+  function said(st, was){
+    var r = run(st);
+    if (!r.feasible) return 'That does not even cover the loan payment and the card minimum';
+    return 'Clear in ' + years(r.months) + ', ' + money(r.cost) + ' in interest and fees'
+           + (was !== null && st.settings.notifyCleared
+              ? (r.cost < was ? ' — ' + money(was - r.cost) + ' better'
+                              : (r.cost > was ? ' — ' + money(r.cost - was) + ' worse'
+                                              : ' — no different')) : '');
+  }
+
+  switch (A.type) {
+
+  case 'NOOP': break;
+  case 'FINISH': st.meta.finished = true; st.meta.answer = A.answer === undefined ? null : A.answer; break;
+
+  case 'NAV': push(st, A.to, A.params); break;
+  case 'BACK':
+    if (st.ui.sheet) st.ui.sheet = null;
+    else if (st.ui.confirm) st.ui.confirm = null;
+    else pop(st);
+    break;
+  case 'TAB': {
+    var roots = {plan:'plan', sched:'sched', debts:'debts', settings:'settings'};
+    st.ui.tab = A.tab; st.ui.sheet = null; st.ui.confirm = null;
+    st.ui.stack = [{name:roots[A.tab] || 'plan', params:{}}];
+    break;
+  }
+  case 'HOME':
+    st.ui.tab = 'plan'; st.ui.stack = [{name:'plan', params:{}}];
+    st.ui.sheet = null; st.ui.confirm = null;
+    break;
+  case 'SET_INPUT': st.ui.inputs[A.field] = A.value; break;
+  case 'OPEN_SHEET': st.ui.sheet = {type:A.sheet, id:A.id || null}; break;
+  case 'CLOSE_SHEET': st.ui.sheet = null; break;
+  case 'CONFIRM_NO': st.ui.confirm = null; break;
+  case 'CONFIRM_YES': {
+    var yes = st.ui.confirm && st.ui.confirm.yes; st.ui.confirm = null;
+    if (yes) { var keep = st.meta.steps; var out = reduce(st, yes); out.meta.steps = keep; return out; }
+    break;
+  }
+  case 'MONTH': st.ui.month = Math.max(1, Math.min(HORIZON, A.n)); break;
+
+  /* ---- the three levers ---- */
+  case 'BUDGET': {
+    var was = run(st).feasible ? run(st).cost : null;
+    if (BUDGETS.indexOf(A.n) < 0) break;
+    if (A.n === st.budget) { toast(st, 'Already ' + money(A.n) + ' a month'); break; }
+    st.budget = A.n;
+    toast(st, money(A.n) + ' a month — ' + said(st, was));
+    break;
+  }
+  case 'TARGET': {
+    if (!targetOf(A.id)) break;
+    var was2 = run(st).feasible ? run(st).cost : null;
+    if (A.id === st.target) { toast(st, 'The surplus already goes there'); break; }
+    st.target = A.id;
+    toast(st, targetOf(A.id).name + ' — ' + said(st, was2));
+    break;
+  }
+  case 'TRANSFER': {
+    if (st.transfer) {
+      st.transfer = false;
+      toast(st, 'Transfer dropped — ' + said(st, null));
+      break;
+    }
+    st.ui.confirm = {title:'Move the card to the 0% deal?',
+      text:'A fee of ' + money(Math.ceil(CARD.start * XFER.fee / 10000)) + ' goes onto the balance '
+           + 'straight away. No interest for ' + XFER.months + ' months, then 24.9%.',
+      okText:'Move it', yes:{type:'TRANSFER_YES'}};
+    break;
+  }
+  case 'TRANSFER_YES': {
+    var was3 = run(st).feasible ? run(st).cost : null;
+    st.transfer = true;
+    toast(st, 'Moved — ' + said(st, was3));
+    break;
+  }
+
+  case 'BEST_TARGET': {
+    var b = bestTarget(st);
+    if (!b) { toast(st, 'Nothing is affordable at this budget'); break; }
+    if (b.t.id === st.target) { toast(st, 'You are already on the best of the three'); break; }
+    var was4 = run(st).cost;
+    st.target = b.t.id;
+    toast(st, 'Switched to ' + b.t.name.toLowerCase() + ' — ' + money(was4 - b.r.cost) + ' better');
+    break;
+  }
+
+  case 'SET_TOGGLE': st.settings[A.key] = !st.settings[A.key]; break;
+
+  default: break;
+  }
+  return st;
+}
+
+/* =========================================================== screens */
+function tabbar(st){
+  var items = [
+    {id:'tab_plan',     text:'Plan',     icon:'chart',  tab:'plan'},
+    {id:'tab_sched',    text:'Month by month', icon:'list', tab:'sched'},
+    {id:'tab_debts',    text:'Debts',    icon:'money',  tab:'debts'},
+    {id:'tab_settings', text:'Setup',    icon:'gear',   tab:'settings'}
+  ].map(function(i){
+    return {id:i.id, text:i.text, icon:i.icon, on:(st.ui.tab === i.tab), act:{type:'TAB', tab:i.tab}};
+  });
+  return N('tabbar', {id:'tabbar', items:items});
+}
+function outcome(st){
+  var r = run(st);
+  if (!r.feasible)
+    return N('out', {id:'outcome', kicker:'Will not work', amount:money(st.budget) + ' a month',
+      sub:'That does not cover the ' + money(LOAN.payment) + ' loan payment and the card minimum '
+          + 'on top. Nothing can be planned until it does.',
+      grid:[{v:'—', l:'debt free', hi:false}, {v:'—', l:'interest', hi:false},
+            {v:'—', l:'total paid', hi:false}]});
+  return N('out', {id:'outcome', kicker:'Debt free in', amount:years(r.months),
+    sub:'The card goes at month ' + (r.cardMonth || '—') + ' and the loan at month '
+        + (r.loanMonth || '—') + '. '
+        + (st.transfer ? 'The transfer fee of ' + money(r.fee) + ' is counted in.'
+                       : 'On the card as it stands, at 21.9%.'),
+    grid:[{v:r.months + ' months', l:'to clear both', hi:true},
+          {v:money(r.cost), l:'interest and fees', hi:false},
+          {v:money(r.totalPaid), l:'paid in all', hi:false}]});
+}
+function slider(st){
+  var i = BUDGETS.indexOf(st.budget);
+  return N('slid', {id:'budget_slider', value:money(st.budget) + ' a month',
+    caption:'The loan takes ' + money(LOAN.payment) + ' whatever happens; the card minimum is '
+            + money(cardMin(CARD.start)) + ' to start with. Everything above that is yours to aim.',
+    lo:money(BUDGETS[0]), hi:money(BUDGETS[BUDGETS.length-1]),
+    ticks:BUDGETS.map(function(b, k){
+      return {id:'bud_' + (b / 100), on:b === st.budget, pre:k < i,
+        low:!simulate(b, st.target, st.transfer).feasible,
+        act:{type:'BUDGET', n:b}};
+    })});
+}
+function targetCard(st){
+  var best = bestTarget(st);
+  return N('card', {id:'target_card', cls:'flush', c: st.order.map(targetOf).map(function(t){
+    var r = runWith(st, {target:t.id});
+    return N('opt', {id:'tgt_' + t.id, on:st.target === t.id, name:t.name, sub:t.note,
+      amount:r.feasible ? years(r.months) : 'not affordable',
+      note:r.feasible ? money(r.cost) + ' in interest' : '',
+      best:!!(best && best.t.id === t.id),
+      act:{type:'TARGET', id:t.id}});
+  })});
+}
+
+function scrPlan(st){
+  var r = run(st), without = runWith(st, {transfer:false}), with_ = runWith(st, {transfer:true});
+  return N('screen', {id:'scr_plan', name:'plan', c:[
+    appbar('Bastion'),
+    N('scroll', {id:'plan_scroll', c:[
+      outcome(st),
+      N('sec', {text:'What you can find each month'}),
+      slider(st),
+      N('sec', {text:'Where the surplus goes', side:bestTarget(st)
+        ? 'cheapest: ' + bestTarget(st).t.name.split(' ').slice(-1)[0] : ''}),
+      targetCard(st),
+      N('padded', {c:[btn('use_best', 'Use whichever is cheapest', {type:'BEST_TARGET'}, 'block')]}),
+      N('sec', {text:'The 0% offer'}),
+      N('card', {id:'xfer_card', cls:'flush', c:[
+        row('xfer_row', 'Move the card to 0% for ' + XFER.months + ' months',
+          {sub:XFER.note, arrow:false,
+           c:[N('switch', {id:'set_transfer', on:st.transfer, act:{type:'TRANSFER'}})]}),
+        row('xfer_math', st.transfer ? 'With it' : 'If you took it',
+          {lead:'money',
+           sub:(st.settings.showFee
+                ? 'fee ' + money(Math.ceil(CARD.start * XFER.fee / 10000)) + ' · ' : '')
+               + 'clears in ' + years(with_.months) + ' against ' + years(without.months)
+               + ' without',
+           val:with_.cost < without.cost ? money(without.cost - with_.cost) + ' better'
+                                         : money(with_.cost - without.cost) + ' worse',
+           valCls:with_.cost < without.cost ? 'good' : 'bad', arrow:false})]}),
+      N('sec', {text:'How the balances come down'}),
+      N('chart', {id:'balance_chart', months:r.rows.length,
+        bars:r.rows.map(function(x){
+          var top = Math.max(CARD.start + 20000, LOAN.start);
+          return {loan:Math.round(x.loan * 100 / top), card:Math.round(x.card * 100 / top)};
+        }),
+        lo:'month 1', hi:'month ' + (r.rows.length || 0),
+        keys:[{c:'loan', t:'car loan'}, {c:'card', t:'credit card'}]}),
+      N('space', {})
+    ]}),
+    tabbar(st)
+  ]});
+}
+
+function scrSched(st){
+  var r = run(st);
+  var start = Math.max(0, Math.min(st.ui.month - 1, Math.max(0, r.rows.length - 12)));
+  var slice = r.rows.slice(start, start + 12);
+  return N('screen', {id:'scr_sched', name:'sched', c:[
+    appbar('Month by month'),
+    N('scroll', {id:'sched_scroll', c:[
+      outcome(st),
+      N('chips', {id:'jump_chips', c:[1, 13, 25, 37, 49].filter(function(m){
+          return m <= Math.max(1, r.rows.length);
+        }).map(function(m){
+          return N('chip', {id:'mo_' + m, text:'from ' + m, on:start + 1 === m,
+            act:{type:'MONTH', n:m}});
+        })}),
+      N('sec', {text:'Months ' + (start + 1) + '–' + (start + slice.length)}),
+      (st.settings.showSchedule
+        ? N('sched', {id:'schedule', rows:slice.map(function(x){
+            return {m:x.m, card:money(x.card), loan:money(x.loan),
+              int:money(x.ci + x.li), out:money(x.out),
+              gone:x.card === 0 && x.loan === 0,
+              mark:x.m === r.cardMonth || x.m === r.loanMonth};
+          })})
+        : txt('The table is switched off in Setup.', 'empty')),
+      txt('Interest is worked out on the balance at the start of the month and added before '
+          + 'anything is paid, which is why the first few months barely move.', 'muted'),
+      N('sec', {text:'What the interest splits into'}),
+      N('card', {id:'split_card', cls:'flush', c:[
+        row('int_card', 'On the credit card', {lead:'money', val:money(r.interestCard),
+          valCls:'bad', arrow:false,
+          sub:r.cardMonth ? 'cleared at month ' + r.cardMonth : 'still running'}),
+        row('int_loan', 'On the car loan', {lead:'money', val:money(r.interestLoan),
+          valCls:'warn', arrow:false,
+          sub:r.loanMonth ? 'cleared at month ' + r.loanMonth : 'still running'}),
+        row('int_fee', 'Transfer fee', {lead:'money', val:money(r.fee),
+          valCls:r.fee ? 'bad' : '', arrow:false,
+          sub:st.transfer ? '2.9% of what was moved' : 'not taken'}),
+        row('int_total', 'All in', {lead:'money', val:money(r.cost), valCls:'strong',
+          arrow:false})]}),
+      N('space', {})
+    ]}),
+    tabbar(st)
+  ]});
+}
+
+function scrDebts(st){
+  var r = run(st);
+  return N('screen', {id:'scr_debts', name:'debts', c:[
+    appbar('What you owe'),
+    N('scroll', {id:'debts_scroll', c:[
+      N('sec', {text:'Two of them'}),
+      N('card', {id:'debt_list', cls:'flush', c:[
+        row('debt_card', CARD.name,
+          {lead:'money', sub:CARD.apr + ' · ' + CARD.note,
+           val:money(CARD.start), valCls:'bad',
+           act:{type:'NAV', to:'debt', params:{id:'d_card'}}}),
+        row('debt_loan', LOAN.name,
+          {lead:'money', sub:LOAN.apr + ' · ' + LOAN.note,
+           val:money(LOAN.start), valCls:'warn',
+           act:{type:'NAV', to:'debt', params:{id:'d_loan'}}})]}),
+      N('stats', {id:'debt_stats', c:[
+        N('stat', {id:'st_owed', n:money(CARD.start + LOAN.start), l:'owed today'}),
+        N('stat', {id:'st_int', n:money(r.cost), l:'it will cost', acc:true}),
+        N('stat', {id:'st_mth', n:(r.months || '—') + '', l:'months'})
+      ]}),
+      N('sec', {text:'The rate is not the whole story'}),
+      N('card', {id:'why_card', cls:'flush', c:[
+        row('why_1', 'The card is dearer', {lead:'info', arrow:false,
+          sub:'21.9% against 5.9%, so a pound aimed at the card saves nearly four times what the '
+              + 'same pound saves on the loan.'}),
+        row('why_2', 'But it is small', {lead:'info', arrow:false,
+          sub:'£2,400 against £18,000. It clears quickly whatever you do, so the gap between the '
+              + 'two orders is smaller than the rates suggest.'}),
+        row('why_3', 'And the loan payment is fixed', {lead:'info', arrow:false,
+          sub:money(LOAN.payment) + ' leaves your account every month regardless. Only what is '
+              + 'left over is actually a decision.'})]}),
+      N('space', {})
+    ]}),
+    tabbar(st)
+  ]});
+}
+
+function scrDebt(st, params){
+  var d = params.id === 'd_card' ? CARD : LOAN;
+  var r = run(st);
+  var isCard = params.id === 'd_card';
+  return N('screen', {id:'scr_debt', name:'debt', params:params, c:[
+    appbar(d.name, {back:true}),
+    N('scroll', {id:'debt_scroll', c:[
+      N('hero', {id:'debt_hero', kicker:d.apr, title:money(d.start), sub:d.note}),
+      N('stats', {id:'d_stats', c:[
+        N('stat', {id:'st_clear', n:(isCard ? r.cardMonth : r.loanMonth) || '—',
+                   l:'cleared at month', acc:true}),
+        N('stat', {id:'st_cost', n:money(isCard ? r.interestCard : r.interestLoan),
+                   l:'interest'}),
+        N('stat', {id:'st_first', n:money(r.rows.length ? (isCard ? r.rows[0].ci : r.rows[0].li) : 0),
+                   l:'first month'})
+      ]}),
+      N('sec', {text:'The first year, on this plan'}),
+      N('sched', {id:'debt_sched', rows:r.rows.slice(0, 12).map(function(x){
+        return {m:x.m, card:money(isCard ? x.card : x.loan),
+          loan:money(isCard ? x.payCard : x.payLoan),
+          int:money(isCard ? x.ci : x.li), out:money(isCard ? x.payCard : x.payLoan),
+          gone:(isCard ? x.card : x.loan) === 0, mark:false};
+      })}),
+      N('space', {})
+    ]})
+  ]});
+}
+
+function scrSettings(st){
+  function sw(id, text, key, sub){
+    return row(id, text, {sub:sub, arrow:false,
+      c:[N('switch', {id:'set_' + key, on:!!st.settings[key], act:{type:'SET_TOGGLE', key:key}})]});
+  }
+  var r = run(st);
+  return N('screen', {id:'scr_settings', name:'settings', c:[
+    appbar('Setup'),
+    N('scroll', {id:'settings_scroll', c:[
+      N('sec', {text:'This app'}),
+      N('card', {id:'app_card', cls:'flush', c:[
+        sw('sched_row', 'Show the month-by-month table', 'showSchedule', ''),
+        sw('fee_row', 'Spell the transfer fee out', 'showFee', ''),
+        sw('note_row', 'Tell me when a debt clears', 'notifyCleared', '')
+      ]}),
+      N('sec', {text:'The numbers behind it'}),
+      N('card', {id:'rules_card', cls:'flush', c:[
+        row('r_card', 'Card interest', {lead:'info', val:'1.825% a month', valCls:'strong',
+          arrow:false, sub:'worked out on the balance before anything is paid'}),
+        row('r_loan', 'Loan interest', {lead:'info', val:'0.492% a month', valCls:'strong',
+          arrow:false}),
+        row('r_min', 'Card minimum', {lead:'info', val:'2.5% or £25', valCls:'strong',
+          arrow:false, sub:'whichever is more, and it falls as the balance does'}),
+        row('r_pay', 'Loan payment', {lead:'info', val:money(LOAN.payment), valCls:'strong',
+          arrow:false, sub:'fixed, and it comes out first'}),
+        row('r_xfer', 'Transfer', {lead:'info',
+          val:'2.9% fee', valCls:'strong', arrow:false,
+          sub:XFER.months + ' months at nothing, then 24.9%'})]}),
+      N('sec', {text:'Where you are'}),
+      N('card', {id:'now_card', cls:'flush', c:[
+        row('now_budget', 'Budget', {lead:'money', val:money(st.budget), valCls:'strong',
+          arrow:false}),
+        row('now_target', 'Surplus goes to', {lead:'arrow', val:targetOf(st.target).name,
+          valCls:'acc', arrow:false}),
+        row('now_transfer', '0% deal', {lead:'check', val:st.transfer ? 'taken' : 'not taken',
+          valCls:st.transfer ? 'good' : '', arrow:false}),
+        row('now_cost', 'It will cost', {lead:'money',
+          val:r.feasible ? money(r.cost) : '—', valCls:'bad', arrow:false,
+          sub:r.feasible ? 'over ' + years(r.months) : 'the budget does not cover the minimums'})]}),
+      N('space', {})
+    ]}),
+    tabbar(st)
+  ]});
+}
+
+var ROUTES = {plan:scrPlan, sched:scrSched, debts:scrDebts, debt:scrDebt, settings:scrSettings};
+function screen(st){
+  var r = route(st), fn = ROUTES[r.name] || scrPlan;
+  var rootNode = fn(st, r.params || {});
+  rootNode.route = r.name;
+  var extra = [];
+  if (st.ui.confirm)
+    extra.push(N('mask', {id:'confirm_mask', c:[N('dialog', {id:'confirm_dialog',
+      title:st.ui.confirm.title || '', text:st.ui.confirm.text,
+      ok: btn('confirm_ok', st.ui.confirm.okText || 'Confirm', {type:'CONFIRM_YES'}, 'primary'),
+      cancel: btn('confirm_cancel', 'Leave it', {type:'CONFIRM_NO'}, '')})]}));
+  if (st.ui.toast) extra.push(N('toast', {id:'toast', text:st.ui.toast}));
+  rootNode.c = rootNode.c.concat(extra);
+  return rootNode;
+}
+
+/* =======================================================================
+ * TRAVERSAL — element index, GUI action interface, text observation.
+ * Identical in every environment here: the screen tree is the only thing
+ * that differs, and all three readers below walk that same tree.
+ * ==================================================================== */
+var SKIP_KEYS = {act:1, minus:1, plus:1, close:1, yes:1, params:1, meta:1, rows:1, bars:1, grid:1, keys:1, deps:1};
+
+function labelOf(n){ return n.text || n.title || n.name || n.label || n.main || ''; }
+
+function collect(n, out){
+  if (!n || typeof n !== 'object') return;
+  if (Array.isArray(n)) { for (var i=0;i<n.length;i++) collect(n[i], out); return; }
+  if (n.t === 'appbar' && n.back) out.push({id:'nav_back', act:{type:'BACK'}, text:'Back', t:'back'});
+  if (n.id && n.act)              out.push({id:n.id, act:n.act, text:labelOf(n), t:n.t||'el',
+                                            disabled:!!n.disabled,
+                                            input:(n.t === 'inputrow')});
+  if (n.t === 'mask' && n.close)  out.push({id:n.id, act:n.close, text:'Dismiss overlay', t:'mask'});
+  for (var k in n){
+    /* a node may carry extra buttons as a pair of keys: someId holds the
+     * test-id and some holds the action. That is how steppers, sheet close
+     * buttons and per-row buttons all get into the element index. */
+    if (k.length > 2 && k.slice(-2) === 'Id' && typeof n[k] === 'string'){
+      var sib = n[k.slice(0, -2)];
+      if (sib && typeof sib === 'object' && sib.type)
+        out.push({id:n[k], act:sib, text:k.slice(0, -2), t:'sub'});
+    }
+    if (SKIP_KEYS[k]) continue;
+    var v = n[k];
+    if (v && typeof v === 'object') collect(v, out);
+  }
+}
+function elements(st){
+  var rootNode = (st && st.t === 'screen') ? st : screen(st);
+  var masks = (rootNode.c || []).filter(function(n){ return n.t === 'mask'; });
+  var out = [];
+  collect(masks.length ? masks[masks.length-1] : rootNode, out);
+  return out;
+}
+function findEl(st, id){
+  var els = elements(st);
+  for (var i=0;i<els.length;i++) if (els[i].id === id) return els[i];
+  return null;
+}
+function substitute(act, text){
+  var a = clone(act);
+  for (var k in a) if (a[k] === '$VALUE') a[k] = text;
+  return a;
+}
+function step(st, a){
+  a = a || {};
+  var kind = a.action || a.type;
+  switch (kind) {
+  case 'tap': {
+    var el = findEl(st, a.id);
+    if (!el) return {state:st, ok:false, error:'ELEMENT_NOT_FOUND: ' + a.id};
+    if (el.disabled) return {state:st, ok:false, error:'ELEMENT_DISABLED: ' + a.id};
+    return {state:reduce(st, el.act), ok:true};
+  }
+  case 'type': {
+    var e2 = findEl(st, a.id);
+    if (!e2) return {state:st, ok:false, error:'ELEMENT_NOT_FOUND: ' + a.id};
+    if (!e2.input) return {state:st, ok:false, error:'NOT_A_TEXT_FIELD: ' + a.id};
+    return {state:reduce(st, substitute(e2.act, a.text == null ? '' : String(a.text))), ok:true};
+  }
+  case 'back':   return {state:reduce(st, {type:'BACK'}), ok:true};
+  case 'home':   return {state:reduce(st, {type:'HOME'}), ok:true};
+  case 'wait':   return {state:reduce(st, {type:'NOOP'}), ok:true};
+  case 'finish': return {state:reduce(st, {type:'FINISH', answer:a.answer}), ok:true};
+  case 'raw':    return {state:reduce(st, a.act || {}), ok:true};
+  default:       return {state:st, ok:false, error:'UNKNOWN_ACTION: ' + kind};
+  }
+}
+
+/* ------------------------------------------------- text observation (a11y) */
+function a11y(st){
+  var rootNode = screen(st), lines = [], r = route(st);
+  lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
+             '  step ' + st.meta.steps);
+  lines.push('# ' + money(st.budget) + ' a month, surplus to the ' + st.target + (st.transfer ? ', card on the 0% deal' : '') + '. ' + (run(st).feasible ? 'Clear in ' + run(st).months + ' months for ' + money(run(st).cost) + ' in interest and fees.' : 'The budget does not cover the minimums.'));
+  var masks = (rootNode.c || []).filter(function(n){ return n.t === 'mask'; });
+  if (masks.length) lines.push('# An overlay is open. Nothing behind it can be tapped.');
+  walkText(masks.length ? masks[masks.length-1] : rootNode, 0, lines, st);
+  (rootNode.c || []).forEach(function(n){ if (n.t === 'toast') lines.push('[Toast] ' + n.text); });
+  return lines.join('\n');
+}
+function tid(n){ return (n && n.id && n.act) ? ' #' + n.id : ''; }
+function ind(d){ return new Array(d+1).join('  '); }
+
+function walkText(n, d, out, st){
+  if (!n || typeof n !== 'object') return;
+  if (Array.isArray(n)) { n.forEach(function(x){ walkText(x, d, out, st); }); return; }
+  var line = null;
+  switch (n.t) {
+  case 'screen': break;
+  case 'appbar': line = '[AppBar] ' + (n.title || '') + (n.back ? '   Back #nav_back' : ''); break;
+  case 'iconbtn': line = '[IconButton]' + tid(n) + ' ' + n.icon; break;
+  case 'inputrow':
+    line = '[TextField]' + tid(n) + ' ' + (n.label || '') + ' value="' + (n.value || '') + '"'; break;
+  case 'chip':   line = '[Chip]' + tid(n) + ' ' + n.text + (n.on ? '  [selected]' : ''); break;
+  case 'btn':    line = '[Button]' + (n.id ? ' #' + n.id : '') + ' ' + n.text + (n.disabled ? ' (disabled)' : ''); break;
+  case 'row': {
+    var s = '[Row]' + tid(n) + ' ' + (n.text || '') + (n.strike ? ' (crossed out)' : '');
+    if (n.val) s += ' \u2014 ' + n.val;
+    if (n.sub) s += '   (' + n.sub + ')';
+    line = s; break;
+  }
+  case 'switch': line = '[Toggle]' + tid(n) + ' ' + (n.on ? 'ON' : 'OFF'); break;
+  case 'check':  line = '[Checkbox]' + tid(n) + ' ' + (n.on ? 'ticked' : 'not ticked'); break;
+  case 'radio':  line = '[Radio]' + tid(n) + ' ' + (n.on ? 'selected' : 'not selected'); break;
+  case 'stepper':
+    line = '[Stepper] ' + n.value + '  down #' + n.minusId + '  up #' + n.plusId; break;
+  case 'hero':
+    out.push(ind(d) + '[Hero]' + tid(n) + ' ' + n.kicker + ' \u2014 ' + n.title + '. ' + n.sub);
+    return;
+  case 'stat':   line = '[Stat]' + tid(n) + ' ' + n.l + ': ' + n.n; break;
+  case 'pills':  line = n.items.map(function(p){ return '[' + p.text + ']'; }).join(' '); break;
+  case 'sec':    line = '\u2014 ' + n.text + (n.side ? ' (' + n.side + ')' : '') + ' \u2014'; break;
+  case 'text':   line = n.text || null; break;
+  case 'tabbar':
+    out.push(ind(d) + '[TabBar] ' + n.items.map(function(i){
+      return i.text + ' #' + i.id + (i.on ? '[current]' : ''); }).join('  '));
+    return;
+  case 'sheet':  line = '[Sheet] ' + n.title + '   close #' + n.closeId; break;
+  case 'dialog': line = '[Dialog] ' + (n.title ? n.title + ' \u2014 ' : '') + n.text; break;
+  case 'mask': case 'toast': line = null; break;
+  default: {
+    var extra = walkExtra(n, d, out, st);
+    if (extra === true) return;
+    line = extra || null;
+  }
+  }
+  if (line !== null) out.push(ind(d) + line);
+  for (var k in n){
+    if (SKIP_KEYS[k]) continue;
+    var v = n[k];
+    if (v && typeof v === 'object') walkText(v, line !== null ? d+1 : d, out, st);
+  }
+}
+/* per-environment nodes: return a string to print, true if already printed,
+ * or null to ignore */
+function walkExtra(n, d, out, st){
+
+  if (n.t === 'out'){
+    out.push(ind(d) + '[' + n.kicker + '] ' + n.amount);
+    out.push(ind(d+1) + n.sub);
+    n.grid.forEach(function(g){ out.push(ind(d+1) + g.v + ' ' + g.l); });
+    return true;
+  }
+  if (n.t === 'slid'){
+    out.push(ind(d) + '[Budget] ' + n.value + '   ' + n.lo + ' to ' + n.hi);
+    out.push(ind(d+1) + n.caption);
+    n.ticks.forEach(function(t){
+      out.push(ind(d+1) + '#' + t.id + (t.on ? '  [current]' : (t.low ? '  (too little)' : '')));
+    });
+    return true;
+  }
+  if (n.t === 'opt'){
+    out.push(ind(d) + '[Option]' + tid(n) + ' ' + n.name + (n.on ? '  [chosen]' : '')
+             + ' — ' + n.amount + (n.note ? ', ' + n.note : ''));
+    out.push(ind(d+1) + n.sub);
+    return true;
+  }
+  if (n.t === 'chart'){
+    out.push(ind(d) + '[Chart] balances over ' + n.months + ' months');
+    return true;
+  }
+  if (n.t === 'sched'){
+    out.push(ind(d) + '[Schedule] month | card | loan | interest | paid');
+    n.rows.forEach(function(r){
+      out.push(ind(d+1) + r.m + ' | ' + r.card + ' | ' + r.loan + ' | ' + r.int + ' | ' + r.out);
+    });
+    return true;
+  }
+
+  return null;
+}
+
+/* --------------------------------------------------------- derived view */
+function derive(st){
+  var r = run(st);
+  var alt = {};
+  TARGETS.forEach(function(t){
+    var x = runWith(st, {target:t.id});
+    alt[t.name] = x.feasible ? x.cost : null;
+  });
+  var best = bestTarget(st);
+  return {
+    route: route(st).name,
+    routeId: (route(st).params || {}).id || null,
+    tab: st.ui.tab,
+    budget: st.budget,
+    target: st.target,
+    targetName: targetOf(st.target).name,
+    transfer: st.transfer,
+    feasible: r.feasible,
+    months: r.months,
+    cardMonth: r.cardMonth,
+    loanMonth: r.loanMonth,
+    interest: r.interest,
+    interestCard: r.interestCard,
+    interestLoan: r.interestLoan,
+    fee: r.fee,
+    cost: r.cost,
+    totalPaid: r.totalPaid,
+    costByTarget: alt,
+    cheapestTarget: best ? best.t.name : null,
+    costWithTransfer: runWith(st, {transfer:true}).cost,
+    costWithoutTransfer: runWith(st, {transfer:false}).cost,
+    viewingMonth: st.ui.month,
+    settings: clone(st.settings),
+    finished: !!st.meta.finished,
+    answer: st.meta.answer
+  };
+}
+
+function snapshot(st){ var o = clone(st); o.derived = derive(st); return o; }
+function applyPatch(st, patch){
+  (patch || []).forEach(function(p){ setPath(st, p.path, clone(p.value)); });
+  return st;
+}
+
+var ENGINE = {
+  ENV_ID: ENV_ID, VERSION: VERSION, CATALOG: {card:CARD, loan:LOAN, transfer:XFER, targets:TARGETS},
+  createInitialState: createInitialState,
+  reduce: reduce, step: step, screen: screen, a11y: a11y,
+  elements: elements, findEl: findEl, applyPatch: applyPatch,
+  getPath: getPath, setPath: setPath, clone: clone,
+  derive: derive, snapshot: snapshot,
+  select: SELECT
+};
+root.BASTION_ENGINE = ENGINE;
+root.GUI_ENGINE = ENGINE;
+
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+</script>
+
+<script id="ui">
+/* ===========================================================================
+ * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
+ * ======================================================================== */
+(function(){
+'use strict';
+var E = window.GUI_ENGINE;
+var app = document.getElementById('app');
+var hud = document.getElementById('hud');
+function esc(s){
+  return String(s === undefined || s === null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+var SVG = {
+  back: '<path d="M15 4.5 8 12l7 7.5"/>',
+  arrow: '<path d="M9 4.5 16 12l-7 7.5"/>',
+  plus: '<path d="M12 5.6v12.8M5.6 12h12.8"/>',
+  minus: '<path d="M5.6 12h12.8"/>',
+  close: '<path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5"/>',
+  check: '<path d="M4.8 12.6 9.8 17.6 19.2 6.8"/>',
+  gear: '<circle cx="12" cy="12" r="3.4"/><path d="M19.1 14.4a1.6 1.6 0 0 0 .3 1.8l.1.1a1.9 1.9 0 1 1-2.7 2.7l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5v.2a1.9 1.9 0 1 1-3.8 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a1.9 1.9 0 1 1-2.7-2.7l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1h-.2a1.9 1.9 0 1 1 0-3.8h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a1.9 1.9 0 1 1 2.7-2.7l.1.1a1.6 1.6 0 0 0 1.8.3h.1a1.6 1.6 0 0 0 1-1.5v-.2a1.9 1.9 0 1 1 3.8 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a1.9 1.9 0 1 1 2.7 2.7l-.1.1a1.6 1.6 0 0 0-.3 1.8v.1a1.6 1.6 0 0 0 1.5 1h.2a1.9 1.9 0 1 1 0 3.8h-.1a1.6 1.6 0 0 0-1.5 1z"/>',
+  list: '<path d="M8.6 6.4h11M8.6 12h11M8.6 17.6h11"/><circle cx="4.7" cy="6.4" r="1.2" fill="currentColor" stroke="none"/><circle cx="4.7" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="4.7" cy="17.6" r="1.2" fill="currentColor" stroke="none"/>',
+  info: '<circle cx="12" cy="12" r="8.8"/><path d="M12 11.1v5.4"/><circle cx="12" cy="7.9" r=".95" fill="currentColor" stroke="none"/>',
+  alert: '<path d="M12 4.2 2.9 19.4h18.2z"/><path d="M12 10.2v4"/><circle cx="12" cy="16.9" r=".95" fill="currentColor" stroke="none"/>',
+  money: '<rect x="2.8" y="6" width="18.4" height="12" rx="2.4"/><circle cx="12" cy="12" r="2.8"/><path d="M6.4 9.6v4.8M17.6 9.6v4.8"/>',
+  trash: '<path d="M4.6 6.6h14.8"/><path d="M9.4 6.6V4.8h5.2v1.8"/><path d="M6.6 6.6 7.6 20a1.4 1.4 0 0 0 1.4 1.3h6a1.4 1.4 0 0 0 1.4-1.3l1-13.4"/><path d="M10.4 10.6v6M13.6 10.6v6"/>',
+  search: '<circle cx="10.8" cy="10.8" r="6.6"/><path d="m15.6 15.6 4.4 4.4"/>',
+  user: '<circle cx="12" cy="8.2" r="3.8"/><path d="M4.4 20.4c0-3.8 3.4-6.4 7.6-6.4s7.6 2.6 7.6 6.4"/>',
+  clock: '<circle cx="12" cy="12" r="8.8"/><path d="M12 6.8V12l3.6 2.2"/>',
+  chart: '<path d="M4 20V9M9.4 20V4M14.8 20v-7.4M20.2 20v-4.6"/>'
+};
+var FILLED = {};
+function icon(name, size, cls){
+  var d = SVG[name]; if (!d) return '';
+  return '<span class="ico ' + (cls||'') + '" style="width:' + (size||20) + 'px;height:' + (size||20) +
+    'px;display:inline-flex;flex:0 0 auto"><svg viewBox="0 0 24 24" width="100%" height="100%" fill="' +
+    (FILLED[name] ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="1.7" ' +
+    'stroke-linecap="round" stroke-linejoin="round">' + d + '</svg></span>';
+}
+
+var ACTS = [], TRAJ = [];
+function bind(a){ if (!a) return ''; ACTS.push(a); return ' data-act="' + (ACTS.length-1) + '"'; }
+function bindT(a){ if (!a) return ''; ACTS.push(a); return ' data-actt="' + (ACTS.length-1) + '"'; }
+function tid(id){ return id ? ' data-testid="' + esc(id) + '"' : ''; }
+function R(list){ return (list||[]).map(render).join(''); }
+function tagsHtml(items){
+  return (items||[]).map(function(t){
+    return '<span class="tag ' + (t.cls||'') + '">' + esc(t.text) + '</span>'; }).join('');
+}
+
+function render(n){
+  if (!n || typeof n !== 'object') return '';
+  if (Array.isArray(n)) return R(n);
+  switch (n.t) {
+  case 'screen': return R(n.c);
+  case 'appbar': {
+    var left = (n.back
+      ? '<div class="iconbtn" data-testid="nav_back"' + bind({type:'BACK'}) + '>' + icon('back',19) + '</div>'
+      : '') + R(n.left);
+    return '<div class="n-appbar"' + tid(n.id) + '><div class="ab-side">' + left + '</div>'
+      + '<div class="ab-title">' + esc(n.title) + '</div>'
+      + '<div class="ab-side right">' + R(n.right) + '</div></div>';
+  }
+  case 'iconbtn': return '<div class="iconbtn ' + esc(n.cls||'') + '"' + tid(n.id) + bind(n.act) + '>' + icon(n.icon, 19) + '</div>';
+  case 'scroll':  return '<div class="n-scroll"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'chips':   return '<div class="n-chips"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'chip':    return '<div class="n-chip' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '>' + esc(n.text) + '</div>';
+  case 'card':    return '<div class="n-card ' + esc(n.cls||'') + (n.act?' tap':'') + '"' + tid(n.id) + bind(n.act) + '>' + R(n.c) + '</div>';
+  case 'padded':  return '<div style="padding:5px 16px">' + R(n.c) + '</div>';
+  case 'sec':     return '<div class="n-sec"' + tid(n.id) + '><span>' + esc(n.text) + '</span>'
+                       + (n.side ? '<span>' + esc(n.side) + '</span>' : '') + '</div>';
+  case 'text':    return '<div class="n-text ' + esc(n.cls||'') + '">' + esc(n.text) + '</div>';
+  case 'space':   return '<div class="n-space"></div>';
+  case 'row': {
+    var inline = [], below = [];
+    (n.c||[]).forEach(function(ch){
+      (ch.t==='switch'||ch.t==='radio'||ch.t==='check'||ch.t==='stepper'||ch.t==='btn'||ch.t==='iconbtn')
+        ? inline.push(ch) : below.push(ch);
+    });
+    return '<div class="n-row' + (n.act?' tap':'') + '"' + tid(n.id) + bind(n.act) + '>'
+      + (n.lead ? '<div class="r-lead"' + (n.leadColour ? ' style="color:' + esc(n.leadColour) + '"' : '')
+                + '>' + icon(n.lead, 19) + '</div>' : '')
+      + (n.avatar ? avatarHtml(n.avatar) : '')
+      + (n.thumb && typeof thumbHtml === 'function' ? thumbHtml(n.thumb) : '')
+      + '<div class="r-main"><div class="r-label' + (n.strike?' strike':'') + '">' + esc(n.text) + '</div>'
+      + (n.sub ? '<div class="r-sub">' + esc(n.sub) + '</div>' : '') + '</div>'
+      + (n.val ? '<div class="r-value ' + esc(n.valCls||'') + '">' + esc(n.val) + '</div>' : '')
+      + R(inline)
+      + (n.arrow && !inline.length ? '<div class="r-arrow">' + icon('arrow',15) + '</div>' : '')
+      + '</div>' + R(below);
+  }
+  case 'btn':
+    return '<div class="n-btn ' + esc(n.cls||'') + (n.disabled?' off':'') + '"' + tid(n.id)
+      + (n.disabled?'':bind(n.act)) + '>' + esc(n.text) + '</div>';
+  case 'btnrow': return '<div class="n-btnrow"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'bar':    return '<div style="flex:0 0 auto;background:var(--card);border-top:1px solid var(--line);'
+                      + 'padding:12px 16px 16px;z-index:30"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'switch': return '<div class="n-switch' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '><i></i></div>';
+  case 'check':  return '<div class="n-check' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '></div>';
+  case 'radio':  return '<div class="n-radio' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '></div>';
+  case 'inputrow':
+    return '<div class="n-input"><div class="i-label">' + esc(n.label) + '</div>'
+      + '<input' + tid(n.id) + bindT(n.act) + ' value="' + esc(n.value) + '" placeholder="'
+      + esc(n.placeholder) + '"></div>';
+  case 'stepper':
+    return '<div style="display:flex;align-items:center;gap:8px"' + tid(n.id) + '>'
+      + '<div class="iconbtn" style="background:var(--btn);width:30px;height:30px"' + tid(n.minusId) + bind(n.minus) + '>' + icon('minus',14) + '</div>'
+      + '<div style="min-width:52px;text-align:center;font-weight:700;font-size:12.5px;font-variant-numeric:tabular-nums">'
+      + esc(n.value) + '</div>'
+      + '<div class="iconbtn" style="background:var(--btn);width:30px;height:30px"' + tid(n.plusId) + bind(n.plus) + '>' + icon('plus',14) + '</div></div>';
+  case 'stats':  return '<div class="stats"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'stat':
+    return '<div class="stat' + (n.acc?' acc':'') + (n.act?' tap':'') + '"' + tid(n.id) + bind(n.act)
+      + '><div class="st-n">' + esc(n.n) + '</div><div class="st-l">' + esc(n.l) + '</div></div>';
+  case 'hero':
+    return '<div class="hero' + (n.act?' tap':'') + '"' + tid(n.id) + bind(n.act) + '>'
+      + '<div class="he-k">' + esc(n.kicker) + '</div>'
+      + '<div class="he-t">' + esc(n.title) + '</div>'
+      + '<div class="he-s">' + esc(n.sub) + '</div>' + R(n.c) + '</div>';
+  case 'pills':
+    return '<div style="display:flex;gap:7px;flex-wrap:wrap;padding:8px 18px 4px"' + tid(n.id) + '>'
+      + tagsHtml(n.items) + '</div>';
+  case 'tabbar':
+    return '<div class="n-tabbar"' + tid(n.id) + '>' + n.items.map(function(i){
+      return '<div class="tb' + (i.on?' on':'') + '"' + tid(i.id) + bind(i.act) + '>'
+        + '<i>' + icon(i.icon, 21) + '</i>' + esc(i.text) + '</div>';
+    }).join('') + '</div>';
+  case 'mask':  return '<div class="n-mask"' + tid(n.id) + bind(n.close) + '>' + R(n.c) + '</div>';
+  case 'sheet':
+    return '<div class="n-sheet"' + tid(n.id) + ' data-stop="1"><div class="sh-hd">'
+      + '<div class="t">' + esc(n.title) + '</div>'
+      + '<div class="iconbtn"' + tid(n.closeId) + bind(n.close) + '>' + icon('close',15) + '</div></div>'
+      + '<div class="sh-bd">' + R(n.c) + '</div></div>';
+  case 'dialog':
+    return '<div class="dialog"' + tid(n.id) + ' data-stop="1">'
+      + '<div style="padding:22px 20px 16px;text-align:center">'
+      + (n.title ? '<div style="font:650 17px/1.3 var(--disp);margin-bottom:8px">' + esc(n.title) + '</div>' : '')
+      + '<div style="font-size:13.5px;color:var(--ink2);line-height:1.55">' + esc(n.text) + '</div></div>'
+      + '<div style="display:flex;gap:10px;padding:0 16px 16px">'
+      + '<div class="n-btn" style="flex:1"' + tid(n.cancel.id) + bind(n.cancel.act) + '>' + esc(n.cancel.text) + '</div>'
+      + '<div class="n-btn primary" style="flex:1"' + tid(n.ok.id) + bind(n.ok.act) + '>' + esc(n.ok.text) + '</div>'
+      + '</div></div>';
+  case 'toast': return '<div class="n-toast"' + tid(n.id) + '>' + esc(n.text) + '</div>';
+  default: return renderExtra(n);
+  }
+}
+function avatarHtml(a){
+  return '<div class="av" style="width:38px;height:38px;border-radius:50%;flex:0 0 auto;display:flex;'
+    + 'align-items:center;justify-content:center;font:700 14px/1 var(--disp);color:#fff;background:hsl('
+    + a.hue + ' 52% 46%)">' + esc(a.initial) + '</div>';
+}
+
+function renderExtra(n){
+  switch (n.t) {
+  case 'out':
+    return '<div class="out"' + tid(n.id) + '><div class="ou-k">' + esc(n.kicker) + '</div>'
+      + '<div class="ou-n">' + esc(n.amount) + '</div>'
+      + '<div class="ou-s">' + esc(n.sub) + '</div><div class="ou-g">'
+      + n.grid.map(function(g){
+          return '<div class="ou-i' + (g.hi?' hi':'') + '"><div class="v">' + esc(g.v)
+            + '</div><div class="l">' + esc(g.l) + '</div></div>';
+        }).join('') + '</div></div>';
+  case 'slid':
+    return '<div class="slid"' + tid(n.id) + '><div class="sl-v">' + esc(n.value) + '</div>'
+      + '<div class="sl-c">' + esc(n.caption) + '</div>'
+      + '<div class="sl-t" style="margin-top:12px">' + n.ticks.map(function(t){
+          return '<div class="' + (t.on?'on':(t.low?'lo':(t.pre?'pre':''))) + '"'
+            + tid(t.id) + bind(t.act) + '></div>';
+        }).join('') + '</div>'
+      + '<div class="sl-l"><span>' + esc(n.lo) + '</span><span>' + esc(n.hi) + '</span></div></div>';
+  case 'opt':
+    return '<div class="opt' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '>'
+      + '<div class="op-r"></div><div class="op-m"><div class="op-n">' + esc(n.name) + '</div>'
+      + '<div class="op-s">' + esc(n.sub) + '</div></div>'
+      + '<div class="op-v"><div class="op-a">' + esc(n.amount) + '</div>'
+      + '<div class="op-b' + (n.best?' best':'') + '">' + esc(n.note) + '</div></div></div>';
+  case 'chart':
+    return '<div class="chart"' + tid(n.id) + '><div class="ch-b">'
+      + n.bars.map(function(b){
+          return '<span><u style="height:' + b.card + '%"></u><i style="height:' + b.loan
+            + '%"></i></span>';
+        }).join('') + '</div>'
+      + '<div class="ch-x"><span>' + esc(n.lo) + '</span><span>' + esc(n.hi) + '</span></div>'
+      + '<div class="ch-k">' + n.keys.map(function(k){
+          return '<span><b style="background:' + (k.c === 'loan' ? 'var(--accent)' : 'var(--bad)')
+            + '"></b>' + esc(k.t) + '</span>';
+        }).join('') + '</div></div>';
+  case 'sched': {
+    var head = '<tr><th class="m">Month</th><th>Card</th><th>Loan</th><th>Interest</th>'
+      + '<th>Paid</th></tr>';
+    var body = n.rows.map(function(r){
+      return '<tr class="' + (r.gone?'gone':'') + (r.mark?' mark':'') + '">'
+        + '<td class="m">' + r.m + '</td><td>' + esc(r.card) + '</td><td>' + esc(r.loan)
+        + '</td><td>' + esc(r.int) + '</td><td>' + esc(r.out) + '</td></tr>';
+    }).join('');
+    return '<div class="sched"' + tid(n.id) + '><table>' + head + body + '</table></div>';
+  }
+  default: return '';
+  }
+}
+
+var STATE = null;
+function paint(){
+  ACTS = [];
+  app.innerHTML = render(E.screen(STATE));
+  var c = '';
+  if (c) document.getElementById('sb-clock').textContent = c;
+  if (!hud.classList.contains('off')) paintHud();
+}
+app.addEventListener('click', function(ev){
+  var el = ev.target.closest('[data-act]'); if (!el) return;
+  if (el.classList.contains('n-mask') && ev.target.closest('[data-stop]')) return;
+  var act = ACTS[+el.getAttribute('data-act')]; if (!act) return;
+  TRAJ.push({action:'tap', id: el.getAttribute('data-testid') || null});
+  STATE = E.reduce(STATE, act); paint();
+});
+app.addEventListener('input', function(ev){
+  var el = ev.target.closest('[data-actt]'); if (!el) return;
+  var act = JSON.parse(JSON.stringify(ACTS[+el.getAttribute('data-actt')]));
+  for (var k in act) if (act[k] === '$VALUE') act[k] = el.value;
+  var id = el.getAttribute('data-testid'), pos = el.selectionStart;
+  TRAJ.push({action:'type', id:id, text:el.value});
+  STATE = E.reduce(STATE, act); paint();
+  var again = id && app.querySelector('[data-testid="' + id + '"]');
+  if (again && again.focus) { again.focus(); try { again.setSelectionRange(pos, pos); } catch(e){} }
+});
+
+function paintHud(){
+  var d = E.derive(STATE);
+  hud.innerHTML = '<h4>__ENV__ \u00b7 ' + E.ENV_ID + ' v' + E.VERSION + '</h4>'
+    + '<div><span class="k">route</span> ' + d.route + '  <span class="k">step</span> ' + STATE.meta.steps + '</div>'
+    + '<div><span class="k">months</span> ' + d.months + '  <span class="k">cost</span> ' + d.cost + '  <span class="k">target</span> ' + d.target + '</div>'
+    + '<div style="margin-top:8px"><button id="hud-reset">reset</button>'
+    + '<button id="hud-a11y">copy a11y</button><button id="hud-state">copy state</button>'
+    + '<button id="hud-traj">copy traj</button><button id="hud-hide">hide (h)</button></div>'
+    + '<pre>' + esc(E.a11y(STATE)) + '</pre>';
+  hud.querySelector('#hud-reset').onclick = function(){ ENVAPI.reset({seed:STATE.meta.seed}); };
+  hud.querySelector('#hud-a11y').onclick  = function(){ copy(E.a11y(STATE)); };
+  hud.querySelector('#hud-state').onclick = function(){ copy(JSON.stringify(E.snapshot(STATE), null, 2)); };
+  hud.querySelector('#hud-traj').onclick  = function(){ copy(JSON.stringify(TRAJ, null, 2)); };
+  hud.querySelector('#hud-hide').onclick  = function(){ hud.classList.add('off'); };
+}
+function copy(t){ try { navigator.clipboard.writeText(t); } catch(e){} }
+document.addEventListener('keydown', function(e){
+  if (e.key === 'h') { hud.classList.toggle('off'); if (!hud.classList.contains('off')) paintHud(); }
+});
+
+var ENVAPI = {
+  ENV_ID: E.ENV_ID, VERSION: E.VERSION,
+  reset: function(opts){
+    opts = opts || {};
+    STATE = E.createInitialState(opts.seed || 0);
+    if (opts.patch) E.applyPatch(STATE, opts.patch);
+    TRAJ = []; paint();
+    return E.snapshot(STATE);
+  },
+  getState:   function(){ return E.snapshot(STATE); },
+  setState:   function(s){ STATE = JSON.parse(JSON.stringify(s)); paint(); return true; },
+  step:       function(a){ var r = E.step(STATE, a); STATE = r.state; TRAJ.push(a); paint();
+                           return {ok:r.ok, error:r.error || null}; },
+  dispatch:   function(act){ STATE = E.reduce(STATE, act); paint(); return true; },
+  a11y:       function(){ return E.a11y(STATE); },
+  elements:   function(){ return E.elements(STATE); },
+  route:      function(){ return E.select.route(STATE); },
+  trajectory: function(){ return JSON.parse(JSON.stringify(TRAJ)); },
+  bounds: function(){
+    var base = document.getElementById('screen').getBoundingClientRect(), out = {};
+    app.querySelectorAll('[data-testid]').forEach(function(el){
+      var r = el.getBoundingClientRect();
+      out[el.getAttribute('data-testid')] = {
+        x:Math.round(r.left-base.left), y:Math.round(r.top-base.top),
+        w:Math.round(r.width), h:Math.round(r.height),
+        cx:Math.round(r.left-base.left+r.width/2), cy:Math.round(r.top-base.top+r.height/2)};
+    });
+    return out;
+  }
+};
+window.__ENV__ = ENVAPI;
+var qs = new URLSearchParams(location.search);
+if (qs.get('bare') === '1') document.body.classList.add('bare');
+if (qs.get('hud')  === '1') hud.classList.remove('off');
+ENVAPI.reset({seed: parseInt(qs.get('seed') || '0', 10) || 0});
+window.__ENV_READY__ = true;
+})();
+</script>
+</body>
+</html>

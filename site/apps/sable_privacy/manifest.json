@@ -1,0 +1,30 @@
+{
+  "id": "sable_privacy",
+  "name": "Privacy",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "viewport": {"width": 390, "height": 844},
+  "description": "A single-file H5 stock privacy screen. A permission is not a checkbox, it is an edge in a graph: every app declares named features and which permissions each one needs, so revoking something does not print a warning — it names the features that stop working. Some permissions depend on others: precise location is meaningless without location and is dropped with it, and «Always» location quietly degrades to «While using» the moment background refresh goes off. The headline number is not a score but a query — how many apps can find out where you are while you are not looking. Three can, and getting that to nought without losing turn-by-turn navigation or the outdoor run route means knowing which feature actually needed «Always». 5 screens, 8 apps, 9 permissions, 19 named features.",
+  "tasks_file": "tasks.json",
+  "oracle_file": "oracle.json",
+  "action_space": {
+    "tap":    {"id": "test-id of the element"},
+    "type":   {"id": "test-id of a text field", "text": "replaces the whole value"},
+    "back":   {}, "home": {}, "wait": {},
+    "finish": {"answer": "final answer for question tasks; optional for action tasks"},
+    "tap_xy": {"x": "screen pixel x", "y": "screen pixel y", "note": "browser backend only"}
+  },
+  "observation": {
+    "text": "engine.a11y(state) — every app page lists its permissions with the three-way location control spelled out, then every feature with either what it needs or exactly which permissions are missing; the matrix screen prints the whole grid row by row.",
+    "pixels": "390x844 screenshot (browser backend); __ENV__.bounds() maps every test-id to a pixel box",
+    "state": "engine.snapshot(state) — canonical state plus per-feature on/off keyed by «app·feature». For the verifier only."
+  },
+  "world": {
+    "clock": "09:58",
+    "graph": "8 apps, 9 permissions, 19 features; each feature names the permissions it needs and the level it needs them at",
+    "implications": "precise location requires location; «Always» requires background refresh and silently degrades to «While using» without it",
+    "seeded": "Compass Maps, Cirrus Weather and Stride Fitness all have Always + background refresh; Chatter, Marketplace and Streamly are allowed to track; nothing is broken",
+    "headline": "the number on top is a query over the matrix — apps with location = Always and background refresh on — not a score",
+    "costs": "stopping all background location breaks exactly 3 features and keeps navigation, lane guidance and the run route; revoking location everywhere breaks 8, two of them only because precise location goes with it; revoking tracking everywhere breaks 2 and costs Chatter nothing"
+  }
+}

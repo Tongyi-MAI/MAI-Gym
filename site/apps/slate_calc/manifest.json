@@ -1,0 +1,32 @@
+{
+  "id": "slate_calc",
+  "name": "计算器",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "viewport": {"width": 390, "height": 844},
+  "description": "一个单文件 H5「计算器」——手机自带的那个（界面为中文）。世界模型是一个真的求值器：按键进记号表，记号表按真的运算优先级归约，屏幕上的数就是归约的结果，没有一个答案是存下来的。它还带着每台手机计算器都有的那个怪脾气：百分号不是一个意思。挂在加减后面它是「左边那个数的百分之几」，所以 50 + 10% = 55；挂在乘除后面它只是除以一百，所以 50 × 10% = 5。同样的键、同样的数字、两个答案，除了知道规则没有别的办法分辨。另有内存键、可点回来复用的历史纸带，以及一个换算页（长度/质量/数据/温度），其中十进制 GB 与二进制 GiB 的差值和摄氏华氏的仿射关系都是精确的。4 个界面，20 个按键，24 个单位。",
+  "tasks_file": "tasks.json",
+  "oracle_file": "oracle.json",
+  "action_space": {
+    "tap":    {"id": "test-id of the element"},
+    "type":   {"id": "test-id of a text field", "text": "replaces the whole value"},
+    "back":   {}, "home": {}, "wait": {},
+    "finish": {"answer": "final answer for question tasks; optional for action tasks"},
+    "tap_xy": {"x": "screen pixel x", "y": "screen pixel y", "note": "browser backend only"}
+  },
+  "observation": {
+    "text": "engine.a11y(state) — 显示区打印当前算式和结果，键盘按四个一行逐个列出 test-id，纸带每条都带算式与结果，换算页把每个单位的换算值列全。纯文本也能完整操作。",
+    "pixels": "390x844 screenshot (browser backend); __ENV__.bounds() maps every test-id to a pixel box",
+    "state": "engine.snapshot(state) — canonical state 加上显示串、纸带结果数组和换算表的 derived view。仅供校验器使用。"
+  },
+  "world": {
+    "clock": "14:08",
+    "numbers": "内部是 IEEE double，显示按十位有效数字截断再去尾零；两个后端逐字节相同",
+    "precedence": "先乘除后加减：2 + 3 × 4 得 14",
+    "percent": "挂加减 = 左操作数的百分之几；挂乘除 = 除以一百；不挂运算符 = 除以一百",
+    "worked": "50+10%=55、50×10%=5、200−15%=170、2+3×4%=2.12、1280+25% 再 ×80% 正好回到 1280",
+    "equals": "连按等号重复上一次运算：5 + 3 = = 得 11",
+    "errors": "除以零直接报错并清空算式",
+    "convert": "英寸 2.54 cm、英里 1609.344 m、海里 1852 m、磅 0.45359237 kg、斤 500 g 都是定义值；GiB = 1073741824 B；温度是仿射的 ×9/5+32"
+  }
+}

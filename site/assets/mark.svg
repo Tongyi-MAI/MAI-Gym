@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
+<g transform="translate(128 127) scale(1.07) translate(-128 -127)">
+<path d="M128.00,42.86 L198.29,78.00 L128.00,113.14 L57.71,78.00 Z" fill="#8f57f9" stroke="#8f57f9" stroke-width="18.0" stroke-linejoin="round"/>
+<g transform="matrix(0.96,0.48,-0.96,0.48,128,30)"><g stroke="#fff" stroke-width="6.5" stroke-linecap="round" fill="none"><circle cx="50" cy="50" r="32"/><ellipse cx="50" cy="50" rx="14.4" ry="32"/><path d="M18 50 H82"/><path d="M22.3 34.0 H77.7 M22.3 66.0 H77.7"/></g></g>
+<path d="M43.50,96.61 L116.50,133.11 L116.50,205.39 L43.50,168.89 Z" fill="#331dc5" stroke="#331dc5" stroke-width="18.0" stroke-linejoin="round"/>
+<g transform="matrix(1,0.5,0,1,32,78)"><rect x="28" y="11" width="40" height="76" rx="9" fill="#fff"/><rect x="40.5" y="18.5" width="15" height="4.4" rx="2.2" fill="#331dc5"/><circle cx="48" cy="77" r="4.8" fill="#331dc5"/></g>
+<path d="M139.50,133.11 L212.50,96.61 L212.50,168.89 L139.50,205.39 Z" fill="#6425e9" stroke="#6425e9" stroke-width="18.0" stroke-linejoin="round"/>
+<g transform="matrix(1,-0.5,0,1,128,126)"><rect x="17" y="15" width="62" height="45" rx="7" fill="#fff"/><rect x="24.5" y="22.5" width="47" height="30" rx="3" fill="#6425e9"/><rect x="43.5" y="59" width="9" height="13" fill="#fff"/><rect x="30.5" y="70" width="35" height="7.5" rx="3.75" fill="#fff"/></g>
+</g>
+</svg>

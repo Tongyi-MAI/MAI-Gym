@@ -1,0 +1,38 @@
+{
+  "id": "daniel_phone",
+  "name": "Daniel's iPhone",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "viewport": {"width": 390, "height": 844},
+  "description": "A single-file H5 iPhone — an iOS Home Screen and Settings app laid over the other forty environments in this folder. Nothing on the Home Screen is invented: every tile's name comes from that environment's own manifest and every tile's colour is the --accent read straight out of that environment's index.html at build time, so the mosaic is literally the forty brand colours and the tile you tap is the colour of the app you land in. Each app-detail page carries a real link to ../<env>/index.html — click it in a browser and you are inside that environment; the link deliberately carries no test-id, so an agent never sees it. The world is the one piece of arithmetic every iPhone owner gets wrong: device storage and iCloud storage are two different pools and almost every switch moves exactly one of them. Offload App frees the binary and keeps Documents & Data; Delete App frees both — so offloading is far weaker than it looks: offloading all forty apps frees 3.62 GB and iOS 26.1 needs 3.66 GB more than is free, which means it cannot be done that way at all. Emptying Recently Deleted frees 2.18 GB and is the only action that frees the same amount in both pools; after it the update needs 1.48 GB and the four largest binaries come to 1.49 GB, so exactly four offloads, never three (1.23 GB). Tonight's iCloud backup wants 33.0 GB against 12.6 GB free, so five backup switches have to go off — or four, if Recently Deleted was emptied first. And Optimise iPhone Storage is already on: switching to Download and Keep Originals would want the whole 135 GB library on a 128 GB phone, 89.5 GB more than exists. The owner is Daniel Okafor, engineering manager at Meridian Labs in London — the Daniel Okafor already in covey_contacts, and the London end of the same company as 张三 on sam_phone. 11 screens, 40 apps, two storage pools.",
+  "tasks_file": "tasks.json",
+  "oracle_file": "oracle.json",
+  "action_space": {
+    "tap":    {"id": "test-id of the element"},
+    "type":   {"id": "test-id of a text field", "text": "replaces the whole value"},
+    "back":   {}, "home": {}, "wait": {},
+    "finish": {"answer": "final answer for question tasks; optional for action tasks"},
+    "tap_xy": {"x": "screen pixel x", "y": "screen pixel y", "note": "browser backend only"}
+  },
+  "observation": {
+    "text": "engine.a11y(state) — every screen prints both pools in its header; iPhone Storage lists each app's binary, its Documents & Data and what offloading versus deleting would free; Backups prints every per-app backup size and switch. A text-only agent has everything both sums need.",
+    "pixels": "390x844 screenshot (browser backend); __ENV__.bounds() maps every test-id to a pixel box",
+    "state": "engine.snapshot(state) — canonical state plus a derived view (free space in both pools, how short the update is, next backup size, which apps are offloaded/deleted/backed up, where every icon lives). For the verifier only."
+  },
+  "world": {
+    "units": "whole megabytes, 1 GB = 1000 MB, the way iOS reports it",
+    "device": "128 GB capacity; iOS 9,140 + System Data 9,707 + Photos 42,600 + Recently Deleted 2,180 + apps 61,233 = 124,860 used, 3,140 free",
+    "update": "iOS 26.1 downloads 4,820 MB but needs 6,800 MB free to unpack — 3,660 MB more than there is",
+    "offload_vs_delete": "offloading frees size and keeps docs; deleting frees size + docs. Every app offloaded totals 3,620 MB, which is 40 MB less than the update needs: offloading alone cannot do it",
+    "trash": "Recently Deleted holds 2,180 MB and is the only action that frees the same amount on the device and in iCloud",
+    "after_trash": "the update is 1,480 MB short; the four largest binaries (Maps 480, Umber 410, Sonora 340, Aperture 260) come to 1,490 and the three largest to 1,230 — four offloads exactly",
+    "single_delete": "the smallest single app whose deletion covers 3,660 on its own is Books at 4,390 (Messages 4,900, Files 9,910, Sonora 18,740); Aperture at 3,440 falls 220 short",
+    "icloud": "200 GB plan; Photos library 135,200 + iPad backup 18,200 + Drive and Mail 9,400 + current iPhone backup 24,600 = 187,400 used, 12,600 free",
+    "backup": "next backup = 3,100 base + every switched-on app = 33,044, which is 20,444 over. Largest: Files 6,200, Messages 4,800, Books 4,240, Aperture 3,180, Umber 2,760 — top four 18,420, top five 21,180, so five switches; after emptying Recently Deleted iCloud has 14,780 free and four is enough",
+    "backup_exceptions": "Sonora is the largest thing on the device (18.7 GB) and contributes 0 to the backup; Mail and Camera also contribute 0 — that content re-downloads",
+    "photos": "Optimise iPhone Storage is already on; Download and Keep Originals wants the whole 135,200 library against 42,600 on device and 3,140 free — 89,460 MB more than exists",
+    "layout": "Dock 4 (Messages / Maps / Camera / Settings) + page 1 twelve apps + page 2 twelve apps + Work 4 / Household 4 / Utilities 5 = the forty environments plus this phone's own Settings",
+    "owner": "Daniel Okafor, 41, engineering manager at Meridian Labs London, Bellenden Road Peckham; partner Ama, children Zoe (11) and Kwame (7), mum Grace in Lagos, brother Femi in Manchester; Sam Zhang and Yuki Tanaka at work",
+    "trap": "the two pools look like one number. Offload moves the device only, a backup switch moves iCloud only, and the switch that looks like the big saving (Keep Originals) is the one that cannot be flipped"
+  }
+}

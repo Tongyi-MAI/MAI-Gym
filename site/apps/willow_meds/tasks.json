@@ -1,0 +1,769 @@
+{
+  "env": "willow_meds",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_settings",
+      "name": "Warn me earlier",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "settings"
+      ],
+      "instruction": "In Settings, set the low-stock warning to 14 days and turn on the fifteen-minute early nudge.",
+      "goal": [
+        {
+          "name": "Fourteen days",
+          "path": "derived.settings.warnDays",
+          "op": "eq",
+          "value": 14,
+          "weight": 3,
+          "hint": "it starts at 10 and moves a day at a time"
+        },
+        {
+          "name": "Early nudge on",
+          "path": "derived.settings.remindEarly",
+          "op": "eq",
+          "value": true,
+          "weight": 2
+        },
+        {
+          "name": "The main reminder is untouched",
+          "path": "derived.settings.remind",
+          "op": "eq",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "T02_query_soonest",
+      "name": "Question: which runs out first",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "answer_expected": true,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "Which of your medicines will run out first?",
+      "goal": [
+        {
+          "name": "Sertraline",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Ss]ertraline",
+          "weight": 3,
+          "hint": "six left, one a day"
+        },
+        {
+          "name": "Nothing was taken",
+          "path": "derived.takenToday",
+          "op": "eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T03_take_one",
+      "name": "Take the sertraline",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "tags": [
+        "doses"
+      ],
+      "instruction": "Mark this morning's sertraline as taken.",
+      "goal": [
+        {
+          "name": "It is marked taken",
+          "path": "derived.marks.Sertraline.morning",
+          "op": "eq",
+          "value": "taken",
+          "weight": 3
+        },
+        {
+          "name": "One tablet came off the count",
+          "path": "derived.stock.Sertraline",
+          "op": "eq",
+          "value": 5,
+          "weight": 3
+        },
+        {
+          "name": "Which is five days now",
+          "path": "derived.daysLeft.Sertraline",
+          "op": "eq",
+          "value": 5,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T04_take_morning",
+      "name": "The whole morning at once",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "doses",
+        "bulk"
+      ],
+      "instruction": "Mark everything due this morning as taken, in one go.",
+      "goal": [
+        {
+          "name": "Four doses taken",
+          "path": "derived.takenToday",
+          "op": "eq",
+          "value": 4,
+          "weight": 3
+        },
+        {
+          "name": "Levothyroxine came down",
+          "path": "derived.stock.Levothyroxine",
+          "op": "eq",
+          "value": 10,
+          "weight": 2
+        },
+        {
+          "name": "So did the vitamin D",
+          "path": "derived.stock.Vitamin D",
+          "op": "eq",
+          "value": 59,
+          "weight": 2
+        },
+        {
+          "name": "The evening is still to come",
+          "path": "derived.marks.Atorvastatin",
+          "op": "absent"
+        }
+      ]
+    },
+    {
+      "id": "T05_skip",
+      "name": "Skip one on purpose",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "doses",
+        "adherence"
+      ],
+      "instruction": "You have already had breakfast, so skip this morning's levothyroxine rather than taking it.",
+      "goal": [
+        {
+          "name": "Marked as skipped",
+          "path": "derived.marks.Levothyroxine.morning",
+          "op": "eq",
+          "value": "skipped",
+          "weight": 3
+        },
+        {
+          "name": "The count did not move",
+          "path": "derived.stock.Levothyroxine",
+          "op": "eq",
+          "value": 11,
+          "weight": 3,
+          "hint": "skipping is not the same as taking"
+        },
+        {
+          "name": "And nothing counts as taken",
+          "path": "derived.takenToday",
+          "op": "eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T06_query_days",
+      "name": "Question: how long will the metformin last",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "answer_expected": true,
+      "tags": [
+        "arithmetic",
+        "query",
+        "read-only"
+      ],
+      "instruction": "Metformin is taken twice a day. How many whole days of it are left? Answer with just the number.",
+      "goal": [
+        {
+          "name": "Seventeen",
+          "source": "answer",
+          "op": "eq",
+          "value": 17,
+          "extract": "number",
+          "weight": 3,
+          "hint": "34 tablets, two a day"
+        },
+        {
+          "name": "You did not take any to find out",
+          "path": "derived.stock.Metformin",
+          "op": "eq",
+          "value": 34,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T07_order",
+      "name": "Order a repeat",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "repeats"
+      ],
+      "instruction": "Put in a repeat request for the atorvastatin.",
+      "goal": [
+        {
+          "name": "It is on order",
+          "path": "derived.ordered.Atorvastatin",
+          "op": "eq",
+          "value": true,
+          "weight": 3
+        },
+        {
+          "name": "Nothing has arrived yet",
+          "path": "derived.stock.Atorvastatin",
+          "op": "eq",
+          "value": 9,
+          "weight": 2,
+          "hint": "ordering is not the same as receiving"
+        },
+        {
+          "name": "One order open",
+          "path": "derived.orderCount",
+          "op": "eq",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "T08_receive",
+      "name": "Order it and check it in",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "repeats",
+        "stock"
+      ],
+      "instruction": "Order a repeat of the sertraline and then mark the pack as arrived.",
+      "goal": [
+        {
+          "name": "Thirty-four tablets now",
+          "path": "derived.stock.Sertraline",
+          "op": "eq",
+          "value": 34,
+          "weight": 3,
+          "hint": "six left plus a pack of 28"
+        },
+        {
+          "name": "Which is 34 days",
+          "path": "derived.daysLeft.Sertraline",
+          "op": "eq",
+          "value": 34,
+          "weight": 2
+        },
+        {
+          "name": "Nothing still on order",
+          "path": "derived.ordered.Sertraline",
+          "op": "eq",
+          "value": false,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T09_order_all",
+      "name": "Order everything that is low",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "repeats",
+        "bulk"
+      ],
+      "instruction": "Order repeats for every medicine that is running low, in one go.",
+      "goal": [
+        {
+          "name": "Two orders",
+          "path": "derived.orderCount",
+          "op": "eq",
+          "value": 2,
+          "weight": 3
+        },
+        {
+          "name": "Atorvastatin among them",
+          "path": "derived.ordered.Atorvastatin",
+          "op": "eq",
+          "value": true,
+          "weight": 2
+        },
+        {
+          "name": "And sertraline",
+          "path": "derived.ordered.Sertraline",
+          "op": "eq",
+          "value": true,
+          "weight": 2
+        },
+        {
+          "name": "Not the vitamin D",
+          "path": "derived.ordered.Vitamin D",
+          "op": "eq",
+          "value": false,
+          "weight": 2,
+          "hint": "it has sixty days left"
+        }
+      ]
+    },
+    {
+      "id": "T10_query_caution",
+      "name": "Question: the two to keep apart",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "answer_expected": true,
+      "tags": [
+        "caution",
+        "query",
+        "read-only"
+      ],
+      "instruction": "The app warns about taking two of these together. Which two, and how long should be left between them?",
+      "goal": [
+        {
+          "name": "Levothyroxine",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Ll]evothyroxine",
+          "weight": 2
+        },
+        {
+          "name": "And vitamin D",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Vv]itamin ?D",
+          "weight": 2
+        },
+        {
+          "name": "Four hours",
+          "source": "answer",
+          "op": "regex",
+          "value": "four|4 ?h",
+          "weight": 3
+        }
+      ]
+    },
+    {
+      "id": "T11_schedule",
+      "name": "A third metformin",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "schedule",
+        "arithmetic"
+      ],
+      "instruction": "The doctor has added a midday metformin. Put it on the schedule.",
+      "goal": [
+        {
+          "name": "Three times a day",
+          "path": "derived.schedule.Metformin",
+          "op": "len_eq",
+          "value": 3,
+          "weight": 3
+        },
+        {
+          "name": "Midday among them",
+          "path": "derived.schedule.Metformin",
+          "op": "contains",
+          "value": "noon",
+          "weight": 2
+        },
+        {
+          "name": "Which brings it down to 11 days",
+          "path": "derived.daysLeft.Metformin",
+          "op": "eq",
+          "value": 11,
+          "weight": 3,
+          "hint": "34 tablets, three a day"
+        },
+        {
+          "name": "Seven doses due today now",
+          "path": "derived.dueToday",
+          "op": "eq",
+          "value": 7,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T12_undo",
+      "name": "Take it, then unmark it",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "doses",
+        "undo"
+      ],
+      "instruction": "Mark the morning vitamin D as taken, then realise you had not actually taken it and put it back.",
+      "goal": [
+        {
+          "name": "No mark on it",
+          "path": "derived.marks.Vitamin D.morning",
+          "op": "eq",
+          "value": null,
+          "weight": 3
+        },
+        {
+          "name": "The tablet went back",
+          "path": "derived.stock.Vitamin D",
+          "op": "eq",
+          "value": 60,
+          "weight": 3
+        },
+        {
+          "name": "Nothing counts as taken",
+          "path": "derived.takenToday",
+          "op": "eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T13_prn",
+      "name": "One for the headache",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 10,
+      "tags": [
+        "as-needed"
+      ],
+      "instruction": "You have taken an ibuprofen for a headache. Record it.",
+      "goal": [
+        {
+          "name": "Twenty-three left",
+          "path": "derived.stock.Ibuprofen",
+          "op": "eq",
+          "value": 23,
+          "weight": 3
+        },
+        {
+          "name": "It has no days-left figure",
+          "path": "derived.daysLeft.Ibuprofen",
+          "op": "eq",
+          "value": null,
+          "weight": 2,
+          "hint": "nothing taken to a schedule has one"
+        },
+        {
+          "name": "The scheduled doses are untouched",
+          "path": "derived.takenToday",
+          "op": "eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T14_flagship",
+      "name": "Morning done, repeats in (flagship)",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "doses",
+        "repeats",
+        "arithmetic",
+        "long-horizon"
+      ],
+      "instruction": "Do the morning properly: mark all four morning doses as taken, then order repeats for everything that is now running low.",
+      "notes": "Taking this morning's doses moves one more medicine under the threshold.",
+      "goal": [
+        {
+          "name": "Four doses taken",
+          "path": "derived.takenToday",
+          "op": "eq",
+          "value": 4,
+          "weight": 2
+        },
+        {
+          "name": "Sertraline down to five",
+          "path": "derived.stock.Sertraline",
+          "op": "eq",
+          "value": 5,
+          "weight": 2
+        },
+        {
+          "name": "Three repeats on order",
+          "path": "derived.orderCount",
+          "op": "eq",
+          "value": 3,
+          "weight": 3,
+          "hint": "levothyroxine drops to ten days once you have taken this morning's"
+        },
+        {
+          "name": "Levothyroxine among them",
+          "path": "derived.ordered.Levothyroxine",
+          "op": "eq",
+          "value": true,
+          "weight": 3
+        },
+        {
+          "name": "Still not the vitamin D",
+          "path": "derived.ordered.Vitamin D",
+          "op": "eq",
+          "value": false,
+          "weight": 2
+        },
+        {
+          "name": "Efficiency: 4 steps or fewer",
+          "source": "trajectory",
+          "path": "steps",
+          "op": "lte",
+          "value": 4,
+          "critical": false,
+          "weight": 0.5
+        }
+      ]
+    },
+    {
+      "id": "T15_query_adherence",
+      "name": "Question: how well are you doing",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "answer_expected": true,
+      "tags": [
+        "history",
+        "query",
+        "read-only"
+      ],
+      "instruction": "What percentage of your doses have you taken this week, counting today so far? Answer with just the number.",
+      "goal": [
+        {
+          "name": "Seventy-five per cent",
+          "source": "answer",
+          "op": "eq",
+          "value": 75,
+          "extract": "number",
+          "weight": 3
+        },
+        {
+          "name": "You did not take anything to change it",
+          "path": "derived.takenToday",
+          "op": "eq",
+          "value": 0,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T16_evening",
+      "name": "Close the evening off",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "doses"
+      ],
+      "instruction": "Mark both evening medicines as taken.",
+      "goal": [
+        {
+          "name": "Metformin evening taken",
+          "path": "derived.marks.Metformin.evening",
+          "op": "eq",
+          "value": "taken",
+          "weight": 2
+        },
+        {
+          "name": "Atorvastatin taken",
+          "path": "derived.marks.Atorvastatin.evening",
+          "op": "eq",
+          "value": "taken",
+          "weight": 2
+        },
+        {
+          "name": "Atorvastatin down to eight",
+          "path": "derived.stock.Atorvastatin",
+          "op": "eq",
+          "value": 8,
+          "weight": 2
+        },
+        {
+          "name": "The morning is untouched",
+          "path": "derived.takenToday",
+          "op": "eq",
+          "value": 2,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T17_free_stock",
+      "name": "Get everything above two weeks (many valid answers)",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 26,
+      "unique_solution": false,
+      "tags": [
+        "repeats",
+        "constraint",
+        "multi-solution"
+      ],
+      "instruction": "You are going away for a fortnight. Make sure nothing has fewer than 14 days left, without changing anyone's schedule.",
+      "goal": [
+        {
+          "name": "Sertraline will last",
+          "path": "derived.daysLeft.Sertraline",
+          "op": "gte",
+          "value": 14,
+          "weight": 3
+        },
+        {
+          "name": "So will the atorvastatin",
+          "path": "derived.daysLeft.Atorvastatin",
+          "op": "gte",
+          "value": 14,
+          "weight": 3
+        },
+        {
+          "name": "And the levothyroxine",
+          "path": "derived.daysLeft.Levothyroxine",
+          "op": "gte",
+          "value": 14,
+          "weight": 3,
+          "hint": "eleven days is not a fortnight"
+        },
+        {
+          "name": "Schedules left alone",
+          "path": "derived.schedule.Metformin",
+          "op": "len_eq",
+          "value": 2,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T18_low_list",
+      "name": "Question: what is on the low list",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "answer_expected": true,
+      "tags": [
+        "repeats",
+        "query",
+        "read-only"
+      ],
+      "instruction": "How many medicines are showing as running low right now? Answer with just the number.",
+      "goal": [
+        {
+          "name": "Two",
+          "source": "answer",
+          "op": "eq",
+          "value": 2,
+          "extract": "number",
+          "weight": 3,
+          "hint": "the threshold is ten days"
+        },
+        {
+          "name": "Nothing was ordered",
+          "path": "derived.orderCount",
+          "op": "eq",
+          "value": 0,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T19_threshold",
+      "name": "Move the threshold and watch the list",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 24,
+      "answer_expected": true,
+      "tags": [
+        "settings",
+        "repeats",
+        "query"
+      ],
+      "instruction": "Raise the low-stock warning to 20 days, then tell me how many medicines are on the low list.",
+      "goal": [
+        {
+          "name": "Twenty days",
+          "path": "derived.settings.warnDays",
+          "op": "eq",
+          "value": 20,
+          "weight": 2
+        },
+        {
+          "name": "Four of them",
+          "source": "answer",
+          "op": "eq",
+          "value": 4,
+          "extract": "number",
+          "weight": 3,
+          "hint": "everything except the vitamin D and the ibuprofen"
+        },
+        {
+          "name": "The app agrees",
+          "path": "derived.lowNames",
+          "op": "len_eq",
+          "value": 4,
+          "weight": 3
+        },
+        {
+          "name": "Nothing was ordered",
+          "path": "derived.orderCount",
+          "op": "eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T20_mixed",
+      "name": "A whole day in one go",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 34,
+      "tags": [
+        "doses",
+        "long-horizon"
+      ],
+      "instruction": "Close the whole day off: take everything in the morning, skip the evening atorvastatin because you have run out of water, and take the evening metformin.",
+      "goal": [
+        {
+          "name": "Five doses taken",
+          "path": "derived.takenToday",
+          "op": "eq",
+          "value": 5,
+          "weight": 3
+        },
+        {
+          "name": "Atorvastatin skipped, not taken",
+          "path": "derived.marks.Atorvastatin.evening",
+          "op": "eq",
+          "value": "skipped",
+          "weight": 3
+        },
+        {
+          "name": "So its count did not move",
+          "path": "derived.stock.Atorvastatin",
+          "op": "eq",
+          "value": 9,
+          "weight": 2
+        },
+        {
+          "name": "Metformin taken twice",
+          "path": "derived.stock.Metformin",
+          "op": "eq",
+          "value": 32,
+          "weight": 2
+        }
+      ]
+    }
+  ]
+}

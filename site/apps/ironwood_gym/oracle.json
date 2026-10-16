@@ -1,0 +1,455 @@
+{
+  "env": "ironwood_gym",
+  "note": "Golden action sequences replayed by CI.",
+  "solutions": {
+    "T01_settings": [
+      {
+        "action": "tap",
+        "id": "open_settings"
+      },
+      {
+        "action": "tap",
+        "id": "unit_lb"
+      },
+      {
+        "action": "tap",
+        "id": "set_plateHelper"
+      }
+    ],
+    "T02_query_pb": [
+      {
+        "action": "tap",
+        "id": "main_ex_bench"
+      },
+      {
+        "action": "finish",
+        "answer": "82.5 kg for 5 reps"
+      }
+    ],
+    "T03_add_exercise": [
+      {
+        "action": "tap",
+        "id": "tab_routines"
+      },
+      {
+        "action": "tap",
+        "id": "routine_rt_pull"
+      },
+      {
+        "action": "tap",
+        "id": "add_exercise"
+      },
+      {
+        "action": "tap",
+        "id": "lib_ex_legraise"
+      }
+    ],
+    "T04_first_set": [
+      {
+        "action": "tap",
+        "id": "start_today"
+      },
+      {
+        "action": "tap",
+        "id": "log_set"
+      }
+    ],
+    "T05_new_pb": [
+      {
+        "action": "tap",
+        "id": "start_today"
+      },
+      {
+        "action": "tap",
+        "id": "w_inc"
+      },
+      {
+        "action": "tap",
+        "id": "log_set"
+      },
+      {
+        "action": "tap",
+        "id": "session_finish"
+      },
+      {
+        "action": "tap",
+        "id": "save_session"
+      }
+    ],
+    "T06_units": [
+      {
+        "action": "tap",
+        "id": "open_settings"
+      },
+      {
+        "action": "tap",
+        "id": "unit_lb"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "main_ex_squat"
+      },
+      {
+        "action": "finish",
+        "answer": "231.5 lb"
+      }
+    ],
+    "T07_plates": [
+      {
+        "action": "tap",
+        "id": "tab_routines"
+      },
+      {
+        "action": "tap",
+        "id": "routine_rt_legs"
+      },
+      {
+        "action": "tap",
+        "id": "start_routine"
+      },
+      {
+        "action": "tap",
+        "id": "w_dec"
+      },
+      {
+        "action": "tap",
+        "id": "w_dec"
+      },
+      {
+        "action": "finish",
+        "answer": "2"
+      }
+    ],
+    "T08_rest": [
+      {
+        "action": "tap",
+        "id": "start_today"
+      },
+      {
+        "action": "tap",
+        "id": "log_set"
+      },
+      {
+        "action": "tap",
+        "id": "rest_btn"
+      },
+      {
+        "action": "tap",
+        "id": "log_set"
+      },
+      {
+        "action": "tap",
+        "id": "session_finish"
+      },
+      {
+        "action": "tap",
+        "id": "save_session"
+      }
+    ],
+    "T09_undo": [
+      {
+        "action": "tap",
+        "id": "start_today"
+      },
+      {
+        "action": "tap",
+        "id": "log_set"
+      },
+      {
+        "action": "tap",
+        "id": "log_set"
+      },
+      {
+        "action": "tap",
+        "id": "log_set"
+      },
+      {
+        "action": "tap",
+        "id": "undo_set"
+      },
+      {
+        "action": "tap",
+        "id": "session_finish"
+      },
+      {
+        "action": "tap",
+        "id": "save_session"
+      }
+    ],
+    "T10_move_on": [
+      {
+        "action": "tap",
+        "id": "start_today"
+      },
+      {
+        "action": "tap",
+        "id": "log_set"
+      },
+      {
+        "action": "tap",
+        "id": "ex_2"
+      },
+      {
+        "action": "tap",
+        "id": "w_inc"
+      },
+      {
+        "action": "tap",
+        "id": "log_set"
+      }
+    ],
+    "T11_remove": [
+      {
+        "action": "tap",
+        "id": "tab_routines"
+      },
+      {
+        "action": "tap",
+        "id": "routine_rt_push"
+      },
+      {
+        "action": "tap",
+        "id": "rm_ex_lateral"
+      }
+    ],
+    "T12_target_sets": [
+      {
+        "action": "tap",
+        "id": "tab_routines"
+      },
+      {
+        "action": "tap",
+        "id": "routine_rt_push"
+      },
+      {
+        "action": "tap",
+        "id": "sets_ex_bench_inc"
+      }
+    ],
+    "T13_query_volume": [
+      {
+        "action": "tap",
+        "id": "tab_history"
+      },
+      {
+        "action": "tap",
+        "id": "hist_s_6"
+      },
+      {
+        "action": "finish",
+        "answer": "10,425 kg"
+      }
+    ],
+    "T14_search_add": [
+      {
+        "action": "tap",
+        "id": "tab_routines"
+      },
+      {
+        "action": "tap",
+        "id": "open_library"
+      },
+      {
+        "action": "type",
+        "id": "q_ex",
+        "text": "front"
+      },
+      {
+        "action": "tap",
+        "id": "lib_ex_front"
+      },
+      {
+        "action": "tap",
+        "id": "add_to_routine"
+      },
+      {
+        "action": "tap",
+        "id": "pick_rt_legs"
+      }
+    ],
+    "T15_flagship": [
+      {
+        "action": "tap",
+        "id": "start_today"
+      },
+      {
+        "action": "tap",
+        "id": "w_inc"
+      },
+      {
+        "action": "tap",
+        "id": "log_set"
+      },
+      {
+        "action": "tap",
+        "id": "rest_btn"
+      },
+      {
+        "action": "tap",
+        "id": "log_set"
+      },
+      {
+        "action": "tap",
+        "id": "rest_btn"
+      },
+      {
+        "action": "tap",
+        "id": "log_set"
+      },
+      {
+        "action": "tap",
+        "id": "rest_btn"
+      },
+      {
+        "action": "tap",
+        "id": "log_set"
+      },
+      {
+        "action": "tap",
+        "id": "session_finish"
+      },
+      {
+        "action": "tap",
+        "id": "save_session"
+      }
+    ],
+    "T16_discard": [
+      {
+        "action": "tap",
+        "id": "tab_routines"
+      },
+      {
+        "action": "tap",
+        "id": "routine_rt_legs"
+      },
+      {
+        "action": "tap",
+        "id": "start_routine"
+      },
+      {
+        "action": "tap",
+        "id": "session_finish"
+      },
+      {
+        "action": "tap",
+        "id": "discard_session"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      }
+    ],
+    "T17_target": [
+      {
+        "action": "tap",
+        "id": "open_settings"
+      },
+      {
+        "action": "tap",
+        "id": "target_inc"
+      },
+      {
+        "action": "tap",
+        "id": "target_inc"
+      },
+      {
+        "action": "finish",
+        "answer": "4"
+      }
+    ],
+    "T18_filter": [
+      {
+        "action": "tap",
+        "id": "tab_routines"
+      },
+      {
+        "action": "tap",
+        "id": "open_library"
+      },
+      {
+        "action": "tap",
+        "id": "grp_core"
+      },
+      {
+        "action": "tap",
+        "id": "lib_ex_plank"
+      }
+    ],
+    "T19_any_pb": [
+      {
+        "action": "tap",
+        "id": "start_today"
+      },
+      {
+        "action": "tap",
+        "id": "w_inc"
+      },
+      {
+        "action": "tap",
+        "id": "w_inc"
+      },
+      {
+        "action": "tap",
+        "id": "log_set"
+      },
+      {
+        "action": "tap",
+        "id": "session_finish"
+      },
+      {
+        "action": "tap",
+        "id": "save_session"
+      }
+    ],
+    "T20_pull_day": [
+      {
+        "action": "tap",
+        "id": "tab_routines"
+      },
+      {
+        "action": "tap",
+        "id": "routine_rt_pull"
+      },
+      {
+        "action": "tap",
+        "id": "start_routine"
+      },
+      {
+        "action": "tap",
+        "id": "log_set"
+      },
+      {
+        "action": "tap",
+        "id": "ex_1"
+      },
+      {
+        "action": "tap",
+        "id": "log_set"
+      },
+      {
+        "action": "tap",
+        "id": "ex_2"
+      },
+      {
+        "action": "tap",
+        "id": "log_set"
+      },
+      {
+        "action": "tap",
+        "id": "session_finish"
+      },
+      {
+        "action": "tap",
+        "id": "save_session"
+      },
+      {
+        "action": "finish",
+        "answer": "970 kg"
+      }
+    ]
+  }
+}

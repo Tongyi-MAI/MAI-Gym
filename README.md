@@ -1,5 +1,5 @@
 <div align="center">
-  <h1><img src="docs/assets/mai-gym-logo.png" width="56" align="middle" alt="MAI-Gym logo"> MAI-Gym</h1>
+  <h1><img src="site/assets/mai-gym-logo.png" width="56" align="middle" alt="MAI-Gym logo"> MAI-Gym</h1>
   <p><strong>An Open All-in-One Platform for GUI Agent Evaluation and RL Training<br>across Mobile and Computer Environments</strong></p>
   <p>Evaluate agents. Build verifiable worlds. Train across devices.</p>
   <p>
@@ -10,12 +10,12 @@
 </div>
 
 > [!IMPORTANT]
-> **Model weights are available.** Download **MAI-Gym-9B** from [Hugging Face](https://huggingface.co/Tongyi-MAI/MAI-Gym-9B), explore the [interactive demos](https://tongyi-mai.github.io/MAI-Gym/), and read the [paper](https://arxiv.org/abs/2610.20939). **Source code is coming soon.**
+> **Model weights are available.** Download **MAI-Gym-9B** from [Hugging Face](https://huggingface.co/Tongyi-MAI/MAI-Gym-9B), explore the [interactive demos](https://tongyi-mai.github.io/MAI-Gym/), and read the [paper](https://arxiv.org/abs/2610.20939). **Framework source code is coming soon.**
 
 **MAI-Gym** brings evaluation, trajectory collection, and online reinforcement learning into one platform for **mobile, computer, and web agents**. The same interaction and verification pipeline carries an agent from benchmark evaluation to training at scale.
 
 <p align="center">
-  <a href="https://arxiv.org/abs/2610.20939"><img src="docs/assets/overview.webp" width="100%" alt="MAI-Gym overview: mobile and computer environments, parallel rollouts, agentic RL, adaptive synthesis, and benchmark results"></a>
+  <a href="https://arxiv.org/abs/2610.20939"><img src="site/assets/overview.webp" width="100%" alt="MAI-Gym overview: mobile and computer environments, parallel rollouts, agentic RL, adaptive synthesis, and benchmark results"></a>
 </p>
 <p align="center"><sub>One platform connects GUI environments, verifiable tasks, and reinforcement learning. Click the figure to read the paper.</sub></p>
 
@@ -52,7 +52,7 @@ Explore the [novel apps and tasks](https://tongyi-mai.github.io/MAI-Gym/#apps): 
 Trained from **Qwen3.5-9B** with mixed-domain GUI reinforcement learning, **MAI-Gym-9B** reaches **78.4% on MobileWorld** and **76.2% on OSWorld-Verified**, leading open GUI agents under 10B parameters on these benchmarks in our [paper](https://arxiv.org/abs/2610.20939).
 
 <p align="center">
-  <a href="docs/assets/benchmark-results.png"><img src="docs/assets/benchmark-results.png" width="100%" alt="Success rates for Qwen3.5-9B and MAI-Gym-9B across three mobile and three computer benchmarks"></a>
+  <a href="site/assets/benchmark-results.png"><img src="site/assets/benchmark-results.png" width="100%" alt="Success rates for Qwen3.5-9B and MAI-Gym-9B across three mobile and three computer benchmarks"></a>
 </p>
 <p align="center"><sub>Success rate (%). The same 9B policy improves across all six benchmarks shown. Results from the <a href="https://tongyi-mai.github.io/MAI-Gym/#results">project evaluation</a>.</sub></p>
 

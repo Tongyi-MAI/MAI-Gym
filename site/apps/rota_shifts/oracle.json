@@ -1,0 +1,947 @@
+{
+  "env": "rota_shifts",
+  "note": "Golden action sequences replayed by CI.",
+  "solutions": {
+    "T01_settings": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_showRate"
+      },
+      {
+        "action": "tap",
+        "id": "set_warnOvertime"
+      }
+    ],
+    "T02_issue_count": [
+      {
+        "action": "tap",
+        "id": "tab_check"
+      },
+      {
+        "action": "finish",
+        "answer": "四处。"
+      }
+    ],
+    "T03_bill": [
+      {
+        "action": "finish",
+        "answer": "¥4,568.00"
+      }
+    ],
+    "T04_friday": [
+      {
+        "action": "tap",
+        "id": "cell_fri_pm"
+      },
+      {
+        "action": "finish",
+        "answer": "差一个人，现在只有何俊。"
+      }
+    ],
+    "T05_supervisors": [
+      {
+        "action": "tap",
+        "id": "tab_people"
+      },
+      {
+        "action": "finish",
+        "answer": "林晓、赵敏、何俊。"
+      }
+    ],
+    "T06_refuse": [
+      {
+        "action": "tap",
+        "id": "cell_wed_am"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_zhao"
+      },
+      {
+        "action": "finish",
+        "answer": "排不进去 —— 赵敏周三要上夜校，那天不可用。"
+      }
+    ],
+    "T07_fix_wed": [
+      {
+        "action": "tap",
+        "id": "cell_wed_pm"
+      },
+      {
+        "action": "tap",
+        "id": "on_p_zhao"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_he"
+      },
+      {
+        "action": "back"
+      }
+    ],
+    "T08_fix_double": [
+      {
+        "action": "tap",
+        "id": "cell_tue_pm"
+      },
+      {
+        "action": "tap",
+        "id": "on_p_chen"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_wu"
+      },
+      {
+        "action": "back"
+      }
+    ],
+    "T09_fix_nosup": [
+      {
+        "action": "tap",
+        "id": "cell_thu_am"
+      },
+      {
+        "action": "tap",
+        "id": "on_p_wu"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_lin"
+      },
+      {
+        "action": "back"
+      }
+    ],
+    "T10_fill_friday": [
+      {
+        "action": "tap",
+        "id": "cell_tue_pm"
+      },
+      {
+        "action": "tap",
+        "id": "on_p_chen"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_wu"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_fri_pm"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_chen"
+      },
+      {
+        "action": "back"
+      }
+    ],
+    "T11_he_max": [
+      {
+        "action": "tap",
+        "id": "tab_people"
+      },
+      {
+        "action": "tap",
+        "id": "st_p_he"
+      },
+      {
+        "action": "finish",
+        "answer": "三个。他一周上限是 24 小时，一个班 8 小时，所以最多三个班。"
+      }
+    ],
+    "T12_wu_hours": [
+      {
+        "action": "tap",
+        "id": "tab_people"
+      },
+      {
+        "action": "tap",
+        "id": "st_p_wu"
+      },
+      {
+        "action": "finish",
+        "answer": "四个班、32 小时，合同 24 小时，所以加班 8 小时。"
+      }
+    ],
+    "T13_monday_only": [
+      {
+        "action": "tap",
+        "id": "clear_week"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "tap",
+        "id": "cell_mon_am"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_lin"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_wu"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_mon_pm"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_zhao"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_chen"
+      },
+      {
+        "action": "back"
+      }
+    ],
+    "T14_overtime_now": [
+      {
+        "action": "tap",
+        "id": "tab_check"
+      },
+      {
+        "action": "finish",
+        "answer": "24 小时 —— 赵敏、吴斌、陈露各 8 小时。"
+      }
+    ],
+    "T15_fix_all": [
+      {
+        "action": "tap",
+        "id": "cell_wed_pm"
+      },
+      {
+        "action": "tap",
+        "id": "on_p_zhao"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_he"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_tue_pm"
+      },
+      {
+        "action": "tap",
+        "id": "on_p_chen"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_wu"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_thu_am"
+      },
+      {
+        "action": "tap",
+        "id": "on_p_wu"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_lin"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_fri_pm"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_chen"
+      },
+      {
+        "action": "back"
+      }
+    ],
+    "T16_cheapest": [
+      {
+        "action": "tap",
+        "id": "clear_week"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "tap",
+        "id": "cell_mon_am"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_lin"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_wu"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_mon_pm"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_zhao"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_chen"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_tue_am"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_lin"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_wu"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_tue_pm"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_zhao"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_chen"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_wed_am"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_lin"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_wu"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_wed_pm"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_chen"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_he"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_thu_am"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_lin"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_wu"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_thu_pm"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_zhao"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_chen"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_fri_am"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_zhao"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_wu"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_fri_pm"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_chen"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_he"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "finish",
+        "answer": "¥4,696.00"
+      }
+    ],
+    "T17_he_min": [
+      {
+        "action": "tap",
+        "id": "clear_week"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "tap",
+        "id": "cell_mon_am"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_lin"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_wu"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_mon_pm"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_zhao"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_chen"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_tue_am"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_lin"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_wu"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_tue_pm"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_zhao"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_chen"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_wed_am"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_lin"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_wu"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_wed_pm"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_chen"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_he"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_thu_am"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_lin"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_wu"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_thu_pm"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_zhao"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_chen"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_fri_am"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_zhao"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_wu"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_fri_pm"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_chen"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_he"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "finish",
+        "answer": "两个。周三赵敏不在，那天两个班里只有林晓能带班，而林晓一天只能上一个班，所以另一个班非何俊不可；周五林晓不在，同样的道理。别的日子都轮不到他。"
+      }
+    ],
+    "T18_ot_floor": [
+      {
+        "action": "tap",
+        "id": "clear_week"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "tap",
+        "id": "cell_mon_am"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_lin"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_wu"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_mon_pm"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_zhao"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_chen"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_tue_am"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_lin"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_wu"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_tue_pm"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_zhao"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_chen"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_wed_am"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_lin"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_wu"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_wed_pm"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_chen"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_he"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_thu_am"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_lin"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_wu"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_thu_pm"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_zhao"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_chen"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_fri_am"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_zhao"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_wu"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_fri_pm"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_chen"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_he"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "finish",
+        "answer": "24 小时。一周要 20 个班次、160 小时，五个人的合同工时加起来只有 136 小时，差的 24 小时无论怎么排都得按加班算。"
+      }
+    ],
+    "T19_sup_capacity": [
+      {
+        "action": "tap",
+        "id": "tab_people"
+      },
+      {
+        "action": "finish",
+        "answer": "十一个。林晓周五不在，一天又只能上一个班，最多四个；赵敏周三不在，同样最多四个；何俊上限 24 小时，最多三个。四加四加三是十一，比十个只多出一个班的余地。"
+      }
+    ],
+    "T20_rebuild": [
+      {
+        "action": "tap",
+        "id": "clear_week"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "tap",
+        "id": "cell_mon_am"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_lin"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_wu"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_mon_pm"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_zhao"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_chen"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_tue_am"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_lin"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_wu"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_tue_pm"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_zhao"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_chen"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_wed_am"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_lin"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_wu"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_wed_pm"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_chen"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_he"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_thu_am"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_lin"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_wu"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_thu_pm"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_zhao"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_chen"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_fri_am"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_zhao"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_wu"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_fri_pm"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_chen"
+      },
+      {
+        "action": "tap",
+        "id": "add_p_he"
+      },
+      {
+        "action": "back"
+      }
+    ]
+  }
+}

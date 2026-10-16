@@ -1,0 +1,44 @@
+{
+  "id": "hearth_home",
+  "name": "Hearth · Home",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "description": "A single-file H5 smart-home control app in a dark theme: 14 screens, 6 rooms, 19 devices of 7 kinds, 5 scenes, 4 automations, a security panel and a weekly energy view. Continuous controls (brightness, volume, blind position, thermostat set-point), a segmented alarm control and a time picker are the new interaction primitives. The floor plan is state-driven — its rooms glow from the live device state — so the picture is an observation, not decoration.",
+  "tasks_file": "tasks.json",
+  "oracle_file": "oracle.json",
+  "action_space": {
+    "tap": {
+      "id": "test-id of the element"
+    },
+    "type": {
+      "id": "test-id of a text field",
+      "text": "replaces the whole value"
+    },
+    "back": {},
+    "home": {},
+    "wait": {},
+    "finish": {
+      "answer": "final answer for question tasks; optional for action tasks"
+    },
+    "tap_xy": {
+      "x": "screen pixel x",
+      "y": "screen pixel y",
+      "note": "browser backend only"
+    }
+  },
+  "observation": {
+    "text": "engine.a11y(state) — an accessibility tree with #test-ids. The floor plan, sliders, segmented controls and charts all serialise to text, so a text-only agent sees the same facts a viewer does.",
+    "pixels": "390x844 screenshot (browser backend); __ENV__.bounds() maps every test-id to a pixel box",
+    "state": "engine.snapshot(state) — canonical state plus a derived view. For the verifier only; never feed it to the agent."
+  },
+  "world": {
+    "clock": "19:24, evening",
+    "power": "live draw = sum over devices; a light draws watts x brightness/100, everything else draws its rating when on. 519 W at reset.",
+    "energy": "the weekly chart and per-room kWh are fixed mock history, not derived from the live state",
+    "units": "Celsius by default; Settings switches the display to Fahrenheit (state always stores Celsius)"
+  }
+}

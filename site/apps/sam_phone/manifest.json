@@ -1,0 +1,38 @@
+{
+  "id": "sam_phone",
+  "name": "张三的手机",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "viewport": {"width": 390, "height": 844},
+  "description": "一台单文件 H5 智能手机——把这个目录里另外四十个环境当成它的四十个 app 装了进去（界面为中文）。图标清单是构建时从每个环境自己的 manifest 里读出来的，所以主屏上永远正好是那四十个，一个不多一个不少：Dock 四个、两页主屏、四个文件夹。机主是张三（Sam Zhang），三十三岁，在 Meridian Labs 上海办公室做产品，住 Rowan Street、公司在 Kestrel Wharf——正是 compass_maps 里那条通勤路线；爱人王倩的号码和他自己的号码只差一位。这台手机自己的世界是两套横跨所有 app 的算法。一是电量能不能撑到闹钟：耗电速率 = 系统底噪 1.10 %/时 + 每个开着后台刷新的 app 的那一份，现在 5.65 %/时，23% 电撑 4 小时 4 分钟，02:51 就没电，而闹钟在 7 小时 53 分钟之后。低电量模式把整体打到 58 折，但光开它只能到 05:47；开了之后再关掉一个 app 就够，而四十个里只有「音乐」那一个够格；不开低电量的话至少要关六个。二是通知吵不吵得到他：十三条待处理通知，先看那个 app 自己的通知开关，再看专注模式放不放行（放行名单 / 紧急联系人 / 时效性），关闭 12 条、工作 7 条、睡眠 4 条、勿扰 3 条。关掉后台刷新和关掉通知是两件不同的事，这台手机把这一点摆在明面上。每个 app 详情页底下有一个真的链接指向那个环境本身，浏览器里点下去就打开了它——那个链接故意没有 test-id，只给人看。8 个界面，40 个 app，13 条通知。",
+  "tasks_file": "tasks.json",
+  "oracle_file": "oracle.json",
+  "action_space": {
+    "tap":    {"id": "test-id of the element"},
+    "type":   {"id": "test-id of a text field", "text": "replaces the whole value"},
+    "back":   {}, "home": {}, "wait": {},
+    "finish": {"answer": "final answer for question tasks; optional for action tasks"},
+    "tap_xy": {"x": "screen pixel x", "y": "screen pixel y", "note": "browser backend only"}
+  },
+  "observation": {
+    "text": "engine.a11y(state) — 主屏把每个图标、角标、文件夹里装了几个都列出来；电量页把每个 app 的后台耗电和开关状态逐行打印，并给出当前速率、还能撑多久、几点没电、以及撑到闹钟需要压到多少；通知页对每条通知说明它会响还是静音、静音是被谁拦下的。纯文本足以把两套算术都做完。",
+    "pixels": "390x844 screenshot (browser backend); __ENV__.bounds() maps every test-id to a pixel box",
+    "state": "engine.snapshot(state) — canonical state 加上一个 derived view（速率、剩余分钟、放行条数、每个 app 在哪一页）。仅供校验器使用。"
+  },
+  "world": {
+    "owner": "张三 / Sam Zhang，33 岁，产品经理 · Meridian Labs 上海办公室；住 Rowan Street 12 号，公司 Kestrel Wharf；本机 138 0013 8001",
+    "family": "爱人王倩 138 0013 8000（紧急联系人）、妈张桂芬在南京（紧急联系人）、姐姐张敏在苏州、女儿张念念 6 岁",
+    "work": "同组张伟（上海）、Daniel Okafor（伦敦）、Yuki Tanaka（东京）、客户 Sam Lawrence",
+    "likes": "跑步（周二四六早上沿滨江）、烘焙（周末发面）、摄影（手动挡、弱光）、播客（通勤听）",
+    "clock": "周四 22:47，冻住不走；下一个闹钟周五 06:40，相距 473 分钟",
+    "layout": "Dock 4（信息 / 通讯录 / 相机 / 地图）+ 第一页 8 + 第二页 8 + 四个文件夹（工作 4 / 生活 5 / 出行 3 / 消遣 8）= 40",
+    "battery": "23%，单位百分之一；速率 = 底噪 110 + 每个开着后台刷新的 app 之和 455 = 565（5.65 %/时）；剩余分钟 = floor(2300 × 60 ÷ 速率) = 244，02:51 没电",
+    "low_power": "整体乘 58% 后取整：565 → 328，撑 420 分钟到 05:47，仍差 53 分钟",
+    "battery_answer": "撑到 06:40 需要速率 ≤ 291。开低电量后只有关掉「音乐」（0.70）够：495 × 0.58 = 287 → 480 分钟 → 06:47；关「地图」（0.60）差 3 分钟。不开低电量则要砍掉 274，最耗电的五个只有 265，必须关六个",
+    "drains": "音乐 0.70、地图 0.60、健身 0.50、相册 0.45、邮件 0.40、天气 0.35、家 0.30、信息 0.25、公交 0.25、外卖 0.20、快递 0.20、文件 0.15、银行 0.10、通讯录 0.05、时钟 0.05（%/时）",
+    "notifications": "13 条待处理；一条能不能响 = 那个 app 的通知开关 AND（模式为关闭 OR 在放行名单 OR 发件人是本模式的紧急联系人 OR 是时效性通知）",
+    "notif_counts": "关闭 12 / 工作 7 / 睡眠 4 / 勿扰 3；「拍卖」那条无论哪个模式都不响，因为它自己的通知开关是关的",
+    "cross_refs": "闹钟 06:40 来自 nightjar_clock；13° 和明早 4.2 毫米来自 cirrus_weather；Rowan Street → Kestrel Wharf 来自 compass_maps；王倩与张伟来自 quill_messages；2.35 GB 可用来自 harbour_files 的量级",
+    "trap": "关掉后台刷新省电但不影响通知；关掉通知不省一点电。两个开关在同一张卡片上并排放着"
+  }
+}
