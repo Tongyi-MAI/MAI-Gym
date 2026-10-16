@@ -7,7 +7,6 @@
     <a href="https://arxiv.org/abs/2610.20939"><img src="https://img.shields.io/badge/arXiv-2610.20939-B31B1B?style=flat-square" alt="Paper on arXiv"></a>
     <a href="https://huggingface.co/Tongyi-MAI/MAI-Gym-9B"><img src="https://img.shields.io/badge/MAI--Gym--9B-Available-FFD21E?style=flat-square&amp;logo=huggingface&amp;logoColor=000" alt="MAI-Gym-9B weights available on Hugging Face"></a>
   </p>
-  <p><strong>MAI-UI Team · Alibaba Group</strong></p>
 </div>
 
 > [!IMPORTANT]
