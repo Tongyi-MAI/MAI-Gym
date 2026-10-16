@@ -1,0 +1,31 @@
+{
+  "id": "covey_contacts",
+  "name": "通讯录",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "viewport": {"width": 390, "height": 844},
+  "description": "一个单文件 H5「通讯录」——手机自带的那个（界面为中文，联系人是国际化的）。重复不是一张存好的表：每一步都把所有卡两两比一遍，号码先规范化成 E.164（默认国家 +44，前导 0 换成 +44），所以 07700 900123 和 +44 7700 900123 是同一个号，然后带着理由给出建议。合并才是重点——号码、邮箱、群组是多值的，直接取并集不用挑；名字、公司、生日只能有一个，两边不一样就必须逐字段选，不选就合不了。四条建议里有一条是假阳性：两个同名但号码、邮箱、公司全不一样的人，唯一的证据只有名字，合了就把两个真人并成了一张卡，而应用不会拦你。5 个界面，12 张卡，3 个群组。",
+  "tasks_file": "tasks.json",
+  "oracle_file": "oracle.json",
+  "action_space": {
+    "tap":    {"id": "test-id of the element"},
+    "type":   {"id": "test-id of a text field", "text": "replaces the whole value"},
+    "back":   {}, "home": {}, "wait": {},
+    "finish": {"answer": "final answer for question tasks; optional for action tasks"},
+    "tap_xy": {"x": "screen pixel x", "y": "screen pixel y", "note": "browser backend only"}
+  },
+  "observation": {
+    "text": "engine.a11y(state) — 每条建议都打印两张卡的来源、摘要和判定理由；合并页把每个单值字段的两个候选和「合并后是什么」逐行列出，多值字段列出并集。纯文本也能把合并做完。",
+    "pixels": "390x844 screenshot (browser backend); __ENV__.bounds() maps every test-id to a pixel box",
+    "state": "engine.snapshot(state) — canonical state 加上按姓名索引的号码数、邮箱数、公司和群组人数。仅供校验器使用。"
+  },
+  "world": {
+    "clock": "11:32",
+    "normalisation": "去掉空格括号连字符；+ 开头保留；0 开头换成 +44；其余补 +44",
+    "evidence": "同号码或同邮箱 = 证据充分；只有同名 = 不够",
+    "seeded": "12 张卡，4 条建议：Daniel（同号码）、Priya（同号码）、Yuki（同邮箱）都是真重复，Sam Lawrence 只是重名",
+    "conflicts": "Daniel 两张卡的公司是 Meridian Labs 和 Meridian Laboratories，不选一个就不能合；Priya 和 Yuki 没有冲突可以直接合",
+    "union": "号码、邮箱、群组取并集；号码按规范化后去重",
+    "outcome": "三组真重复合完是 9 个联系人，证据充分的建议归零；把 Sam 也合掉会得到一张带两个号码的卡"
+  }
+}

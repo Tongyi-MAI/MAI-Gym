@@ -1,0 +1,30 @@
+{
+  "id": "marlin_mail",
+  "name": "Marlin Mail",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "viewport": {"width": 390, "height": 844},
+  "description": "A single-file H5 email client. The loop is triage, not purchase: 10 screens, 22 seeded conversations across 8 folders and 5 labels, multi-select with a bulk action bar, folders vs labels (one folder, many labels), read/unread, starring, snoozing, an undoable move, a three-field compose form and search with field operators (from: / label: / has: / is:).",
+  "tasks_file": "tasks.json",
+  "oracle_file": "oracle.json",
+  "action_space": {
+    "tap":    {"id": "test-id of the element"},
+    "type":   {"id": "test-id of a text field", "text": "replaces the whole value"},
+    "back":   {},
+    "home":   {},
+    "wait":   {},
+    "finish": {"answer": "final answer for question tasks; optional for action tasks"},
+    "tap_xy": {"x": "screen pixel x", "y": "screen pixel y", "note": "browser backend only"}
+  },
+  "observation": {
+    "text": "engine.a11y(state) — an accessibility tree with #test-ids. Every mail row prints its sender, flags, labels and its own select/star test-ids, so a text-only agent can drive multi-select.",
+    "pixels": "390x844 screenshot (browser backend); __ENV__.bounds() maps every test-id to a pixel box",
+    "state": "engine.snapshot(state) — canonical state plus a derived view. For the verifier only."
+  },
+  "world": {
+    "clock": "08:12",
+    "selection": "tapping a mail row opens it normally, but toggles selection while selection mode is on; the avatar is always a select target",
+    "folders_vs_labels": "a message is in exactly one folder and carries any number of labels; Starred and Snoozed are views, not folders",
+    "undo": "a move leaves an UNDO affordance on the toast that survives exactly one step"
+  }
+}

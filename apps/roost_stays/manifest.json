@@ -1,0 +1,48 @@
+{
+  "id": "roost_stays",
+  "name": "Roost · Stays",
+  "version": "1.2.0",
+  "entry": "index.html",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "description": "A single-file H5 travel-booking app: 13 screens, 11 illustrated stays across 7 browsable categories, full-text search over names, cities, hosts, tags and amenities, a real date-range calendar, distance-from-me on every listing, a guest-review system with per-category scores and helpful votes, guest/pet limits, add-ons, promo codes, saved cards and trip management. Every picture is an inline SVG scene, so the environment needs no image files, no network and no emoji font.",
+  "tasks_file": "tasks.json",
+  "oracle_file": "oracle.json",
+  "action_space": {
+    "tap": {
+      "id": "test-id of the element"
+    },
+    "type": {
+      "id": "test-id of a text field",
+      "text": "replaces the whole value"
+    },
+    "back": {},
+    "home": {},
+    "wait": {},
+    "finish": {
+      "answer": "final answer for question tasks; optional for action tasks"
+    },
+    "tap_xy": {
+      "x": "screen pixel x",
+      "y": "screen pixel y",
+      "note": "browser backend only"
+    }
+  },
+  "observation": {
+    "text": "engine.a11y(state) — an accessibility tree with #test-ids. Illustrations appear as alt-text lines, so a text-only agent still knows what each picture shows.",
+    "pixels": "390x844 screenshot (browser backend); __ENV__.bounds() maps every test-id to a pixel box",
+    "state": "engine.snapshot(state) — canonical state plus a derived view. For the verifier only; never feed it to the agent."
+  },
+  "world": {
+    "today": "2026-06-08",
+    "currency": "USD by default; EUR is a display-only conversion at 0.92",
+    "pricing": "total = nightly x nights + cleaning + round(12% service) + add-ons - promo",
+    "user_location": "Denver, Colorado — every stay carries a mocked distanceMi from here",
+    "units": "miles by default; the Settings screen switches the display to kilometres (x1.609)",
+    "reviews": "26 guest reviews across the 6 stays, each with an author, month, star rating, text, optional host reply and a helpful counter the agent can vote on",
+    "categories": "7 categories driven by per-stay tags (not by `type`), so every category returns 3-4 stays",
+    "search": "all whitespace-separated terms must match; the haystack is name + city + type + host + blurb + tags + amenity labels + 'free cancellation' / 'instant book'"
+  }
+}

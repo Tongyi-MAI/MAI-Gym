@@ -1,0 +1,1433 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>排班 (mocked GUI env)</title>
+<!--
+  ============================================================================
+  排班 Rota — a single-file H5 shift planner for agent research.
+
+  Same two-block contract as every environment here: script#engine is a pure,
+  DOM-free state machine on globalThis.GUI_ENGINE; script#ui renders its screen
+  tree and exposes window.__ENV__.
+
+  What is new: the screen is a grid, not a list. Five days by two shifts, ten
+  cells, and the world is a constraint problem over them — every cell needs two
+  people and at least one supervisor, nobody may work both shifts in a day,
+  nobody may be rostered on a day they are unavailable, and everybody has a
+  weekly ceiling. Hours beyond a person's contract are paid at one and a half
+  times, so the legal rotas differ in price and the cheapest one is not the
+  obvious one.
+
+  The three supervisors are the scarce resource, and each is unavailable on a
+  different day, which forces almost the whole shape of the answer: the only
+  rota that is both legal and cheapest puts exactly one supervisor and one of
+  the two other staff in every single cell.
+
+  Money is integer fen and hours are integer, so every figure is exact.
+  ============================================================================
+-->
+<style>
+:root{
+  --outer:#e3e6ee;
+  --bezel:#12151f;
+  --bg:#eef1f3;
+  --card:#ffffff;
+  --card2:#f2f4f9;
+  --line:#dde3e7;
+  --line2:#c3ced5;
+  --press:#e6ebee;
+  --chev:#b3c0c8;
+  --ink:#16232b;
+  --ink2:#4b5f6b;
+  --muted:#7f929d;
+  --accent:#0f766e;
+  --accent-d:#0b5750;
+  --accent-s:#dff0ee;
+  --on-accent:#ffffff;
+  --good:#0f766e;
+  --good-s:#dff0ee;
+  --warn:#a15c00;
+  --warn-s:#fbeedb;
+  --bad:#b3261e;
+  --bad-s:#fbe7e5;
+  --bad-line:#e5c2be;
+  --btn:#e6ebee;
+  --btn-off:#dbe2e6;
+  --off:#bfcbd2;
+  --appbar:#ffffff;
+  --appbar-ink:#161a27;
+  --appbar-line:#dde3e7;
+  --tabbar:#ffffff;
+  --scrim:rgba(22,35,43,.44);
+  --toast:#16232b;
+  --toast-ink:#ffffff;
+  --hero:linear-gradient(140deg,#0b5750,#14867c);
+  --hero-line:transparent;
+  --hero-ink:#ffffff;
+  --disp:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --r:18px; --r2:12px;
+  --shadow:0 1px 2px rgba(16,18,26,.05),0 10px 26px rgba(16,18,26,.07);
+  --ui:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;height:100%}
+body{background:var(--outer);color:var(--ink);font:14px/1.55 var(--ui);
+  display:flex;align-items:center;justify-content:center;overflow:hidden}
+
+#device{position:relative;width:390px;height:844px;background:var(--bezel);border-radius:46px;padding:5px;
+  box-shadow:0 30px 70px rgba(0,0,0,.34);flex:0 0 auto}
+#screen{position:relative;width:100%;height:100%;background:var(--bg);border-radius:41px;
+  overflow:hidden;display:flex;flex-direction:column}
+#notch{position:absolute;top:5px;left:50%;transform:translateX(-50%);width:118px;height:30px;
+  background:var(--bezel);border-radius:0 0 18px 18px;z-index:60}
+body.bare{background:var(--bg)}
+body.bare #device{width:390px;height:844px;padding:0;border-radius:0;box-shadow:none;background:var(--bg)}
+body.bare #screen{border-radius:0}
+body.bare #notch{display:none}
+body.bare .n-sheet{animation:none}
+
+.statusbar{height:44px;flex:0 0 44px;display:flex;align-items:flex-end;justify-content:space-between;
+  padding:0 22px 6px;font-size:13px;font-weight:600;z-index:50;color:var(--ink)}
+.statusbar .sb-r{display:flex;gap:5px;align-items:center}
+.sb-bat{width:22px;height:11px;border:1.3px solid currentColor;border-radius:3px;position:relative;opacity:.9}
+.sb-bat:after{content:"";position:absolute;right:-3px;top:3px;width:2px;height:5px;background:currentColor;border-radius:0 1px 1px 0}
+.sb-bat i{position:absolute;left:1.3px;top:1.3px;bottom:1.3px;width:78%;background:currentColor;border-radius:1px}
+
+#app{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;position:relative}
+
+.n-appbar{flex:0 0 auto;min-height:52px;display:flex;align-items:center;gap:8px;padding:6px 12px;
+  background:var(--appbar);color:var(--appbar-ink);z-index:20;border-bottom:1px solid var(--appbar-line)}
+.n-appbar .ab-title{flex:1 1 auto;text-align:center;font:650 17px/1.3 var(--disp);letter-spacing:-.2px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.n-appbar .ab-side{flex:0 0 auto;min-width:56px;display:flex;align-items:center;gap:2px}
+.n-appbar .ab-side.right{justify-content:flex-end}
+.n-appbar .iconbtn{color:var(--appbar-ink);opacity:.85}
+.iconbtn{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  color:var(--ink2);cursor:pointer}
+.iconbtn:active{background:var(--press)}
+
+.n-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding-bottom:10px}
+.n-scroll::-webkit-scrollbar{width:0}
+
+.n-text{padding:2px 18px;color:var(--ink2)}
+.n-text.h1{font:700 26px/1.18 var(--disp);color:var(--ink);padding:10px 18px 6px;letter-spacing:-.6px}
+.n-text.h2{font:650 18px/1.3 var(--disp);color:var(--ink);padding:12px 18px 2px}
+.n-text.body{font-size:13.5px;padding:5px 18px;line-height:1.7}
+.n-text.muted{font-size:12.5px;color:var(--muted);padding:6px 18px;line-height:1.6}
+.n-text.empty{padding:14px 18px 40px;text-align:center;color:var(--muted);font-size:13.5px}
+.n-sec{padding:18px 18px 6px;font:700 11.5px/1 var(--ui);color:var(--muted);letter-spacing:1.3px;
+  text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.n-space{height:16px}
+
+.n-card{background:var(--card);border-radius:var(--r);margin:9px 16px;overflow:hidden;border:1px solid var(--line)}
+.n-card.flush{padding:0}
+.n-card.pad{padding:14px 16px}
+.n-card.tap{cursor:pointer}
+.n-card.tap:active{background:var(--press)}
+
+.n-row{display:flex;align-items:center;gap:13px;padding:12px 16px;border-bottom:1px solid var(--line);min-height:54px}
+.n-row:last-child{border-bottom:none}
+.n-row.tap{cursor:pointer}
+.n-row.tap:active{background:var(--press)}
+.n-row .r-lead{flex:0 0 auto;width:26px;color:var(--ink2);display:flex;align-items:center;justify-content:center}
+.n-row .r-main{flex:1 1 auto;min-width:0}
+.n-row .r-label{font-size:14.5px}
+.n-row .r-label.strike{text-decoration:line-through;color:var(--muted)}
+.n-row .r-sub{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.5}
+.n-row .r-value{flex:0 0 auto;font-size:14px;color:var(--ink2);text-align:right;font-variant-numeric:tabular-nums}
+.n-row .r-value.strong{color:var(--ink);font-weight:700}
+.n-row .r-value.acc{color:var(--accent);font-weight:700}
+.n-row .r-value.good{color:var(--good);font-weight:700}
+.n-row .r-value.warn{color:var(--warn);font-weight:700}
+.n-row .r-value.bad{color:var(--bad);font-weight:700}
+.n-row .r-arrow{flex:0 0 auto;color:var(--chev);display:flex}
+
+.n-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:47px;padding:0 20px;
+  border-radius:13px;font:650 15px/1 var(--ui);background:var(--btn);color:var(--ink);
+  border:none;cursor:pointer;user-select:none}
+.n-btn:active{filter:brightness(.97)}
+.n-btn.primary{background:var(--accent);color:var(--on-accent)}
+.n-btn.primary.off{background:var(--btn-off);color:var(--muted);cursor:not-allowed}
+.n-btn.ghost{background:transparent;border:1px solid var(--line2);height:37px;font-size:13px;padding:0 14px;color:var(--ink2)}
+.n-btn.danger{background:transparent;border:1px solid var(--bad-line);color:var(--bad);height:37px;font-size:13px;padding:0 14px}
+.n-btn.block{display:flex;width:100%}
+.n-btnrow{display:flex;gap:10px;padding:12px 16px;justify-content:flex-end;align-items:center;flex-wrap:wrap}
+
+.n-chips{display:flex;gap:8px;padding:8px 16px;overflow-x:auto}
+.n-chips::-webkit-scrollbar{height:0}
+.n-chip{flex:0 0 auto;height:34px;padding:0 14px;border-radius:11px;background:var(--card);
+  border:1px solid var(--line2);display:flex;align-items:center;font-size:13px;
+  color:var(--ink2);cursor:pointer;white-space:nowrap;font-weight:600}
+.n-chip.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+
+.n-input{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line);background:var(--card)}
+.n-input .i-label{flex:0 0 78px;font-size:13px;color:var(--muted)}
+.n-input input{flex:1 1 auto;border:none;outline:none;background:transparent;font-size:14.5px;
+  font-family:inherit;color:var(--ink);min-width:0}
+.n-input input::placeholder{color:var(--muted)}
+.n-switch{flex:0 0 auto;width:46px;height:27px;border-radius:14px;background:var(--off);position:relative;cursor:pointer;transition:background .16s}
+.n-switch.on{background:var(--accent)}
+.n-switch i{position:absolute;top:2.5px;left:2.5px;width:22px;height:22px;border-radius:50%;background:#fff;
+  transition:transform .16s;box-shadow:0 1px 3px rgba(0,0,0,.22)}
+.n-switch.on i{transform:translateX(19px)}
+.n-check{flex:0 0 auto;width:23px;height:23px;border-radius:7px;border:1.8px solid var(--off);position:relative;background:var(--card)}
+.n-check.on{border-color:var(--accent);background:var(--accent)}
+.n-check.on:after{content:"";position:absolute;left:7.5px;top:4px;width:5px;height:10px;
+  border:2px solid var(--on-accent);border-top:0;border-left:0;transform:rotate(42deg)}
+.n-radio{flex:0 0 auto;width:22px;height:22px;border-radius:50%;border:1.8px solid var(--off);position:relative}
+.n-radio.on{border-color:var(--accent);background:var(--accent)}
+.n-radio.on:after{content:"";position:absolute;left:7px;top:4px;width:5px;height:9px;
+  border:2px solid var(--on-accent);border-top:0;border-left:0;transform:rotate(42deg)}
+
+.tag{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11px;
+  font-weight:700;background:var(--btn);color:var(--ink2)}
+.tag.acc{background:var(--accent-s);color:var(--accent)}
+.tag.good{background:var(--good-s);color:var(--good)}
+.tag.warn{background:var(--warn-s);color:var(--warn)}
+.tag.bad{background:var(--bad-s);color:var(--bad)}
+
+.n-tabbar{flex:0 0 auto;height:58px;background:var(--tabbar);border-top:1px solid var(--line);display:flex;z-index:30}
+.n-tabbar .tb{flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  color:var(--muted);font-size:10.5px;cursor:pointer;font-weight:600}
+.n-tabbar .tb i{display:flex}
+.n-tabbar .tb.on{color:var(--accent)}
+
+.n-mask{position:absolute;inset:0;background:var(--scrim);z-index:70;display:flex;align-items:flex-end}
+.n-sheet{width:100%;max-height:80%;background:var(--card);border-radius:22px 22px 0 0;display:flex;
+  flex-direction:column;overflow:hidden;animation:up .18s ease-out}
+@keyframes up{from{transform:translateY(24px)}to{transform:none}}
+.n-sheet .sh-hd{padding:16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
+.n-sheet .sh-hd .t{font:650 17px/1.2 var(--disp)}
+.n-sheet .sh-bd{flex:1 1 auto;overflow-y:auto;min-height:0}
+.n-sheet .sh-bd::-webkit-scrollbar{width:0}
+.n-toast{position:absolute;left:50%;bottom:118px;transform:translateX(-50%);background:var(--toast);
+  color:var(--toast-ink);padding:11px 18px;border-radius:11px;font-size:13px;z-index:90;max-width:84%;text-align:center}
+.dialog{margin:auto;width:82%;background:var(--card);border-radius:18px;overflow:hidden;border:1px solid var(--line)}
+
+.stats{display:flex;gap:9px;padding:4px 16px}
+.stat{flex:1 1 0;background:var(--card);border:1px solid var(--line);border-radius:var(--r2);padding:13px 12px}
+.stat.tap{cursor:pointer}
+.stat .st-n{font:800 19px/1.1 var(--disp);letter-spacing:-.5px;font-variant-numeric:tabular-nums}
+.stat .st-l{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.4}
+.stat.acc .st-n{color:var(--accent)}
+
+.hero{margin:8px 16px 4px;padding:18px;border-radius:var(--r);background:var(--hero);
+  border:1px solid var(--hero-line);color:var(--hero-ink)}
+.hero.tap{cursor:pointer}
+.hero .he-k{font-size:11px;letter-spacing:1.3px;text-transform:uppercase;font-weight:800;opacity:.85}
+.hero .he-t{font:800 25px/1.16 var(--disp);margin-top:9px;letter-spacing:-.7px}
+.hero .he-s{font-size:13px;margin-top:8px;line-height:1.6;opacity:.9}
+
+
+.grid{margin:0 12px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+  overflow:hidden}
+.gd-h{display:flex;border-bottom:1px solid var(--line2);background:var(--btn)}
+.gd-h div{flex:1 1 0;padding:9px 4px;text-align:center;font-size:11px;font-weight:700;
+  color:var(--ink2)}
+.gd-h div:first-child{flex:0 0 46px;text-align:left;padding-left:10px;color:var(--muted)}
+.gd-row{display:flex;border-bottom:1px solid var(--line)}
+.gd-row:last-child{border-bottom:none}
+.gd-lb{flex:0 0 46px;padding:10px;font-size:11.5px;font-weight:700;color:var(--ink2);
+  background:var(--btn);display:flex;align-items:center}
+.gd-c{flex:1 1 0;min-width:0;padding:7px 4px;border-left:1px solid var(--line);cursor:pointer;
+  min-height:62px}
+.gd-c:active{background:var(--press)}
+.gd-c.bad{background:var(--bad-s)}
+.gd-c.short{background:var(--warn-s)}
+.gd-nm{display:block;font-size:11px;line-height:1.5;text-align:center;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.gd-nm.sup{font-weight:700;color:var(--accent)}
+.gd-nm.err{color:var(--bad);text-decoration:line-through}
+.gd-x{display:block;font-size:10px;text-align:center;color:var(--warn);margin-top:2px}
+
+.who{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--line)}
+.who:last-child{border-bottom:none}
+.who.off{opacity:.55}
+.wh-a{flex:0 0 auto;width:34px;height:34px;border-radius:17px;background:var(--btn);
+  display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;
+  color:var(--ink2)}
+.who.sup .wh-a{background:var(--accent-s);color:var(--accent)}
+.wh-m{flex:1 1 auto;min-width:0}
+.wh-n{font-size:14px;font-weight:600}
+.wh-n b{font-size:10px;margin-left:6px;padding:1px 5px;border-radius:3px;background:var(--accent-s);
+  color:var(--accent);font-weight:700}
+.wh-s{font-size:11.5px;color:var(--muted);margin-top:3px}
+.wh-s.no{color:var(--bad)}
+.wh-b{flex:0 0 auto;padding:6px 11px;border-radius:7px;background:var(--accent);
+  color:var(--on-accent);font-size:12px;font-weight:700;cursor:pointer}
+.wh-b.rm{background:var(--btn);color:var(--bad)}
+.wh-b.no{background:var(--btn-off);color:var(--muted)}
+
+.hrs{margin:0 16px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+  padding:6px 0}
+.hr-r{display:flex;align-items:center;gap:10px;padding:8px 14px}
+.hr-n{flex:0 0 62px;font-size:12.5px;font-weight:600}
+.hr-b{flex:1 1 auto;height:15px;background:var(--btn);border-radius:3px;overflow:hidden;
+  position:relative}
+.hr-b i{position:absolute;left:0;top:0;bottom:0;background:var(--accent);border-radius:3px}
+.hr-b u{position:absolute;top:0;bottom:0;background:var(--warn);border-radius:0 3px 3px 0}
+.hr-b b{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink2);opacity:.45}
+.hr-v{flex:0 0 auto;font-size:11.5px;font-weight:700;min-width:62px;text-align:right;
+  font-variant-numeric:tabular-nums}
+.hr-v.ot{color:var(--warn)}
+
+.issue{display:flex;gap:11px;padding:12px 14px;border-bottom:1px solid var(--line);cursor:pointer}
+.issue:last-child{border-bottom:none}
+.issue:active{background:var(--press)}
+.is-d{flex:0 0 auto;width:8px;height:8px;border-radius:4px;margin-top:6px;background:var(--bad)}
+.issue.warn .is-d{background:var(--warn)}
+.is-m{flex:1 1 auto}
+.is-t{font-size:13.5px;font-weight:600}
+.is-s{font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.5}
+
+.bill{margin:12px 16px;padding:16px;border:1px solid var(--line);border-radius:var(--r);
+  background:var(--card)}
+.bill .bl-k{font-size:11px;color:var(--muted);letter-spacing:1px}
+.bill .bl-n{font:700 30px/1 var(--disp);margin-top:9px;letter-spacing:-1px}
+.bill .bl-g{display:flex;gap:20px;margin-top:15px;padding-top:13px;border-top:1px solid var(--line)}
+.bill .bl-i .v{font-size:15px;font-weight:700}
+.bill .bl-i.bad .v{color:var(--bad)}
+.bill .bl-i.good .v{color:var(--good)}
+.bill .bl-i .l{font-size:10.5px;color:var(--muted);margin-top:4px}
+
+</style>
+</head>
+<body>
+<div id="device">
+  <div id="notch"></div>
+  <div id="screen">
+    <div class="statusbar" id="sb">
+      <div id="sb-clock">09:12</div>
+      <div class="sb-r">
+        <svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="4.6" y="5.5" width="3" height="6.5" rx="1"/><rect x="9.2" y="3" width="3" height="9" rx="1"/><rect x="13.8" y="0" width="3" height="12" rx="1"/></svg>
+        <svg width="15" height="12" viewBox="0 0 15 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 4.2a9 9 0 0 1 13 0"/><path d="M3.4 6.9a5.6 5.6 0 0 1 8.2 0"/><circle cx="7.5" cy="10" r=".9" fill="currentColor" stroke="none"/></svg>
+        <span class="sb-bat"><i></i></span>
+      </div>
+    </div>
+    <div id="app"></div>
+  </div>
+</div>
+<div id="hud" class="off"></div>
+
+<script id="engine">
+/* ===========================================================================
+ * ENGINE — pure, deterministic, DOM-free.
+ * 工时是整数小时，钱是整数分。覆盖、违规、工资都是每次动作后
+ * 从排班表重新算出来的，没有一个数是存下来的。
+ * ======================================================================== */
+(function(root){
+'use strict';
+
+var ENV_ID  = 'rota_shifts';
+var VERSION = '1.0.0';
+
+/* ------------------------------------------------------------- utilities */
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+function pad2(n){ return (n < 10 ? '0' : '') + n; }
+function hhmm(m){ m = ((m % 1440) + 1440) % 1440; return pad2(Math.floor(m/60)) + ':' + pad2(m%60); }
+function sum(a){ var s = 0; for (var i=0;i<a.length;i++) s += a[i]; return s; }
+function clamp(v, lo, hi){ return v < lo ? lo : (v > hi ? hi : v); }
+function lcg(seed){ var s=(seed>>>0)||1; return function(){ s=(s*1664525+1013904223)>>>0; return s/4294967296; }; }
+function shuffled(list, seed){
+  if (!seed) return list.slice();
+  var r = lcg(seed), a = list.slice();
+  for (var i=a.length-1;i>0;i--){ var j = Math.floor(r()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; }
+  return a;
+}
+function money(p, sym){
+  var neg = p < 0; p = Math.abs(p);
+  return (neg ? '-' : '') + (sym === undefined ? '\u00a3' : sym) +
+         (Math.floor(p/100)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '.' + pad2(p%100);
+}
+function getPath(o, path){
+  var cur = o, parts = String(path).split('.');
+  for (var i=0;i<parts.length;i++){
+    var k = parts[i], m = k.match(/^(.*?)\[(\d+)\]$/);
+    if (m){ cur = cur ? cur[m[1]] : undefined; cur = cur ? cur[+m[2]] : undefined; }
+    else cur = cur ? cur[k] : undefined;
+    if (cur === undefined) return undefined;
+  }
+  return cur;
+}
+function setPath(o, path, value){
+  var parts = String(path).split('.'), cur = o;
+  for (var i=0;i<parts.length-1;i++){
+    var k = parts[i], m = k.match(/^(.*?)\[(\d+)\]$/);
+    cur = m ? cur[m[1]][+m[2]] : (cur[k] = cur[k] || {});
+  }
+  var lastK = parts[parts.length-1], lm = lastK.match(/^(.*?)\[(\d+)\]$/);
+  if (lm) cur[lm[1]][+lm[2]] = value; else cur[lastK] = value;
+  return o;
+}
+
+/* ------------------------------------------- screen-tree node constructors */
+function N(t, o){ o = o || {}; o.t = t; return o; }
+function txt(s, cls){ return N('text', {text:s, cls:cls || ''}); }
+function row(id, text, o){
+  o = o || {}; o.id = id; o.text = text;
+  if (o.arrow === undefined) o.arrow = !!o.act;
+  return N('row', o);
+}
+function btn(id, text, act, cls, disabled){
+  return N('btn', {id:id, text:text, act:act, cls:cls || '', disabled:!!disabled});
+}
+function iconbtn(id, ic, act, cls){ return N('iconbtn', {id:id, icon:ic, act:act, cls:cls || ''}); }
+function appbar(title, o){ o = o || {}; o.title = title; return N('appbar', o); }
+function stepper(id, value, minus, plus){
+  return N('stepper', {id:id, value:value, minusId:id + '_dec', plusId:id + '_inc',
+                       minus:minus, plus:plus});
+}
+function sheet(id, title, kids){
+  return N('sheet', {id:id, title:title, closeId:id + '_close', close:{type:'CLOSE_SHEET'}, c:kids});
+}
+function route(st){ return st.ui.stack[st.ui.stack.length - 1]; }
+function push(st, name, params){ st.ui.stack.push({name:name, params:params || {}}); st.ui.sheet = null; }
+function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
+function toast(st, t){ st.ui.toast = t; }
+
+/* ------------------------------------------------------------ the shop */
+var DAYS = [
+  {id:'mon', name:'周一'}, {id:'tue', name:'周二'}, {id:'wed', name:'周三'},
+  {id:'thu', name:'周四'}, {id:'fri', name:'周五'}
+];
+var SHIFTS = [
+  {id:'am', name:'早班', span:'08:00–16:00', hours:8},
+  {id:'pm', name:'晚班', span:'16:00–24:00', hours:8}
+];
+var NEED = 2;                          /* 每个班次都要两个人 */
+function dayOf(id){ for (var i=0;i<DAYS.length;i++) if (DAYS[i].id === id) return DAYS[i]; return null; }
+function shiftOf(id){ for (var i=0;i<SHIFTS.length;i++) if (SHIFTS[i].id === id) return SHIFTS[i]; return null; }
+function cellKey(d, s){ return d + '_' + s; }
+function cellName(d, s){ return dayOf(d).name + shiftOf(s).name; }
+
+function P(id, name, sup, contract, cap, rate, off, note){
+  return {id:id, name:name, sup:sup, contract:contract, cap:cap, rate:rate, off:off, note:note};
+}
+var STAFF = [
+  P('p_lin',  '林晓', true,  32, 40, 2800, ['fri'], '店长，周五要去总部开会。'),
+  P('p_zhao', '赵敏', true,  32, 40, 3200, ['wed'], '副店长，周三上夜校。'),
+  P('p_wu',   '吴斌', false, 24, 40, 2400, [],      '兼职，随时都能排。'),
+  P('p_chen', '陈露', false, 32, 40, 2600, [],      '正式工，不能带班。'),
+  P('p_he',   '何俊', true,  16, 24, 3000, ['mon'], '返聘，一周最多三个班。')
+];
+function staffOf(id){ for (var i=0;i<STAFF.length;i++) if (STAFF[i].id === id) return STAFF[i]; return null; }
+function staffName(id){ var p = staffOf(id); return p ? p.name : id; }
+
+function cellOf(st, d, s){ return st.rota[cellKey(d, s)] || []; }
+function worksOn(st, who, d){
+  var n = 0;
+  SHIFTS.forEach(function(s){ if (cellOf(st, d, s.id).indexOf(who) >= 0) n += 1; });
+  return n;
+}
+function shiftsOf(st, who){
+  var n = 0;
+  DAYS.forEach(function(d){ SHIFTS.forEach(function(s){
+    if (cellOf(st, d.id, s.id).indexOf(who) >= 0) n += 1;
+  }); });
+  return n;
+}
+function hoursOf(st, who){ return shiftsOf(st, who) * 8; }
+function overtimeOf(st, who){
+  var p = staffOf(who);
+  return Math.max(0, hoursOf(st, who) - p.contract);
+}
+function payOf(st, who){
+  var p = staffOf(who), h = hoursOf(st, who);
+  var base = Math.min(h, p.contract), ot = Math.max(0, h - p.contract);
+  return base * p.rate + ot * p.rate * 3 / 2;
+}
+function billOf(st){ return sum(STAFF.map(function(p){ return payOf(st, p.id); })); }
+function totalOvertime(st){ return sum(STAFF.map(function(p){ return overtimeOf(st, p.id); })); }
+
+/* -------------------------------------------------- what is wrong with it */
+function whyNot(st, who, d, s){
+  var p = staffOf(who);
+  if (cellOf(st, d, s).indexOf(who) >= 0) return '已经排在这个班了';
+  if (p.off.indexOf(d) >= 0) return dayOf(d).name + '不可用：' + p.note;
+  if (worksOn(st, who, d) > 0) return '同一天不能连上两个班';
+  if (hoursOf(st, who) + 8 > p.cap) return '会超过每周 ' + p.cap + ' 小时上限';
+  return null;
+}
+/* 已经排好的班里，哪些是违规的 */
+function cellFaults(st, d, s){
+  var out = [], list = cellOf(st, d, s);
+  list.forEach(function(who){
+    var p = staffOf(who);
+    if (p.off.indexOf(d) >= 0)
+      out.push({kind:'off', who:who, day:d, shift:s,
+        text:staffName(who) + dayOf(d).name + '不可用', why:p.note});
+    if (worksOn(st, who, d) > 1)
+      out.push({kind:'double', who:who, day:d, shift:s,
+        text:staffName(who) + dayOf(d).name + '连上两个班', why:'早班和晚班接在一起，中间没有休息'});
+  });
+  return out;
+}
+function issues(st){
+  var out = [];
+  DAYS.forEach(function(d){
+    SHIFTS.forEach(function(s){
+      var list = cellOf(st, d.id, s.id);
+      if (list.length < NEED)
+        out.push({kind:'short', day:d.id, shift:s.id, sev:'bad',
+          text:cellName(d.id, s.id) + '只有 ' + list.length + ' 个人',
+          why:'每个班要 ' + NEED + ' 个人'});
+      if (list.length > NEED)
+        out.push({kind:'over', day:d.id, shift:s.id, sev:'warn',
+          text:cellName(d.id, s.id) + '排了 ' + list.length + ' 个人',
+          why:'多出来的工时照付，但没有用'});
+      if (!list.some(function(w){ return staffOf(w).sup; }))
+        out.push({kind:'nosup', day:d.id, shift:s.id, sev:'bad',
+          text:cellName(d.id, s.id) + '没有带班的',
+          why:'每个班至少要一个能带班的人'});
+      cellFaults(st, d.id, s.id).forEach(function(f){
+        /* 连上两个班在两个格子里都会出现，只记一次 */
+        if (f.kind === 'double' && s.id !== 'am') return;
+        out.push({kind:f.kind, day:d.id, shift:s.id, who:f.who, sev:'bad',
+          text:f.text, why:f.why});
+      });
+    });
+  });
+  STAFF.forEach(function(p){
+    if (hoursOf(st, p.id) > p.cap)
+      out.push({kind:'cap', who:p.id, sev:'bad',
+        text:p.name + '排了 ' + hoursOf(st, p.id) + ' 小时',
+        why:'上限是 ' + p.cap + ' 小时'});
+  });
+  return out;
+}
+function legal(st){ return issues(st).length === 0; }
+function filledSlots(st){
+  var n = 0;
+  DAYS.forEach(function(d){ SHIFTS.forEach(function(s){ n += cellOf(st, d.id, s.id).length; }); });
+  return n;
+}
+function yuan(fen){
+  var neg = fen < 0; if (neg) fen = -fen;
+  var w = '' + Math.floor(fen / 100), c = fen % 100, g = '';
+  for (var i = 0; i < w.length; i++){
+    if (i > 0 && (w.length - i) % 3 === 0) g += ',';
+    g += w[i];
+  }
+  return (neg ? '-' : '') + '¥' + g + '.' + (c < 10 ? '0' : '') + c;
+}
+
+/* =========================================================== state */
+function createInitialState(seed){
+  seed = seed || 0;
+  /* 排好的一周，故意留了两个坑和两处违规 */
+  var rota = {
+    mon_am:['p_lin', 'p_wu'],   mon_pm:['p_zhao', 'p_chen'],
+    tue_am:['p_lin', 'p_chen'], tue_pm:['p_zhao', 'p_chen'],
+    wed_am:['p_lin', 'p_wu'],   wed_pm:['p_zhao', 'p_chen'],
+    thu_am:['p_wu', 'p_chen'],  thu_pm:['p_zhao', 'p_he'],
+    fri_am:['p_zhao', 'p_wu'],  fri_pm:['p_he']
+  };
+  return {
+    meta:{env:ENV_ID, version:VERSION, seed:seed, steps:0, finished:false, answer:null},
+    rota:rota,
+    /* 种子只打乱花名册的先后，谁在册子上不会变 */
+    order:shuffled(STAFF.map(function(p){ return p.id; }), seed),
+    ui:{tab:'grid', stack:[{name:'grid', params:{}}], sheet:null, confirm:null, inputs:{},
+        toast:null},
+    settings:{showRate:false, markProblems:true, warnOvertime:true}
+  };
+}
+var SELECT = {
+  staffOf:staffOf, staffName:staffName, cellOf:cellOf, worksOn:worksOn, shiftsOf:shiftsOf,
+  hoursOf:hoursOf, overtimeOf:overtimeOf, payOf:payOf, billOf:billOf, totalOvertime:totalOvertime,
+  whyNot:whyNot, issues:issues, legal:legal, filledSlots:filledSlots, cellKey:cellKey,
+  cellName:cellName, days:DAYS, shifts:SHIFTS, staff:STAFF, need:NEED, route:route
+};
+
+/* =========================================================== reducer */
+function reduce(prev, action){
+  var st = clone(prev), A = action || {};
+  st.ui.toast = null;
+  st.meta.steps += 1;
+
+  switch (A.type) {
+
+  case 'NOOP': break;
+  case 'FINISH': st.meta.finished = true; st.meta.answer = A.answer === undefined ? null : A.answer; break;
+
+  case 'NAV': push(st, A.to, A.params); break;
+  case 'BACK':
+    if (st.ui.sheet) st.ui.sheet = null;
+    else if (st.ui.confirm) st.ui.confirm = null;
+    else pop(st);
+    break;
+  case 'TAB': {
+    var roots = {grid:'grid', check:'check', people:'people', settings:'settings'};
+    st.ui.tab = A.tab; st.ui.sheet = null; st.ui.confirm = null;
+    st.ui.stack = [{name:roots[A.tab] || 'grid', params:{}}];
+    break;
+  }
+  case 'HOME':
+    st.ui.tab = 'grid'; st.ui.stack = [{name:'grid', params:{}}];
+    st.ui.sheet = null; st.ui.confirm = null;
+    break;
+  case 'SET_INPUT': st.ui.inputs[A.field] = A.value; break;
+  case 'OPEN_SHEET': st.ui.sheet = {type:A.sheet, day:A.day, shift:A.shift}; break;
+  case 'CLOSE_SHEET': st.ui.sheet = null; break;
+  case 'CONFIRM_NO': st.ui.confirm = null; break;
+  case 'CONFIRM_YES': {
+    var yes = st.ui.confirm && st.ui.confirm.yes; st.ui.confirm = null;
+    if (yes) { var keep = st.meta.steps; var out = reduce(st, yes); out.meta.steps = keep; return out; }
+    break;
+  }
+
+  /* ---- 排班 ---- */
+  case 'ASSIGN': {
+    var why = whyNot(st, A.who, A.day, A.shift);
+    if (why) { toast(st, staffName(A.who) + '排不进去 — ' + why); break; }
+    var k = cellKey(A.day, A.shift);
+    st.rota[k] = (st.rota[k] || []).concat([A.who]);
+    var p = staffOf(A.who);
+    var over = Math.max(0, hoursOf(st, A.who) - p.contract);
+    toast(st, staffName(A.who) + ' 排进 ' + cellName(A.day, A.shift) + '，本周 '
+              + hoursOf(st, A.who) + ' 小时'
+              + (over && st.settings.warnOvertime ? '，其中 ' + over + ' 小时加班' : ''));
+    break;
+  }
+  case 'UNASSIGN': {
+    var k2 = cellKey(A.day, A.shift), list = (st.rota[k2] || []).slice();
+    var i = list.indexOf(A.who);
+    if (i < 0) { toast(st, staffName(A.who) + '本来就不在这个班'); break; }
+    list.splice(i, 1);
+    st.rota[k2] = list;
+    toast(st, staffName(A.who) + ' 从 ' + cellName(A.day, A.shift) + ' 撤下，本周 '
+              + hoursOf(st, A.who) + ' 小时');
+    break;
+  }
+  case 'CLEAR_CELL': {
+    var k3 = cellKey(A.day, A.shift);
+    if (!(st.rota[k3] || []).length) { toast(st, '这个班本来就是空的'); break; }
+    st.ui.confirm = {title:'把' + cellName(A.day, A.shift) + '清空？',
+      text:'这个班上排的人全部撤下。',
+      okText:'清空', yes:{type:'CLEAR_CELL_YES', day:A.day, shift:A.shift}};
+    break;
+  }
+  case 'CLEAR_CELL_YES':
+    st.rota[cellKey(A.day, A.shift)] = [];
+    toast(st, cellName(A.day, A.shift) + '已清空');
+    break;
+
+  case 'CLEAR_WEEK':
+    st.ui.confirm = {title:'整周重排？', text:'十个班全部清空，从头来过。',
+      okText:'全部清空', yes:{type:'CLEAR_WEEK_YES'}};
+    break;
+  case 'CLEAR_WEEK_YES': {
+    var r = {};
+    DAYS.forEach(function(d){ SHIFTS.forEach(function(s){ r[cellKey(d.id, s.id)] = []; }); });
+    st.rota = r;
+    toast(st, '整周已清空');
+    break;
+  }
+
+  case 'SET_TOGGLE': st.settings[A.key] = !st.settings[A.key]; break;
+
+  default: break;
+  }
+  return st;
+}
+
+/* =========================================================== screens */
+function tabbar(st){
+  var items = [
+    {id:'tab_grid',     text:'排班',  icon:'calendar', tab:'grid'},
+    {id:'tab_check',    text:'检查',  icon:'alert',    tab:'check'},
+    {id:'tab_people',   text:'员工',  icon:'user',     tab:'people'},
+    {id:'tab_settings', text:'设置',  icon:'gear',     tab:'settings'}
+  ].map(function(i){
+    return {id:i.id, text:i.text, icon:i.icon, on:(st.ui.tab === i.tab), act:{type:'TAB', tab:i.tab}};
+  });
+  return N('tabbar', {id:'tabbar', items:items});
+}
+function billCard(st){
+  var probs = issues(st);
+  return N('bill', {id:'bill', kicker:'本周工资',
+    amount:yuan(billOf(st)),
+    grid:[{v:filledSlots(st) + '/' + (DAYS.length * SHIFTS.length * NEED), l:'班次填满',
+           cls:filledSlots(st) === DAYS.length * SHIFTS.length * NEED ? 'good' : 'bad'},
+          {v:totalOvertime(st) + ' 小时', l:'加班',
+           cls:totalOvertime(st) ? 'bad' : 'good'},
+          {v:probs.length + ' 处', l:'问题', cls:probs.length ? 'bad' : 'good'}]});
+}
+function gridNode(st){
+  var rows = SHIFTS.map(function(s){
+    return {label:s.name, cells:DAYS.map(function(d){
+      var list = cellOf(st, d.id, s.id);
+      var faults = cellFaults(st, d.id, s.id);
+      var bad = faults.length > 0;
+      var nosup = !list.some(function(w){ return staffOf(w).sup; });
+      return {id:'cell_' + cellKey(d.id, s.id), day:d.id, shift:s.id,
+        bad:st.settings.markProblems && bad,
+        short:st.settings.markProblems && (list.length !== NEED || nosup),
+        names:list.map(function(w){
+          return {text:staffName(w), sup:staffOf(w).sup,
+                  err:faults.some(function(f){ return f.who === w; })};
+        }),
+        note:list.length < NEED ? '缺 ' + (NEED - list.length) + ' 人'
+             : (nosup ? '无带班' : ''),
+        act:{type:'NAV', to:'cell', params:{day:d.id, shift:s.id}}};
+    })};
+  });
+  return N('grid', {id:'rota_grid', days:DAYS.map(function(d){ return d.name; }), rows:rows});
+}
+
+function scrGrid(st){
+  return N('screen', {id:'scr_grid', name:'grid', c:[
+    appbar('排班'),
+    N('scroll', {id:'grid_scroll', c:[
+      billCard(st),
+      N('sec', {text:'本周', side:'点格子改人'}),
+      gridNode(st),
+      txt('早班 08:00–16:00，晚班 16:00–24:00，每班 8 小时、要 2 个人，其中至少 1 个能带班。',
+          'muted'),
+      N('sec', {text:'工时'}),
+      N('hrs', {id:'hours', rows:st.order.map(function(id){
+        var p = staffOf(id), h = hoursOf(st, id), ot = overtimeOf(st, id);
+        return {id:'hr_' + id, act:{type:'NAV', to:'person', params:{id:id}},
+          name:p.name, base:Math.round(Math.min(h, p.contract) * 100 / p.cap),
+          ot:Math.round(ot * 100 / p.cap), otLeft:Math.round(Math.min(h, p.contract) * 100 / p.cap),
+          mark:Math.round(p.contract * 100 / p.cap),
+          text:h + '/' + p.contract + (ot ? ' +' + ot : ''), over:ot > 0};
+      })}),
+      txt('细的那根竖线是合同工时，超过的部分按 1.5 倍算。', 'muted'),
+      N('padded', {c:[btn('clear_week', '整周清空重排', {type:'CLEAR_WEEK'}, 'block')]}),
+      N('space', {})
+    ]}),
+    tabbar(st)
+  ]});
+}
+
+function scrCell(st, params){
+  var d = params.day, s = params.shift;
+  if (!dayOf(d) || !shiftOf(s)) return scrGrid(st);
+  var list = cellOf(st, d, s);
+  var faults = cellFaults(st, d, s);
+  var nosup = !list.some(function(w){ return staffOf(w).sup; });
+  var others = st.order.filter(function(id){ return list.indexOf(id) < 0; });
+  return N('screen', {id:'scr_cell', name:'cell', params:params, c:[
+    appbar(cellName(d, s), {back:true}),
+    N('scroll', {id:'cell_scroll', c:[
+      N('hero', {id:'cell_hero', kicker:shiftOf(s).span, title:cellName(d, s),
+        sub:list.length + '/' + NEED + ' 人' + (nosup ? ' · 还没有带班的' : ' · 带班已就位')}),
+      N('sec', {text:'这个班上的人'}),
+      N('card', {id:'on_shift', cls:'flush', c: list.length
+        ? list.map(function(id){
+            var p = staffOf(id);
+            var f = faults.filter(function(x){ return x.who === id; })[0];
+            return N('who', {id:'on_' + id, name:p.name, sup:p.sup, off:false,
+              init:p.name.slice(0, 1),
+              sub:f ? f.text + ' — ' + f.why
+                    : '本周 ' + hoursOf(st, id) + ' 小时，合同 ' + p.contract
+                      + (overtimeOf(st, id) ? '，加班 ' + overtimeOf(st, id) : ''),
+              subNo:!!f,
+              btn:'撤下', btnCls:'rm',
+              act:{type:'UNASSIGN', who:id, day:d, shift:s}});
+          })
+        : [txt('没人。', 'empty')]}),
+      N('sec', {text:'还能排谁'}),
+      N('card', {id:'off_shift', cls:'flush', c: others.map(function(id){
+        var p = staffOf(id), why = whyNot(st, id, d, s);
+        return N('who', {id:'add_' + id, name:p.name, sup:p.sup, off:!!why,
+          init:p.name.slice(0, 1),
+          sub:why ? why : '本周 ' + hoursOf(st, id) + ' 小时，还能排 '
+                          + ((p.cap - hoursOf(st, id)) / 8) + ' 个班，'
+                          + (hoursOf(st, id) >= p.contract ? '再排就是加班 ' + yuan(p.rate * 8 * 3 / 2)
+                                                           : '这个班 ' + yuan(p.rate * 8)),
+          subNo:!!why,
+          btn:why ? '排不了' : '排上', btnCls:why ? 'no' : '',
+          act:{type:'ASSIGN', who:id, day:d, shift:s}});
+      })}),
+      N('padded', {c:[btn('clear_cell', '这个班全部撤下', {type:'CLEAR_CELL', day:d, shift:s},
+                          'danger block', list.length === 0)]}),
+      N('space', {})
+    ]})
+  ]});
+}
+
+function scrCheck(st){
+  var probs = issues(st);
+  return N('screen', {id:'scr_check', name:'check', c:[
+    appbar('检查'),
+    N('scroll', {id:'check_scroll', c:[
+      billCard(st),
+      N('sec', {text:probs.length ? '要处理的 ' + probs.length + ' 处' : '没有问题'}),
+      N('card', {id:'issue_list', cls:'flush', c: probs.length
+        ? probs.map(function(p, i){
+            return N('issue', {id:'iss_' + i, sev:p.sev, title:p.text, sub:p.why,
+              act:p.day ? {type:'NAV', to:'cell', params:{day:p.day, shift:p.shift}}
+                        : {type:'TAB', tab:'people'}});
+          })
+        : [txt('十个班都排满了，规矩也都守住了。', 'empty')]}),
+      N('sec', {text:'工资怎么来的'}),
+      N('card', {id:'pay_list', cls:'flush', c: st.order.map(function(id){
+        var p = staffOf(id), h = hoursOf(st, id), ot = overtimeOf(st, id);
+        return row('pay_' + id, p.name,
+          {lead:'money',
+           sub:h + ' 小时' + (ot ? '（含加班 ' + ot + ' 小时，按 ' + yuan(p.rate * 3 / 2) + '/时）'
+                                 : '') + ' · ' + yuan(p.rate) + '/时',
+           val:yuan(payOf(st, id)), valCls:ot ? 'warn' : 'strong', arrow:false});
+      }).concat([row('pay_total', '合计', {lead:'money', val:yuan(billOf(st)), valCls:'strong',
+        arrow:false, sub:'十个班全部排满最少要 ' + (DAYS.length * SHIFTS.length * NEED)
+          + ' 个班次，合同工时一共只有 '
+          + (sum(STAFF.map(function(p){ return p.contract; })) / 8) + ' 个班'})])}),
+      N('space', {})
+    ]}),
+    tabbar(st)
+  ]});
+}
+
+function scrPeople(st){
+  return N('screen', {id:'scr_people', name:'people', c:[
+    appbar('员工'),
+    N('scroll', {id:'people_scroll', c:[
+      N('sec', {text:'五个人'}),
+      N('card', {id:'staff_list', cls:'flush', c: st.order.map(function(id){
+        var p = staffOf(id), h = hoursOf(st, id);
+        return N('who', {id:'st_' + id, name:p.name, sup:p.sup, off:false,
+          init:p.name.slice(0, 1),
+          sub:'合同 ' + p.contract + ' 小时 · 上限 ' + p.cap + ' 小时 · ' + yuan(p.rate) + '/时'
+              + (p.off.length ? ' · ' + p.off.map(function(x){ return dayOf(x).name; }).join('、')
+                                + '不可用' : ' · 每天都能排'),
+          subNo:h > p.cap,
+          btn:h + '/' + p.cap, btnCls:h > p.cap ? 'no' : (h > p.contract ? 'rm' : ''),
+          act:{type:'NAV', to:'person', params:{id:id}}});
+      })}),
+      N('sec', {text:'带班的只有三个'}),
+      N('card', {id:'sup_note', cls:'flush', c: STAFF.filter(function(p){ return p.sup; })
+        .map(function(p){
+          return row('sup_' + p.id, p.name,
+            {lead:'user', sub:p.off.length ? p.off.map(function(x){ return dayOf(x).name; }).join('、')
+                                             + '不在' : '一周都在',
+             val:shiftsOf(st, p.id) + ' 个班', valCls:'acc',
+             act:{type:'NAV', to:'person', params:{id:p.id}}});
+        }).concat([row('sup_math', '十个班都要一个带班的', {lead:'info',
+          sub:'三个人分别有一天不在，所以谁哪天带班基本是定死的', arrow:false})])}),
+      N('space', {})
+    ]}),
+    tabbar(st)
+  ]});
+}
+
+function scrPerson(st, params){
+  var p = staffOf(params.id);
+  if (!p) return scrPeople(st);
+  var mine = [];
+  DAYS.forEach(function(d){ SHIFTS.forEach(function(s){
+    if (cellOf(st, d.id, s.id).indexOf(p.id) >= 0) mine.push({d:d.id, s:s.id});
+  }); });
+  return N('screen', {id:'scr_person', name:'person', params:params, c:[
+    appbar(p.name, {back:true}),
+    N('scroll', {id:'person_scroll', c:[
+      N('hero', {id:'person_hero', kicker:p.sup ? '能带班' : '不能带班', title:p.name,
+        sub:p.note}),
+      N('stats', {id:'person_stats', c:[
+        N('stat', {id:'st_hours', n:hoursOf(st, p.id) + '', l:'本周小时',
+                   acc:hoursOf(st, p.id) > p.contract}),
+        N('stat', {id:'st_contract', n:p.contract + '', l:'合同'}),
+        N('stat', {id:'st_pay', n:yuan(payOf(st, p.id)), l:'工资'})
+      ]}),
+      N('sec', {text:'排了哪些班'}),
+      N('card', {id:'my_shifts', cls:'flush', c: mine.length
+        ? mine.map(function(x){
+            return row('my_' + x.d + '_' + x.s, cellName(x.d, x.s),
+              {lead:'calendar', sub:shiftOf(x.s).span,
+               act:{type:'NAV', to:'cell', params:{day:x.d, shift:x.s}}});
+          })
+        : [txt('这周一个班都没排。', 'empty')]}),
+      N('sec', {text:'哪天不能排'}),
+      N('card', {id:'my_off', cls:'flush', c: p.off.length
+        ? p.off.map(function(x){
+            return row('off_' + x, dayOf(x).name, {lead:'close', sub:p.note, arrow:false});
+          })
+        : [txt('每天都能排。', 'empty')]}),
+      N('space', {})
+    ]})
+  ]});
+}
+
+function scrSettings(st){
+  function sw(id, text, key, sub){
+    return row(id, text, {sub:sub, arrow:false,
+      c:[N('switch', {id:'set_' + key, on:!!st.settings[key], act:{type:'SET_TOGGLE', key:key}})]});
+  }
+  return N('screen', {id:'scr_settings', name:'settings', c:[
+    appbar('设置'),
+    N('scroll', {id:'settings_scroll', c:[
+      N('sec', {text:'显示'}),
+      N('card', {id:'show_card', cls:'flush', c:[
+        sw('rate_row', '在格子里显示时薪', 'showRate', '排班表上每个人名后面带上时薪'),
+        sw('mark_row', '把有问题的班标红', 'markProblems', '缺人、没带班、违规都会上色'),
+        sw('ot_row', '排班时提醒加班', 'warnOvertime', '')
+      ]}),
+      N('sec', {text:'这周的规矩'}),
+      N('card', {id:'rule_card', cls:'flush', c:[
+        row('rule_need', '每班人数', {lead:'info', val:NEED + ' 人', valCls:'strong', arrow:false}),
+        row('rule_sup', '带班', {lead:'info', val:'每班 1 人', valCls:'strong', arrow:false,
+          sub:'能带班的只有林晓、赵敏、何俊'}),
+        row('rule_double', '同一天两个班', {lead:'info', val:'不行', valCls:'strong', arrow:false,
+          sub:'早班接晚班中间没有休息'}),
+        row('rule_ot', '加班', {lead:'info', val:'1.5 倍', valCls:'strong', arrow:false,
+          sub:'超出合同工时的部分'}),
+        row('rule_cap', '每周上限', {lead:'alert', val:'各人不同', valCls:'warn', arrow:false,
+          sub:'林晓 40、赵敏 40、吴斌 40、陈露 40、何俊 24'})
+      ]}),
+      N('sec', {text:'现在'}),
+      N('card', {id:'now_card', cls:'flush', c:[
+        row('now_legal', '这张表能用吗', {lead:'check',
+          val:legal(st) ? '可以' : '不行', valCls:legal(st) ? 'good' : 'bad', arrow:false,
+          sub:legal(st) ? '十个班都合规' : issues(st).length + ' 处要改'}),
+        row('now_bill', '工资合计', {lead:'money', val:yuan(billOf(st)), valCls:'strong',
+          arrow:false, sub:'加班 ' + totalOvertime(st) + ' 小时'})
+      ]}),
+      N('space', {})
+    ]}),
+    tabbar(st)
+  ]});
+}
+
+var ROUTES = {grid:scrGrid, cell:scrCell, check:scrCheck, people:scrPeople, person:scrPerson,
+              settings:scrSettings};
+function screen(st){
+  var r = route(st), fn = ROUTES[r.name] || scrGrid;
+  var rootNode = fn(st, r.params || {});
+  rootNode.route = r.name;
+  var extra = [];
+  if (st.ui.confirm)
+    extra.push(N('mask', {id:'confirm_mask', c:[N('dialog', {id:'confirm_dialog',
+      title:st.ui.confirm.title || '', text:st.ui.confirm.text,
+      ok: btn('confirm_ok', st.ui.confirm.okText || '确定', {type:'CONFIRM_YES'}, 'primary'),
+      cancel: btn('confirm_cancel', '算了', {type:'CONFIRM_NO'}, '')})]}));
+  if (st.ui.toast) extra.push(N('toast', {id:'toast', text:st.ui.toast}));
+  rootNode.c = rootNode.c.concat(extra);
+  return rootNode;
+}
+
+/* =======================================================================
+ * TRAVERSAL — element index, GUI action interface, text observation.
+ * Identical in every environment here: the screen tree is the only thing
+ * that differs, and all three readers below walk that same tree.
+ * ==================================================================== */
+var SKIP_KEYS = {act:1, minus:1, plus:1, close:1, yes:1, params:1, meta:1, grid:1, names:1, days:1, off:1, deps:1};
+
+function labelOf(n){ return n.text || n.title || n.name || n.label || n.main || ''; }
+
+function collect(n, out){
+  if (!n || typeof n !== 'object') return;
+  if (Array.isArray(n)) { for (var i=0;i<n.length;i++) collect(n[i], out); return; }
+  if (n.t === 'appbar' && n.back) out.push({id:'nav_back', act:{type:'BACK'}, text:'Back', t:'back'});
+  if (n.id && n.act)              out.push({id:n.id, act:n.act, text:labelOf(n), t:n.t||'el',
+                                            disabled:!!n.disabled,
+                                            input:(n.t === 'inputrow')});
+  if (n.t === 'mask' && n.close)  out.push({id:n.id, act:n.close, text:'Dismiss overlay', t:'mask'});
+  for (var k in n){
+    /* a node may carry extra buttons as a pair of keys: someId holds the
+     * test-id and some holds the action. That is how steppers, sheet close
+     * buttons and per-row buttons all get into the element index. */
+    if (k.length > 2 && k.slice(-2) === 'Id' && typeof n[k] === 'string'){
+      var sib = n[k.slice(0, -2)];
+      if (sib && typeof sib === 'object' && sib.type)
+        out.push({id:n[k], act:sib, text:k.slice(0, -2), t:'sub'});
+    }
+    if (SKIP_KEYS[k]) continue;
+    var v = n[k];
+    if (v && typeof v === 'object') collect(v, out);
+  }
+}
+function elements(st){
+  var rootNode = (st && st.t === 'screen') ? st : screen(st);
+  var masks = (rootNode.c || []).filter(function(n){ return n.t === 'mask'; });
+  var out = [];
+  collect(masks.length ? masks[masks.length-1] : rootNode, out);
+  return out;
+}
+function findEl(st, id){
+  var els = elements(st);
+  for (var i=0;i<els.length;i++) if (els[i].id === id) return els[i];
+  return null;
+}
+function substitute(act, text){
+  var a = clone(act);
+  for (var k in a) if (a[k] === '$VALUE') a[k] = text;
+  return a;
+}
+function step(st, a){
+  a = a || {};
+  var kind = a.action || a.type;
+  switch (kind) {
+  case 'tap': {
+    var el = findEl(st, a.id);
+    if (!el) return {state:st, ok:false, error:'ELEMENT_NOT_FOUND: ' + a.id};
+    if (el.disabled) return {state:st, ok:false, error:'ELEMENT_DISABLED: ' + a.id};
+    return {state:reduce(st, el.act), ok:true};
+  }
+  case 'type': {
+    var e2 = findEl(st, a.id);
+    if (!e2) return {state:st, ok:false, error:'ELEMENT_NOT_FOUND: ' + a.id};
+    if (!e2.input) return {state:st, ok:false, error:'NOT_A_TEXT_FIELD: ' + a.id};
+    return {state:reduce(st, substitute(e2.act, a.text == null ? '' : String(a.text))), ok:true};
+  }
+  case 'back':   return {state:reduce(st, {type:'BACK'}), ok:true};
+  case 'home':   return {state:reduce(st, {type:'HOME'}), ok:true};
+  case 'wait':   return {state:reduce(st, {type:'NOOP'}), ok:true};
+  case 'finish': return {state:reduce(st, {type:'FINISH', answer:a.answer}), ok:true};
+  case 'raw':    return {state:reduce(st, a.act || {}), ok:true};
+  default:       return {state:st, ok:false, error:'UNKNOWN_ACTION: ' + kind};
+  }
+}
+
+/* ------------------------------------------------- text observation (a11y) */
+function a11y(st){
+  var rootNode = screen(st), lines = [], r = route(st);
+  lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
+             '  step ' + st.meta.steps);
+  lines.push('# 十个班填了 ' + filledSlots(st) + '/20 个人次，问题 ' + issues(st).length + ' 处，加班 ' + totalOvertime(st) + ' 小时，工资 ' + yuan(billOf(st)) + '。');
+  var masks = (rootNode.c || []).filter(function(n){ return n.t === 'mask'; });
+  if (masks.length) lines.push('# An overlay is open. Nothing behind it can be tapped.');
+  walkText(masks.length ? masks[masks.length-1] : rootNode, 0, lines, st);
+  (rootNode.c || []).forEach(function(n){ if (n.t === 'toast') lines.push('[Toast] ' + n.text); });
+  return lines.join('\n');
+}
+function tid(n){ return (n && n.id && n.act) ? ' #' + n.id : ''; }
+function ind(d){ return new Array(d+1).join('  '); }
+
+function walkText(n, d, out, st){
+  if (!n || typeof n !== 'object') return;
+  if (Array.isArray(n)) { n.forEach(function(x){ walkText(x, d, out, st); }); return; }
+  var line = null;
+  switch (n.t) {
+  case 'screen': break;
+  case 'appbar': line = '[AppBar] ' + (n.title || '') + (n.back ? '   Back #nav_back' : ''); break;
+  case 'iconbtn': line = '[IconButton]' + tid(n) + ' ' + n.icon; break;
+  case 'inputrow':
+    line = '[TextField]' + tid(n) + ' ' + (n.label || '') + ' value="' + (n.value || '') + '"'; break;
+  case 'chip':   line = '[Chip]' + tid(n) + ' ' + n.text + (n.on ? '  [selected]' : ''); break;
+  case 'btn':    line = '[Button]' + (n.id ? ' #' + n.id : '') + ' ' + n.text + (n.disabled ? ' (disabled)' : ''); break;
+  case 'row': {
+    var s = '[Row]' + tid(n) + ' ' + (n.text || '') + (n.strike ? ' (crossed out)' : '');
+    if (n.val) s += ' \u2014 ' + n.val;
+    if (n.sub) s += '   (' + n.sub + ')';
+    line = s; break;
+  }
+  case 'switch': line = '[Toggle]' + tid(n) + ' ' + (n.on ? 'ON' : 'OFF'); break;
+  case 'check':  line = '[Checkbox]' + tid(n) + ' ' + (n.on ? 'ticked' : 'not ticked'); break;
+  case 'radio':  line = '[Radio]' + tid(n) + ' ' + (n.on ? 'selected' : 'not selected'); break;
+  case 'stepper':
+    line = '[Stepper] ' + n.value + '  down #' + n.minusId + '  up #' + n.plusId; break;
+  case 'hero':
+    out.push(ind(d) + '[Hero]' + tid(n) + ' ' + n.kicker + ' \u2014 ' + n.title + '. ' + n.sub);
+    return;
+  case 'stat':   line = '[Stat]' + tid(n) + ' ' + n.l + ': ' + n.n; break;
+  case 'pills':  line = n.items.map(function(p){ return '[' + p.text + ']'; }).join(' '); break;
+  case 'sec':    line = '\u2014 ' + n.text + (n.side ? ' (' + n.side + ')' : '') + ' \u2014'; break;
+  case 'text':   line = n.text || null; break;
+  case 'tabbar':
+    out.push(ind(d) + '[TabBar] ' + n.items.map(function(i){
+      return i.text + ' #' + i.id + (i.on ? '[current]' : ''); }).join('  '));
+    return;
+  case 'sheet':  line = '[Sheet] ' + n.title + '   close #' + n.closeId; break;
+  case 'dialog': line = '[Dialog] ' + (n.title ? n.title + ' \u2014 ' : '') + n.text; break;
+  case 'mask': case 'toast': line = null; break;
+  default: {
+    var extra = walkExtra(n, d, out, st);
+    if (extra === true) return;
+    line = extra || null;
+  }
+  }
+  if (line !== null) out.push(ind(d) + line);
+  for (var k in n){
+    if (SKIP_KEYS[k]) continue;
+    var v = n[k];
+    if (v && typeof v === 'object') walkText(v, line !== null ? d+1 : d, out, st);
+  }
+}
+/* per-environment nodes: return a string to print, true if already printed,
+ * or null to ignore */
+function walkExtra(n, d, out, st){
+
+  if (n.t === 'bill'){
+    out.push(ind(d) + '[' + n.kicker + '] ' + n.amount);
+    n.grid.forEach(function(g){ out.push(ind(d+1) + g.v + ' ' + g.l); });
+    return true;
+  }
+  if (n.t === 'grid'){
+    out.push(ind(d) + '[排班表] 列：' + n.days.join('  '));
+    n.rows.forEach(function(r){
+      r.cells.forEach(function(c, i){
+        out.push(ind(d+1) + n.days[i] + r.label + tid(c) + ' — '
+                 + (c.names.length ? c.names.map(function(x){
+                     return x.text + (x.sup ? '(带班)' : '') + (x.err ? '(违规)' : '');
+                   }).join('、') : '空')
+                 + (c.note ? '  ' + c.note : ''));
+      });
+    });
+    return true;
+  }
+  if (n.t === 'who'){
+    out.push(ind(d) + '[员工]' + tid(n) + ' ' + n.name + (n.sup ? '(带班)' : '')
+             + ' — ' + n.sub + '   [' + n.btn + ']');
+    return true;
+  }
+  if (n.t === 'hrs'){
+    n.rows.forEach(function(r){
+      out.push(ind(d) + '[工时]' + tid(r) + ' ' + r.name + ' ' + r.text + ' 小时');
+    });
+    return true;
+  }
+  if (n.t === 'issue'){
+    out.push(ind(d) + '[问题]' + tid(n) + ' ' + n.title + ' — ' + n.sub);
+    return true;
+  }
+
+  return null;
+}
+
+/* --------------------------------------------------------- derived view */
+function derive(st){
+  var hours = {}, ot = {}, pay = {}, cells = {};
+  STAFF.forEach(function(p){
+    hours[p.name] = hoursOf(st, p.id);
+    ot[p.name] = overtimeOf(st, p.id);
+    pay[p.name] = payOf(st, p.id);
+  });
+  DAYS.forEach(function(d){ SHIFTS.forEach(function(s){
+    cells[cellName(d.id, s.id)] = cellOf(st, d.id, s.id).map(staffName).sort();
+  }); });
+  var probs = issues(st);
+  return {
+    route: route(st).name,
+    routeId: (route(st).params || {}).id || null,
+    routeCell: (route(st).params || {}).day
+      ? (route(st).params.day + '_' + route(st).params.shift) : null,
+    tab: st.ui.tab,
+    cells: cells,
+    hours: hours,
+    overtime: ot,
+    pay: pay,
+    bill: billOf(st),
+    totalOvertime: totalOvertime(st),
+    filled: filledSlots(st),
+    legal: legal(st),
+    issueCount: probs.length,
+    issueKinds: probs.map(function(p){ return p.kind; }).sort(),
+    issueTexts: probs.map(function(p){ return p.text; }).sort(),
+    settings: clone(st.settings),
+    finished: !!st.meta.finished,
+    answer: st.meta.answer
+  };
+}
+
+function snapshot(st){ var o = clone(st); o.derived = derive(st); return o; }
+function applyPatch(st, patch){
+  (patch || []).forEach(function(p){ setPath(st, p.path, clone(p.value)); });
+  return st;
+}
+
+var ENGINE = {
+  ENV_ID: ENV_ID, VERSION: VERSION, CATALOG: {staff:STAFF, days:DAYS, shifts:SHIFTS},
+  createInitialState: createInitialState,
+  reduce: reduce, step: step, screen: screen, a11y: a11y,
+  elements: elements, findEl: findEl, applyPatch: applyPatch,
+  getPath: getPath, setPath: setPath, clone: clone,
+  derive: derive, snapshot: snapshot,
+  select: SELECT
+};
+root.ROTA_ENGINE = ENGINE;
+root.GUI_ENGINE = ENGINE;
+
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+</script>
+
+<script id="ui">
+/* ===========================================================================
+ * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
+ * ======================================================================== */
+(function(){
+'use strict';
+var E = window.GUI_ENGINE;
+var app = document.getElementById('app');
+var hud = document.getElementById('hud');
+function esc(s){
+  return String(s === undefined || s === null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+var SVG = {
+  back: '<path d="M15 4.5 8 12l7 7.5"/>',
+  arrow: '<path d="M9 4.5 16 12l-7 7.5"/>',
+  plus: '<path d="M12 5.6v12.8M5.6 12h12.8"/>',
+  minus: '<path d="M5.6 12h12.8"/>',
+  close: '<path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5"/>',
+  check: '<path d="M4.8 12.6 9.8 17.6 19.2 6.8"/>',
+  gear: '<circle cx="12" cy="12" r="3.4"/><path d="M19.1 14.4a1.6 1.6 0 0 0 .3 1.8l.1.1a1.9 1.9 0 1 1-2.7 2.7l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5v.2a1.9 1.9 0 1 1-3.8 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a1.9 1.9 0 1 1-2.7-2.7l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1h-.2a1.9 1.9 0 1 1 0-3.8h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a1.9 1.9 0 1 1 2.7-2.7l.1.1a1.6 1.6 0 0 0 1.8.3h.1a1.6 1.6 0 0 0 1-1.5v-.2a1.9 1.9 0 1 1 3.8 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a1.9 1.9 0 1 1 2.7 2.7l-.1.1a1.6 1.6 0 0 0-.3 1.8v.1a1.6 1.6 0 0 0 1.5 1h.2a1.9 1.9 0 1 1 0 3.8h-.1a1.6 1.6 0 0 0-1.5 1z"/>',
+  list: '<path d="M8.6 6.4h11M8.6 12h11M8.6 17.6h11"/><circle cx="4.7" cy="6.4" r="1.2" fill="currentColor" stroke="none"/><circle cx="4.7" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="4.7" cy="17.6" r="1.2" fill="currentColor" stroke="none"/>',
+  info: '<circle cx="12" cy="12" r="8.8"/><path d="M12 11.1v5.4"/><circle cx="12" cy="7.9" r=".95" fill="currentColor" stroke="none"/>',
+  alert: '<path d="M12 4.2 2.9 19.4h18.2z"/><path d="M12 10.2v4"/><circle cx="12" cy="16.9" r=".95" fill="currentColor" stroke="none"/>',
+  money: '<rect x="2.8" y="6" width="18.4" height="12" rx="2.4"/><circle cx="12" cy="12" r="2.8"/><path d="M6.4 9.6v4.8M17.6 9.6v4.8"/>',
+  trash: '<path d="M4.6 6.6h14.8"/><path d="M9.4 6.6V4.8h5.2v1.8"/><path d="M6.6 6.6 7.6 20a1.4 1.4 0 0 0 1.4 1.3h6a1.4 1.4 0 0 0 1.4-1.3l1-13.4"/><path d="M10.4 10.6v6M13.6 10.6v6"/>',
+  search: '<circle cx="10.8" cy="10.8" r="6.6"/><path d="m15.6 15.6 4.4 4.4"/>',
+  user: '<circle cx="12" cy="8.2" r="3.8"/><path d="M4.4 20.4c0-3.8 3.4-6.4 7.6-6.4s7.6 2.6 7.6 6.4"/>',
+  clock: '<circle cx="12" cy="12" r="8.8"/><path d="M12 6.8V12l3.6 2.2"/>',
+  calendar: '<rect x="3.4" y="5.4" width="17.2" height="15.2" rx="2.2"/><path d="M3.4 10h17.2M8.4 3.4v4M15.6 3.4v4"/>'
+};
+var FILLED = {};
+function icon(name, size, cls){
+  var d = SVG[name]; if (!d) return '';
+  return '<span class="ico ' + (cls||'') + '" style="width:' + (size||20) + 'px;height:' + (size||20) +
+    'px;display:inline-flex;flex:0 0 auto"><svg viewBox="0 0 24 24" width="100%" height="100%" fill="' +
+    (FILLED[name] ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="1.7" ' +
+    'stroke-linecap="round" stroke-linejoin="round">' + d + '</svg></span>';
+}
+
+var ACTS = [], TRAJ = [];
+function bind(a){ if (!a) return ''; ACTS.push(a); return ' data-act="' + (ACTS.length-1) + '"'; }
+function bindT(a){ if (!a) return ''; ACTS.push(a); return ' data-actt="' + (ACTS.length-1) + '"'; }
+function tid(id){ return id ? ' data-testid="' + esc(id) + '"' : ''; }
+function R(list){ return (list||[]).map(render).join(''); }
+function tagsHtml(items){
+  return (items||[]).map(function(t){
+    return '<span class="tag ' + (t.cls||'') + '">' + esc(t.text) + '</span>'; }).join('');
+}
+
+function render(n){
+  if (!n || typeof n !== 'object') return '';
+  if (Array.isArray(n)) return R(n);
+  switch (n.t) {
+  case 'screen': return R(n.c);
+  case 'appbar': {
+    var left = (n.back
+      ? '<div class="iconbtn" data-testid="nav_back"' + bind({type:'BACK'}) + '>' + icon('back',19) + '</div>'
+      : '') + R(n.left);
+    return '<div class="n-appbar"' + tid(n.id) + '><div class="ab-side">' + left + '</div>'
+      + '<div class="ab-title">' + esc(n.title) + '</div>'
+      + '<div class="ab-side right">' + R(n.right) + '</div></div>';
+  }
+  case 'iconbtn': return '<div class="iconbtn ' + esc(n.cls||'') + '"' + tid(n.id) + bind(n.act) + '>' + icon(n.icon, 19) + '</div>';
+  case 'scroll':  return '<div class="n-scroll"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'chips':   return '<div class="n-chips"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'chip':    return '<div class="n-chip' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '>' + esc(n.text) + '</div>';
+  case 'card':    return '<div class="n-card ' + esc(n.cls||'') + (n.act?' tap':'') + '"' + tid(n.id) + bind(n.act) + '>' + R(n.c) + '</div>';
+  case 'padded':  return '<div style="padding:5px 16px">' + R(n.c) + '</div>';
+  case 'sec':     return '<div class="n-sec"' + tid(n.id) + '><span>' + esc(n.text) + '</span>'
+                       + (n.side ? '<span>' + esc(n.side) + '</span>' : '') + '</div>';
+  case 'text':    return '<div class="n-text ' + esc(n.cls||'') + '">' + esc(n.text) + '</div>';
+  case 'space':   return '<div class="n-space"></div>';
+  case 'row': {
+    var inline = [], below = [];
+    (n.c||[]).forEach(function(ch){
+      (ch.t==='switch'||ch.t==='radio'||ch.t==='check'||ch.t==='stepper'||ch.t==='btn'||ch.t==='iconbtn')
+        ? inline.push(ch) : below.push(ch);
+    });
+    return '<div class="n-row' + (n.act?' tap':'') + '"' + tid(n.id) + bind(n.act) + '>'
+      + (n.lead ? '<div class="r-lead"' + (n.leadColour ? ' style="color:' + esc(n.leadColour) + '"' : '')
+                + '>' + icon(n.lead, 19) + '</div>' : '')
+      + (n.avatar ? avatarHtml(n.avatar) : '')
+      + (n.thumb && typeof thumbHtml === 'function' ? thumbHtml(n.thumb) : '')
+      + '<div class="r-main"><div class="r-label' + (n.strike?' strike':'') + '">' + esc(n.text) + '</div>'
+      + (n.sub ? '<div class="r-sub">' + esc(n.sub) + '</div>' : '') + '</div>'
+      + (n.val ? '<div class="r-value ' + esc(n.valCls||'') + '">' + esc(n.val) + '</div>' : '')
+      + R(inline)
+      + (n.arrow && !inline.length ? '<div class="r-arrow">' + icon('arrow',15) + '</div>' : '')
+      + '</div>' + R(below);
+  }
+  case 'btn':
+    return '<div class="n-btn ' + esc(n.cls||'') + (n.disabled?' off':'') + '"' + tid(n.id)
+      + (n.disabled?'':bind(n.act)) + '>' + esc(n.text) + '</div>';
+  case 'btnrow': return '<div class="n-btnrow"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'bar':    return '<div style="flex:0 0 auto;background:var(--card);border-top:1px solid var(--line);'
+                      + 'padding:12px 16px 16px;z-index:30"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'switch': return '<div class="n-switch' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '><i></i></div>';
+  case 'check':  return '<div class="n-check' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '></div>';
+  case 'radio':  return '<div class="n-radio' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '></div>';
+  case 'inputrow':
+    return '<div class="n-input"><div class="i-label">' + esc(n.label) + '</div>'
+      + '<input' + tid(n.id) + bindT(n.act) + ' value="' + esc(n.value) + '" placeholder="'
+      + esc(n.placeholder) + '"></div>';
+  case 'stepper':
+    return '<div style="display:flex;align-items:center;gap:8px"' + tid(n.id) + '>'
+      + '<div class="iconbtn" style="background:var(--btn);width:30px;height:30px"' + tid(n.minusId) + bind(n.minus) + '>' + icon('minus',14) + '</div>'
+      + '<div style="min-width:52px;text-align:center;font-weight:700;font-size:12.5px;font-variant-numeric:tabular-nums">'
+      + esc(n.value) + '</div>'
+      + '<div class="iconbtn" style="background:var(--btn);width:30px;height:30px"' + tid(n.plusId) + bind(n.plus) + '>' + icon('plus',14) + '</div></div>';
+  case 'stats':  return '<div class="stats"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'stat':
+    return '<div class="stat' + (n.acc?' acc':'') + (n.act?' tap':'') + '"' + tid(n.id) + bind(n.act)
+      + '><div class="st-n">' + esc(n.n) + '</div><div class="st-l">' + esc(n.l) + '</div></div>';
+  case 'hero':
+    return '<div class="hero' + (n.act?' tap':'') + '"' + tid(n.id) + bind(n.act) + '>'
+      + '<div class="he-k">' + esc(n.kicker) + '</div>'
+      + '<div class="he-t">' + esc(n.title) + '</div>'
+      + '<div class="he-s">' + esc(n.sub) + '</div>' + R(n.c) + '</div>';
+  case 'pills':
+    return '<div style="display:flex;gap:7px;flex-wrap:wrap;padding:8px 18px 4px"' + tid(n.id) + '>'
+      + tagsHtml(n.items) + '</div>';
+  case 'tabbar':
+    return '<div class="n-tabbar"' + tid(n.id) + '>' + n.items.map(function(i){
+      return '<div class="tb' + (i.on?' on':'') + '"' + tid(i.id) + bind(i.act) + '>'
+        + '<i>' + icon(i.icon, 21) + '</i>' + esc(i.text) + '</div>';
+    }).join('') + '</div>';
+  case 'mask':  return '<div class="n-mask"' + tid(n.id) + bind(n.close) + '>' + R(n.c) + '</div>';
+  case 'sheet':
+    return '<div class="n-sheet"' + tid(n.id) + ' data-stop="1"><div class="sh-hd">'
+      + '<div class="t">' + esc(n.title) + '</div>'
+      + '<div class="iconbtn"' + tid(n.closeId) + bind(n.close) + '>' + icon('close',15) + '</div></div>'
+      + '<div class="sh-bd">' + R(n.c) + '</div></div>';
+  case 'dialog':
+    return '<div class="dialog"' + tid(n.id) + ' data-stop="1">'
+      + '<div style="padding:22px 20px 16px;text-align:center">'
+      + (n.title ? '<div style="font:650 17px/1.3 var(--disp);margin-bottom:8px">' + esc(n.title) + '</div>' : '')
+      + '<div style="font-size:13.5px;color:var(--ink2);line-height:1.55">' + esc(n.text) + '</div></div>'
+      + '<div style="display:flex;gap:10px;padding:0 16px 16px">'
+      + '<div class="n-btn" style="flex:1"' + tid(n.cancel.id) + bind(n.cancel.act) + '>' + esc(n.cancel.text) + '</div>'
+      + '<div class="n-btn primary" style="flex:1"' + tid(n.ok.id) + bind(n.ok.act) + '>' + esc(n.ok.text) + '</div>'
+      + '</div></div>';
+  case 'toast': return '<div class="n-toast"' + tid(n.id) + '>' + esc(n.text) + '</div>';
+  default: return renderExtra(n);
+  }
+}
+function avatarHtml(a){
+  return '<div class="av" style="width:38px;height:38px;border-radius:50%;flex:0 0 auto;display:flex;'
+    + 'align-items:center;justify-content:center;font:700 14px/1 var(--disp);color:#fff;background:hsl('
+    + a.hue + ' 52% 46%)">' + esc(a.initial) + '</div>';
+}
+
+function renderExtra(n){
+  switch (n.t) {
+  case 'bill':
+    return '<div class="bill"' + tid(n.id) + '><div class="bl-k">' + esc(n.kicker) + '</div>'
+      + '<div class="bl-n">' + esc(n.amount) + '</div><div class="bl-g">'
+      + n.grid.map(function(g){
+          return '<div class="bl-i ' + esc(g.cls) + '"><div class="v">' + esc(g.v)
+            + '</div><div class="l">' + esc(g.l) + '</div></div>';
+        }).join('') + '</div></div>';
+  case 'grid':
+    return '<div class="grid"' + tid(n.id) + '><div class="gd-h"><div></div>'
+      + n.days.map(function(d){ return '<div>' + esc(d) + '</div>'; }).join('') + '</div>'
+      + n.rows.map(function(r){
+          return '<div class="gd-row"><div class="gd-lb">' + esc(r.label) + '</div>'
+            + r.cells.map(function(c){
+                return '<div class="gd-c' + (c.bad?' bad':(c.short?' short':'')) + '"'
+                  + tid(c.id) + bind(c.act) + '>'
+                  + c.names.map(function(x){
+                      return '<span class="gd-nm' + (x.sup?' sup':'') + (x.err?' err':'') + '">'
+                        + esc(x.text) + '</span>';
+                    }).join('')
+                  + (c.note ? '<span class="gd-x">' + esc(c.note) + '</span>' : '') + '</div>';
+              }).join('') + '</div>';
+        }).join('') + '</div>';
+  case 'who':
+    return '<div class="who' + (n.sup?' sup':'') + (n.off?' off':'') + '"' + tid(n.id)
+      + bind(n.act) + '>'
+      + '<div class="wh-a">' + esc(n.init) + '</div>'
+      + '<div class="wh-m"><div class="wh-n">' + esc(n.name)
+      + (n.sup ? '<b>带班</b>' : '') + '</div>'
+      + '<div class="wh-s' + (n.subNo?' no':'') + '">' + esc(n.sub) + '</div></div>'
+      + '<div class="wh-b ' + esc(n.btnCls || '') + '">' + esc(n.btn) + '</div></div>';
+  case 'hrs':
+    return '<div class="hrs"' + tid(n.id) + '>' + n.rows.map(function(r){
+      return '<div class="hr-r"' + tid(r.id) + bind(r.act) + '><div class="hr-n">'
+        + esc(r.name) + '</div>'
+        + '<div class="hr-b"><i style="width:' + r.base + '%"></i>'
+        + (r.ot ? '<u style="left:' + r.otLeft + '%;width:' + r.ot + '%"></u>' : '')
+        + '<b style="left:' + r.mark + '%"></b></div>'
+        + '<div class="hr-v' + (r.over?' ot':'') + '">' + esc(r.text) + '</div></div>';
+    }).join('') + '</div>';
+  case 'issue':
+    return '<div class="issue ' + esc(n.sev) + '"' + tid(n.id) + bind(n.act) + '>'
+      + '<div class="is-d"></div><div class="is-m"><div class="is-t">' + esc(n.title) + '</div>'
+      + '<div class="is-s">' + esc(n.sub) + '</div></div></div>';
+  default: return '';
+  }
+}
+
+var STATE = null;
+function paint(){
+  ACTS = [];
+  app.innerHTML = render(E.screen(STATE));
+  var c = '';
+  if (c) document.getElementById('sb-clock').textContent = c;
+  if (!hud.classList.contains('off')) paintHud();
+}
+app.addEventListener('click', function(ev){
+  var el = ev.target.closest('[data-act]'); if (!el) return;
+  if (el.classList.contains('n-mask') && ev.target.closest('[data-stop]')) return;
+  var act = ACTS[+el.getAttribute('data-act')]; if (!act) return;
+  TRAJ.push({action:'tap', id: el.getAttribute('data-testid') || null});
+  STATE = E.reduce(STATE, act); paint();
+});
+app.addEventListener('input', function(ev){
+  var el = ev.target.closest('[data-actt]'); if (!el) return;
+  var act = JSON.parse(JSON.stringify(ACTS[+el.getAttribute('data-actt')]));
+  for (var k in act) if (act[k] === '$VALUE') act[k] = el.value;
+  var id = el.getAttribute('data-testid'), pos = el.selectionStart;
+  TRAJ.push({action:'type', id:id, text:el.value});
+  STATE = E.reduce(STATE, act); paint();
+  var again = id && app.querySelector('[data-testid="' + id + '"]');
+  if (again && again.focus) { again.focus(); try { again.setSelectionRange(pos, pos); } catch(e){} }
+});
+
+function paintHud(){
+  var d = E.derive(STATE);
+  hud.innerHTML = '<h4>__ENV__ \u00b7 ' + E.ENV_ID + ' v' + E.VERSION + '</h4>'
+    + '<div><span class="k">route</span> ' + d.route + '  <span class="k">step</span> ' + STATE.meta.steps + '</div>'
+    + '<div><span class="k">bill</span> ' + d.bill + '  <span class="k">issues</span> ' + d.issueCount + '  <span class="k">ot</span> ' + d.totalOvertime + '</div>'
+    + '<div style="margin-top:8px"><button id="hud-reset">reset</button>'
+    + '<button id="hud-a11y">copy a11y</button><button id="hud-state">copy state</button>'
+    + '<button id="hud-traj">copy traj</button><button id="hud-hide">hide (h)</button></div>'
+    + '<pre>' + esc(E.a11y(STATE)) + '</pre>';
+  hud.querySelector('#hud-reset').onclick = function(){ ENVAPI.reset({seed:STATE.meta.seed}); };
+  hud.querySelector('#hud-a11y').onclick  = function(){ copy(E.a11y(STATE)); };
+  hud.querySelector('#hud-state').onclick = function(){ copy(JSON.stringify(E.snapshot(STATE), null, 2)); };
+  hud.querySelector('#hud-traj').onclick  = function(){ copy(JSON.stringify(TRAJ, null, 2)); };
+  hud.querySelector('#hud-hide').onclick  = function(){ hud.classList.add('off'); };
+}
+function copy(t){ try { navigator.clipboard.writeText(t); } catch(e){} }
+document.addEventListener('keydown', function(e){
+  if (e.key === 'h') { hud.classList.toggle('off'); if (!hud.classList.contains('off')) paintHud(); }
+});
+
+var ENVAPI = {
+  ENV_ID: E.ENV_ID, VERSION: E.VERSION,
+  reset: function(opts){
+    opts = opts || {};
+    STATE = E.createInitialState(opts.seed || 0);
+    if (opts.patch) E.applyPatch(STATE, opts.patch);
+    TRAJ = []; paint();
+    return E.snapshot(STATE);
+  },
+  getState:   function(){ return E.snapshot(STATE); },
+  setState:   function(s){ STATE = JSON.parse(JSON.stringify(s)); paint(); return true; },
+  step:       function(a){ var r = E.step(STATE, a); STATE = r.state; TRAJ.push(a); paint();
+                           return {ok:r.ok, error:r.error || null}; },
+  dispatch:   function(act){ STATE = E.reduce(STATE, act); paint(); return true; },
+  a11y:       function(){ return E.a11y(STATE); },
+  elements:   function(){ return E.elements(STATE); },
+  route:      function(){ return E.select.route(STATE); },
+  trajectory: function(){ return JSON.parse(JSON.stringify(TRAJ)); },
+  bounds: function(){
+    var base = document.getElementById('screen').getBoundingClientRect(), out = {};
+    app.querySelectorAll('[data-testid]').forEach(function(el){
+      var r = el.getBoundingClientRect();
+      out[el.getAttribute('data-testid')] = {
+        x:Math.round(r.left-base.left), y:Math.round(r.top-base.top),
+        w:Math.round(r.width), h:Math.round(r.height),
+        cx:Math.round(r.left-base.left+r.width/2), cy:Math.round(r.top-base.top+r.height/2)};
+    });
+    return out;
+  }
+};
+window.__ENV__ = ENVAPI;
+var qs = new URLSearchParams(location.search);
+if (qs.get('bare') === '1') document.body.classList.add('bare');
+if (qs.get('hud')  === '1') hud.classList.remove('off');
+ENVAPI.reset({seed: parseInt(qs.get('seed') || '0', 10) || 0});
+window.__ENV_READY__ = true;
+})();
+</script>
+</body>
+</html>

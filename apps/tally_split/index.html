@@ -1,0 +1,1575 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Tally (mocked GUI env)</title>
+<!--
+  ============================================================================
+  Tally — a single-file H5 shared-expense app for agent research.
+
+  Same two-block contract as every environment here.
+
+  What is new: money. The world is a ledger, and every screen is a view of an
+  arithmetic invariant (all balances sum to zero). Amounts are entered on a
+  numeric keypad rather than a text field, splits come in three modes, and an
+  exact split will not save until the parts add up to the whole. Rounding is
+  explicit: an equal split of £47.50 across four people is 11.88 / 11.88 /
+  11.87 / 11.87, and the app says so.
+  ============================================================================
+-->
+<style>
+:root{
+  --bg:#f6f7fb; --card:#fff; --line:#e8eaf2; --line2:#dcdfeb;
+  --ink:#161a27; --ink2:#5d6579; --muted:#939bb0;
+  --accent:#4f46e5; --accent-d:#4338ca; --accent-s:#eef0fe;
+  --owed:#0f9d58; --owe:#e0483c; --neutral:#8b93a7;
+  --r:16px; --r2:11px;
+  --shadow:0 1px 2px rgba(22,26,39,.05),0 8px 24px rgba(22,26,39,.06);
+  --disp:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;height:100%}
+body{background:#e4e7f0;color:var(--ink);
+  font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  display:flex;align-items:center;justify-content:center;overflow:hidden}
+
+#device{position:relative;width:390px;height:844px;background:#12151f;border-radius:46px;padding:5px;
+  box-shadow:0 30px 70px rgba(0,0,0,.34);flex:0 0 auto}
+#screen{position:relative;width:100%;height:100%;background:var(--bg);border-radius:41px;
+  overflow:hidden;display:flex;flex-direction:column}
+#notch{position:absolute;top:5px;left:50%;transform:translateX(-50%);width:118px;height:30px;
+  background:#12151f;border-radius:0 0 18px 18px;z-index:60}
+body.bare{background:var(--bg)}
+body.bare #device{width:390px;height:844px;padding:0;border-radius:0;box-shadow:none;background:var(--bg)}
+body.bare #screen{border-radius:0}
+body.bare #notch{display:none}
+
+.statusbar{height:44px;flex:0 0 44px;display:flex;align-items:flex-end;justify-content:space-between;
+  padding:0 22px 6px;font-size:13px;font-weight:600;z-index:50}
+.statusbar .sb-r{display:flex;gap:5px;align-items:center}
+.sb-bat{width:22px;height:11px;border:1.3px solid currentColor;border-radius:3px;position:relative;opacity:.9}
+.sb-bat:after{content:"";position:absolute;right:-3px;top:3px;width:2px;height:5px;background:currentColor;border-radius:0 1px 1px 0}
+.sb-bat i{position:absolute;left:1.3px;top:1.3px;bottom:1.3px;width:78%;background:currentColor;border-radius:1px}
+
+#app{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;position:relative}
+
+.n-appbar{flex:0 0 auto;min-height:52px;display:flex;align-items:center;gap:8px;padding:6px 12px;
+  background:var(--card);border-bottom:1px solid var(--line);z-index:20}
+.n-appbar .ab-title{flex:1 1 auto;text-align:center;font:650 17px/1.3 var(--disp);letter-spacing:-.2px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.n-appbar .ab-side{flex:0 0 auto;min-width:56px;display:flex;align-items:center;gap:4px}
+.n-appbar .ab-side.right{justify-content:flex-end}
+.iconbtn{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  color:var(--ink2);cursor:pointer}
+.iconbtn:active{background:#eef0f6}
+
+.n-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding-bottom:10px}
+.n-scroll::-webkit-scrollbar{width:0}
+
+.n-text{padding:2px 16px;color:var(--ink2)}
+.n-text.h1{font:700 26px/1.2 var(--disp);color:var(--ink);padding:12px 16px 4px;letter-spacing:-.6px}
+.n-text.body{font-size:13.5px;padding:5px 16px;line-height:1.65}
+.n-text.muted{font-size:12.5px;color:var(--muted);padding:5px 16px}
+.n-text.empty{padding:10px 16px 40px;text-align:center;color:var(--muted);font-size:13.5px}
+.n-sec{padding:16px 16px 6px;font:600 12px/1 var(--disp);color:var(--muted);letter-spacing:1.1px;
+  text-transform:uppercase;display:flex;justify-content:space-between;align-items:center}
+.n-space{height:14px}
+
+.n-card{background:var(--card);border-radius:var(--r);margin:10px 16px;overflow:hidden;border:1px solid var(--line)}
+.n-card.flush{padding:0}
+.n-card.pad{padding:14px}
+.n-card.tap{cursor:pointer}
+.n-card.tap:active{background:#f7f8fc}
+
+.n-row{display:flex;align-items:center;gap:13px;padding:13px 16px;border-bottom:1px solid var(--line);min-height:54px}
+.n-row:last-child{border-bottom:none}
+.n-row.tap{cursor:pointer}
+.n-row.tap:active{background:#f7f8fc}
+.n-row .r-lead{flex:0 0 auto;width:26px;color:var(--ink2);display:flex;align-items:center;justify-content:center}
+.n-row .r-main{flex:1 1 auto;min-width:0}
+.n-row .r-label{font-size:14.5px}
+.n-row .r-sub{font-size:12px;color:var(--muted);margin-top:3px}
+.n-row .r-value{flex:0 0 auto;font-size:14px;color:var(--ink2);text-align:right;font-variant-numeric:tabular-nums}
+.n-row .r-value.owed{color:var(--owed);font-weight:700}
+.n-row .r-value.owe{color:var(--owe);font-weight:700}
+.n-row .r-value.strong{color:var(--ink);font-weight:700}
+.n-row .r-arrow{flex:0 0 auto;color:#c3c8d6;display:flex}
+
+.av{flex:0 0 auto;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font:700 14px/1 var(--disp);color:#fff}
+
+.n-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:46px;padding:0 20px;
+  border-radius:13px;font:650 15px/1 var(--disp);background:#eef0f6;color:var(--ink);
+  border:none;cursor:pointer;user-select:none}
+.n-btn:active{filter:brightness(.96)}
+.n-btn.primary{background:var(--accent);color:#fff}
+.n-btn.primary.off{background:#c3c7dc;cursor:not-allowed}
+.n-btn.ghost{background:transparent;border:1px solid var(--line2);height:34px;font-size:13px;padding:0 14px;color:var(--ink2)}
+.n-btn.danger{background:transparent;border:1px solid #f0c6c1;color:var(--owe);height:34px;font-size:13px;padding:0 14px}
+.n-btn.block{display:flex;width:100%}
+.n-btnrow{display:flex;gap:10px;padding:12px 16px;justify-content:flex-end;align-items:center}
+
+.n-chips{display:flex;gap:8px;padding:8px 16px;overflow-x:auto}
+.n-chips::-webkit-scrollbar{height:0}
+.n-chip{flex:0 0 auto;height:34px;padding:0 14px;border-radius:11px;background:var(--card);
+  border:1px solid var(--line2);display:flex;align-items:center;gap:6px;font-size:13px;
+  color:var(--ink2);cursor:pointer;white-space:nowrap;font-weight:550}
+.n-chip.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+
+.n-input{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line);background:var(--card)}
+.n-input .i-label{flex:0 0 84px;font-size:13px;color:var(--muted)}
+.n-input input{flex:1 1 auto;border:none;outline:none;background:transparent;font-size:14.5px;
+  font-family:inherit;color:var(--ink);min-width:0}
+.n-input input::placeholder{color:var(--muted)}
+.n-switch{flex:0 0 auto;width:46px;height:27px;border-radius:14px;background:#cdd2e0;position:relative;cursor:pointer;transition:background .16s}
+.n-switch.on{background:var(--owed)}
+.n-switch i{position:absolute;top:2.5px;left:2.5px;width:22px;height:22px;border-radius:50%;background:#fff;
+  transition:transform .16s;box-shadow:0 1px 3px rgba(0,0,0,.22)}
+.n-switch.on i{transform:translateX(19px)}
+.n-check{flex:0 0 auto;width:23px;height:23px;border-radius:7px;border:1.8px solid #c6ccdb;position:relative;background:#fff}
+.n-check.on{border-color:var(--accent);background:var(--accent)}
+.n-check.on:after{content:"";position:absolute;left:7.5px;top:4px;width:5px;height:10px;
+  border:2px solid #fff;border-top:0;border-left:0;transform:rotate(42deg)}
+.n-radio{flex:0 0 auto;width:22px;height:22px;border-radius:50%;border:1.8px solid #c6ccdb;position:relative}
+.n-radio.on{border-color:var(--accent);background:var(--accent)}
+.n-radio.on:after{content:"";position:absolute;left:7px;top:4px;width:5px;height:9px;
+  border:2px solid #fff;border-top:0;border-left:0;transform:rotate(42deg)}
+
+/* ---------------- balance summary ---------------- */
+.summary{margin:12px 16px;background:linear-gradient(140deg,#4f46e5,#7c68f0);border-radius:var(--r);
+  padding:20px;color:#fff}
+.summary .su-lab{font-size:12px;opacity:.82;font-weight:600}
+.summary .su-amt{font:800 34px/1.05 var(--disp);margin-top:8px;letter-spacing:-1px}
+.summary .su-sub{font-size:12.5px;opacity:.85;margin-top:8px}
+.balbar{display:flex;height:8px;border-radius:4px;overflow:hidden;margin:14px 16px 4px;background:#e8eaf2}
+.balbar i{display:block;height:100%}
+
+/* ---------------- keypad ---------------- */
+.amount{padding:26px 16px 10px;text-align:center}
+.amount .am-lab{font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.6px}
+.amount .am-val{font:800 46px/1.05 var(--disp);margin-top:12px;letter-spacing:-1.6px;font-variant-numeric:tabular-nums}
+.amount .am-val.zero{color:var(--muted)}
+.amount .am-sub{font-size:12.5px;color:var(--muted);margin-top:10px}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:10px 22px 18px}
+.keypad .key{height:58px;border-radius:14px;background:var(--card);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;font:600 23px/1 var(--disp);cursor:pointer;
+  box-shadow:var(--shadow)}
+.keypad .key:active{background:#eef0f6}
+.keypad .key.wide{grid-column:span 1}
+.keypad .key.fn{font-size:16px;color:var(--ink2)}
+
+/* ---------------- split editor ---------------- */
+.splitbar{margin:8px 16px;padding:11px 14px;border-radius:var(--r2);font-size:13px;font-weight:650;
+  display:flex;justify-content:space-between;gap:10px}
+.splitbar.ok{background:#e7f6ee;color:var(--owed)}
+.splitbar.bad{background:#fdecea;color:var(--owe)}
+
+.pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:11px;
+  font-weight:650;background:#eef0f6;color:var(--ink2)}
+.pill.owed{background:#e7f6ee;color:var(--owed)}
+.pill.owe{background:#fdecea;color:var(--owe)}
+.pill.settled{background:#eef0f6;color:var(--muted)}
+
+.kv{display:flex;justify-content:space-between;gap:12px;padding:8px 16px;font-size:13.5px;color:var(--ink2)}
+.kv .v{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.kv.total{border-top:1px solid var(--line);margin-top:8px;padding-top:12px}
+.kv.total .k,.kv.total .v{font-weight:800;font-size:15.5px;color:var(--ink)}
+
+.fab{position:absolute;right:18px;bottom:74px;width:56px;height:56px;border-radius:18px;background:var(--accent);
+  color:#fff;display:flex;align-items:center;justify-content:center;z-index:40;cursor:pointer;
+  box-shadow:0 6px 20px rgba(79,70,229,.4)}
+.fab:active{filter:brightness(.94)}
+
+.n-tabbar{flex:0 0 auto;height:58px;background:var(--card);border-top:1px solid var(--line);display:flex;z-index:30}
+.n-tabbar .tb{flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  color:var(--muted);font-size:10.5px;cursor:pointer;font-weight:600}
+.n-tabbar .tb i{display:flex}
+.n-tabbar .tb.on{color:var(--accent)}
+
+.n-mask{position:absolute;inset:0;background:rgba(15,18,30,.44);z-index:70;display:flex;align-items:flex-end}
+.n-sheet{width:100%;max-height:80%;background:var(--card);border-radius:20px 20px 0 0;display:flex;
+  flex-direction:column;overflow:hidden;animation:up .18s ease-out}
+@keyframes up{from{transform:translateY(24px)}to{transform:none}}
+.n-sheet .sh-hd{padding:16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
+.n-sheet .sh-hd .t{font:650 17px/1.2 var(--disp)}
+.n-sheet .sh-bd{flex:1 1 auto;overflow-y:auto;min-height:0}
+.n-sheet .sh-bd::-webkit-scrollbar{width:0}
+.n-toast{position:absolute;left:50%;bottom:120px;transform:translateX(-50%);background:#1b2030;color:#fff;
+  padding:11px 18px;border-radius:11px;font-size:13px;z-index:90;max-width:82%;text-align:center}
+.dialog{margin:auto;width:80%;background:#fff;border-radius:16px;overflow:hidden}
+
+#hud{position:fixed;top:14px;left:14px;width:310px;max-height:calc(100% - 28px);overflow:auto;
+  background:#12151f;color:#c8cde0;border-radius:12px;padding:12px;
+  font:11.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;z-index:200;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+#hud h4{margin:0 0 8px;font-size:12px;color:#fff}
+#hud .k{color:#7b8399}
+#hud pre{margin:6px 0 0;white-space:pre-wrap;word-break:break-word;color:#a5b4fc;max-height:250px;overflow:auto}
+#hud button{background:#232838;border:none;color:#c8cde0;border-radius:6px;padding:5px 9px;margin:2px 4px 2px 0;font:inherit;cursor:pointer}
+#hud.off{display:none}
+</style>
+</head>
+<body>
+<div id="device">
+  <div id="notch"></div>
+  <div id="screen">
+    <div class="statusbar" id="sb">
+      <div id="sb-clock">14:26</div>
+      <div class="sb-r">
+        <svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="4.6" y="5.5" width="3" height="6.5" rx="1"/><rect x="9.2" y="3" width="3" height="9" rx="1"/><rect x="13.8" y="0" width="3" height="12" rx="1"/></svg>
+        <svg width="15" height="12" viewBox="0 0 15 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 4.2a9 9 0 0 1 13 0"/><path d="M3.4 6.9a5.6 5.6 0 0 1 8.2 0"/><circle cx="7.5" cy="10" r=".9" fill="currentColor" stroke="none"/></svg>
+        <span class="sb-bat"><i></i></span>
+      </div>
+    </div>
+    <div id="app"></div>
+  </div>
+</div>
+<div id="hud" class="off"></div>
+
+<script id="engine">
+/* ===========================================================================
+ * ENGINE — pure, deterministic, DOM-free. Every amount is an integer in pence.
+ * ======================================================================== */
+(function (root) {
+'use strict';
+
+var VERSION = '1.0.0';
+var ENV_ID  = 'tally_split';
+
+/* ------------------------------------------------------------- catalog */
+var PEOPLE = [
+  {id:'p_ren',   name:'Ren',   you:true,  hue:248},
+  {id:'p_ivo',   name:'Ivo',   hue:158},
+  {id:'p_suri',  name:'Suri',  hue:22},
+  {id:'p_mo',    name:'Mo',    hue:196},
+  {id:'p_jules', name:'Jules', hue:320},
+  {id:'p_ada',   name:'Ada',   hue:44}
+];
+
+var CATEGORIES = [
+  {key:'travel',   label:'Travel'},
+  {key:'stay',     label:'Stay'},
+  {key:'food',     label:'Food'},
+  {key:'home',     label:'Home'},
+  {key:'other',    label:'Other'}
+];
+
+var CATALOG = {people:PEOPLE, categories:CATEGORIES};
+
+/* ------------------------------------------------------------- helpers */
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+function person(id){ for (var i=0;i<PEOPLE.length;i++) if (PEOPLE[i].id===id) return PEOPLE[i]; return null; }
+function pname(id){ var p = person(id); return p ? p.name : id; }
+function category(k){ for (var i=0;i<CATEGORIES.length;i++) if (CATEGORIES[i].key===k) return CATEGORIES[i]; return CATEGORIES[4]; }
+function money(p){
+  var neg = p < 0; p = Math.abs(Math.round(p));
+  return (neg ? '-' : '') + '£' + Math.floor(p/100) + '.' + (p%100 < 10 ? '0' : '') + (p%100);
+}
+function lcg(seed){ var s=(seed>>>0)||1; return function(){ s=(s*1664525+1013904223)>>>0; return s/4294967296; }; }
+function shuffled(list, seed){
+  if (!seed) return list.slice();
+  var r=lcg(seed), a=list.slice();
+  for (var i=a.length-1;i>0;i--){ var j=Math.floor(r()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; }
+  return a;
+}
+function getPath(obj, path){
+  var parts = String(path).replace(/\[(\w+|last|-1)\]/g,'.$1').split('.').filter(Boolean), cur = obj;
+  for (var i=0;i<parts.length;i++){
+    if (cur == null) return undefined;
+    var k = parts[i];
+    if (Array.isArray(cur) && (k==='last'||k==='-1')) cur = cur[cur.length-1]; else cur = cur[k];
+  }
+  return cur;
+}
+function setPath(obj, path, value){
+  var parts = String(path).replace(/\[(\w+)\]/g,'.$1').split('.').filter(Boolean), cur = obj;
+  for (var i=0;i<parts.length-1;i++){
+    var k = parts[i];
+    if (cur[k] == null) cur[k] = /^\d+$/.test(parts[i+1]) ? [] : {};
+    cur = cur[k];
+  }
+  cur[parts[parts.length-1]] = value;
+  return obj;
+}
+
+/* --------------------------------------------------------- world clock */
+var CLOCK0 = {h:14, mi:26, s:0};
+var SECONDS_PER_STEP = 4;
+function tick(c, n){
+  var t=c.s+n; c.s=t%60;
+  var m=c.mi+Math.floor(t/60); c.mi=m%60;
+  c.h=(c.h+Math.floor(m/60))%24;
+  return c;
+}
+function clockStr(c){ return (c.h<10?'0':'')+c.h+':'+(c.mi<10?'0':'')+c.mi; }
+
+/* ------------------------------------------------------ initial state */
+function EQ(among){ return {mode:'equal', among:among, exact:{}, shares:{}}; }
+function createInitialState(seed){
+  seed = seed || 0;
+  var LIS = ['p_ren','p_ivo','p_suri','p_mo'];
+  var FLAT = ['p_ren','p_jules','p_ada'];
+  return {
+    meta:{ env:ENV_ID, version:VERSION, seed:seed, clock:clone(CLOCK0), steps:0,
+           expenseSeq:1, groupSeq:1, answer:null, finished:false },
+    ui:{ stack:[{name:'groups', params:{}}], tab:'groups', sheet:null, confirm:null, toast:null,
+         inputs:{}, keypad:0, draftGroup:null },
+    me:'p_ren',
+    settings:{ currency:'GBP', simplifyDebts:true, notifyNewExpense:true, roundUp:false },
+    groups:[
+      {id:'g_lisbon', name:'Lisbon trip', members:LIS, emoji:'trip'},
+      {id:'g_flat',   name:'Flat 3B',     members:FLAT, emoji:'home'}
+    ],
+    expenses:[
+      {id:'e_1', group:'g_lisbon', title:'Flights', payer:'p_ren', amount:48000,
+       category:'travel', date:'12 Aug', split:EQ(LIS)},
+      {id:'e_2', group:'g_lisbon', title:'Airbnb', payer:'p_ivo', amount:31200,
+       category:'stay', date:'13 Aug', split:EQ(LIS)},
+      {id:'e_3', group:'g_lisbon', title:'Groceries', payer:'p_suri', amount:4750,
+       category:'food', date:'14 Aug', split:EQ(LIS)},
+      {id:'e_4', group:'g_lisbon', title:'Taxi from airport', payer:'p_ren', amount:2800,
+       category:'travel', date:'13 Aug', split:EQ(['p_ren','p_ivo','p_mo'])},
+      {id:'e_5', group:'g_lisbon', title:'Dinner at Belcanto', payer:'p_mo', amount:21500,
+       category:'food', date:'15 Aug',
+       split:{mode:'exact', among:LIS, exact:{p_ren:6500, p_ivo:5000, p_suri:5000, p_mo:5000}, shares:{}}},
+      {id:'e_6', group:'g_flat', title:'Internet', payer:'p_jules', amount:4200,
+       category:'home', date:'1 Aug', split:EQ(FLAT)},
+      {id:'e_7', group:'g_flat', title:'Cleaning', payer:'p_ren', amount:6000,
+       category:'home', date:'4 Aug', split:EQ(FLAT)}
+    ],
+    settlements:[],
+    draft:null
+  };
+}
+
+/* ------------------------------------------------------------- ledger */
+/* an equal split gives the remainder pennies to the first people in the list,
+   so 4750 across four is 1188 / 1188 / 1187 / 1187 and the total is exact */
+function shareOf(exp, personId){
+  var sp = exp.split, among = sp.among;
+  if (among.indexOf(personId) < 0) return 0;
+  if (sp.mode === 'exact') return sp.exact[personId] || 0;
+  if (sp.mode === 'shares') {
+    var totalShares = 0;
+    among.forEach(function(id){ totalShares += (sp.shares[id] || 0); });
+    if (!totalShares) return 0;
+    var base = 0, used = 0;
+    for (var i = 0; i < among.length; i++) {
+      var v = Math.floor(exp.amount * (sp.shares[among[i]] || 0) / totalShares);
+      if (among[i] === personId) base = v;
+      used += v;
+    }
+    var rem = exp.amount - used;
+    var idx = among.indexOf(personId);
+    return base + (idx < rem ? 1 : 0);
+  }
+  var n = among.length;
+  if (!n) return 0;
+  var each = Math.floor(exp.amount / n), remainder = exp.amount - each * n;
+  return each + (among.indexOf(personId) < remainder ? 1 : 0);
+}
+function splitTotal(exp){
+  var s = 0;
+  exp.split.among.forEach(function(id){ s += shareOf(exp, id); });
+  return s;
+}
+function groupExpenses(st, gid){ return st.expenses.filter(function(e){ return e.group === gid; }); }
+function groupSettlements(st, gid){ return st.settlements.filter(function(s){ return s.group === gid; }); }
+function balances(st, gid){
+  var g = groupOf(st, gid); if (!g) return {};
+  var bal = {};
+  g.members.forEach(function(id){ bal[id] = 0; });
+  groupExpenses(st, gid).forEach(function(e){
+    if (bal[e.payer] !== undefined) bal[e.payer] += e.amount;
+    e.split.among.forEach(function(id){ if (bal[id] !== undefined) bal[id] -= shareOf(e, id); });
+  });
+  groupSettlements(st, gid).forEach(function(s){
+    if (bal[s.from] !== undefined) bal[s.from] += s.amount;
+    if (bal[s.to]   !== undefined) bal[s.to]   -= s.amount;
+  });
+  return bal;
+}
+function netAcross(st){
+  var n = 0;
+  st.groups.forEach(function(g){ n += (balances(st, g.id)[st.me] || 0); });
+  return n;
+}
+function groupOf(st, gid){
+  for (var i=0;i<st.groups.length;i++) if (st.groups[i].id === gid) return st.groups[i];
+  return null;
+}
+function expenseOf(st, eid){
+  for (var i=0;i<st.expenses.length;i++) if (st.expenses[i].id === eid) return st.expenses[i];
+  return null;
+}
+/* greedy settle-up: repeatedly pay the biggest debtor into the biggest creditor */
+function settleUp(st, gid){
+  var bal = balances(st, gid), owe = [], owed = [];
+  Object.keys(bal).forEach(function(id){
+    if (bal[id] < 0) owe.push({id:id, amt:-bal[id]});
+    else if (bal[id] > 0) owed.push({id:id, amt:bal[id]});
+  });
+  owe.sort(function(a,b){ return b.amt - a.amt || (a.id < b.id ? -1 : 1); });
+  owed.sort(function(a,b){ return b.amt - a.amt || (a.id < b.id ? -1 : 1); });
+  var out = [], i = 0, j = 0;
+  while (i < owe.length && j < owed.length) {
+    var amt = Math.min(owe[i].amt, owed[j].amt);
+    if (amt > 0) out.push({from:owe[i].id, to:owed[j].id, amount:amt});
+    owe[i].amt -= amt; owed[j].amt -= amt;
+    if (owe[i].amt === 0) i++;
+    if (owed[j].amt === 0) j++;
+  }
+  return out;
+}
+/* The pairwise view: what one person and I owe each other directly, which is
+ * not the same number as the simplified settle-up plan and is shown separately. */
+function othersOf(st){
+  var seen = {}, out = [];
+  st.groups.forEach(function(g){
+    g.members.forEach(function(id){
+      if (id !== st.me && !seen[id]) { seen[id] = 1; out.push(id); }
+    });
+  });
+  return out;
+}
+function pairNet(st, other, gid){
+  var n = 0;
+  st.expenses.forEach(function(e){
+    if (gid && e.group !== gid) return;
+    var g = groupOf(st, e.group);
+    if (!g || g.members.indexOf(other) < 0 || g.members.indexOf(st.me) < 0) return;
+    if (e.payer === st.me  && e.split.among.indexOf(other) >= 0) n += shareOf(e, other);
+    if (e.payer === other  && e.split.among.indexOf(st.me) >= 0) n -= shareOf(e, st.me);
+  });
+  st.settlements.forEach(function(s){
+    if (gid && s.group !== gid) return;
+    if (s.from === other  && s.to === st.me)  n -= s.amount;
+    if (s.from === st.me  && s.to === other)  n += s.amount;
+  });
+  return n;
+}
+function draftSplitTotal(d){
+  if (!d) return 0;
+  var fake = {amount:d.amount, split:{mode:d.mode, among:d.among, exact:d.exact, shares:d.shares}};
+  var s = 0;
+  d.among.forEach(function(id){ s += shareOf(fake, id); });
+  return s;
+}
+function draftValid(d){
+  if (!d) return false;
+  if (d.amount <= 0) return false;
+  if (!String(d.title || '').trim()) return false;
+  if (!d.among.length) return false;
+  if (d.mode === 'exact') return draftSplitTotal(d) === d.amount;
+  if (d.mode === 'shares') {
+    var tot = 0; d.among.forEach(function(id){ tot += (d.shares[id] || 0); });
+    return tot > 0;
+  }
+  return true;
+}
+function route(st){ return st.ui.stack[st.ui.stack.length-1]; }
+
+var SELECT = { person:person, pname:pname, money:money, shareOf:shareOf, balances:balances,
+               groupExpenses:groupExpenses, groupOf:groupOf, expenseOf:expenseOf, settleUp:settleUp,
+               netAcross:netAcross, draftSplitTotal:draftSplitTotal, draftValid:draftValid,
+               category:category, route:route, clockStr:clockStr, splitTotal:splitTotal,
+               othersOf:othersOf, pairNet:pairNet };
+
+/* ------------------------------------------------------------- reducer */
+function push(st, name, params){ st.ui.stack.push({name:name, params:params||{}}); st.ui.sheet=null; }
+function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
+function toast(st, t){ st.ui.toast = t; }
+var MAX_AMOUNT = 99999999;   /* £999,999.99 */
+
+function newDraft(st, gid){
+  var g = groupOf(st, gid);
+  return {group:gid, amount:0, title:'', payer:st.me, category:'other',
+          mode:'equal', among:g ? g.members.slice() : [], exact:{}, shares:{},
+          editing:null};
+}
+
+function reduce(prev, action){
+  var st = clone(prev), A = action || {};
+  st.ui.toast = null;
+  st.meta.steps += 1;
+  tick(st.meta.clock, SECONDS_PER_STEP);
+
+  switch (A.type) {
+
+  case 'NAV':  push(st, A.to, A.params); break;
+  case 'BACK':
+    if (st.ui.confirm) st.ui.confirm = null;
+    else if (st.ui.sheet) st.ui.sheet = null;
+    else pop(st);
+    break;
+  case 'TAB':
+    st.ui.tab = A.tab; st.ui.sheet = null; st.ui.confirm = null;
+    st.ui.stack = [{name:A.tab, params:{}}];
+    break;
+  case 'HOME':
+    st.ui.tab='groups'; st.ui.stack=[{name:'groups', params:{}}]; st.ui.sheet=null; st.ui.confirm=null;
+    break;
+  case 'SET_INPUT':
+    st.ui.inputs[A.field] = A.value;
+    /* the title box feeds the draft directly, so the Save button can gate on it */
+    if (A.field === 'exp_title' && st.draft) st.draft.title = A.value;
+    break;
+
+  /* ---- adding an expense ---- */
+  case 'EXPENSE_NEW':
+    st.draft = newDraft(st, A.group);
+    st.ui.inputs.exp_title = '';
+    push(st, 'amount', {});
+    break;
+  case 'KEY_DIGIT': {
+    if (!st.draft) break;
+    var v = st.draft.amount * 10 + A.d;
+    if (v > MAX_AMOUNT) { toast(st, 'That is as large as this gets'); break; }
+    st.draft.amount = v;
+    break;
+  }
+  case 'KEY_DOUBLE_ZERO': {
+    if (!st.draft) break;
+    var v2 = st.draft.amount * 100;
+    if (v2 > MAX_AMOUNT) { toast(st, 'That is as large as this gets'); break; }
+    st.draft.amount = v2;
+    break;
+  }
+  case 'KEY_BACK':
+    if (st.draft) st.draft.amount = Math.floor(st.draft.amount / 10);
+    break;
+  case 'KEY_CLEAR':
+    if (st.draft) st.draft.amount = 0;
+    break;
+  case 'AMOUNT_NEXT':
+    if (!st.draft || st.draft.amount <= 0) { toast(st, 'Enter an amount first'); break; }
+    push(st, 'details', {});
+    break;
+  case 'DRAFT_SET':
+    if (st.draft) st.draft[A.key] = A.value;
+    break;
+  case 'DRAFT_PAYER': if (st.draft) { st.draft.payer = A.id; st.ui.sheet = null; } break;
+  case 'DRAFT_CATEGORY': if (st.draft) { st.draft.category = A.key; st.ui.sheet = null; } break;
+  case 'DRAFT_MODE': {
+    if (!st.draft) break;
+    st.draft.mode = A.mode;
+    if (A.mode === 'exact') {
+      /* seed the exact boxes with the current equal split so the sum starts correct */
+      var fake = {amount:st.draft.amount, split:{mode:'equal', among:st.draft.among, exact:{}, shares:{}}};
+      st.draft.exact = {};
+      st.draft.among.forEach(function(id){ st.draft.exact[id] = shareOf(fake, id); });
+    }
+    if (A.mode === 'shares') {
+      st.draft.shares = {};
+      st.draft.among.forEach(function(id){ st.draft.shares[id] = 1; });
+    }
+    break;
+  }
+  case 'DRAFT_TOGGLE_PERSON': {
+    if (!st.draft) break;
+    var among = st.draft.among, k = among.indexOf(A.id);
+    if (k >= 0) { if (among.length === 1) { toast(st, 'Someone has to be in the split'); break; }
+                  among.splice(k, 1); delete st.draft.exact[A.id]; delete st.draft.shares[A.id]; }
+    else { among.push(A.id);
+           if (st.draft.mode === 'exact') st.draft.exact[A.id] = 0;
+           if (st.draft.mode === 'shares') st.draft.shares[A.id] = 1; }
+    /* keep the group order stable */
+    var g2 = groupOf(st, st.draft.group);
+    if (g2) st.draft.among = g2.members.filter(function(m){ return among.indexOf(m) >= 0; });
+    break;
+  }
+  case 'DRAFT_EXACT_BUMP': {
+    if (!st.draft) break;
+    var cur = st.draft.exact[A.id] || 0;
+    st.draft.exact[A.id] = Math.max(0, cur + A.delta);
+    break;
+  }
+  case 'DRAFT_SHARE_BUMP': {
+    if (!st.draft) break;
+    var c2 = st.draft.shares[A.id] || 0;
+    st.draft.shares[A.id] = Math.max(0, Math.min(9, c2 + A.delta));
+    break;
+  }
+  case 'DRAFT_SPLIT_EVEN': {
+    if (!st.draft || st.draft.mode !== 'exact') break;
+    var fake2 = {amount:st.draft.amount, split:{mode:'equal', among:st.draft.among, exact:{}, shares:{}}};
+    st.draft.exact = {};
+    st.draft.among.forEach(function(id){ st.draft.exact[id] = shareOf(fake2, id); });
+    toast(st, 'Split evenly');
+    break;
+  }
+  case 'EXPENSE_SAVE': {
+    var d = st.draft;
+    if (!d) break;
+    d.title = String(st.ui.inputs.exp_title || d.title || '').trim();
+    if (!draftValid(d)) {
+      if (!d.title) toast(st, 'Give the expense a title');
+      else if (d.mode === 'exact') toast(st, 'The exact amounts must add up to ' + money(d.amount));
+      else toast(st, 'Check the split');
+      break;
+    }
+    var eid = 'e_n' + st.meta.expenseSeq; st.meta.expenseSeq += 1;
+    st.expenses.push({id:eid, group:d.group, title:d.title, payer:d.payer, amount:d.amount,
+                      category:d.category, date:'Today',
+                      split:{mode:d.mode, among:d.among.slice(), exact:clone(d.exact), shares:clone(d.shares)}});
+    st.draft = null;
+    st.ui.stack = [{name:'groups', params:{}}, {name:'group', params:{id:d.group}}];
+    toast(st, d.title + ' added');
+    break;
+  }
+  case 'EXPENSE_DELETE': {
+    st.ui.confirm = {title:'Delete this expense?', text:'Balances update straight away.',
+                     okText:'Delete', yes:{type:'EXPENSE_DELETE_OK', id:A.id}};
+    break;
+  }
+  case 'EXPENSE_DELETE_OK': {
+    var e = expenseOf(st, A.id);
+    st.expenses = st.expenses.filter(function(x){ return x.id !== A.id; });
+    if (route(st).name === 'expense') pop(st);
+    toast(st, (e ? e.title : 'Expense') + ' deleted');
+    break;
+  }
+
+  /* ---- settling up ---- */
+  case 'SETTLE_START': {
+    st.ui.inputs.settle_amount = '';
+    st.draft = null;
+    push(st, 'settle', {group:A.group, from:A.from, to:A.to, amount:A.amount || 0});
+    break;
+  }
+  case 'SETTLE_CONFIRM': {
+    var p = route(st).params;
+    if (!p || !p.amount) { toast(st, 'Nothing to settle'); break; }
+    st.settlements.push({id:'s_' + st.settlements.length, group:p.group,
+                         from:p.from, to:p.to, amount:p.amount, date:'Today'});
+    pop(st);
+    toast(st, pname(p.from) + ' paid ' + pname(p.to) + ' ' + money(p.amount));
+    break;
+  }
+
+  /* ---- groups ---- */
+  case 'GROUP_NEW':
+    st.ui.inputs.group_name = '';
+    st.ui.draftGroup = {name:'', members:[st.me]};
+    push(st, 'newGroup', {});
+    break;
+  case 'GROUP_TOGGLE_MEMBER': {
+    var dg = st.ui.draftGroup; if (!dg) break;
+    var k2 = dg.members.indexOf(A.id);
+    if (A.id === st.me) { toast(st, 'You are always in the group'); break; }
+    if (k2 >= 0) dg.members.splice(k2, 1); else dg.members.push(A.id);
+    break;
+  }
+  case 'GROUP_CREATE': {
+    var dg2 = st.ui.draftGroup; if (!dg2) break;
+    var nm = String(st.ui.inputs.group_name || '').trim();
+    if (!nm) { toast(st, 'Give the group a name'); break; }
+    if (dg2.members.length < 2) { toast(st, 'Add at least one other person'); break; }
+    var gid = 'g_n' + st.meta.groupSeq; st.meta.groupSeq += 1;
+    st.groups.push({id:gid, name:nm, members:PEOPLE.filter(function(p2){
+      return dg2.members.indexOf(p2.id) >= 0; }).map(function(p2){ return p2.id; }), emoji:'home'});
+    st.ui.draftGroup = null;
+    pop(st);
+    toast(st, 'Group "' + nm + '" created');
+    break;
+  }
+
+  /* ---- settings & overlays ---- */
+  case 'SET_SETTING':    st.settings[A.key] = A.value; break;
+  case 'TOGGLE_SETTING': st.settings[A.key] = !st.settings[A.key]; break;
+  case 'OPEN_SHEET':  st.ui.sheet = {type:A.sheet, id:A.id || null}; break;
+  case 'CLOSE_SHEET': st.ui.sheet = null; break;
+  case 'CONFIRM_NO':  st.ui.confirm = null; break;
+  case 'CONFIRM_YES': {
+    var yes = st.ui.confirm && st.ui.confirm.yes; st.ui.confirm = null;
+    if (yes) { var keep = st.meta.steps, kc = clone(st.meta.clock);
+               var out = reduce(st, yes); out.meta.steps = keep; out.meta.clock = kc; return out; }
+    break;
+  }
+  case 'EXPLAIN': toast(st, A.text || ''); break;
+
+  case 'FINISH':
+    st.meta.answer = (A.answer === undefined ? null : A.answer);
+    st.meta.finished = true;
+    break;
+  case 'NOOP': default: break;
+  }
+  return st;
+}
+
+/* =======================================================================
+ * SCREEN TREE
+ * ==================================================================== */
+function N(t, o){ o = o || {}; o.t = t; return o; }
+function appbar(title, o){
+  o = o || {};
+  return N('appbar', {id:'appbar', title:title, back:!!o.back, right:o.right||[], left:o.left||[]});
+}
+function row(id, text, o){
+  o = o || {};
+  return N('row', {id:id, text:text, sub:o.sub, val:o.val, valCls:o.valCls, lead:o.lead,
+                   avatar:o.avatar, arrow:o.arrow !== false, act:o.act, c:o.c});
+}
+function btn(id, text, act, cls, disabled){
+  return N('btn', {id:id, text:text, act:act, cls:cls||'', disabled:!!disabled});
+}
+function txt(text, cls){ return N('text', {text:text, cls:cls||'body'}); }
+function iconbtn(id, ic, act, cls){ return N('iconbtn', {id:id, icon:ic, act:act, cls:cls||''}); }
+function av(id){ var p = person(id); return {name:p.name, initial:p.name.charAt(0), hue:p.hue}; }
+
+function tabbar(st){
+  var items = [
+    {id:'tab_groups',   text:'Groups',   icon:'users',  tab:'groups'},
+    {id:'tab_activity', text:'Activity', icon:'clock',  tab:'activity'},
+    {id:'tab_settings', text:'Settings', icon:'gear',   tab:'settings'}
+  ].map(function(i){
+    return {id:i.id, text:i.text, icon:i.icon, on:(st.ui.tab===i.tab), act:{type:'TAB', tab:i.tab}};
+  });
+  return N('tabbar', {id:'tabbar', items:items});
+}
+function balLabel(v){
+  if (v > 0) return {text:'you are owed ' + money(v), cls:'owed'};
+  if (v < 0) return {text:'you owe ' + money(-v), cls:'owe'};
+  return {text:'settled up', cls:''};
+}
+
+/* ------------------------------------------------------------- screens */
+function scrGroups(st){
+  var net = netAcross(st);
+  return N('screen', {id:'scr_groups', name:'groups', c:[
+    appbar('Tally', {right:[iconbtn('group_add', 'plus', {type:'GROUP_NEW'})]}),
+    N('scroll', {id:'groups_scroll', c:[
+      N('summary', {id:'net_summary', label:net >= 0 ? 'You are owed overall' : 'You owe overall',
+        amount:money(Math.abs(net)),
+        sub:st.groups.length + ' groups · ' + st.expenses.length + ' expenses'}),
+      N('sec', {text:'Groups'}),
+      N('card', {id:'group_list', cls:'flush', c: st.groups.map(function(g){
+        var b = balances(st, g.id)[st.me] || 0, l = balLabel(b);
+        return row('group_' + g.id, g.name,
+          {sub:g.members.map(pname).join(', '), val:l.text, valCls:l.cls,
+           act:{type:'NAV', to:'group', params:{id:g.id}}});
+      })}),
+      N('sec', {text:'People you split with'}),
+      N('card', {id:'friend_list', cls:'flush', c:
+        shuffled(othersOf(st), st.meta.seed).map(function(id){
+          var v = pairNet(st, id, null), fl = balLabel(v);
+          var shared = st.groups.filter(function(g){ return g.members.indexOf(id) >= 0; }).length;
+          return row('friend_' + id, pname(id),
+            {avatar:av(id), sub:shared + (shared === 1 ? ' group' : ' groups'),
+             val:fl.text, valCls:fl.cls, act:{type:'NAV', to:'person', params:{id:id}}});
+        })}),
+      N('padded', {c:[btn('new_group_btn', 'Start a new group', {type:'GROUP_NEW'}, 'block')]}),
+      N('space', {})
+    ]}),
+    tabbar(st)
+  ]});
+}
+
+function scrGroup(st, params){
+  var g = groupOf(st, params.id); if (!g) return scrGroups(st);
+  var bal = balances(st, g.id), mine = bal[st.me] || 0, l = balLabel(mine);
+  var exps = groupExpenses(st, g.id).slice().reverse();
+  return N('screen', {id:'scr_group', name:'group', params:{id:g.id}, c:[
+    appbar(g.name, {back:true,
+      right:[iconbtn('group_balances', 'scales', {type:'NAV', to:'balances', params:{id:g.id}})]}),
+    N('scroll', {id:'group_scroll', c:[
+      N('summary', {id:'group_summary', label:l.cls === 'owed' ? 'You are owed' :
+                    (l.cls === 'owe' ? 'You owe' : 'All settled'),
+        amount:money(Math.abs(mine)), sub:g.members.length + ' people · ' + exps.length + ' expenses'}),
+      N('sec', {text:'Who owes what'}),
+      N('card', {id:'group_bal', cls:'flush', c: g.members.map(function(id){
+        var v = bal[id] || 0;
+        return row('bal_' + id, pname(id) + (id === st.me ? ' (you)' : ''),
+          {avatar:av(id), arrow:false,
+           val: v > 0 ? 'is owed ' + money(v) : (v < 0 ? 'owes ' + money(-v) : 'settled'),
+           valCls: v > 0 ? 'owed' : (v < 0 ? 'owe' : '')});
+      })}),
+      N('sec', {text:'Expenses', side:exps.length + ''}),
+      N('card', {id:'group_expenses', cls:'flush', c: exps.length
+        ? exps.map(function(e){
+            var share = shareOf(e, st.me);
+            return row('expense_' + e.id, e.title,
+              {sub:pname(e.payer) + ' paid ' + money(e.amount) + ' · ' + e.date,
+               val: e.payer === st.me ? 'you lent ' + money(e.amount - share)
+                                      : 'you owe ' + money(share),
+               valCls: e.payer === st.me ? 'owed' : 'owe',
+               act:{type:'NAV', to:'expense', params:{id:e.id}}});
+          })
+        : [txt('No expenses yet.', 'empty')]}),
+      N('space', {})
+    ]}),
+    N('fab', {id:'add_expense', icon:'plus', act:{type:'EXPENSE_NEW', group:g.id}})
+  ]});
+}
+
+function scrExpense(st, params){
+  var e = expenseOf(st, params.id); if (!e) return scrGroups(st);
+  var g = groupOf(st, e.group);
+  return N('screen', {id:'scr_expense', name:'expense', params:{id:e.id}, c:[
+    appbar('Expense', {back:true}),
+    N('scroll', {id:'expense_scroll', c:[
+      txt(e.title, 'h1'),
+      txt(money(e.amount) + ' · paid by ' + pname(e.payer) + ' · ' + e.date, 'body'),
+      N('pills', {id:'exp_pills', items:[
+        {text:category(e.category).label, cls:''},
+        {text:e.split.mode === 'equal' ? 'Split equally'
+            : (e.split.mode === 'exact' ? 'Exact amounts' : 'By shares'), cls:''},
+        {text:g ? g.name : '', cls:''}]}),
+      N('sec', {text:'Split'}),
+      N('card', {id:'exp_split', cls:'flush', c: e.split.among.map(function(id){
+        return row('share_' + id, pname(id), {avatar:av(id), arrow:false,
+          val:money(shareOf(e, id)), valCls:'strong'});
+      }).concat([N('kv', {k:'Total', v:money(splitTotal(e)), cls:'total'})])}),
+      N('btnrow', {id:'exp_ops', c:[
+        btn('exp_delete', 'Delete expense', {type:'EXPENSE_DELETE', id:e.id}, 'danger')]}),
+      N('space', {})
+    ]})
+  ]});
+}
+
+function scrAmount(st){
+  var d = st.draft; if (!d) return scrGroups(st);
+  var keys = [
+    {id:'key_1', label:'1', act:{type:'KEY_DIGIT', d:1}},
+    {id:'key_2', label:'2', act:{type:'KEY_DIGIT', d:2}},
+    {id:'key_3', label:'3', act:{type:'KEY_DIGIT', d:3}},
+    {id:'key_4', label:'4', act:{type:'KEY_DIGIT', d:4}},
+    {id:'key_5', label:'5', act:{type:'KEY_DIGIT', d:5}},
+    {id:'key_6', label:'6', act:{type:'KEY_DIGIT', d:6}},
+    {id:'key_7', label:'7', act:{type:'KEY_DIGIT', d:7}},
+    {id:'key_8', label:'8', act:{type:'KEY_DIGIT', d:8}},
+    {id:'key_9', label:'9', act:{type:'KEY_DIGIT', d:9}},
+    {id:'key_00', label:'00', act:{type:'KEY_DOUBLE_ZERO'}, fn:true},
+    {id:'key_0', label:'0', act:{type:'KEY_DIGIT', d:0}},
+    {id:'key_back', label:'del', act:{type:'KEY_BACK'}, fn:true}
+  ];
+  return N('screen', {id:'scr_amount', name:'amount', c:[
+    appbar('New expense', {back:true,
+      right:[iconbtn('key_clear', 'eraser', {type:'KEY_CLEAR'})]}),
+    N('scroll', {id:'amount_scroll', c:[
+      N('amount', {id:'amount_display', label:'AMOUNT', value:money(d.amount), zero:d.amount === 0,
+        sub:'Digits go in from the right — tap 3 5 0 0 for ' + money(3500)}),
+      N('keypad', {id:'keypad', keys:keys}),
+      N('space', {})
+    ]}),
+    N('bar', {id:'amount_bar', c:[
+      btn('amount_next', 'Next', {type:'AMOUNT_NEXT'}, 'primary block', d.amount === 0)]})
+  ]});
+}
+
+function scrDetails(st){
+  var d = st.draft; if (!d) return scrGroups(st);
+  var g = groupOf(st, d.group);
+  var total = draftSplitTotal(d), ok = draftValid(d);
+  var body = [
+    N('amount', {id:'details_amount', label:'AMOUNT', value:money(d.amount), zero:false,
+      sub:'Tap to change', act:{type:'BACK'}}),
+    N('card', {id:'details_form', cls:'flush', c:[
+      N('inputrow', {id:'exp_title', label:'Title', field:'exp_title',
+        value:st.ui.inputs.exp_title !== undefined ? st.ui.inputs.exp_title : d.title,
+        placeholder:'e.g. Museum tickets',
+        act:{type:'SET_INPUT', field:'exp_title', value:'$VALUE'}}),
+      row('exp_payer', 'Paid by', {val:pname(d.payer), avatar:av(d.payer),
+        act:{type:'OPEN_SHEET', sheet:'payer'}}),
+      row('exp_category', 'Category', {val:category(d.category).label, lead:'tag',
+        act:{type:'OPEN_SHEET', sheet:'category'}})
+    ]}),
+    N('sec', {text:'Split'}),
+    N('chips', {id:'split_modes', c:[
+      N('chip', {id:'mode_equal',  text:'Equally',       on:d.mode==='equal',  act:{type:'DRAFT_MODE', mode:'equal'}}),
+      N('chip', {id:'mode_exact',  text:'Exact amounts', on:d.mode==='exact',  act:{type:'DRAFT_MODE', mode:'exact'}}),
+      N('chip', {id:'mode_shares', text:'By shares',     on:d.mode==='shares', act:{type:'DRAFT_MODE', mode:'shares'}})
+    ]})
+  ];
+  if (d.mode === 'exact')
+    body.push(N('splitbar', {id:'split_check', ok: total === d.amount,
+      left: total === d.amount ? 'The parts add up' : 'Off by ' + money(Math.abs(d.amount - total)),
+      right: money(total) + ' of ' + money(d.amount)}));
+  body.push(N('card', {id:'split_people', cls:'flush', c: (g ? g.members : []).map(function(id){
+    var inSplit = d.among.indexOf(id) >= 0;
+    var kids = [];
+    if (d.mode === 'exact' && inSplit)
+      kids.push(N('stepper', {id:'ex_' + id, value:money(d.exact[id] || 0),
+        minusId:'ex_' + id + '_dec', plusId:'ex_' + id + '_inc',
+        minus:{type:'DRAFT_EXACT_BUMP', id:id, delta:-100},
+        plus:{type:'DRAFT_EXACT_BUMP', id:id, delta:100}}));
+    else if (d.mode === 'shares' && inSplit)
+      kids.push(N('stepper', {id:'sh_' + id, value:(d.shares[id] || 0) + 'x',
+        minusId:'sh_' + id + '_dec', plusId:'sh_' + id + '_inc',
+        minus:{type:'DRAFT_SHARE_BUMP', id:id, delta:-1},
+        plus:{type:'DRAFT_SHARE_BUMP', id:id, delta:1}}));
+    else
+      kids.push(N('check', {id:'in_' + id, on:inSplit, act:{type:'DRAFT_TOGGLE_PERSON', id:id}}));
+    return row('person_' + id, pname(id) + (id === st.me ? ' (you)' : ''),
+      {avatar:av(id), arrow:false,
+       sub: !inSplit ? 'not in this split'
+            : (d.mode === 'exact'
+               ? Math.round((d.exact[id] || 0) * 100 / Math.max(1, d.amount)) + '% of the bill'
+               : money(shareOf({amount:d.amount, split:{mode:d.mode, among:d.among,
+                   exact:d.exact, shares:d.shares}}, id))),
+       act: (d.mode === 'equal') ? {type:'DRAFT_TOGGLE_PERSON', id:id} : null,
+       c:kids});
+  })}));
+  if (d.mode === 'exact')
+    body.push(N('padded', {c:[btn('split_even', 'Split it evenly', {type:'DRAFT_SPLIT_EVEN'}, 'block')]}));
+  body.push(N('space', {}));
+  return N('screen', {id:'scr_details', name:'details', c:[
+    appbar('Details', {back:true}),
+    N('scroll', {id:'details_scroll', c:body}),
+    N('bar', {id:'details_bar', c:[
+      btn('expense_save', 'Save expense', {type:'EXPENSE_SAVE'}, 'primary block', !ok)]})
+  ]});
+}
+
+function scrPerson(st, params){
+  var id = params.id, p = person(id);
+  if (!p || id === st.me) return scrGroups(st);
+  var net = pairNet(st, id, null), l = balLabel(net);
+  var gs = st.groups.filter(function(g){
+    return g.members.indexOf(id) >= 0 && g.members.indexOf(st.me) >= 0; });
+  var shared = st.expenses.filter(function(e){
+    var g = groupOf(st, e.group);
+    if (!g || g.members.indexOf(id) < 0 || g.members.indexOf(st.me) < 0) return false;
+    return (e.payer === st.me && e.split.among.indexOf(id) >= 0) ||
+           (e.payer === id    && e.split.among.indexOf(st.me) >= 0);
+  }).slice().reverse();
+  return N('screen', {id:'scr_person', name:'person', params:{id:id}, c:[
+    appbar(p.name, {back:true}),
+    N('scroll', {id:'person_scroll', c:[
+      N('summary', {id:'person_summary',
+        label: net > 0 ? p.name + ' owes you' : (net < 0 ? 'You owe ' + p.name : 'You two are square'),
+        amount:money(Math.abs(net)),
+        sub:gs.length + ' shared groups \u00b7 ' + shared.length + ' shared expenses'}),
+      N('sec', {text:'Group by group'}),
+      N('card', {id:'person_groups', cls:'flush', c: gs.length
+        ? gs.map(function(g){
+            var v = pairNet(st, id, g.id), gl = balLabel(v);
+            return row('pgroup_' + g.id, g.name,
+              {sub:g.members.length + ' people', val:gl.text, valCls:gl.cls,
+               act:{type:'NAV', to:'group', params:{id:g.id}}});
+          })
+        : [txt('No shared groups.', 'empty')]}),
+      N('sec', {text:'Between the two of you', side:shared.length + ''}),
+      N('card', {id:'person_expenses', cls:'flush', c: shared.length
+        ? shared.map(function(e){
+            var mine = e.payer === st.me;
+            return row('pexp_' + e.id, e.title,
+              {sub:(mine ? 'you paid ' : p.name + ' paid ') + money(e.amount) + ' \u00b7 ' + e.date,
+               val:(mine ? 'lent ' : 'owe ') + money(mine ? shareOf(e, id) : shareOf(e, st.me)),
+               valCls:mine ? 'owed' : 'owe',
+               act:{type:'NAV', to:'expense', params:{id:e.id}}});
+          })
+        : [txt('Nothing shared yet.', 'empty')]}),
+      txt('This is the direct total between the two of you. The settle-up plan inside a group may route the money differently.', 'muted'),
+      N('space', {})
+    ]})
+  ]});
+}
+
+function scrBalances(st, params){
+  var g = groupOf(st, params.id); if (!g) return scrGroups(st);
+  var bal = balances(st, g.id), plan = settleUp(st, g.id);
+  return N('screen', {id:'scr_balances', name:'balances', params:{id:g.id}, c:[
+    appbar('Balances', {back:true}),
+    N('scroll', {id:'balances_scroll', c:[
+      txt(g.name, 'h1'),
+      N('sec', {text:'Net position'}),
+      N('card', {id:'bal_net', cls:'flush', c: g.members.map(function(id){
+        var v = bal[id] || 0;
+        return row('net_' + id, pname(id) + (id === st.me ? ' (you)' : ''),
+          {avatar:av(id), arrow:false, val:money(v), valCls: v > 0 ? 'owed' : (v < 0 ? 'owe' : '')});
+      })}),
+      N('sec', {text:'Simplest way to settle', side:plan.length + ' payments'}),
+      N('card', {id:'bal_plan', cls:'flush', c: plan.length
+        ? plan.map(function(p, i){
+            return row('settle_' + i, pname(p.from) + ' pays ' + pname(p.to),
+              {avatar:av(p.from), val:money(p.amount), valCls:'strong',
+               act:{type:'SETTLE_START', group:g.id, from:p.from, to:p.to, amount:p.amount}});
+          })
+        : [txt('Everyone is square.', 'empty')]}),
+      N('space', {})
+    ]})
+  ]});
+}
+
+function scrSettle(st, params){
+  return N('screen', {id:'scr_settle', name:'settle', params:params, c:[
+    appbar('Record a payment', {back:true}),
+    N('scroll', {id:'settle_scroll', c:[
+      N('amount', {id:'settle_amount', label:'PAYMENT', value:money(params.amount || 0), zero:false,
+        sub:pname(params.from) + ' pays ' + pname(params.to)}),
+      N('card', {id:'settle_info', cls:'flush', c:[
+        row('settle_from', 'From', {avatar:av(params.from), val:pname(params.from), arrow:false}),
+        row('settle_to', 'To', {avatar:av(params.to), val:pname(params.to), arrow:false}),
+        row('settle_group', 'Group', {val:(groupOf(st, params.group) || {}).name, arrow:false})
+      ]}),
+      txt('Recording a payment moves the balance; it does not delete any expense.', 'muted'),
+      N('space', {}),
+      N('padded', {c:[btn('settle_confirm', 'Record this payment', {type:'SETTLE_CONFIRM'}, 'primary block')]}),
+      N('space', {})
+    ]})
+  ]});
+}
+
+function scrActivity(st){
+  var rows = [];
+  st.expenses.slice().reverse().forEach(function(e){
+    rows.push(row('act_' + e.id, e.title,
+      {avatar:av(e.payer), sub:pname(e.payer) + ' paid ' + money(e.amount) + ' in ' +
+        (groupOf(st, e.group) || {}).name + ' · ' + e.date,
+       val:money(shareOf(e, st.me)), valCls:'owe',
+       act:{type:'NAV', to:'expense', params:{id:e.id}}}));
+  });
+  st.settlements.slice().reverse().forEach(function(s){
+    rows.unshift(row('act_' + s.id, pname(s.from) + ' paid ' + pname(s.to),
+      {avatar:av(s.from), sub:'Settlement in ' + (groupOf(st, s.group) || {}).name + ' · ' + s.date,
+       val:money(s.amount), arrow:false}));
+  });
+  return N('screen', {id:'scr_activity', name:'activity', c:[
+    appbar('Activity'),
+    N('scroll', {id:'activity_scroll', c:[
+      N('card', {id:'activity_list', cls:'flush', c: rows.length ? rows : [txt('Nothing yet.', 'empty')]}),
+      N('space', {})
+    ]}),
+    tabbar(st)
+  ]});
+}
+
+function scrNewGroup(st){
+  var dg = st.ui.draftGroup || {name:'', members:[st.me]};
+  return N('screen', {id:'scr_newGroup', name:'newGroup', c:[
+    appbar('New group', {back:true}),
+    N('scroll', {id:'newgroup_scroll', c:[
+      N('card', {id:'group_form', cls:'flush', c:[
+        N('inputrow', {id:'group_name', label:'Name', field:'group_name',
+          value:st.ui.inputs.group_name || '', placeholder:'e.g. Ski week',
+          act:{type:'SET_INPUT', field:'group_name', value:'$VALUE'}})
+      ]}),
+      N('sec', {text:'Who is in it', side:dg.members.length + ''}),
+      N('card', {id:'group_members', cls:'flush', c: PEOPLE.map(function(p){
+        return row('member_' + p.id, p.name + (p.id === st.me ? ' (you)' : ''),
+          {avatar:av(p.id), arrow:false, act:{type:'GROUP_TOGGLE_MEMBER', id:p.id},
+           c:[N('check', {id:'mem_' + p.id, on:dg.members.indexOf(p.id) >= 0,
+                          act:{type:'GROUP_TOGGLE_MEMBER', id:p.id}})]});
+      })}),
+      N('space', {}),
+      N('padded', {c:[btn('group_create', 'Create group', {type:'GROUP_CREATE'}, 'primary block')]}),
+      N('space', {})
+    ]})
+  ]});
+}
+
+function scrSettings(st){
+  var s = st.settings;
+  function sw(id, text, key, sub){
+    return row(id, text, {sub:sub, arrow:false, act:{type:'TOGGLE_SETTING', key:key},
+      c:[N('switch', {id:id + '_switch', on:!!s[key], act:{type:'TOGGLE_SETTING', key:key}})]});
+  }
+  return N('screen', {id:'scr_settings', name:'settings', c:[
+    appbar('Settings'),
+    N('scroll', {id:'settings_scroll', c:[
+      N('card', {id:'me_card', cls:'flush', c:[
+        row('me_row', pname(st.me) + ' (you)', {avatar:av(st.me), sub:'Across ' + st.groups.length + ' groups',
+          arrow:false})
+      ]}),
+      N('sec', {text:'Balances'}),
+      N('card', {id:'set_bal', cls:'flush', c:[
+        sw('set_simplifyDebts', 'Simplify debts', 'simplifyDebts',
+           'Suggest the fewest payments that clear a group'),
+        sw('set_roundUp', 'Round shares up to the penny', 'roundUp', 'Cosmetic only')
+      ]}),
+      N('sec', {text:'Notifications'}),
+      N('card', {id:'set_notify', cls:'flush', c:[
+        sw('set_notifyNewExpense', 'Tell me about new expenses', 'notifyNewExpense', '')
+      ]}),
+      N('space', {})
+    ]}),
+    tabbar(st)
+  ]});
+}
+
+/* ------------------------------------------------------------ overlays */
+function sheetPayer(st){
+  var d = st.draft, g = d ? groupOf(st, d.group) : null;
+  return N('sheet', {id:'sheet_payer', title:'Who paid?', closeId:'sheet_close', close:{type:'CLOSE_SHEET'},
+    c: (g ? g.members : []).map(function(id){
+      return row('payer_' + id, pname(id) + (id === st.me ? ' (you)' : ''),
+        {avatar:av(id), arrow:false, act:{type:'DRAFT_PAYER', id:id},
+         c:[N('radio', {id:'payer_' + id + '_radio', on:d && d.payer === id,
+                        act:{type:'DRAFT_PAYER', id:id}})]});
+    })});
+}
+function sheetCategory(st){
+  var d = st.draft;
+  return N('sheet', {id:'sheet_category', title:'Category', closeId:'sheet_close', close:{type:'CLOSE_SHEET'},
+    c: CATEGORIES.map(function(c){
+      return row('cat_' + c.key, c.label, {lead:'tag', arrow:false,
+        act:{type:'DRAFT_CATEGORY', key:c.key},
+        c:[N('radio', {id:'cat_' + c.key + '_radio', on:d && d.category === c.key,
+                       act:{type:'DRAFT_CATEGORY', key:c.key}})]});
+    })});
+}
+
+var ROUTES = {
+  groups:scrGroups, group:scrGroup, expense:scrExpense, amount:scrAmount, details:scrDetails,
+  person:scrPerson,
+  balances:scrBalances, settle:scrSettle, activity:scrActivity, newGroup:scrNewGroup,
+  settings:scrSettings
+};
+
+function screen(st){
+  var r = route(st), fn = ROUTES[r.name] || scrGroups;
+  var rootNode = fn(st, r.params || {});
+  rootNode.route = r.name;
+  var extra = [];
+  if (st.ui.sheet) {
+    var sh = st.ui.sheet.type === 'payer' ? sheetPayer(st)
+           : st.ui.sheet.type === 'category' ? sheetCategory(st) : null;
+    if (sh) extra.push(N('mask', {id:'mask', close:{type:'CLOSE_SHEET'}, c:[sh]}));
+  }
+  if (st.ui.confirm) {
+    extra.push(N('mask', {id:'confirm_mask', c:[N('dialog', {id:'confirm_dialog',
+      title:st.ui.confirm.title || '', text:st.ui.confirm.text,
+      ok: btn('confirm_ok', st.ui.confirm.okText || 'Confirm', {type:'CONFIRM_YES'}, 'primary'),
+      cancel: btn('confirm_cancel', 'Cancel', {type:'CONFIRM_NO'}, '')})]}));
+  }
+  if (st.ui.toast) extra.push(N('toast', {id:'toast', text:st.ui.toast}));
+  rootNode.c = rootNode.c.concat(extra);
+  return rootNode;
+}
+
+/* =======================================================================
+ * TRAVERSAL — element index, GUI action interface, text observation
+ * ==================================================================== */
+var SKIP_KEYS = {act:1, minus:1, plus:1, close:1, yes:1, params:1, meta:1, split:1, exact:1, shares:1};
+
+function labelOf(n){ return n.text || n.title || n.name || n.label || ''; }
+
+function collect(n, out){
+  if (!n || typeof n !== 'object') return;
+  if (Array.isArray(n)) { for (var i=0;i<n.length;i++) collect(n[i], out); return; }
+  if (n.t === 'appbar' && n.back) out.push({id:'nav_back', act:{type:'BACK'}, text:'Back', t:'back'});
+  if (n.id && n.act)              out.push({id:n.id, act:n.act, text:labelOf(n), t:n.t||'el',
+                                            disabled:!!n.disabled,
+                                            input:(n.t==='inputrow')});
+  if (n.t === 'mask' && n.close)  out.push({id:n.id, act:n.close, text:'Dismiss overlay', t:'mask'});
+  if (n.minusId && n.minus)       out.push({id:n.minusId, act:n.minus, text:'decrease', t:'step'});
+  if (n.plusId  && n.plus)        out.push({id:n.plusId,  act:n.plus,  text:'increase', t:'step'});
+  if (n.closeId && n.close)       out.push({id:n.closeId, act:n.close, text:'Close', t:'btn'});
+  for (var k in n){
+    if (SKIP_KEYS[k]) continue;
+    var v = n[k];
+    if (v && typeof v === 'object') collect(v, out);
+  }
+}
+function elements(st){
+  var rootNode = (st && st.t === 'screen') ? st : screen(st);
+  var masks = (rootNode.c||[]).filter(function(n){ return n.t === 'mask'; });
+  var out = [];
+  collect(masks.length ? masks[masks.length-1] : rootNode, out);
+  return out;
+}
+function findEl(st, id){
+  var els = elements(st);
+  for (var i=0;i<els.length;i++) if (els[i].id === id) return els[i];
+  return null;
+}
+function substitute(act, text){
+  var a = clone(act);
+  for (var k in a) if (a[k] === '$VALUE') a[k] = text;
+  return a;
+}
+function step(st, a){
+  a = a || {};
+  var kind = a.action || a.type;
+  switch (kind) {
+  case 'tap': {
+    var el = findEl(st, a.id);
+    if (!el) return {state:st, ok:false, error:'ELEMENT_NOT_FOUND: ' + a.id};
+    if (el.disabled) return {state:st, ok:false, error:'ELEMENT_DISABLED: ' + a.id};
+    return {state:reduce(st, el.act), ok:true};
+  }
+  case 'type': {
+    var e2 = findEl(st, a.id);
+    if (!e2) return {state:st, ok:false, error:'ELEMENT_NOT_FOUND: ' + a.id};
+    if (!e2.input) return {state:st, ok:false, error:'NOT_A_TEXT_FIELD: ' + a.id};
+    return {state:reduce(st, substitute(e2.act, a.text == null ? '' : String(a.text))), ok:true};
+  }
+  case 'back':   return {state:reduce(st, {type:'BACK'}), ok:true};
+  case 'home':   return {state:reduce(st, {type:'HOME'}), ok:true};
+  case 'wait':   return {state:reduce(st, {type:'NOOP'}), ok:true};
+  case 'finish': return {state:reduce(st, {type:'FINISH', answer:a.answer}), ok:true};
+  case 'raw':    return {state:reduce(st, a.act || {}), ok:true};
+  default:       return {state:st, ok:false, error:'UNKNOWN_ACTION: ' + kind};
+  }
+}
+
+/* ------------------------------------------------- text observation (a11y) */
+function a11y(st){
+  var rootNode = screen(st), lines = [], r = route(st);
+  lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
+             '  ' + clockStr(st.meta.clock) + '  step ' + st.meta.steps);
+  if (st.draft)
+    lines.push('# Draft expense: ' + money(st.draft.amount) + ' "' + (st.draft.title || '(untitled)') +
+               '" paid by ' + pname(st.draft.payer) + ', split ' + st.draft.mode +
+               ' across ' + st.draft.among.map(pname).join('/'));
+  var masks = (rootNode.c||[]).filter(function(n){ return n.t==='mask'; });
+  if (masks.length) lines.push('# An overlay is open. Nothing behind it can be tapped.');
+  walkText(masks.length ? masks[masks.length-1] : rootNode, 0, lines, st);
+  (rootNode.c||[]).forEach(function(n){ if (n.t==='toast') lines.push('[Toast] ' + n.text); });
+  return lines.join('\n');
+}
+function tid(n){ return (n && n.id && n.act) ? ' #'+n.id : ''; }
+function ind(d){ return new Array(d+1).join('  '); }
+
+function walkText(n, d, out, st){
+  if (!n || typeof n !== 'object') return;
+  if (Array.isArray(n)) { n.forEach(function(x){ walkText(x, d, out, st); }); return; }
+  var line = null;
+  switch (n.t) {
+  case 'screen': break;
+  case 'appbar': line = '[AppBar] ' + (n.title || '') + (n.back ? '   Back #nav_back' : ''); break;
+  case 'iconbtn': line = '[IconButton]' + tid(n) + ' ' + n.icon; break;
+  case 'inputrow':
+    line = '[TextField]' + tid(n) + ' ' + (n.label||'') + ' value="' + (n.value||'') + '"'; break;
+  case 'chip':   line = '[Chip]' + tid(n) + ' ' + n.text + (n.on ? '  [selected]' : ''); break;
+  case 'btn':    line = '[Button]' + (n.id ? ' #'+n.id : '') + ' ' + n.text + (n.disabled ? ' (disabled)' : ''); break;
+  case 'row': {
+    var s = '[Row]' + tid(n) + ' ' + (n.text||'');
+    if (n.val) s += ' — ' + n.val;
+    if (n.sub) s += '   (' + n.sub + ')';
+    line = s; break;
+  }
+  case 'switch': line = '[Toggle]' + tid(n) + ' ' + (n.on ? 'ON' : 'OFF'); break;
+  case 'check':  line = '[Checkbox]' + tid(n) + ' ' + (n.on ? 'checked' : 'unchecked'); break;
+  case 'radio':  line = '[Radio]' + tid(n) + ' ' + (n.on ? 'selected' : 'not selected'); break;
+  case 'stepper':
+    line = '[Stepper] ' + n.value + '  decrease #' + n.minusId + '  increase #' + n.plusId; break;
+  case 'summary':
+    out.push(ind(d) + '[Balance] ' + n.label + ': ' + n.amount + '  (' + n.sub + ')');
+    return;
+  case 'amount':
+    out.push(ind(d) + '[Amount] ' + n.label + ' = ' + n.value + (n.sub ? '   ' + n.sub : ''));
+    return;
+  case 'keypad':
+    out.push(ind(d) + '[Keypad] ' + n.keys.map(function(k){ return k.label + ' #' + k.id; }).join('  '));
+    return;
+  case 'splitbar':
+    line = (n.ok ? '[Split OK] ' : '[Split does not add up] ') + n.left + ' — ' + n.right; break;
+  case 'kv':      line = '  ' + n.k + ': ' + n.v; break;
+  case 'pills':   line = n.items.map(function(p){ return '[' + p.text + ']'; }).join(' '); break;
+  case 'fab':     line = '[AddExpense]' + tid(n); break;
+  case 'emptystate': line = '[Empty] ' + n.text; break;
+  case 'sec':     line = '— ' + n.text + (n.side ? ' (' + n.side + ')' : '') + ' —'; break;
+  case 'text':    line = n.text || null; break;
+  case 'tabbar':
+    out.push(ind(d) + '[TabBar] ' + n.items.map(function(i){
+      return i.text + ' #' + i.id + (i.on ? '[current]' : ''); }).join('  '));
+    return;
+  case 'sheet':   line = '[Sheet] ' + n.title + '   close #' + n.closeId; break;
+  case 'dialog':  line = '[Dialog] ' + (n.title ? n.title + ' — ' : '') + n.text; break;
+  case 'mask': case 'toast': line = null; break;
+  default:        line = null;
+  }
+  if (line !== null) out.push(ind(d) + line);
+  for (var k in n){
+    if (SKIP_KEYS[k]) continue;
+    var v = n[k];
+    if (v && typeof v === 'object') walkText(v, line !== null ? d+1 : d, out, st);
+  }
+}
+
+/* --------------------------------------------------------- derived view */
+function derive(st){
+  var byGroup = {}, plans = {};
+  st.groups.forEach(function(g){
+    var b = balances(st, g.id), named = {};
+    Object.keys(b).forEach(function(id){ named[pname(id)] = b[id]; });
+    byGroup[g.name] = named;
+    plans[g.name] = settleUp(st, g.id).map(function(p){
+      return pname(p.from) + '->' + pname(p.to) + ':' + p.amount; });
+  });
+  var last = st.expenses.length ? st.expenses[st.expenses.length-1] : null;
+  var lastShares = {};
+  if (last) last.split.among.forEach(function(id){ lastShares[pname(id)] = shareOf(last, id); });
+  return {
+    route: route(st).name,
+    balancesByGroup: byGroup,
+    settlePlans: plans,
+    netAcross: netAcross(st),
+    expenseCount: st.expenses.length,
+    expenseTitles: st.expenses.map(function(e){ return e.title; }).sort(),
+    lastExpense: last ? {title:last.title, amount:last.amount, payer:pname(last.payer),
+                         group:(groupOf(st, last.group) || {}).name, mode:last.split.mode,
+                         among:last.split.among.map(pname).sort(), category:last.category} : null,
+    lastExpenseShares: lastShares,
+    settlementCount: st.settlements.length,
+    lastSettlement: st.settlements.length
+      ? (function(s){ return {from:pname(s.from), to:pname(s.to), amount:s.amount,
+                              group:(groupOf(st, s.group) || {}).name}; })(st.settlements[st.settlements.length-1])
+      : null,
+    groupNames: st.groups.map(function(g){ return g.name; }).sort(),
+    draftAmount: st.draft ? st.draft.amount : 0,
+    settings: clone(st.settings),
+    finished: !!st.meta.finished,
+    answer: st.meta.answer
+  };
+}
+function snapshot(st){ var o = clone(st); o.derived = derive(st); return o; }
+function applyPatch(st, patch){
+  (patch || []).forEach(function(p){ setPath(st, p.path, clone(p.value)); });
+  return st;
+}
+
+var ENGINE = {
+  ENV_ID: ENV_ID, VERSION: VERSION, CATALOG: CATALOG,
+  createInitialState: createInitialState,
+  reduce: reduce, step: step, screen: screen, a11y: a11y,
+  elements: elements, findEl: findEl, applyPatch: applyPatch,
+  getPath: getPath, setPath: setPath, clone: clone,
+  derive: derive, snapshot: snapshot,
+  select: SELECT
+};
+root.TALLY_ENGINE = ENGINE;
+root.GUI_ENGINE   = ENGINE;
+
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+</script>
+
+<script id="ui">
+/* ===========================================================================
+ * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
+ * ======================================================================== */
+(function(){
+'use strict';
+var E = window.GUI_ENGINE;
+var app = document.getElementById('app');
+var hud = document.getElementById('hud');
+function esc(s){
+  return String(s === undefined || s === null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+var SVG = {
+  back:  '<path d="M15 4.5 8 12l7 7.5"/>',
+  arrow: '<path d="M9 4.5 16 12l-7 7.5"/>',
+  plus:  '<path d="M12 5.6v12.8M5.6 12h12.8"/>',
+  minus: '<path d="M5.6 12h12.8"/>',
+  close: '<path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5"/>',
+  check: '<path d="M4.8 12.6 9.8 17.6 19.2 6.8"/>',
+  users: '<circle cx="9" cy="8" r="3.6"/><path d="M2.6 20.4c0-3.6 2.9-6 6.4-6s6.4 2.4 6.4 6"/><path d="M16.4 4.8a3.6 3.6 0 0 1 0 6.8"/><path d="M17.6 14.8c2.4.6 3.8 2.6 3.8 5.6"/>',
+  clock: '<circle cx="12" cy="12" r="8.8"/><path d="M12 6.8V12l3.6 2.2"/>',
+  gear:  '<circle cx="12" cy="12" r="3.4"/><path d="M19.1 14.4a1.6 1.6 0 0 0 .3 1.8l.1.1a1.9 1.9 0 1 1-2.7 2.7l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5v.2a1.9 1.9 0 1 1-3.8 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a1.9 1.9 0 1 1-2.7-2.7l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1h-.2a1.9 1.9 0 1 1 0-3.8h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a1.9 1.9 0 1 1 2.7-2.7l.1.1a1.6 1.6 0 0 0 1.8.3h.1a1.6 1.6 0 0 0 1-1.5v-.2a1.9 1.9 0 1 1 3.8 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a1.9 1.9 0 1 1 2.7 2.7l-.1.1a1.6 1.6 0 0 0-.3 1.8v.1a1.6 1.6 0 0 0 1.5 1h.2a1.9 1.9 0 1 1 0 3.8h-.1a1.6 1.6 0 0 0-1.5 1z"/>',
+  tag:   '<path d="M11.3 3.4H20v8.7l-8.9 8.9a1.7 1.7 0 0 1-2.4 0l-6.3-6.3a1.7 1.7 0 0 1 0-2.4z"/><circle cx="16.3" cy="7.7" r="1.5"/>',
+  scales:'<path d="M12 3.6v16.8M6 20.4h12"/><path d="M12 6.6 4.4 8.8M12 6.6l7.6 2.2"/><path d="M1.6 15.2a2.8 2.8 0 0 0 5.6 0L4.4 8.8z"/><path d="M16.8 15.2a2.8 2.8 0 0 0 5.6 0l-2.8-6.4z"/>',
+  eraser:'<path d="M8.6 20.6 3.4 15.4a2 2 0 0 1 0-2.8l8.2-8.2a2 2 0 0 1 2.8 0l5.2 5.2a2 2 0 0 1 0 2.8l-8.2 8.2z"/><path d="M8.6 20.6H20.6"/>'
+};
+function icon(name, size, cls){
+  var d = SVG[name]; if (!d) return '';
+  return '<span class="ico ' + (cls||'') + '" style="width:' + (size||20) + 'px;height:' + (size||20) +
+    'px;display:inline-flex;flex:0 0 auto"><svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" ' +
+    'stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg></span>';
+}
+function avatarHtml(a, size){
+  return '<div class="av" style="width:' + size + 'px;height:' + size + 'px;background:hsl(' + a.hue +
+    ' 56% 48%)">' + esc(a.initial) + '</div>';
+}
+
+var ACTS = [], TRAJ = [];
+function bind(a){ if (!a) return ''; ACTS.push(a); return ' data-act="' + (ACTS.length-1) + '"'; }
+function bindT(a){ if (!a) return ''; ACTS.push(a); return ' data-actt="' + (ACTS.length-1) + '"'; }
+function tid(id){ return id ? ' data-testid="' + esc(id) + '"' : ''; }
+function R(list){ return (list||[]).map(render).join(''); }
+
+function render(n){
+  if (!n || typeof n !== 'object') return '';
+  if (Array.isArray(n)) return R(n);
+  switch (n.t) {
+  case 'screen': return R(n.c);
+  case 'appbar': {
+    var left = (n.back
+      ? '<div class="iconbtn" data-testid="nav_back"' + bind({type:'BACK'}) + '>' + icon('back',19) + '</div>'
+      : '') + R(n.left);
+    return '<div class="n-appbar"' + tid(n.id) + '><div class="ab-side">' + left + '</div>'
+      + '<div class="ab-title">' + esc(n.title) + '</div>'
+      + '<div class="ab-side right">' + R(n.right) + '</div></div>';
+  }
+  case 'iconbtn': return '<div class="iconbtn ' + esc(n.cls||'') + '"' + tid(n.id) + bind(n.act) + '>' + icon(n.icon, 19) + '</div>';
+  case 'scroll':  return '<div class="n-scroll"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'chips':   return '<div class="n-chips"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'chip':    return '<div class="n-chip' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '>' + esc(n.text) + '</div>';
+  case 'card':    return '<div class="n-card ' + esc(n.cls||'') + (n.act?' tap':'') + '"' + tid(n.id) + bind(n.act) + '>' + R(n.c) + '</div>';
+  case 'padded':  return '<div style="padding:4px 16px">' + R(n.c) + '</div>';
+  case 'sec':     return '<div class="n-sec"' + tid(n.id) + '><span>' + esc(n.text) + '</span>'
+                       + (n.side ? '<span>' + esc(n.side) + '</span>' : '') + '</div>';
+  case 'text':    return '<div class="n-text ' + esc(n.cls||'') + '">' + esc(n.text) + '</div>';
+  case 'space':   return '<div class="n-space"></div>';
+  case 'emptystate': return '<div class="n-text empty"' + tid(n.id) + '>' + esc(n.text) + '</div>';
+  case 'row': {
+    var inline = [], below = [];
+    (n.c||[]).forEach(function(ch){
+      (ch.t==='switch'||ch.t==='radio'||ch.t==='check'||ch.t==='stepper'||ch.t==='btn') ? inline.push(ch) : below.push(ch);
+    });
+    return '<div class="n-row' + (n.act?' tap':'') + '"' + tid(n.id) + bind(n.act) + '>'
+      + (n.avatar ? avatarHtml(n.avatar, 38) : '')
+      + (n.lead ? '<div class="r-lead">' + icon(n.lead, 18) + '</div>' : '')
+      + '<div class="r-main"><div class="r-label">' + esc(n.text) + '</div>'
+      + (n.sub ? '<div class="r-sub">' + esc(n.sub) + '</div>' : '') + '</div>'
+      + (n.val ? '<div class="r-value ' + esc(n.valCls||'') + '">' + esc(n.val) + '</div>' : '')
+      + R(inline)
+      + (n.arrow && !inline.length ? '<div class="r-arrow">' + icon('arrow',15) + '</div>' : '')
+      + '</div>' + R(below);
+  }
+  case 'btn':
+    return '<div class="n-btn ' + esc(n.cls||'') + (n.disabled?' off':'') + '"' + tid(n.id)
+      + (n.disabled?'':bind(n.act)) + '>' + esc(n.text) + '</div>';
+  case 'btnrow': return '<div class="n-btnrow"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'bar':    return '<div style="flex:0 0 auto;background:var(--card);border-top:1px solid var(--line);'
+                      + 'padding:12px 16px 16px;z-index:30"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'switch': return '<div class="n-switch' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '><i></i></div>';
+  case 'check':  return '<div class="n-check' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '></div>';
+  case 'radio':  return '<div class="n-radio' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '></div>';
+  case 'inputrow':
+    return '<div class="n-input"><div class="i-label">' + esc(n.label) + '</div>'
+      + '<input' + tid(n.id) + bindT(n.act) + ' value="' + esc(n.value) + '" placeholder="'
+      + esc(n.placeholder) + '"></div>';
+  case 'stepper':
+    return '<div class="n-stepper" style="display:flex;align-items:center;gap:10px"' + tid(n.id) + '>'
+      + '<div class="iconbtn" style="background:#eef0f6"' + tid(n.minusId) + bind(n.minus) + '>' + icon('minus',15) + '</div>'
+      + '<div style="min-width:62px;text-align:center;font-weight:700;font-variant-numeric:tabular-nums">'
+      + esc(n.value) + '</div>'
+      + '<div class="iconbtn" style="background:#eef0f6"' + tid(n.plusId) + bind(n.plus) + '>' + icon('plus',15) + '</div></div>';
+
+  case 'summary':
+    return '<div class="summary"' + tid(n.id) + '><div class="su-lab">' + esc(n.label) + '</div>'
+      + '<div class="su-amt">' + esc(n.amount) + '</div>'
+      + '<div class="su-sub">' + esc(n.sub) + '</div></div>';
+  case 'amount':
+    return '<div class="amount"' + tid(n.id) + bind(n.act) + '><div class="am-lab">' + esc(n.label) + '</div>'
+      + '<div class="am-val' + (n.zero?' zero':'') + '">' + esc(n.value) + '</div>'
+      + (n.sub ? '<div class="am-sub">' + esc(n.sub) + '</div>' : '') + '</div>';
+  case 'keypad':
+    return '<div class="keypad"' + tid(n.id) + '>' + n.keys.map(function(k){
+      return '<div class="key' + (k.fn?' fn':'') + '"' + tid(k.id) + bind(k.act) + '>' + esc(k.label) + '</div>';
+    }).join('') + '</div>';
+  case 'splitbar':
+    return '<div class="splitbar ' + (n.ok?'ok':'bad') + '"' + tid(n.id) + '>'
+      + '<span>' + esc(n.left) + '</span><span>' + esc(n.right) + '</span></div>';
+  case 'kv':
+    return '<div class="kv ' + esc(n.cls||'') + '"><span class="k">' + esc(n.k) + '</span>'
+      + '<span class="v">' + esc(n.v) + '</span></div>';
+  case 'pills':
+    return '<div style="display:flex;gap:7px;flex-wrap:wrap;padding:2px 16px 8px"' + tid(n.id) + '>'
+      + n.items.map(function(p){ return '<span class="pill ' + (p.cls||'') + '">' + esc(p.text) + '</span>'; }).join('')
+      + '</div>';
+  case 'fab': return '<div class="fab"' + tid(n.id) + bind(n.act) + '>' + icon(n.icon, 24) + '</div>';
+  case 'tabbar':
+    return '<div class="n-tabbar"' + tid(n.id) + '>' + n.items.map(function(i){
+      return '<div class="tb' + (i.on?' on':'') + '"' + tid(i.id) + bind(i.act) + '>'
+        + '<i>' + icon(i.icon, 21) + '</i>' + esc(i.text) + '</div>';
+    }).join('') + '</div>';
+  case 'mask':  return '<div class="n-mask"' + tid(n.id) + bind(n.close) + '>' + R(n.c) + '</div>';
+  case 'sheet':
+    return '<div class="n-sheet"' + tid(n.id) + ' data-stop="1"><div class="sh-hd">'
+      + '<div class="t">' + esc(n.title) + '</div>'
+      + '<div class="iconbtn"' + tid(n.closeId) + bind(n.close) + '>' + icon('close',15) + '</div></div>'
+      + '<div class="sh-bd">' + R(n.c) + '</div></div>';
+  case 'dialog':
+    return '<div class="dialog"' + tid(n.id) + ' data-stop="1">'
+      + '<div style="padding:22px 20px 16px;text-align:center">'
+      + (n.title ? '<div style="font:650 17px/1.3 var(--disp);margin-bottom:8px">' + esc(n.title) + '</div>' : '')
+      + '<div style="font-size:13.5px;color:var(--ink2);line-height:1.55">' + esc(n.text) + '</div></div>'
+      + '<div style="display:flex;gap:10px;padding:0 16px 16px">'
+      + '<div class="n-btn" style="flex:1"' + tid(n.cancel.id) + bind(n.cancel.act) + '>' + esc(n.cancel.text) + '</div>'
+      + '<div class="n-btn primary" style="flex:1"' + tid(n.ok.id) + bind(n.ok.act) + '>' + esc(n.ok.text) + '</div>'
+      + '</div></div>';
+  case 'toast': return '<div class="n-toast"' + tid(n.id) + '>' + esc(n.text) + '</div>';
+  default: return '';
+  }
+}
+
+var STATE = null;
+function paint(){
+  ACTS = [];
+  var tree = E.screen(STATE);
+  app.innerHTML = render(tree);
+  document.getElementById('sb-clock').textContent = E.select.clockStr(STATE.meta.clock);
+  if (!hud.classList.contains('off')) paintHud();
+}
+app.addEventListener('click', function(ev){
+  var el = ev.target.closest('[data-act]'); if (!el) return;
+  if (el.classList.contains('n-mask') && ev.target.closest('[data-stop]')) return;
+  var act = ACTS[+el.getAttribute('data-act')]; if (!act) return;
+  TRAJ.push({action:'tap', id: el.getAttribute('data-testid') || null});
+  STATE = E.reduce(STATE, act); paint();
+});
+app.addEventListener('input', function(ev){
+  var el = ev.target.closest('[data-actt]'); if (!el) return;
+  var act = JSON.parse(JSON.stringify(ACTS[+el.getAttribute('data-actt')]));
+  for (var k in act) if (act[k] === '$VALUE') act[k] = el.value;
+  var id = el.getAttribute('data-testid'), pos = el.selectionStart;
+  TRAJ.push({action:'type', id:id, text:el.value});
+  STATE = E.reduce(STATE, act); paint();
+  var again = id && app.querySelector('[data-testid="' + id + '"]');
+  if (again && again.focus) { again.focus(); try { again.setSelectionRange(pos, pos); } catch(e){} }
+});
+
+function paintHud(){
+  var d = E.derive(STATE);
+  hud.innerHTML = '<h4>__ENV__ · ' + E.ENV_ID + ' v' + E.VERSION + '</h4>'
+    + '<div><span class="k">route</span> ' + d.route + '  <span class="k">step</span> ' + STATE.meta.steps + '</div>'
+    + '<div><span class="k">net</span> ' + d.netAcross + '  <span class="k">expenses</span> ' + d.expenseCount + '</div>'
+    + '<div style="margin-top:8px"><button id="hud-reset">reset</button>'
+    + '<button id="hud-a11y">copy a11y</button><button id="hud-state">copy state</button>'
+    + '<button id="hud-traj">copy traj</button><button id="hud-hide">hide (h)</button></div>'
+    + '<pre>' + esc(E.a11y(STATE)) + '</pre>';
+  hud.querySelector('#hud-reset').onclick = function(){ ENVAPI.reset({seed:STATE.meta.seed}); };
+  hud.querySelector('#hud-a11y').onclick  = function(){ copy(E.a11y(STATE)); };
+  hud.querySelector('#hud-state').onclick = function(){ copy(JSON.stringify(E.snapshot(STATE), null, 2)); };
+  hud.querySelector('#hud-traj').onclick  = function(){ copy(JSON.stringify(TRAJ, null, 2)); };
+  hud.querySelector('#hud-hide').onclick  = function(){ hud.classList.add('off'); };
+}
+function copy(t){ try { navigator.clipboard.writeText(t); } catch(e){} }
+document.addEventListener('keydown', function(e){
+  if (e.key === 'h') { hud.classList.toggle('off'); if (!hud.classList.contains('off')) paintHud(); }
+});
+
+var ENVAPI = {
+  ENV_ID: E.ENV_ID, VERSION: E.VERSION,
+  reset: function(opts){
+    opts = opts || {};
+    STATE = E.createInitialState(opts.seed || 0);
+    if (opts.patch) E.applyPatch(STATE, opts.patch);
+    TRAJ = []; paint();
+    return E.snapshot(STATE);
+  },
+  getState:   function(){ return E.snapshot(STATE); },
+  setState:   function(s){ STATE = JSON.parse(JSON.stringify(s)); paint(); return true; },
+  step:       function(a){ var r = E.step(STATE, a); STATE = r.state; TRAJ.push(a); paint();
+                           return {ok:r.ok, error:r.error || null}; },
+  dispatch:   function(act){ STATE = E.reduce(STATE, act); paint(); return true; },
+  a11y:       function(){ return E.a11y(STATE); },
+  elements:   function(){ return E.elements(STATE); },
+  route:      function(){ return E.select.route(STATE); },
+  trajectory: function(){ return JSON.parse(JSON.stringify(TRAJ)); },
+  bounds: function(){
+    var base = document.getElementById('screen').getBoundingClientRect(), out = {};
+    app.querySelectorAll('[data-testid]').forEach(function(el){
+      var r = el.getBoundingClientRect();
+      out[el.getAttribute('data-testid')] = {
+        x:Math.round(r.left-base.left), y:Math.round(r.top-base.top),
+        w:Math.round(r.width), h:Math.round(r.height),
+        cx:Math.round(r.left-base.left+r.width/2), cy:Math.round(r.top-base.top+r.height/2)};
+    });
+    return out;
+  }
+};
+window.__ENV__ = ENVAPI;
+var qs = new URLSearchParams(location.search);
+if (qs.get('bare') === '1') document.body.classList.add('bare');
+if (qs.get('hud')  === '1') hud.classList.remove('off');
+ENVAPI.reset({seed: parseInt(qs.get('seed') || '0', 10) || 0});
+window.__ENV_READY__ = true;
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+{
+  "id": "nightjar_clock",
+  "name": "时钟",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "viewport": {"width": 390, "height": 844},
+  "description": "一个单文件 H5「时钟」——手机自带的那个（界面为中文）。这里没有一个时间是存下来的：闹钟是一条规则（时刻 + 一组星期），屏幕上所有的数字都是从周四 22:47 这个冻住的墙上时钟往前推出来的下一次响铃，并且和别的闹钟排好序。关掉一个、给一个打开「跳过下一次」、把某个挪五分钟，整张表的次序和「还能睡多久」都跟着变。种子局里就埋着这个 app 在现实里最常见的坑：看着最早的 05:30 并不是先响的那个，因为它的跳过开着。世界时钟是真的时区运算——伦敦八月在夏令时所以是 UTC+1、新德里差的是两个半小时、悉尼已经翻到了明天。另有多个并发计时器和一份记好的秒表圈速。6 个界面，6 个闹钟，11 个城市。",
+  "tasks_file": "tasks.json",
+  "oracle_file": "oracle.json",
+  "action_space": {
+    "tap":    {"id": "test-id of the element"},
+    "type":   {"id": "test-id of a text field", "text": "replaces the whole value"},
+    "back":   {}, "home": {}, "wait": {},
+    "finish": {"answer": "final answer for question tasks; optional for action tasks"},
+    "tap_xy": {"x": "screen pixel x", "y": "screen pixel y", "note": "browser backend only"}
+  },
+  "observation": {
+    "text": "engine.a11y(state) — 每个闹钟都打印时刻、重复规则、下次响的星期与时间和是否跳过；时间选择器把 24 个小时格和 12 个分钟格逐个列出；世界时钟每行带时区和「今天/明天/昨天」。纯文本也能把整套推理做完。",
+    "pixels": "390x844 screenshot (browser backend); __ENV__.bounds() maps every test-id to a pixel box",
+    "state": "engine.snapshot(state) — canonical state 加上按闹钟名索引的 derived view。仅供校验器使用。"
+  },
+  "world": {
+    "clock": "周四 22:47（8月27日），冻住不走",
+    "week": "一周 10080 分钟，周一 00:00 为 0；所有时间都是整数分钟",
+    "next_fire": "对每个开着的闹钟，取它的重复星期里第一个晚于现在的时刻；「跳过下一次」则取第二个",
+    "seeded": "上班 06:40 工作日、早班 05:30 工作日（跳过下一次开着）、周末 07:15、跑步 06:00 关闭、吃药 22:00 每天、牙医 09:30 单次周日",
+    "trap": "下一个响的是 06:40 的上班而不是 05:30 的早班；把跳过取消后就只剩 6 小时 43 分钟可睡",
+    "timezones": "偏移相对上海（UTC+8）：伦敦 −7（BST）、巴黎 −6（CEST）、纽约 −12（EDT）、洛杉矶 −15（PDT）、新德里 −2:30、悉尼 +2、奥克兰 +4",
+    "timers": "泡面剩 1:12、烤箱剩 18:40（都在跑）、洗衣 45:00 未启动；秒表四圈，最快第 2 圈 9:58",
+    "bedtime": "23:30 → 06:40 共 7 小时 10 分，目标 8 小时；步进器一次十五分钟"
+  }
+}

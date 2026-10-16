@@ -1,0 +1,578 @@
+{
+  "env": "larkline_transit",
+  "note": "Golden action sequences replayed by CI.",
+  "solutions": {
+    "T01_settings": [
+      {
+        "action": "tap",
+        "id": "open_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_stepFreeOnly"
+      },
+      {
+        "action": "tap",
+        "id": "set_showCrowding"
+      }
+    ],
+    "T02_query_suspension": [
+      {
+        "action": "tap",
+        "id": "tab_alerts"
+      },
+      {
+        "action": "tap",
+        "id": "line_coral"
+      },
+      {
+        "action": "finish",
+        "answer": "The Coral line has no service between Cinder Street and Brindle Park."
+      }
+    ],
+    "T03_favourite": [
+      {
+        "action": "tap",
+        "id": "tab_alerts"
+      },
+      {
+        "action": "tap",
+        "id": "line_green"
+      },
+      {
+        "action": "tap",
+        "id": "als_wh"
+      },
+      {
+        "action": "tap",
+        "id": "fav_toggle"
+      }
+    ],
+    "T04_plan_direct": [
+      {
+        "action": "tap",
+        "id": "pick_to"
+      },
+      {
+        "action": "tap",
+        "id": "st_hn"
+      },
+      {
+        "action": "tap",
+        "id": "search_go"
+      },
+      {
+        "action": "tap",
+        "id": "opt_0"
+      }
+    ],
+    "T05_query_next": [
+      {
+        "action": "tap",
+        "id": "tab_live"
+      },
+      {
+        "action": "finish",
+        "answer": "14:31"
+      }
+    ],
+    "T06_time_stepper": [
+      {
+        "action": "tap",
+        "id": "time_inc"
+      },
+      {
+        "action": "tap",
+        "id": "time_inc"
+      },
+      {
+        "action": "tap",
+        "id": "time_inc"
+      },
+      {
+        "action": "tap",
+        "id": "time_inc"
+      },
+      {
+        "action": "tap",
+        "id": "time_inc"
+      },
+      {
+        "action": "tap",
+        "id": "time_inc"
+      },
+      {
+        "action": "tap",
+        "id": "time_inc"
+      },
+      {
+        "action": "tap",
+        "id": "pick_to"
+      },
+      {
+        "action": "tap",
+        "id": "st_wh"
+      },
+      {
+        "action": "tap",
+        "id": "search_go"
+      },
+      {
+        "action": "tap",
+        "id": "opt_0"
+      }
+    ],
+    "T07_arrive_by": [
+      {
+        "action": "tap",
+        "id": "pick_from"
+      },
+      {
+        "action": "tap",
+        "id": "st_mb"
+      },
+      {
+        "action": "tap",
+        "id": "pick_to"
+      },
+      {
+        "action": "tap",
+        "id": "st_hn"
+      },
+      {
+        "action": "tap",
+        "id": "mode_arrive"
+      },
+      {
+        "action": "tap",
+        "id": "time_inc"
+      },
+      {
+        "action": "tap",
+        "id": "time_inc"
+      },
+      {
+        "action": "tap",
+        "id": "time_inc"
+      },
+      {
+        "action": "tap",
+        "id": "time_inc"
+      },
+      {
+        "action": "tap",
+        "id": "time_inc"
+      },
+      {
+        "action": "tap",
+        "id": "time_inc"
+      },
+      {
+        "action": "tap",
+        "id": "time_inc"
+      },
+      {
+        "action": "tap",
+        "id": "time_inc"
+      },
+      {
+        "action": "tap",
+        "id": "time_inc"
+      },
+      {
+        "action": "tap",
+        "id": "time_inc"
+      },
+      {
+        "action": "tap",
+        "id": "time_inc"
+      },
+      {
+        "action": "tap",
+        "id": "time_inc"
+      },
+      {
+        "action": "tap",
+        "id": "time_inc"
+      },
+      {
+        "action": "tap",
+        "id": "search_go"
+      },
+      {
+        "action": "tap",
+        "id": "opt_0"
+      }
+    ],
+    "T08_step_free": [
+      {
+        "action": "tap",
+        "id": "pick_to"
+      },
+      {
+        "action": "tap",
+        "id": "st_fl"
+      },
+      {
+        "action": "tap",
+        "id": "search_go"
+      },
+      {
+        "action": "tap",
+        "id": "filter_stepfree"
+      },
+      {
+        "action": "tap",
+        "id": "sort_fastest"
+      },
+      {
+        "action": "tap",
+        "id": "opt_0"
+      }
+    ],
+    "T09_save": [
+      {
+        "action": "tap",
+        "id": "pick_from"
+      },
+      {
+        "action": "tap",
+        "id": "st_qy"
+      },
+      {
+        "action": "tap",
+        "id": "pick_to"
+      },
+      {
+        "action": "tap",
+        "id": "st_bp"
+      },
+      {
+        "action": "tap",
+        "id": "search_go"
+      },
+      {
+        "action": "tap",
+        "id": "results_save"
+      }
+    ],
+    "T10_delete_saved": [
+      {
+        "action": "tap",
+        "id": "del_sv_2"
+      },
+      {
+        "action": "tap",
+        "id": "saved_sv_1"
+      }
+    ],
+    "T11_buy_single": [
+      {
+        "action": "tap",
+        "id": "tab_wallet"
+      },
+      {
+        "action": "tap",
+        "id": "buy_open"
+      },
+      {
+        "action": "tap",
+        "id": "type_single"
+      },
+      {
+        "action": "tap",
+        "id": "zone_z12"
+      },
+      {
+        "action": "tap",
+        "id": "buy_now"
+      }
+    ],
+    "T12_buy_peak_day": [
+      {
+        "action": "tap",
+        "id": "tab_wallet"
+      },
+      {
+        "action": "tap",
+        "id": "buy_open"
+      },
+      {
+        "action": "tap",
+        "id": "type_day"
+      },
+      {
+        "action": "tap",
+        "id": "zone_z13"
+      },
+      {
+        "action": "tap",
+        "id": "peak_toggle"
+      },
+      {
+        "action": "tap",
+        "id": "buy_now"
+      }
+    ],
+    "T13_activate": [
+      {
+        "action": "tap",
+        "id": "tab_wallet"
+      },
+      {
+        "action": "tap",
+        "id": "buy_open"
+      },
+      {
+        "action": "tap",
+        "id": "zone_z1"
+      },
+      {
+        "action": "tap",
+        "id": "buy_now"
+      },
+      {
+        "action": "tap",
+        "id": "ticket_tk_2"
+      },
+      {
+        "action": "tap",
+        "id": "activate_ticket"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      }
+    ],
+    "T14_query_fare": [
+      {
+        "action": "tap",
+        "id": "tab_wallet"
+      },
+      {
+        "action": "tap",
+        "id": "buy_open"
+      },
+      {
+        "action": "tap",
+        "id": "type_return"
+      },
+      {
+        "action": "tap",
+        "id": "zone_z13"
+      },
+      {
+        "action": "finish",
+        "answer": "£7.20"
+      }
+    ],
+    "T15_flagship": [
+      {
+        "action": "tap",
+        "id": "pick_from"
+      },
+      {
+        "action": "tap",
+        "id": "st_mb"
+      },
+      {
+        "action": "tap",
+        "id": "pick_to"
+      },
+      {
+        "action": "tap",
+        "id": "st_hn"
+      },
+      {
+        "action": "tap",
+        "id": "mode_arrive"
+      },
+      {
+        "action": "tap",
+        "id": "time_inc"
+      },
+      {
+        "action": "tap",
+        "id": "time_inc"
+      },
+      {
+        "action": "tap",
+        "id": "time_inc"
+      },
+      {
+        "action": "tap",
+        "id": "time_inc"
+      },
+      {
+        "action": "tap",
+        "id": "time_inc"
+      },
+      {
+        "action": "tap",
+        "id": "time_inc"
+      },
+      {
+        "action": "tap",
+        "id": "time_inc"
+      },
+      {
+        "action": "tap",
+        "id": "time_inc"
+      },
+      {
+        "action": "tap",
+        "id": "time_inc"
+      },
+      {
+        "action": "tap",
+        "id": "time_inc"
+      },
+      {
+        "action": "tap",
+        "id": "time_inc"
+      },
+      {
+        "action": "tap",
+        "id": "time_inc"
+      },
+      {
+        "action": "tap",
+        "id": "time_inc"
+      },
+      {
+        "action": "tap",
+        "id": "search_go"
+      },
+      {
+        "action": "tap",
+        "id": "filter_stepfree"
+      },
+      {
+        "action": "tap",
+        "id": "opt_0"
+      },
+      {
+        "action": "tap",
+        "id": "save_journey"
+      },
+      {
+        "action": "tap",
+        "id": "buy_for_journey"
+      },
+      {
+        "action": "tap",
+        "id": "buy_now"
+      }
+    ],
+    "T16_query_platform": [
+      {
+        "action": "tap",
+        "id": "tab_live"
+      },
+      {
+        "action": "tap",
+        "id": "board_pick"
+      },
+      {
+        "action": "tap",
+        "id": "st_mb"
+      },
+      {
+        "action": "finish",
+        "answer": "Platform 3"
+      }
+    ],
+    "T17_swap": [
+      {
+        "action": "tap",
+        "id": "pick_to"
+      },
+      {
+        "action": "tap",
+        "id": "st_hn"
+      },
+      {
+        "action": "tap",
+        "id": "swap_ends"
+      },
+      {
+        "action": "tap",
+        "id": "search_go"
+      },
+      {
+        "action": "tap",
+        "id": "opt_0"
+      }
+    ],
+    "T18_station_page": [
+      {
+        "action": "tap",
+        "id": "tab_alerts"
+      },
+      {
+        "action": "tap",
+        "id": "line_coral"
+      },
+      {
+        "action": "tap",
+        "id": "als_cs"
+      },
+      {
+        "action": "tap",
+        "id": "st_from"
+      },
+      {
+        "action": "tap",
+        "id": "pick_to"
+      },
+      {
+        "action": "tap",
+        "id": "st_qy"
+      },
+      {
+        "action": "tap",
+        "id": "search_go"
+      }
+    ],
+    "T19_any_day_ticket": [
+      {
+        "action": "tap",
+        "id": "tab_wallet"
+      },
+      {
+        "action": "tap",
+        "id": "buy_open"
+      },
+      {
+        "action": "tap",
+        "id": "type_day"
+      },
+      {
+        "action": "tap",
+        "id": "zone_z13"
+      },
+      {
+        "action": "tap",
+        "id": "buy_now"
+      }
+    ],
+    "T20_saved_to_board": [
+      {
+        "action": "tap",
+        "id": "saved_sv_1"
+      },
+      {
+        "action": "tap",
+        "id": "opt_0"
+      },
+      {
+        "action": "tap",
+        "id": "journey_board"
+      },
+      {
+        "action": "finish",
+        "answer": "Platform 1"
+      }
+    ]
+  }
+}

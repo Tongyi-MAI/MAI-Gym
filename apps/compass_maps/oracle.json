@@ -1,0 +1,310 @@
+{
+  "env": "compass_maps",
+  "note": "Golden action sequences replayed by CI.",
+  "solutions": {
+    "T01_settings": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_showTraffic"
+      },
+      {
+        "action": "tap",
+        "id": "set_keepLeft"
+      }
+    ],
+    "T02_eta": [
+      {
+        "action": "finish",
+        "answer": "52 minutes, arriving 08:52."
+      }
+    ],
+    "T03_fastest_now": [
+      {
+        "action": "finish",
+        "answer": "The ring road, at 47 minutes — even though it is the longest."
+      }
+    ],
+    "T04_town": [
+      {
+        "action": "finish",
+        "answer": "67 minutes — the shortest road and the slowest journey."
+      }
+    ],
+    "T05_multiplier": [
+      {
+        "action": "tap",
+        "id": "tab_depart"
+      },
+      {
+        "action": "finish",
+        "answer": "×2.15 at 08:00 and ×1.15 at 11:00."
+      }
+    ],
+    "T06_tolls": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_avoidTolls"
+      },
+      {
+        "action": "finish",
+        "answer": "It moved me onto «Through town», which takes 67 minutes at 08:00 — arriving 09:07, seven minutes late."
+      }
+    ],
+    "T07_pick_fastest": [
+      {
+        "action": "tap",
+        "id": "fastest"
+      }
+    ],
+    "T08_eleven": [
+      {
+        "action": "tap",
+        "id": "tab_depart"
+      },
+      {
+        "action": "tap",
+        "id": "dep_660"
+      },
+      {
+        "action": "finish",
+        "answer": "The A38 motorway, 28 minutes — at eleven the ring road is the slowest of the three."
+      }
+    ],
+    "T09_flip": [
+      {
+        "action": "tap",
+        "id": "tab_depart"
+      },
+      {
+        "action": "finish",
+        "answer": "At 08:00 the ring road wins, 47 against the motorway's 52. At 09:00 the motorway wins, 42 against the ring road's 43."
+      }
+    ],
+    "T10_transit": [
+      {
+        "action": "tap",
+        "id": "md_transit"
+      },
+      {
+        "action": "finish",
+        "answer": "Yes — 45 minutes including a four-minute wait, arriving 08:45. The best drive is 47."
+      }
+    ],
+    "T11_leave_by": [
+      {
+        "action": "tap",
+        "id": "tab_depart"
+      },
+      {
+        "action": "tap",
+        "id": "leave_by"
+      },
+      {
+        "action": "finish",
+        "answer": "08:10, on the ring road."
+      }
+    ],
+    "T12_bike": [
+      {
+        "action": "tap",
+        "id": "md_bike"
+      },
+      {
+        "action": "finish",
+        "answer": "53 minutes and £3.00 for the hire — and it is 53 minutes whatever the hour."
+      }
+    ],
+    "T13_park": [
+      {
+        "action": "tap",
+        "id": "tab_modes"
+      },
+      {
+        "action": "tap",
+        "id": "park_dec"
+      },
+      {
+        "action": "tap",
+        "id": "park_dec"
+      },
+      {
+        "action": "tap",
+        "id": "park_dec"
+      },
+      {
+        "action": "tap",
+        "id": "park_dec"
+      },
+      {
+        "action": "tap",
+        "id": "park_dec"
+      },
+      {
+        "action": "tap",
+        "id": "park_dec"
+      },
+      {
+        "action": "finish",
+        "answer": "£42.04 — £25 toll, £13.44 of fuel and £3.60 for two hours of parking with the first half hour free."
+      }
+    ],
+    "T14_cheapest_drive": [
+      {
+        "action": "tap",
+        "id": "tab_modes"
+      },
+      {
+        "action": "finish",
+        "answer": "Through town at £22.86 — no toll and the least fuel. It is also the slowest."
+      }
+    ],
+    "T15_half_eight": [
+      {
+        "action": "tap",
+        "id": "tab_depart"
+      },
+      {
+        "action": "tap",
+        "id": "arrive_dec"
+      },
+      {
+        "action": "tap",
+        "id": "arrive_dec"
+      },
+      {
+        "action": "tap",
+        "id": "leave_by"
+      },
+      {
+        "action": "finish",
+        "answer": "07:50, on the motorway, arriving exactly 08:30. Subtracting the 47-minute figure from 08:30 gives 07:43, but a 07:00-hour departure only takes 40 minutes — the journey time you look up depends on the hour you set off in, which is the thing you were solving for."
+      }
+    ],
+    "T16_cheapest_ontime": [
+      {
+        "action": "tap",
+        "id": "md_bike"
+      },
+      {
+        "action": "finish",
+        "answer": "Cycling, £3.00 for the hire, arriving 08:53. Walking is free but takes two hours fifty — it does not get there until 10:50."
+      }
+    ],
+    "T17_bus_wait": [
+      {
+        "action": "tap",
+        "id": "md_transit"
+      },
+      {
+        "action": "tap",
+        "id": "tab_depart"
+      },
+      {
+        "action": "tap",
+        "id": "dep_p1"
+      },
+      {
+        "action": "tap",
+        "id": "dep_p1"
+      },
+      {
+        "action": "tap",
+        "id": "dep_p1"
+      },
+      {
+        "action": "tap",
+        "id": "dep_p1"
+      },
+      {
+        "action": "finish",
+        "answer": "Because the bus leaves at :04 and every twelve minutes after. Setting off at 08:00 means four minutes standing at the stop; setting off at 08:04 means none. Same bus, same arrival at 08:45."
+      }
+    ],
+    "T18_no_tolls_ontime": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_avoidTolls"
+      },
+      {
+        "action": "tap",
+        "id": "tab_depart"
+      },
+      {
+        "action": "tap",
+        "id": "leave_by"
+      },
+      {
+        "action": "finish",
+        "answer": "07:55 — through town takes 45 minutes in the seven o'clock hour, arriving 08:40. Five minutes later and it becomes a 67-minute journey."
+      }
+    ],
+    "T19_worst_hour": [
+      {
+        "action": "tap",
+        "id": "tab_depart"
+      },
+      {
+        "action": "tap",
+        "id": "dep_480"
+      },
+      {
+        "action": "finish",
+        "answer": "08:00 — even taking the best of the three roads it is 47 minutes. Every other slot on the strip is quicker."
+      }
+    ],
+    "T20_full_plan": [
+      {
+        "action": "tap",
+        "id": "md_bike"
+      },
+      {
+        "action": "tap",
+        "id": "tab_modes"
+      },
+      {
+        "action": "tap",
+        "id": "park_dec"
+      },
+      {
+        "action": "tap",
+        "id": "park_dec"
+      },
+      {
+        "action": "tap",
+        "id": "park_dec"
+      },
+      {
+        "action": "tap",
+        "id": "park_dec"
+      },
+      {
+        "action": "tap",
+        "id": "tab_depart"
+      },
+      {
+        "action": "tap",
+        "id": "arrive_dec"
+      },
+      {
+        "action": "tap",
+        "id": "leave_by"
+      },
+      {
+        "action": "finish",
+        "answer": "Cycle, £3.00 for the hire. It takes 53 minutes whatever the traffic, so leaving by 07:50 gets me in at 08:43. Parking never enters into it."
+      }
+    ]
+  }
+}

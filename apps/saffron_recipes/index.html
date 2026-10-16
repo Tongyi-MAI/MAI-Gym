@@ -1,0 +1,1596 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Saffron (mocked GUI env)</title>
+<!--
+  ============================================================================
+  Saffron — a single-file H5 recipe and shopping app for agent research.
+
+  Same two-block contract as every environment here: script#engine is a pure,
+  DOM-free state machine on globalThis.GUI_ENGINE; script#ui renders its screen
+  tree and exposes window.__ENV__.
+
+  What is new: quantities that move. Every ingredient is written for a base
+  number of servings, and changing the servings rescales all of them —
+  rounding to whole grams, quarter spoons and half onions, because half a
+  clove of garlic is a real thing and half a gram of it is not. The shopping
+  list is where that arithmetic becomes visible: add two recipes that both
+  want onions and you get one line with the total, not two lines to add up in
+  your head. Turn pantry staples off and the salt and the olive oil stop
+  appearing at all.
+
+  Everything is an integer in thousandths of the display unit, so 1.5 tbsp is
+  1500 and two recipes' worth of it is exactly 3000.
+  ============================================================================
+-->
+<style>
+:root{
+  --bg:#fbf7f0; --card:#fff; --line:#ece4d8; --line2:#ddd2c1;
+  --ink:#241d16; --ink2:#6b5f52; --muted:#9c9082;
+  --accent:#1f6f4a; --accent-d:#175537; --accent-s:#e7f2ea;
+  --hot:#c2562a; --warm:#e0a02a; --bad:#b3402f;
+  --r:18px; --r2:12px;
+  --shadow:0 1px 2px rgba(36,29,22,.05),0 10px 26px rgba(36,29,22,.07);
+  --disp:Georgia,"Times New Roman",serif;
+  --ui:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;height:100%}
+body{background:#e9e0d2;color:var(--ink);
+  font:14px/1.55 var(--ui);display:flex;align-items:center;justify-content:center;overflow:hidden}
+
+#device{position:relative;width:390px;height:844px;background:#1a140e;border-radius:46px;padding:5px;
+  box-shadow:0 30px 70px rgba(26,20,14,.4);flex:0 0 auto}
+#screen{position:relative;width:100%;height:100%;background:var(--bg);border-radius:41px;
+  overflow:hidden;display:flex;flex-direction:column}
+#notch{position:absolute;top:5px;left:50%;transform:translateX(-50%);width:118px;height:30px;
+  background:#1a140e;border-radius:0 0 18px 18px;z-index:60}
+body.bare{background:var(--bg)}
+body.bare #device{width:390px;height:844px;padding:0;border-radius:0;box-shadow:none;background:var(--bg)}
+body.bare #screen{border-radius:0}
+body.bare #notch{display:none}
+body.bare .n-sheet{animation:none}
+
+.statusbar{height:44px;flex:0 0 44px;display:flex;align-items:flex-end;justify-content:space-between;
+  padding:0 22px 6px;font-size:13px;font-weight:600;z-index:50}
+.statusbar .sb-r{display:flex;gap:5px;align-items:center}
+.sb-bat{width:22px;height:11px;border:1.3px solid currentColor;border-radius:3px;position:relative;opacity:.9}
+.sb-bat:after{content:"";position:absolute;right:-3px;top:3px;width:2px;height:5px;background:currentColor;border-radius:0 1px 1px 0}
+.sb-bat i{position:absolute;left:1.3px;top:1.3px;bottom:1.3px;width:78%;background:currentColor;border-radius:1px}
+
+#app{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;position:relative}
+
+.n-appbar{flex:0 0 auto;min-height:52px;display:flex;align-items:center;gap:8px;padding:6px 12px;
+  background:var(--bg);z-index:20}
+.n-appbar .ab-title{flex:1 1 auto;text-align:center;font:600 19px/1.3 var(--disp);letter-spacing:.2px}
+.n-appbar .ab-side{flex:0 0 auto;min-width:56px;display:flex;align-items:center;gap:4px}
+.n-appbar .ab-side.right{justify-content:flex-end}
+.iconbtn{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  color:var(--ink2);cursor:pointer}
+.iconbtn:active{background:#f0e9de}
+
+.n-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding-bottom:10px}
+.n-scroll::-webkit-scrollbar{width:0}
+
+.n-text{padding:2px 18px;color:var(--ink2)}
+.n-text.h1{font:600 27px/1.2 var(--disp);color:var(--ink);padding:10px 18px 6px;letter-spacing:.2px}
+.n-text.body{font-size:14px;padding:6px 18px;line-height:1.7}
+.n-text.muted{font-size:12.5px;color:var(--muted);padding:6px 18px;line-height:1.6}
+.n-text.empty{padding:14px 18px 40px;text-align:center;color:var(--muted);font-size:13.5px}
+.n-text.lede{font:400 15px/1.7 var(--disp);color:var(--ink2);padding:4px 18px 8px}
+.n-sec{padding:18px 18px 6px;font:700 11.5px/1 var(--ui);color:var(--muted);letter-spacing:1.3px;
+  text-transform:uppercase;display:flex;justify-content:space-between;align-items:center}
+.n-space{height:16px}
+
+.n-card{background:var(--card);border-radius:var(--r);margin:9px 16px;overflow:hidden;border:1px solid var(--line)}
+.n-card.flush{padding:0}
+.n-card.tap{cursor:pointer}
+.n-card.tap:active{background:#faf6ef}
+
+.n-row{display:flex;align-items:center;gap:13px;padding:12px 16px;border-bottom:1px solid var(--line);min-height:52px}
+.n-row:last-child{border-bottom:none}
+.n-row.tap{cursor:pointer}
+.n-row.tap:active{background:#faf6ef}
+.n-row .r-lead{flex:0 0 auto;width:26px;color:var(--ink2);display:flex;align-items:center;justify-content:center}
+.n-row .r-main{flex:1 1 auto;min-width:0}
+.n-row .r-label{font-size:14.5px}
+.n-row .r-label.strike{text-decoration:line-through;color:var(--muted)}
+.n-row .r-sub{font-size:12px;color:var(--muted);margin-top:3px}
+.n-row .r-value{flex:0 0 auto;font-size:14px;color:var(--ink2);text-align:right;font-variant-numeric:tabular-nums}
+.n-row .r-value.strong{color:var(--ink);font-weight:700}
+.n-row .r-value.acc{color:var(--accent);font-weight:700}
+.n-row .r-arrow{flex:0 0 auto;color:#c9bfb1;display:flex}
+
+.n-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:47px;padding:0 20px;
+  border-radius:13px;font:650 15px/1 var(--ui);background:#f1eae0;color:var(--ink);
+  border:none;cursor:pointer;user-select:none}
+.n-btn:active{filter:brightness(.97)}
+.n-btn.primary{background:var(--accent);color:#fff}
+.n-btn.primary.off{background:#b9c9bf;cursor:not-allowed}
+.n-btn.hot{background:var(--hot);color:#fff}
+.n-btn.ghost{background:transparent;border:1px solid var(--line2);height:37px;font-size:13px;padding:0 14px;color:var(--ink2)}
+.n-btn.danger{background:transparent;border:1px solid #e6c4bc;color:var(--bad);height:37px;font-size:13px;padding:0 14px}
+.n-btn.block{display:flex;width:100%}
+.n-btnrow{display:flex;gap:10px;padding:12px 16px;justify-content:flex-end;align-items:center}
+
+.n-chips{display:flex;gap:8px;padding:8px 16px;overflow-x:auto}
+.n-chips::-webkit-scrollbar{height:0}
+.n-chip{flex:0 0 auto;height:34px;padding:0 14px;border-radius:18px;background:var(--card);
+  border:1px solid var(--line2);display:flex;align-items:center;font-size:13px;
+  color:var(--ink2);cursor:pointer;white-space:nowrap;font-weight:600}
+.n-chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+
+.n-input{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line);background:var(--card)}
+.n-input .i-label{flex:0 0 66px;font-size:13px;color:var(--muted)}
+.n-input input{flex:1 1 auto;border:none;outline:none;background:transparent;font-size:14.5px;
+  font-family:inherit;color:var(--ink);min-width:0}
+.n-input input::placeholder{color:var(--muted)}
+.n-switch{flex:0 0 auto;width:46px;height:27px;border-radius:14px;background:#d8cec0;position:relative;cursor:pointer;transition:background .16s}
+.n-switch.on{background:var(--accent)}
+.n-switch i{position:absolute;top:2.5px;left:2.5px;width:22px;height:22px;border-radius:50%;background:#fff;
+  transition:transform .16s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.n-switch.on i{transform:translateX(19px)}
+.n-check{flex:0 0 auto;width:24px;height:24px;border-radius:50%;border:1.8px solid #cfc4b4;position:relative;background:#fff}
+.n-check.on{border-color:var(--accent);background:var(--accent)}
+.n-check.on:after{content:"";position:absolute;left:8px;top:4.5px;width:5px;height:10px;
+  border:2px solid #fff;border-top:0;border-left:0;transform:rotate(42deg)}
+.n-radio{flex:0 0 auto;width:22px;height:22px;border-radius:50%;border:1.8px solid #cfc4b4;position:relative}
+.n-radio.on{border-color:var(--accent);background:var(--accent)}
+.n-radio.on:after{content:"";position:absolute;left:7px;top:4px;width:5px;height:9px;
+  border:2px solid #fff;border-top:0;border-left:0;transform:rotate(42deg)}
+
+/* ---------------- recipe cards & plates ---------------- */
+.plate{display:block;border-radius:var(--r);overflow:hidden;background:#f3ece1}
+.rcard{margin:10px 16px;border-radius:var(--r);overflow:hidden;background:var(--card);border:1px solid var(--line);
+  cursor:pointer;box-shadow:var(--shadow)}
+.rcard:active{filter:brightness(.99)}
+.rcard .rc-b{padding:14px 16px 15px}
+.rcard .rc-t{font:600 19px/1.25 var(--disp)}
+.rcard .rc-s{font-size:12.5px;color:var(--muted);margin-top:6px}
+.rcard .rc-m{display:flex;gap:7px;margin-top:11px;flex-wrap:wrap}
+
+.hero{margin:8px 16px 4px;border-radius:var(--r);overflow:hidden;background:var(--card);
+  border:1px solid var(--line);cursor:pointer;box-shadow:var(--shadow)}
+.hero .hr-b{padding:16px 18px 18px}
+.hero .hr-k{font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:var(--hot);font-weight:800}
+.hero .hr-t{font:600 25px/1.2 var(--disp);margin-top:8px}
+.hero .hr-s{font-size:13px;color:var(--ink2);margin-top:8px;line-height:1.6}
+
+.tag{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;
+  font-weight:700;background:#f2ece2;color:var(--ink2)}
+.tag.acc{background:var(--accent-s);color:var(--accent)}
+.tag.hot{background:#fbe9e0;color:var(--hot)}
+.tag.warm{background:#fbf1dc;color:#94690f}
+
+.servbar{display:flex;align-items:center;gap:12px;margin:10px 16px;padding:12px 14px;background:var(--card);
+  border:1px solid var(--line);border-radius:var(--r2)}
+.servbar .sv-l{flex:1 1 auto;font-size:13px;color:var(--ink2)}
+.servbar .sv-v{font:700 20px/1 var(--ui);font-variant-numeric:tabular-nums;min-width:56px;text-align:center}
+.servbar .sv-b{width:36px;height:36px;border-radius:11px;background:#f1eae0;color:var(--ink);display:flex;
+  align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto}
+.servbar .sv-b:active{background:#e6ddd0}
+
+.ing{display:flex;align-items:baseline;gap:12px;padding:11px 16px;border-bottom:1px solid var(--line);cursor:pointer}
+.ing:last-child{border-bottom:none}
+.ing:active{background:#faf6ef}
+.ing .ig-q{flex:0 0 86px;font:700 14px/1.4 var(--ui);font-variant-numeric:tabular-nums;color:var(--accent)}
+.ing .ig-n{flex:1 1 auto;font-size:14.5px}
+.ing .ig-s{font-size:11.5px;color:var(--muted);margin-top:2px}
+.ing.staple .ig-q{color:var(--muted)}
+
+.stepr{display:flex;gap:14px;padding:13px 16px;border-bottom:1px solid var(--line);cursor:pointer}
+.stepr:last-child{border-bottom:none}
+.stepr .sp-n{flex:0 0 28px;height:28px;border-radius:50%;background:var(--accent-s);color:var(--accent);
+  display:flex;align-items:center;justify-content:center;font:800 12.5px/1 var(--ui)}
+.stepr .sp-t{flex:1 1 auto;font-size:14px;line-height:1.6}
+.stepr .sp-m{font-size:11.5px;color:var(--hot);font-weight:700;margin-top:5px}
+
+.cook{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;padding:0 20px}
+.cook .ck-k{font-size:11.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);font-weight:800;
+  padding:8px 0}
+.cook .ck-t{font:400 23px/1.5 var(--disp);flex:1 1 auto;overflow-y:auto;padding-top:10px}
+.cook .ck-t::-webkit-scrollbar{width:0}
+.cook .ck-p{display:flex;gap:5px;padding:14px 0}
+.cook .ck-p i{flex:1 1 0;height:4px;border-radius:2px;background:#e4dacb}
+.cook .ck-p i.on{background:var(--accent)}
+
+.aisle{font:700 11px/1 var(--ui);letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);
+  padding:14px 18px 4px}
+
+.n-tabbar{flex:0 0 auto;height:58px;background:var(--card);border-top:1px solid var(--line);display:flex;z-index:30}
+.n-tabbar .tb{flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  color:var(--muted);font-size:10.5px;cursor:pointer;font-weight:600}
+.n-tabbar .tb i{display:flex}
+.n-tabbar .tb.on{color:var(--accent)}
+
+.n-mask{position:absolute;inset:0;background:rgba(26,20,14,.44);z-index:70;display:flex;align-items:flex-end}
+.n-sheet{width:100%;max-height:80%;background:var(--card);border-radius:22px 22px 0 0;display:flex;
+  flex-direction:column;overflow:hidden;animation:up .18s ease-out}
+@keyframes up{from{transform:translateY(24px)}to{transform:none}}
+.n-sheet .sh-hd{padding:16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
+.n-sheet .sh-hd .t{font:600 18px/1.2 var(--disp)}
+.n-sheet .sh-bd{flex:1 1 auto;overflow-y:auto;min-height:0}
+.n-sheet .sh-bd::-webkit-scrollbar{width:0}
+.n-toast{position:absolute;left:50%;bottom:118px;transform:translateX(-50%);background:#241d16;color:#fff;
+  padding:11px 18px;border-radius:11px;font-size:13px;z-index:90;max-width:84%;text-align:center}
+.dialog{margin:auto;width:82%;background:#fff;border-radius:18px;overflow:hidden}
+
+#hud{position:fixed;top:14px;left:14px;width:310px;max-height:calc(100% - 28px);overflow:auto;
+  background:#241d16;color:#e6ded2;border-radius:12px;padding:12px;
+  font:11.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;z-index:200;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+#hud h4{margin:0 0 8px;font-size:12px;color:#fff}
+#hud .k{color:#a08f7c}
+#hud pre{margin:6px 0 0;white-space:pre-wrap;word-break:break-word;color:#8fd6ae;max-height:250px;overflow:auto}
+#hud button{background:#3a2f24;border:none;color:#e6ded2;border-radius:6px;padding:5px 9px;margin:2px 4px 2px 0;font:inherit;cursor:pointer}
+#hud.off{display:none}
+</style>
+</head>
+<body>
+<div id="device">
+  <div id="notch"></div>
+  <div id="screen">
+    <div class="statusbar" id="sb">
+      <div id="sb-clock">17:05</div>
+      <div class="sb-r">
+        <svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="4.6" y="5.5" width="3" height="6.5" rx="1"/><rect x="9.2" y="3" width="3" height="9" rx="1"/><rect x="13.8" y="0" width="3" height="12" rx="1"/></svg>
+        <svg width="15" height="12" viewBox="0 0 15 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 4.2a9 9 0 0 1 13 0"/><path d="M3.4 6.9a5.6 5.6 0 0 1 8.2 0"/><circle cx="7.5" cy="10" r=".9" fill="currentColor" stroke="none"/></svg>
+        <span class="sb-bat"><i></i></span>
+      </div>
+    </div>
+    <div id="app"></div>
+  </div>
+</div>
+<div id="hud" class="off"></div>
+
+<script id="engine">
+/* ===========================================================================
+ * ENGINE — pure, deterministic, DOM-free.
+ *
+ * Every quantity is an integer in thousandths of its display unit: 1.5 tbsp
+ * is 1500 and two lots of it are exactly 3000. Scaling a recipe multiplies
+ * by servings, divides by the base, and snaps to something you can actually
+ * measure — whole grams, quarter spoons, half onions.
+ * ======================================================================== */
+(function(root){
+'use strict';
+
+var ENV_ID  = 'saffron_recipes';
+var VERSION = '1.0.0';
+var CLOCK0  = 1025;                    /* 17:05 */
+var K = 1000;                          /* one whole unit */
+
+/* ------------------------------------------------------------- utilities */
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+function pad2(n){ return (n < 10 ? '0' : '') + n; }
+function hhmm(m){ m = ((m % 1440) + 1440) % 1440; return pad2(Math.floor(m/60)) + ':' + pad2(m%60); }
+function sum(a){ var s = 0; for (var i=0;i<a.length;i++) s += a[i]; return s; }
+function lcg(seed){ var s=(seed>>>0)||1; return function(){ s=(s*1664525+1013904223)>>>0; return s/4294967296; }; }
+function shuffled(list, seed){
+  if (!seed) return list.slice();
+  var r = lcg(seed), a = list.slice();
+  for (var i=a.length-1;i>0;i--){ var j = Math.floor(r()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; }
+  return a;
+}
+function getPath(o, path){
+  var cur = o, parts = String(path).split('.');
+  for (var i=0;i<parts.length;i++){
+    var k = parts[i], m = k.match(/^(.*?)\[(\d+)\]$/);
+    if (m){ cur = cur ? cur[m[1]] : undefined; cur = cur ? cur[+m[2]] : undefined; }
+    else cur = cur ? cur[k] : undefined;
+    if (cur === undefined) return undefined;
+  }
+  return cur;
+}
+function setPath(o, path, value){
+  var parts = String(path).split('.'), cur = o;
+  for (var i=0;i<parts.length-1;i++){
+    var k = parts[i], m = k.match(/^(.*?)\[(\d+)\]$/);
+    cur = m ? cur[m[1]][+m[2]] : (cur[k] = cur[k] || {});
+  }
+  var lastK = parts[parts.length-1], lm = lastK.match(/^(.*?)\[(\d+)\]$/);
+  if (lm) cur[lm[1]][+lm[2]] = value; else cur[lastK] = value;
+  return o;
+}
+
+/* ----------------------------------------------------------- quantities */
+var UNITS = {
+  g:     {label:'g',      snap:1000, space:''},
+  ml:    {label:'ml',     snap:1000, space:''},
+  tbsp:  {label:'tbsp',   snap:250,  space:' '},
+  tsp:   {label:'tsp',    snap:250,  space:' '},
+  item:  {label:'',       snap:500,  space:''},
+  clove: {label:'cloves', snap:500,  space:' '},
+  pinch: {label:'pinch',  snap:1000, space:' '}
+};
+function unitOf(u){ return UNITS[u] || UNITS.g; }
+/* a quantity you can actually measure: whole grams, quarter spoons, half onions */
+function snapQty(q, unit){
+  var s = unitOf(unit).snap;
+  var v = Math.round(q / s) * s;
+  return v < s ? s : v;
+}
+function scaleQty(q, servings, base, unit){
+  return snapQty(q * servings / base, unit);
+}
+function fmtNumber(q){
+  var whole = Math.floor(q / K), rest = q % K;
+  if (rest === 0) return String(whole);
+  if (rest === 500) return whole ? whole + '.5' : '0.5';
+  if (rest === 250) return whole ? whole + '.25' : '0.25';
+  if (rest === 750) return whole ? whole + '.75' : '0.75';
+  return String(Math.round(q / 10) / 100).replace(/\.0+$/, '');
+}
+function fmtQty(q, unit){
+  var u = unitOf(unit);
+  return fmtNumber(q) + u.space + u.label;
+}
+
+/* ===========================================================================
+ * THE LARDER
+ * ======================================================================== */
+var AISLES = [
+  {id:'produce', label:'Fruit and veg'},
+  {id:'meat',    label:'Meat and fish'},
+  {id:'dairy',   label:'Dairy and eggs'},
+  {id:'pantry',  label:'Cupboard'},
+  {id:'spices',  label:'Herbs and spices'},
+  {id:'bakery',  label:'Baking'}
+];
+function ING(id, name, aisle, unit, staple){
+  return {id:id, name:name, aisle:aisle, unit:unit, staple:!!staple};
+}
+var INGREDIENTS = [
+  ING('i_onion','Onion','produce','item'),
+  ING('i_garlic','Garlic','produce','clove'),
+  ING('i_carrot','Carrot','produce','item'),
+  ING('i_celery','Celery stick','produce','item'),
+  ING('i_ginger','Ginger','produce','g'),
+  ING('i_basil','Basil','produce','g'),
+  ING('i_spinach','Spinach','produce','g'),
+  ING('i_mushroom','Chestnut mushrooms','produce','g'),
+  ING('i_potato','Potatoes','produce','g'),
+  ING('i_apple','Bramley apples','produce','item'),
+  ING('i_lemon','Lemon','produce','item'),
+  ING('i_mince','Beef mince','meat','g'),
+  ING('i_pancetta','Pancetta','meat','g'),
+  ING('i_egg','Eggs','dairy','item'),
+  ING('i_milk','Whole milk','dairy','ml'),
+  ING('i_butter','Butter','dairy','g'),
+  ING('i_parmesan','Parmesan','dairy','g'),
+  ING('i_yoghurt','Natural yoghurt','dairy','g'),
+  ING('i_tomato','Chopped tomatoes','pantry','g'),
+  ING('i_lentil','Red lentils','pantry','g'),
+  ING('i_chickpea','Chickpeas','pantry','g'),
+  ING('i_coconut','Coconut milk','pantry','ml'),
+  ING('i_pasta','Pasta','pantry','g'),
+  ING('i_rice','Short grain rice','pantry','g'),
+  ING('i_stock','Vegetable stock','pantry','ml'),
+  ING('i_apricot','Dried apricots','pantry','g'),
+  ING('i_pinenut','Pine nuts','pantry','g'),
+  ING('i_gochujang','Gochujang','pantry','tbsp'),
+  ING('i_soy','Soy sauce','pantry','tbsp'),
+  ING('i_oil','Olive oil','pantry','tbsp', true),
+  ING('i_flour','Plain flour','bakery','g'),
+  ING('i_sugar','Caster sugar','bakery','g'),
+  ING('i_oats','Rolled oats','bakery','g'),
+  ING('i_turmeric','Turmeric','spices','tsp'),
+  ING('i_cumin','Cumin seeds','spices','tsp'),
+  ING('i_ras','Ras el hanout','spices','tsp'),
+  ING('i_cinnamon','Cinnamon','spices','tsp'),
+  ING('i_salt','Salt','spices','tsp', true),
+  ING('i_pepper','Black pepper','spices','tsp', true)
+];
+function ingredient(id){
+  for (var i=0;i<INGREDIENTS.length;i++) if (INGREDIENTS[i].id === id) return INGREDIENTS[i];
+  return null;
+}
+function ingName(id){ var i = ingredient(id); return i ? i.name : '?'; }
+function aisleLabel(id){ for (var i=0;i<AISLES.length;i++) if (AISLES[i].id === id) return AISLES[i].label; return id; }
+
+function Q(ing, qty, note){ return {ing:ing, qty:qty, note:note || ''}; }
+function ST(text, mins){ return {text:text, mins:mins || 0}; }
+
+var RECIPES = [
+  {id:'r_ragu', name:'Sunday ragu', cuisine:'Italian', base:4, minutes:180, level:'Patient',
+   tags:['batch'], palette:['#8d3b2a','#c96a3f','#e8d3a9'],
+   blurb:'Three hours of very little effort and one very good sauce.',
+   ings:[Q('i_onion', 1000), Q('i_carrot', 1000), Q('i_celery', 2000),
+         Q('i_garlic', 3000), Q('i_pancetta', 100000), Q('i_mince', 500000),
+         Q('i_tomato', 800000), Q('i_milk', 200000), Q('i_oil', 2000),
+         Q('i_salt', 1000), Q('i_pepper', 1000)],
+   steps:[ST('Chop the onion, carrot and celery as small as your patience allows.'),
+          ST('Sweat them in the oil with a good pinch of salt until soft and sweet.', 15),
+          ST('Turn the heat up, add the pancetta and then the mince, and brown it properly.', 10),
+          ST('Pour in the milk and let it disappear, then add the tomatoes.', 20),
+          ST('Barely a bubble, lid ajar, for two and a half hours.', 150),
+          ST('Taste, salt, pepper, and stop.')]},
+  {id:'r_dal', name:'Red lentil dal', cuisine:'Indian', base:4, minutes:35, level:'Easy',
+   tags:['quick','vegan','gf'], palette:['#c98a1f','#e8b64a','#7d5a1c'],
+   blurb:'The thirty-five minute answer to almost any evening.',
+   ings:[Q('i_lentil', 300000), Q('i_onion', 1000), Q('i_garlic', 3000),
+         Q('i_ginger', 20000), Q('i_turmeric', 1000), Q('i_cumin', 2000),
+         Q('i_coconut', 400000), Q('i_stock', 500000), Q('i_spinach', 100000),
+         Q('i_oil', 1000), Q('i_salt', 1000)],
+   steps:[ST('Rinse the lentils until the water runs clear.'),
+          ST('Fry the cumin in the oil until it pops, then the onion, garlic and ginger.', 8),
+          ST('Turmeric in, lentils in, stock and coconut milk in.'),
+          ST('Simmer until the lentils collapse.', 20),
+          ST('Stir the spinach through at the end and season.')]},
+  {id:'r_pesto', name:'Summer pesto pasta', cuisine:'Italian', base:2, minutes:20, level:'Easy',
+   tags:['quick','veg'], palette:['#4f7a35','#8fb562','#e8e3c9'],
+   blurb:'Made in the time the water takes to boil.',
+   ings:[Q('i_pasta', 200000), Q('i_basil', 60000), Q('i_pinenut', 30000),
+         Q('i_parmesan', 40000), Q('i_garlic', 1000), Q('i_lemon', 500),
+         Q('i_oil', 4000), Q('i_salt', 1000)],
+   steps:[ST('Salt the water like the sea and put the pasta on.', 10),
+          ST('Toast the pine nuts dry until they smell of biscuits.', 4),
+          ST('Pound or blitz basil, garlic, pine nuts, parmesan and oil.'),
+          ST('Loosen the pesto with pasta water, then fold it through off the heat.'),
+          ST('Lemon at the very end.')]},
+  {id:'r_tagine', name:'Chickpea tagine', cuisine:'Moroccan', base:6, minutes:55, level:'Easy',
+   tags:['batch','vegan','gf'], palette:['#b4622a','#e5a04b','#6d3f22'],
+   blurb:'Sweet, spiced and better the next day.',
+   ings:[Q('i_onion', 2000), Q('i_garlic', 4000), Q('i_carrot', 3000),
+         Q('i_chickpea', 800000), Q('i_apricot', 150000), Q('i_tomato', 400000),
+         Q('i_ras', 3000), Q('i_stock', 400000), Q('i_oil', 2000), Q('i_salt', 1000)],
+   steps:[ST('Soften the onions and carrots slowly in the oil.', 12),
+          ST('Ras el hanout in, one minute, until the kitchen smells of it.', 1),
+          ST('Chickpeas, apricots, tomatoes and stock.'),
+          ST('Simmer, uncovered, until it thickens.', 35),
+          ST('Season and leave it to sit for ten minutes.', 10)]},
+  {id:'r_congee', name:'Ginger congee', cuisine:'Chinese', base:3, minutes:60, level:'Easy',
+   tags:['veg','gf'], palette:['#d8cdb4','#a89a76','#5e5540'],
+   blurb:'Rice, water, time. The gentlest thing in this app.',
+   ings:[Q('i_rice', 180000), Q('i_stock', 1500000), Q('i_ginger', 30000),
+         Q('i_mushroom', 150000), Q('i_soy', 2000), Q('i_salt', 1000)],
+   steps:[ST('Rinse the rice, then put it on with the stock and half the ginger.'),
+          ST('Barely simmering, stirring now and then, until it is a loose porridge.', 45),
+          ST('Fry the mushrooms hard in a dry pan while it cooks.', 8),
+          ST('Soy, the rest of the ginger, mushrooms on top.')]},
+  {id:'r_tortilla', name:'Potato tortilla', cuisine:'Spanish', base:4, minutes:45, level:'Careful',
+   tags:['veg','gf'], palette:['#d9a83c','#f0d17c','#7a5a20'],
+   blurb:'The flip is the only difficult part, and it is not that difficult.',
+   ings:[Q('i_potato', 600000), Q('i_onion', 1000), Q('i_egg', 6000),
+         Q('i_oil', 6000), Q('i_salt', 2000)],
+   steps:[ST('Slice the potatoes thin and the onion thinner.'),
+          ST('Cook them gently in plenty of oil until soft, not brown.', 20),
+          ST('Beat the eggs, salt them well, and let the potatoes sit in them for ten minutes.', 10),
+          ST('Set it in a hot pan, then flip with a plate and finish the other side.', 8),
+          ST('Rest before cutting. It should still wobble a little.', 5)]},
+  {id:'r_bibimbap', name:'Bibimbap bowls', cuisine:'Korean', base:2, minutes:40, level:'Easy',
+   tags:['veg'], palette:['#b23b2c','#e0813f','#3f6b3a'],
+   blurb:'A tidy bowl of separate things that you then wreck on purpose.',
+   ings:[Q('i_rice', 200000), Q('i_spinach', 150000), Q('i_mushroom', 200000),
+         Q('i_carrot', 1000), Q('i_egg', 2000), Q('i_gochujang', 2000),
+         Q('i_soy', 1000), Q('i_oil', 2000)],
+   steps:[ST('Rice on.', 20),
+          ST('Cook each vegetable separately and season each one as you go.', 12),
+          ST('Fry the eggs so the whites are crisp and the yolks are not.', 3),
+          ST('Build the bowl in sections, egg on top, gochujang alongside.')]},
+  {id:'r_crumble', name:'Apple crumble', cuisine:'British', base:6, minutes:65, level:'Easy',
+   tags:['batch','veg'], palette:['#a9702f','#e2b86a','#f0e2c4'],
+   blurb:'More crumble than apple, which is the correct ratio.',
+   ings:[Q('i_apple', 4000), Q('i_sugar', 120000), Q('i_flour', 200000),
+         Q('i_butter', 120000), Q('i_oats', 80000), Q('i_cinnamon', 1000)],
+   steps:[ST('Peel and chunk the apples, toss with a third of the sugar and the cinnamon.'),
+          ST('Rub the butter into the flour until it looks like gravel.'),
+          ST('Stir in the oats and the rest of the sugar.'),
+          ST('Pile it on, do not press it down.'),
+          ST('Bake until it is properly brown, not politely brown.', 45)]}
+];
+function recipe(id){ for (var i=0;i<RECIPES.length;i++) if (RECIPES[i].id === id) return RECIPES[i]; return null; }
+function recName(id){ var r = recipe(id); return r ? r.name : '?'; }
+function tagLabel(t){
+  return t === 'veg' ? 'Vegetarian' : t === 'vegan' ? 'Vegan' : t === 'gf' ? 'Gluten free'
+       : t === 'quick' ? 'Under 30 min' : t === 'batch' ? 'Batch cooks well' : t;
+}
+
+/* ===========================================================================
+ * STATE
+ * ======================================================================== */
+var DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+function createInitialState(seed){
+  seed = seed || 0;
+  return {
+    meta:{env:ENV_ID, version:VERSION, seed:seed, clock:CLOCK0, steps:0, finished:false, answer:null},
+    ui:{tab:'recipes', stack:[{name:'home', params:{}}], sheet:null, confirm:null,
+        inputs:{}, toast:null, collection:'all'},
+    /* the seed permutes the order the shelf offers recipes in, never which ones */
+    shelf:shuffled(RECIPES.map(function(r){ return r.id; }), seed),
+    servingsFor:{},
+    saved:['r_dal'],
+    cooked:{r_pesto:3, r_dal:1},
+    list:[{ing:'i_pasta', unit:'g', qty:200000, from:['Summer pesto pasta'], checked:false},
+          {ing:'i_lemon', unit:'item', qty:500, from:['Summer pesto pasta'], checked:true}],
+    plan:DAYS.map(function(d){ return {day:d, recipe:null, servings:0}; }),
+    cook:null,
+    settings:{skipStaples:true, showNutrition:false, defaultServings:2, sort:'shelf'}
+  };
+}
+function route(st){ return st.ui.stack[st.ui.stack.length - 1]; }
+function push(st, name, params){ st.ui.stack.push({name:name, params:params || {}}); st.ui.sheet = null; }
+function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
+function toast(st, t){ st.ui.toast = t; }
+function servingsOf(st, id){
+  var r = recipe(id);
+  if (!r) return 1;
+  return st.servingsFor[id] || r.base;
+}
+function isSaved(st, id){ return st.saved.indexOf(id) >= 0; }
+function lineOf(st, ingId){
+  for (var i=0;i<st.list.length;i++) if (st.list[i].ing === ingId) return st.list[i];
+  return null;
+}
+/* the ingredients of one recipe at a given number of servings */
+function scaledIngredients(st, id, servings){
+  var r = recipe(id);
+  if (!r) return [];
+  return r.ings.map(function(x){
+    var meta = ingredient(x.ing);
+    return {ing:x.ing, unit:meta.unit, staple:meta.staple, note:x.note,
+            qty:scaleQty(x.qty, servings, r.base, meta.unit)};
+  });
+}
+function addRecipeToList(st, id, servings){
+  var added = 0, merged = 0;
+  scaledIngredients(st, id, servings).forEach(function(x){
+    if (st.settings.skipStaples && x.staple) return;
+    var line = lineOf(st, x.ing);
+    if (line) {
+      line.qty += x.qty;
+      line.checked = false;
+      if (line.from.indexOf(recName(id)) < 0) line.from.push(recName(id));
+      merged += 1;
+    } else {
+      st.list.push({ing:x.ing, unit:x.unit, qty:x.qty, from:[recName(id)], checked:false});
+      added += 1;
+    }
+  });
+  return {added:added, merged:merged};
+}
+function listByAisle(st){
+  return AISLES.map(function(a){
+    return {aisle:a, lines:st.list.filter(function(l){ return ingredient(l.ing).aisle === a.id; })};
+  }).filter(function(g){ return g.lines.length; });
+}
+function plannedDays(st){ return st.plan.filter(function(p){ return p.recipe; }); }
+function matchesCollection(st, r, col){
+  if (col === 'all') return true;
+  if (col === 'quick') return r.minutes <= 30;
+  if (col === 'saved') return isSaved(st, r.id);
+  return r.tags.indexOf(col) >= 0;
+}
+function sortRecipes(st, ids){
+  var a = ids.slice();
+  /* 'shelf' is the order the app suggests them in, which is what a seed varies */
+  if (st.settings.sort === 'shelf') return a;
+  if (st.settings.sort === 'time')
+    a.sort(function(p, q){ return recipe(p).minutes - recipe(q).minutes ||
+                                  recipe(p).name.localeCompare(recipe(q).name); });
+  else if (st.settings.sort === 'name')
+    a.sort(function(p, q){ return recipe(p).name.localeCompare(recipe(q).name); });
+  return a;
+}
+
+var SELECT = {
+  hhmm:hhmm, fmtQty:fmtQty, fmtNumber:fmtNumber, scaleQty:scaleQty, snapQty:snapQty,
+  recipe:recipe, recName:recName, ingredient:ingredient, ingName:ingName, aisleLabel:aisleLabel,
+  servingsOf:servingsOf, scaledIngredients:scaledIngredients, listByAisle:listByAisle,
+  plannedDays:plannedDays, isSaved:isSaved, route:route, tagLabel:tagLabel,
+  clockStr:function(st){ return hhmm(st.meta ? st.meta.clock : st); }
+};
+
+/* ===========================================================================
+ * REDUCER
+ * ======================================================================== */
+function reduce(prev, action){
+  var st = clone(prev), A = action || {};
+  st.ui.toast = null;
+  st.meta.steps += 1;
+
+  switch (A.type) {
+
+  case 'NOOP': break;
+  case 'FINISH': st.meta.finished = true; st.meta.answer = A.answer === undefined ? null : A.answer; break;
+
+  /* ---- navigation ---- */
+  case 'NAV': push(st, A.to, A.params); break;
+  case 'BACK':
+    if (st.ui.sheet) st.ui.sheet = null;
+    else if (st.ui.confirm) st.ui.confirm = null;
+    else pop(st);
+    break;
+  case 'TAB': {
+    var roots = {recipes:'home', plan:'plan', list:'list', saved:'saved'};
+    st.ui.tab = A.tab; st.ui.sheet = null; st.ui.confirm = null;
+    st.ui.stack = [{name:roots[A.tab] || 'home', params:{}}];
+    break;
+  }
+  case 'HOME':
+    st.ui.tab = 'recipes'; st.ui.stack = [{name:'home', params:{}}];
+    st.ui.sheet = null; st.ui.confirm = null;
+    break;
+  case 'SET_INPUT': st.ui.inputs[A.field] = A.value; break;
+  case 'COLLECTION': st.ui.collection = A.id; break;
+  case 'TOGGLE_FILTER': {
+    var key = 'f_' + A.id;
+    st.ui.inputs[key] = !st.ui.inputs[key];
+    break;
+  }
+  case 'CLEAR_FILTERS':
+    ['veg','vegan','gf','quick'].forEach(function(k){ st.ui.inputs['f_' + k] = false; });
+    st.ui.inputs.q_recipe = '';
+    break;
+  case 'OPEN_SHEET': st.ui.sheet = {type:A.sheet, day:A.day === undefined ? null : A.day}; break;
+  case 'CLOSE_SHEET': st.ui.sheet = null; break;
+  case 'CONFIRM_NO': st.ui.confirm = null; break;
+  case 'CONFIRM_YES': {
+    var yes = st.ui.confirm && st.ui.confirm.yes; st.ui.confirm = null;
+    if (yes) { var keep = st.meta.steps; var out = reduce(st, yes); out.meta.steps = keep; return out; }
+    break;
+  }
+
+  /* ---- recipes ---- */
+  case 'SERV_STEP': {
+    var cur = servingsOf(st, A.id);
+    st.servingsFor[A.id] = Math.max(1, Math.min(12, cur + A.delta));
+    break;
+  }
+  case 'FAV_TOGGLE':
+    if (isSaved(st, A.id)) {
+      st.saved = st.saved.filter(function(x){ return x !== A.id; });
+      toast(st, recName(A.id) + ' removed from your saved recipes');
+    } else {
+      st.saved.push(A.id);
+      toast(st, recName(A.id) + ' saved');
+    }
+    break;
+
+  /* ---- the shopping list ---- */
+  case 'ADD_TO_LIST': {
+    var s = servingsOf(st, A.id);
+    var r2 = addRecipeToList(st, A.id, s);
+    toast(st, recName(A.id) + ' for ' + s + ': ' + r2.added + ' new, ' +
+              r2.merged + ' added to lines you already had');
+    break;
+  }
+  case 'ADD_ONE': {
+    var meta = ingredient(A.ing);
+    var q = A.qty;
+    var line = lineOf(st, A.ing);
+    if (line) { line.qty += q; line.checked = false;
+                if (line.from.indexOf(recName(A.from)) < 0) line.from.push(recName(A.from)); }
+    else st.list.push({ing:A.ing, unit:meta.unit, qty:q, from:[recName(A.from)], checked:false});
+    toast(st, fmtQty(q, meta.unit) + ' ' + meta.name.toLowerCase() + ' on the list');
+    break;
+  }
+  case 'TOGGLE_ITEM': {
+    var l2 = lineOf(st, A.ing);
+    if (l2) l2.checked = !l2.checked;
+    break;
+  }
+  case 'CLEAR_CHECKED': {
+    var before = st.list.length;
+    st.list = st.list.filter(function(l){ return !l.checked; });
+    var gone = before - st.list.length;
+    toast(st, gone ? gone + (gone === 1 ? ' item cleared' : ' items cleared') : 'Nothing was ticked');
+    break;
+  }
+  case 'CLEAR_ALL':
+    if (!st.list.length) { toast(st, 'The list is already empty'); break; }
+    st.ui.confirm = {title:'Empty the whole list?',
+      text:'All ' + st.list.length + ' lines go, ticked or not.',
+      okText:'Empty it', yes:{type:'CLEAR_ALL_YES'}};
+    break;
+  case 'CLEAR_ALL_YES': st.list = []; toast(st, 'Shopping list emptied'); break;
+
+  /* ---- the week ---- */
+  case 'PLAN_SET': {
+    var d = st.ui.sheet && st.ui.sheet.day;
+    if (d === null || d === undefined) break;
+    st.plan[d].recipe = A.id;
+    st.plan[d].servings = st.settings.defaultServings;
+    st.ui.sheet = null;
+    toast(st, recName(A.id) + ' on ' + DAYS[d]);
+    break;
+  }
+  case 'PLAN_CLEAR':
+    st.plan[A.day].recipe = null; st.plan[A.day].servings = 0;
+    toast(st, DAYS[A.day] + ' cleared');
+    break;
+  case 'PLAN_SERV': {
+    var p = st.plan[A.day];
+    if (!p.recipe) break;
+    p.servings = Math.max(1, Math.min(12, p.servings + A.delta));
+    break;
+  }
+  case 'ADD_WEEK': {
+    var days = plannedDays(st);
+    if (!days.length) { toast(st, 'Nothing is planned yet'); break; }
+    var n = 0;
+    days.forEach(function(p){ var r3 = addRecipeToList(st, p.recipe, p.servings); n += r3.added + r3.merged; });
+    toast(st, days.length + ' meals added — ' + st.list.length + ' lines on the list');
+    break;
+  }
+
+  /* ---- cooking ---- */
+  case 'COOK_START':
+    st.cook = {recipe:A.id, step:0};
+    push(st, 'cook', {});
+    break;
+  case 'COOK_STEP': {
+    if (!st.cook) break;
+    var r4 = recipe(st.cook.recipe);
+    st.cook.step = Math.max(0, Math.min(r4.steps.length - 1, st.cook.step + A.delta));
+    break;
+  }
+  case 'COOK_EXIT': st.cook = null; pop(st); break;
+  case 'COOK_DONE': {
+    if (!st.cook) break;
+    var id = st.cook.recipe;
+    st.cooked[id] = (st.cooked[id] || 0) + 1;
+    st.cook = null;
+    st.ui.stack = [{name:'home', params:{}}];
+    st.ui.tab = 'recipes';
+    toast(st, 'Cooked ' + recName(id) + ' — that is ' + st.cooked[id] +
+              (st.cooked[id] === 1 ? ' time' : ' times') + ' now');
+    break;
+  }
+
+  /* ---- settings ---- */
+  case 'SET_TOGGLE': st.settings[A.key] = !st.settings[A.key]; break;
+  case 'SET_SORT': st.settings.sort = A.sort; break;
+  case 'SET_DSERV':
+    st.settings.defaultServings = Math.max(1, Math.min(8, st.settings.defaultServings + A.delta));
+    break;
+
+  default: break;
+  }
+  return st;
+}
+
+/* ===========================================================================
+ * SCREEN TREE
+ * ======================================================================== */
+function N(t, o){ o = o || {}; o.t = t; return o; }
+function txt(s, cls){ return N('text', {text:s, cls:cls || ''}); }
+function row(id, text, o){
+  o = o || {}; o.id = id; o.text = text;
+  if (o.arrow === undefined) o.arrow = !!o.act;
+  return N('row', o);
+}
+function btn(id, text, act, cls, disabled){
+  return N('btn', {id:id, text:text, act:act, cls:cls || '', disabled:!!disabled});
+}
+function iconbtn(id, ic, act, cls){ return N('iconbtn', {id:id, icon:ic, act:act, cls:cls || ''}); }
+function appbar(title, o){ o = o || {}; o.title = title; return N('appbar', o); }
+function tabbar(st){
+  var items = [
+    {id:'tab_recipes', text:'Recipes', icon:'book',   tab:'recipes'},
+    {id:'tab_plan',    text:'Week',    icon:'cal',    tab:'plan'},
+    {id:'tab_list',    text:'List',    icon:'basket', tab:'list'},
+    {id:'tab_saved',   text:'Saved',   icon:'heart',  tab:'saved'}
+  ].map(function(i){
+    return {id:i.id, text:i.text, icon:i.icon, on:(st.ui.tab === i.tab), act:{type:'TAB', tab:i.tab}};
+  });
+  return N('tabbar', {id:'tabbar', items:items});
+}
+function recTags(r){
+  return [{text:r.minutes + ' min', cls:r.minutes <= 30 ? 'acc' : ''},
+          {text:r.cuisine, cls:''}].concat(r.tags.map(function(t){
+            return {text:tagLabel(t), cls:t === 'vegan' || t === 'veg' ? 'acc' : 'warm'}; }));
+}
+function recipeCard(st, id) {
+  var r = recipe(id);
+  return N('rcard', {id:'rec_' + id, title:r.name, sub:r.blurb,
+    palette:r.palette, seed:id, height:132,
+    tags:recTags(r).slice(0, 3),
+    act:{type:'NAV', to:'recipe', params:{id:id}}});
+}
+
+/* ----------------------------------------------------------------- home */
+function scrHome(st){
+  var col = st.ui.collection;
+  var ids = sortRecipes(st, st.shelf).filter(function(id){
+    return matchesCollection(st, recipe(id), col);
+  });
+  /* not shelf[0], or the featured plate and the first card would be the same picture twice */
+  var featured = st.shelf[3], fr = recipe(featured);
+  var body = [
+    N('hero', {id:'hero_recipe', kicker:'Tonight', title:fr.name, sub:fr.blurb,
+      palette:fr.palette, seed:fr.id, height:170,
+      act:{type:'NAV', to:'recipe', params:{id:fr.id}}}),
+    N('chips', {id:'collections', c:[
+      N('chip', {id:'col_all',   text:'Everything', on:col === 'all',   act:{type:'COLLECTION', id:'all'}}),
+      N('chip', {id:'col_quick', text:'Under 30 min', on:col === 'quick', act:{type:'COLLECTION', id:'quick'}}),
+      N('chip', {id:'col_veg',   text:'Vegetarian', on:col === 'veg',   act:{type:'COLLECTION', id:'veg'}}),
+      N('chip', {id:'col_vegan', text:'Vegan',      on:col === 'vegan', act:{type:'COLLECTION', id:'vegan'}}),
+      N('chip', {id:'col_batch', text:'Batch',      on:col === 'batch', act:{type:'COLLECTION', id:'batch'}})
+    ]}),
+    N('sec', {text:col === 'all' ? 'All recipes' : tagLabel(col), side:ids.length + ''})
+  ];
+  if (ids.length) ids.forEach(function(id){ body.push(recipeCard(st, id)); });
+  else body.push(txt('Nothing in that collection.', 'empty'));
+  body.push(N('space', {}));
+  return N('screen', {id:'scr_home', name:'home', c:[
+    appbar('Saffron', {
+      left:[iconbtn('open_search', 'search', {type:'NAV', to:'search'})],
+      right:[iconbtn('open_settings', 'gear', {type:'NAV', to:'settings'})]}),
+    N('scroll', {id:'home_scroll', c:body}),
+    tabbar(st)
+  ]});
+}
+
+/* --------------------------------------------------------------- search */
+function scrSearch(st){
+  var q = String(st.ui.inputs.q_recipe || '').trim().toLowerCase();
+  var on = {veg:!!st.ui.inputs.f_veg, vegan:!!st.ui.inputs.f_vegan,
+            gf:!!st.ui.inputs.f_gf, quick:!!st.ui.inputs.f_quick};
+  var ids = sortRecipes(st, st.shelf).filter(function(id){
+    var r = recipe(id);
+    if (on.veg   && r.tags.indexOf('veg') < 0 && r.tags.indexOf('vegan') < 0) return false;
+    if (on.vegan && r.tags.indexOf('vegan') < 0) return false;
+    if (on.gf    && r.tags.indexOf('gf') < 0) return false;
+    if (on.quick && r.minutes > 30) return false;
+    if (!q) return true;
+    var hay = (r.name + ' ' + r.cuisine + ' ' + r.blurb + ' ' +
+               r.ings.map(function(x){ return ingName(x.ing); }).join(' ')).toLowerCase();
+    return q.split(/\s+/).every(function(w){ return hay.indexOf(w) >= 0; });
+  });
+  return N('screen', {id:'scr_search', name:'search', c:[
+    appbar('Search', {back:true, right:[iconbtn('clear_filters', 'close', {type:'CLEAR_FILTERS'})]}),
+    N('scroll', {id:'search_scroll', c:[
+      N('inputrow', {id:'q_recipe', label:'Search', field:'q_recipe',
+        value:st.ui.inputs.q_recipe || '', placeholder:'A dish, a cuisine or an ingredient',
+        act:{type:'SET_INPUT', field:'q_recipe', value:'$VALUE'}}),
+      N('chips', {id:'filters', c:[
+        N('chip', {id:'f_veg',   text:'Vegetarian',   on:on.veg,   act:{type:'TOGGLE_FILTER', id:'veg'}}),
+        N('chip', {id:'f_vegan', text:'Vegan',        on:on.vegan, act:{type:'TOGGLE_FILTER', id:'vegan'}}),
+        N('chip', {id:'f_gf',    text:'Gluten free',  on:on.gf,    act:{type:'TOGGLE_FILTER', id:'gf'}}),
+        N('chip', {id:'f_quick', text:'Under 30 min', on:on.quick, act:{type:'TOGGLE_FILTER', id:'quick'}})
+      ]}),
+      N('sec', {text:ids.length + (ids.length === 1 ? ' recipe' : ' recipes')}),
+      N('card', {id:'search_list', cls:'flush', c: ids.length
+        ? ids.map(function(id){
+            var r = recipe(id);
+            return row('res_' + id, r.name, {lead:'book',
+              sub:r.cuisine + ' · ' + r.minutes + ' min · serves ' + r.base,
+              val:isSaved(st, id) ? 'saved' : '', valCls:'acc',
+              act:{type:'NAV', to:'recipe', params:{id:id}}});
+          })
+        : [txt('Nothing matches that. Try clearing the filters.', 'empty')]}),
+      N('space', {})
+    ]})
+  ]});
+}
+
+/* --------------------------------------------------------------- recipe */
+function scrRecipe(st, params){
+  var r = recipe(params.id);
+  if (!r) return scrHome(st);
+  var s = servingsOf(st, r.id);
+  var ings = scaledIngredients(st, r.id, s);
+  var cooked = st.cooked[r.id] || 0;
+  var body = [
+    N('plate', {id:'recipe_art', palette:r.palette, seed:r.id, height:200}),
+    txt(r.name, 'h1'),
+    txt(r.blurb, 'lede'),
+    N('pills', {id:'recipe_pills', items:recTags(r).concat(
+      cooked ? [{text:'cooked ' + cooked + (cooked === 1 ? ' time' : ' times'), cls:'hot'}] : [])}),
+    N('servbar', {id:'serv_bar', label:'Servings', value:String(s),
+      minusId:'serv_dec', plusId:'serv_inc',
+      minus:{type:'SERV_STEP', id:r.id, delta:-1}, plus:{type:'SERV_STEP', id:r.id, delta:1},
+      note:s === r.base ? 'as written' : 'written for ' + r.base}),
+    N('sec', {text:'Ingredients', side:ings.length + ''}),
+    N('card', {id:'ing_card', cls:'flush', c: ings.map(function(x){
+      return N('ing', {id:'ing_' + x.ing, qty:fmtQty(x.qty, x.unit), name:ingName(x.ing),
+        staple:x.staple,
+        sub:x.staple ? 'cupboard staple — tap to add it anyway' : 'tap to add just this',
+        act:{type:'ADD_ONE', ing:x.ing, qty:x.qty, from:r.id}});
+    })}),
+    N('btnrow', {id:'recipe_ops', c:[
+      btn('plan_it', 'Put it in the week', {type:'TAB', tab:'plan'}, 'ghost'),
+      btn('add_to_list', 'Add all to list', {type:'ADD_TO_LIST', id:r.id}, 'primary')]}),
+    N('sec', {text:'Method', side:r.steps.length + ' steps'}),
+    N('card', {id:'steps_card', cls:'flush', c: r.steps.map(function(x, i){
+      return N('stepr', {id:'step_' + i, n:i + 1, text:x.text,
+        mins:x.mins ? x.mins + ' min' : '', act:{type:'COOK_START', id:r.id}});
+    })}),
+    N('space', {})
+  ];
+  return N('screen', {id:'scr_recipe', name:'recipe', params:params, c:[
+    appbar(r.name, {back:true, right:[
+      iconbtn('fav_toggle', isSaved(st, r.id) ? 'heartOn' : 'heart', {type:'FAV_TOGGLE', id:r.id})]}),
+    N('scroll', {id:'recipe_scroll', c:body}),
+    N('bar', {id:'recipe_bar', c:[btn('start_cook', 'Start cooking', {type:'COOK_START', id:r.id},
+      'primary block')]})
+  ]});
+}
+
+/* ----------------------------------------------------------------- cook */
+function scrCook(st){
+  var c = st.cook;
+  if (!c) return scrHome(st);
+  var r = recipe(c.recipe), step = r.steps[c.step], last = c.step === r.steps.length - 1;
+  return N('screen', {id:'scr_cook', name:'cook', c:[
+    appbar(r.name, {left:[iconbtn('cook_exit', 'close', {type:'COOK_EXIT'})]}),
+    N('cook', {id:'cook_body', kicker:'Step ' + (c.step + 1) + ' of ' + r.steps.length,
+      text:step.text, mins:step.mins ? step.mins + ' minutes' : '',
+      dots:r.steps.map(function(x, i){ return {on:i <= c.step}; })}),
+    N('bar', {id:'cook_bar', c:[
+      N('btnrow', {id:'cook_ops', c:[
+        btn('cook_prev', 'Back', {type:'COOK_STEP', delta:-1}, 'ghost', c.step === 0),
+        last ? btn('cook_done', 'Finished cooking', {type:'COOK_DONE'}, 'primary')
+             : btn('cook_next', 'Next step', {type:'COOK_STEP', delta:1}, 'primary')]})]})
+  ]});
+}
+
+/* ----------------------------------------------------------------- list */
+function scrList(st){
+  var groups = listByAisle(st);
+  var ticked = st.list.filter(function(l){ return l.checked; }).length;
+  var body = [
+    N('sec', {text:st.list.length + (st.list.length === 1 ? ' line' : ' lines'),
+              side:ticked + ' ticked'})
+  ];
+  if (!st.list.length) body.push(txt('Your list is empty. Add a recipe to it.', 'empty'));
+  groups.forEach(function(g){
+    body.push(N('aisle', {id:'aisle_' + g.aisle.id, text:g.aisle.label}));
+    body.push(N('card', {id:'aisle_card_' + g.aisle.id, cls:'flush', c:g.lines.map(function(l){
+      return row('li_' + l.ing, ingName(l.ing),
+        {sub:l.from.join(' + '), strike:l.checked,
+         val:fmtQty(l.qty, l.unit), valCls:l.checked ? '' : 'acc',
+         arrow:false, act:{type:'TOGGLE_ITEM', ing:l.ing},
+         c:[N('check', {id:'chk_' + l.ing, on:l.checked, act:{type:'TOGGLE_ITEM', ing:l.ing}})]});
+    })}));
+  });
+  body.push(N('btnrow', {id:'list_ops', c:[
+    btn('clear_all', 'Empty the list', {type:'CLEAR_ALL'}, 'danger'),
+    btn('clear_checked', 'Clear ticked', {type:'CLEAR_CHECKED'}, 'ghost')]}));
+  body.push(txt(st.settings.skipStaples
+    ? 'Cupboard staples like salt and oil are being left off the list.'
+    : 'Cupboard staples are being included.', 'muted'));
+  body.push(N('space', {}));
+  return N('screen', {id:'scr_list', name:'list', c:[
+    appbar('Shopping list', {right:[iconbtn('list_settings', 'gear', {type:'NAV', to:'settings'})]}),
+    N('scroll', {id:'list_scroll', c:body}),
+    tabbar(st)
+  ]});
+}
+
+/* ----------------------------------------------------------------- week */
+function scrPlan(st){
+  var planned = plannedDays(st);
+  return N('screen', {id:'scr_plan', name:'plan', c:[
+    appbar('This week'),
+    N('scroll', {id:'plan_scroll', c:[
+      N('sec', {text:'Seven days', side:planned.length + ' planned'}),
+      N('card', {id:'plan_list', cls:'flush', c: st.plan.map(function(p, i){
+        if (!p.recipe)
+          return row('day_' + i, p.day, {lead:'plus', sub:'Nothing planned',
+            act:{type:'OPEN_SHEET', sheet:'plan_pick', day:i}});
+        return row('day_' + i, p.day, {lead:'book', sub:recName(p.recipe),
+          arrow:false, act:{type:'OPEN_SHEET', sheet:'plan_pick', day:i},
+          c:[N('stepper', {id:'pserv_' + i, value:p.servings + ' sv',
+                minusId:'pserv_' + i + '_dec', plusId:'pserv_' + i + '_inc',
+                minus:{type:'PLAN_SERV', day:i, delta:-1}, plus:{type:'PLAN_SERV', day:i, delta:1}}),
+             iconbtn('clear_day_' + i, 'close', {type:'PLAN_CLEAR', day:i})]});
+      })}),
+      N('padded', {c:[btn('add_week', 'Add the week to the shopping list', {type:'ADD_WEEK'},
+        'primary block', !planned.length)]}),
+      txt('Each day goes on the list at the servings shown next to it, and anything two meals share ends up on one line.', 'muted'),
+      N('space', {})
+    ]}),
+    tabbar(st)
+  ]});
+}
+
+/* ---------------------------------------------------------------- saved */
+function scrSaved(st){
+  var body = [N('sec', {text:'Saved recipes', side:st.saved.length + ''})];
+  if (st.saved.length) st.saved.forEach(function(id){ body.push(recipeCard(st, id)); });
+  else body.push(txt('Nothing saved yet. Tap the heart on a recipe.', 'empty'));
+  body.push(N('sec', {text:'Cooked most'}));
+  var cookedIds = Object.keys(st.cooked).filter(function(id){ return st.cooked[id] > 0; });
+  cookedIds.sort(function(a, b){ return st.cooked[b] - st.cooked[a] || recName(a).localeCompare(recName(b)); });
+  body.push(N('card', {id:'cooked_card', cls:'flush', c: cookedIds.length
+    ? cookedIds.map(function(id){
+        return row('cooked_' + id, recName(id), {lead:'book',
+          sub:recipe(id).cuisine + ' · ' + recipe(id).minutes + ' min',
+          val:st.cooked[id] + (st.cooked[id] === 1 ? ' time' : ' times'), valCls:'strong',
+          act:{type:'NAV', to:'recipe', params:{id:id}}});
+      })
+    : [txt('Nothing cooked yet.', 'empty')]}));
+  body.push(N('space', {}));
+  return N('screen', {id:'scr_saved', name:'saved', c:[
+    appbar('Saved'),
+    N('scroll', {id:'saved_scroll', c:body}),
+    tabbar(st)
+  ]});
+}
+
+/* ------------------------------------------------------------- settings */
+function scrSettings(st){
+  function sw(id, text, key, sub){
+    return row(id, text, {sub:sub, arrow:false,
+      c:[N('switch', {id:'set_' + key, on:!!st.settings[key], act:{type:'SET_TOGGLE', key:key}})]});
+  }
+  return N('screen', {id:'scr_settings', name:'settings', c:[
+    appbar('Settings', {back:true}),
+    N('scroll', {id:'settings_scroll', c:[
+      N('sec', {text:'Shopping'}),
+      N('card', {id:'shop_settings', cls:'flush', c:[
+        sw('staples_row', 'Leave out cupboard staples', 'skipStaples',
+           'Salt, pepper and olive oil stay off the list'),
+        row('dserv_row', 'Servings for planned meals', {arrow:false,
+          sub:'What a day in the week starts at',
+          c:[N('stepper', {id:'dserv', value:String(st.settings.defaultServings),
+            minusId:'dserv_dec', plusId:'dserv_inc',
+            minus:{type:'SET_DSERV', delta:-1}, plus:{type:'SET_DSERV', delta:1}})]})
+      ]}),
+      N('sec', {text:'Recipes'}),
+      N('chips', {id:'sort_chips', c:[
+        N('chip', {id:'sort_shelf', text:'Suggested', on:st.settings.sort === 'shelf',
+          act:{type:'SET_SORT', sort:'shelf'}}),
+        N('chip', {id:'sort_name', text:'Sort by name', on:st.settings.sort === 'name',
+          act:{type:'SET_SORT', sort:'name'}}),
+        N('chip', {id:'sort_time', text:'Sort by time', on:st.settings.sort === 'time',
+          act:{type:'SET_SORT', sort:'time'}})
+      ]}),
+      N('card', {id:'recipe_settings', cls:'flush', c:[
+        sw('nutri_row', 'Show nutrition', 'showNutrition', 'Rough figures, per serving')
+      ]}),
+      N('sec', {text:'About'}),
+      N('card', {id:'about', cls:'flush', c:[
+        row('about_version', 'Version', {val:VERSION, arrow:false}),
+        row('about_units', 'Quantities', {val:'Metric', arrow:false})
+      ]}),
+      txt('Quantities are scaled from what the recipe was written for and rounded to something you can measure: whole grams, quarter spoons, half onions.', 'muted'),
+      N('space', {})
+    ]})
+  ]});
+}
+
+/* --------------------------------------------------------------- sheets */
+function sheetPlanPick(st){
+  var day = st.ui.sheet.day;
+  return N('sheet', {id:'pick_sheet', title:'What are you cooking on ' + DAYS[day] + '?',
+    closeId:'pick_close', close:{type:'CLOSE_SHEET'}, c:[
+      N('card', {id:'pick_list', cls:'flush', c: sortRecipes(st, st.shelf).map(function(id){
+        var r = recipe(id);
+        return row('pick_' + id, r.name, {lead:'book',
+          sub:r.cuisine + ' · ' + r.minutes + ' min · serves ' + r.base,
+          act:{type:'PLAN_SET', id:id}});
+      })})
+    ]});
+}
+
+var ROUTES = {
+  home:scrHome, search:scrSearch, recipe:scrRecipe, cook:scrCook,
+  list:scrList, plan:scrPlan, saved:scrSaved, settings:scrSettings
+};
+function screen(st){
+  var r = route(st), fn = ROUTES[r.name] || scrHome;
+  var rootNode = fn(st, r.params || {});
+  rootNode.route = r.name;
+  var extra = [];
+  if (st.ui.sheet && st.ui.sheet.type === 'plan_pick')
+    extra.push(N('mask', {id:'mask', close:{type:'CLOSE_SHEET'}, c:[sheetPlanPick(st)]}));
+  if (st.ui.confirm)
+    extra.push(N('mask', {id:'confirm_mask', c:[N('dialog', {id:'confirm_dialog',
+      title:st.ui.confirm.title || '', text:st.ui.confirm.text,
+      ok: btn('confirm_ok', st.ui.confirm.okText || 'Confirm', {type:'CONFIRM_YES'}, 'primary'),
+      cancel: btn('confirm_cancel', 'Cancel', {type:'CONFIRM_NO'}, '')})]}));
+  if (st.ui.toast) extra.push(N('toast', {id:'toast', text:st.ui.toast}));
+  rootNode.c = rootNode.c.concat(extra);
+  return rootNode;
+}
+
+/* =======================================================================
+ * TRAVERSAL — element index, GUI action interface, text observation
+ * ==================================================================== */
+var SKIP_KEYS = {act:1, minus:1, plus:1, close:1, yes:1, params:1, meta:1, palette:1, ings:1, steps:1};
+
+function labelOf(n){ return n.text || n.title || n.name || n.label || ''; }
+
+function collect(n, out){
+  if (!n || typeof n !== 'object') return;
+  if (Array.isArray(n)) { for (var i=0;i<n.length;i++) collect(n[i], out); return; }
+  if (n.t === 'appbar' && n.back) out.push({id:'nav_back', act:{type:'BACK'}, text:'Back', t:'back'});
+  if (n.id && n.act)              out.push({id:n.id, act:n.act, text:labelOf(n), t:n.t||'el',
+                                            disabled:!!n.disabled,
+                                            input:(n.t === 'inputrow')});
+  if (n.t === 'mask' && n.close)  out.push({id:n.id, act:n.close, text:'Dismiss overlay', t:'mask'});
+  if (n.minusId && n.minus)       out.push({id:n.minusId, act:n.minus, text:'fewer', t:'step'});
+  if (n.plusId  && n.plus)        out.push({id:n.plusId,  act:n.plus,  text:'more',  t:'step'});
+  if (n.closeId && n.close)       out.push({id:n.closeId, act:n.close, text:'Close', t:'btn'});
+  for (var k in n){
+    if (SKIP_KEYS[k]) continue;
+    var v = n[k];
+    if (v && typeof v === 'object') collect(v, out);
+  }
+}
+function elements(st){
+  var rootNode = (st && st.t === 'screen') ? st : screen(st);
+  var masks = (rootNode.c || []).filter(function(n){ return n.t === 'mask'; });
+  var out = [];
+  collect(masks.length ? masks[masks.length-1] : rootNode, out);
+  return out;
+}
+function findEl(st, id){
+  var els = elements(st);
+  for (var i=0;i<els.length;i++) if (els[i].id === id) return els[i];
+  return null;
+}
+function substitute(act, text){
+  var a = clone(act);
+  for (var k in a) if (a[k] === '$VALUE') a[k] = text;
+  return a;
+}
+function step(st, a){
+  a = a || {};
+  var kind = a.action || a.type;
+  switch (kind) {
+  case 'tap': {
+    var el = findEl(st, a.id);
+    if (!el) return {state:st, ok:false, error:'ELEMENT_NOT_FOUND: ' + a.id};
+    if (el.disabled) return {state:st, ok:false, error:'ELEMENT_DISABLED: ' + a.id};
+    return {state:reduce(st, el.act), ok:true};
+  }
+  case 'type': {
+    var e2 = findEl(st, a.id);
+    if (!e2) return {state:st, ok:false, error:'ELEMENT_NOT_FOUND: ' + a.id};
+    if (!e2.input) return {state:st, ok:false, error:'NOT_A_TEXT_FIELD: ' + a.id};
+    return {state:reduce(st, substitute(e2.act, a.text == null ? '' : String(a.text))), ok:true};
+  }
+  case 'back':   return {state:reduce(st, {type:'BACK'}), ok:true};
+  case 'home':   return {state:reduce(st, {type:'HOME'}), ok:true};
+  case 'wait':   return {state:reduce(st, {type:'NOOP'}), ok:true};
+  case 'finish': return {state:reduce(st, {type:'FINISH', answer:a.answer}), ok:true};
+  case 'raw':    return {state:reduce(st, a.act || {}), ok:true};
+  default:       return {state:st, ok:false, error:'UNKNOWN_ACTION: ' + kind};
+  }
+}
+
+/* ------------------------------------------------- text observation (a11y) */
+function a11y(st){
+  var rootNode = screen(st), lines = [], r = route(st);
+  lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
+             '  clock ' + hhmm(st.meta.clock) + '  step ' + st.meta.steps);
+  lines.push('# Shopping list: ' + st.list.length + ' lines, ' +
+             st.list.filter(function(l){ return l.checked; }).length + ' ticked. Staples are ' +
+             (st.settings.skipStaples ? 'left off.' : 'included.'));
+  if (st.cook)
+    lines.push('# Cooking ' + recName(st.cook.recipe) + ', step ' + (st.cook.step + 1) +
+               ' of ' + recipe(st.cook.recipe).steps.length + '.');
+  var masks = (rootNode.c || []).filter(function(n){ return n.t === 'mask'; });
+  if (masks.length) lines.push('# An overlay is open. Nothing behind it can be tapped.');
+  walkText(masks.length ? masks[masks.length-1] : rootNode, 0, lines, st);
+  (rootNode.c || []).forEach(function(n){ if (n.t === 'toast') lines.push('[Toast] ' + n.text); });
+  return lines.join('\n');
+}
+function tid(n){ return (n && n.id && n.act) ? ' #' + n.id : ''; }
+function ind(d){ return new Array(d+1).join('  '); }
+
+function walkText(n, d, out, st){
+  if (!n || typeof n !== 'object') return;
+  if (Array.isArray(n)) { n.forEach(function(x){ walkText(x, d, out, st); }); return; }
+  var line = null;
+  switch (n.t) {
+  case 'screen': break;
+  case 'appbar': line = '[AppBar] ' + (n.title || '') + (n.back ? '   Back #nav_back' : ''); break;
+  case 'iconbtn': line = '[IconButton]' + tid(n) + ' ' + n.icon; break;
+  case 'inputrow':
+    line = '[TextField]' + tid(n) + ' ' + (n.label || '') + ' value="' + (n.value || '') + '"'; break;
+  case 'chip':   line = '[Chip]' + tid(n) + ' ' + n.text + (n.on ? '  [selected]' : ''); break;
+  case 'btn':    line = '[Button]' + (n.id ? ' #' + n.id : '') + ' ' + n.text + (n.disabled ? ' (disabled)' : ''); break;
+  case 'row': {
+    var s = '[Row]' + tid(n) + ' ' + (n.text || '') + (n.strike ? ' (ticked off)' : '');
+    if (n.val) s += ' — ' + n.val;
+    if (n.sub) s += '   (' + n.sub + ')';
+    line = s; break;
+  }
+  case 'switch': line = '[Toggle]' + tid(n) + ' ' + (n.on ? 'ON' : 'OFF'); break;
+  case 'check':  line = '[Checkbox]' + tid(n) + ' ' + (n.on ? 'ticked' : 'not ticked'); break;
+  case 'stepper':
+    line = '[Stepper] ' + n.value + '  fewer #' + n.minusId + '  more #' + n.plusId; break;
+  case 'hero':
+    out.push(ind(d) + '[Featured]' + tid(n) + ' ' + n.kicker + ': ' + n.title + '. ' + n.sub);
+    return;
+  case 'rcard':
+    out.push(ind(d) + '[Recipe]' + tid(n) + ' ' + n.title + ' — ' +
+             n.tags.map(function(t){ return t.text; }).join(', ') + '. ' + n.sub);
+    return;
+  case 'plate':   line = '[Illustration] a plate of it'; break;
+  case 'servbar':
+    out.push(ind(d) + '[Servings] ' + n.value + ' (' + n.note + ')   fewer #' + n.minusId +
+             '   more #' + n.plusId);
+    return;
+  case 'ing':
+    out.push(ind(d) + '[Ingredient]' + tid(n) + ' ' + n.qty + ' ' + n.name +
+             (n.staple ? '  (cupboard staple)' : ''));
+    return;
+  case 'stepr':
+    out.push(ind(d) + '[Step ' + n.n + ']' + tid(n) + ' ' + n.text + (n.mins ? '  (' + n.mins + ')' : ''));
+    return;
+  case 'cook':
+    out.push(ind(d) + '[Cooking] ' + n.kicker + (n.mins ? '  (' + n.mins + ')' : ''));
+    out.push(ind(d+1) + n.text);
+    return;
+  case 'aisle':   line = '— ' + n.text + ' —'; break;
+  case 'pills':   line = n.items.map(function(p){ return '[' + p.text + ']'; }).join(' '); break;
+  case 'sec':     line = '— ' + n.text + (n.side ? ' (' + n.side + ')' : '') + ' —'; break;
+  case 'text':    line = n.text || null; break;
+  case 'tabbar':
+    out.push(ind(d) + '[TabBar] ' + n.items.map(function(i){
+      return i.text + ' #' + i.id + (i.on ? '[current]' : ''); }).join('  '));
+    return;
+  case 'sheet':   line = '[Sheet] ' + n.title + '   close #' + n.closeId; break;
+  case 'dialog':  line = '[Dialog] ' + (n.title ? n.title + ' — ' : '') + n.text; break;
+  case 'mask': case 'toast': line = null; break;
+  default:        line = null;
+  }
+  if (line !== null) out.push(ind(d) + line);
+  for (var k in n){
+    if (SKIP_KEYS[k]) continue;
+    var v = n[k];
+    if (v && typeof v === 'object') walkText(v, line !== null ? d+1 : d, out, st);
+  }
+}
+
+/* --------------------------------------------------------- derived view */
+function derive(st){
+  var qty = {}, unitsOut = {}, fromOut = {}, checked = {};
+  st.list.forEach(function(l){
+    qty[ingName(l.ing)] = l.qty;
+    unitsOut[ingName(l.ing)] = l.unit;
+    fromOut[ingName(l.ing)] = l.from.slice().sort();
+    checked[ingName(l.ing)] = !!l.checked;
+  });
+  var servings = {};
+  RECIPES.forEach(function(r){ servings[r.name] = servingsOf(st, r.id); });
+  var planned = {};
+  st.plan.forEach(function(p){ if (p.recipe) planned[p.day] = recName(p.recipe) + ' x' + p.servings; });
+  var cooked = {};
+  Object.keys(st.cooked).forEach(function(id){ cooked[recName(id)] = st.cooked[id]; });
+  return {
+    route: route(st).name,
+    routeId: (route(st).params || {}).id || null,
+    tab: st.ui.tab,
+    collection: st.ui.collection,
+    servings: servings,
+    listCount: st.list.length,
+    listNames: st.list.map(function(l){ return ingName(l.ing); }).sort(),
+    listQty: qty,
+    listUnits: unitsOut,
+    listFrom: fromOut,
+    listChecked: checked,
+    tickedCount: st.list.filter(function(l){ return l.checked; }).length,
+    plannedCount: plannedDays(st).length,
+    planned: planned,
+    saved: st.saved.map(recName).sort(),
+    cooked: cooked,
+    cooking: st.cook ? recName(st.cook.recipe) : null,
+    cookStep: st.cook ? st.cook.step + 1 : 0,
+    settings: clone(st.settings),
+    finished: !!st.meta.finished,
+    answer: st.meta.answer
+  };
+}
+function snapshot(st){ var o = clone(st); o.derived = derive(st); return o; }
+function applyPatch(st, patch){
+  (patch || []).forEach(function(p){ setPath(st, p.path, clone(p.value)); });
+  return st;
+}
+
+var ENGINE = {
+  ENV_ID: ENV_ID, VERSION: VERSION,
+  CATALOG: {recipes:RECIPES, ingredients:INGREDIENTS, aisles:AISLES},
+  createInitialState: createInitialState,
+  reduce: reduce, step: step, screen: screen, a11y: a11y,
+  elements: elements, findEl: findEl, applyPatch: applyPatch,
+  getPath: getPath, setPath: setPath, clone: clone,
+  derive: derive, snapshot: snapshot,
+  select: SELECT
+};
+root.SAFFRON_ENGINE = ENGINE;
+root.GUI_ENGINE     = ENGINE;
+
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+</script>
+
+<script id="ui">
+/* ===========================================================================
+ * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
+ * The food illustrations are generated from each recipe's palette and id, so
+ * there is not one image file in this environment.
+ * ======================================================================== */
+(function(){
+'use strict';
+var E = window.GUI_ENGINE;
+var app = document.getElementById('app');
+var hud = document.getElementById('hud');
+function esc(s){
+  return String(s === undefined || s === null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+var SVG = {
+  back:  '<path d="M15 4.5 8 12l7 7.5"/>',
+  arrow: '<path d="M9 4.5 16 12l-7 7.5"/>',
+  plus:  '<path d="M12 5.6v12.8M5.6 12h12.8"/>',
+  minus: '<path d="M5.6 12h12.8"/>',
+  close: '<path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5"/>',
+  check: '<path d="M4.8 12.6 9.8 17.6 19.2 6.8"/>',
+  search:'<circle cx="10.8" cy="10.8" r="6.6"/><path d="m15.6 15.6 4.4 4.4"/>',
+  gear:  '<circle cx="12" cy="12" r="3.4"/><path d="M19.1 14.4a1.6 1.6 0 0 0 .3 1.8l.1.1a1.9 1.9 0 1 1-2.7 2.7l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5v.2a1.9 1.9 0 1 1-3.8 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a1.9 1.9 0 1 1-2.7-2.7l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1h-.2a1.9 1.9 0 1 1 0-3.8h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a1.9 1.9 0 1 1 2.7-2.7l.1.1a1.6 1.6 0 0 0 1.8.3h.1a1.6 1.6 0 0 0 1-1.5v-.2a1.9 1.9 0 1 1 3.8 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a1.9 1.9 0 1 1 2.7 2.7l-.1.1a1.6 1.6 0 0 0-.3 1.8v.1a1.6 1.6 0 0 0 1.5 1h.2a1.9 1.9 0 1 1 0 3.8h-.1a1.6 1.6 0 0 0-1.5 1z"/>',
+  book:  '<path d="M4.6 5.4a2 2 0 0 1 2-2h12.8v14.2H6.6a2 2 0 0 0-2 2z"/><path d="M4.6 19.6a2 2 0 0 1 2-2h12.8v3H6.6a2 2 0 0 1-2-1z"/><path d="M8.4 7.6h7"/>',
+  cal:   '<rect x="3.6" y="5.2" width="16.8" height="15.2" rx="2.4"/><path d="M3.6 9.8h16.8M8.4 3.4v3.6M15.6 3.4v3.6"/>',
+  basket:'<path d="M3.4 8.8h17.2l-1.6 9.8a2.1 2.1 0 0 1-2.1 1.8H7.1a2.1 2.1 0 0 1-2.1-1.8z"/><path d="m8.4 8.8 3-5.4M15.6 8.8l-3-5.4"/>',
+  heart: '<path d="M12 20.4S3.7 15.3 3.7 9.7A4.3 4.3 0 0 1 12 7.5a4.3 4.3 0 0 1 8.3 2.2c0 5.6-8.3 10.7-8.3 10.7z"/>',
+  heartOn:'<path d="M12 20.4S3.7 15.3 3.7 9.7A4.3 4.3 0 0 1 12 7.5a4.3 4.3 0 0 1 8.3 2.2c0 5.6-8.3 10.7-8.3 10.7z"/>'
+};
+var FILLED = {heartOn:1};
+function icon(name, size, cls){
+  var d = SVG[name]; if (!d) return '';
+  return '<span class="ico ' + (cls||'') + '" style="width:' + (size||20) + 'px;height:' + (size||20) +
+    'px;display:inline-flex;flex:0 0 auto"><svg viewBox="0 0 24 24" width="100%" height="100%" fill="' +
+    (FILLED[name] ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="1.7" ' +
+    'stroke-linecap="round" stroke-linejoin="round">' + d + '</svg></span>';
+}
+function hashOf(s){
+  var h = 2166136261;
+  for (var i=0;i<s.length;i++){ h ^= s.charCodeAt(i); h = (h * 16777619) >>> 0; }
+  return h;
+}
+/* a plate of food, drawn from the recipe's own palette and id */
+function plateSvg(palette, seed, h){
+  var W = 300, H = h || 160, cx = W/2, cy = H/2 + 2;
+  var R = Math.min(W, H) * 0.36;
+  var st = hashOf(String(seed));
+  function rnd(){ st = (st * 1664525 + 1013904223) >>> 0; return st / 4294967296; }
+  var out = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" height="' + H +
+            '" preserveAspectRatio="xMidYMid slice" style="display:block">';
+  out += '<rect width="' + W + '" height="' + H + '" fill="#f4ede2"/>';
+  out += '<circle cx="' + (W * 0.12) + '" cy="' + (H * 0.16) + '" r="' + (H * 0.42) +
+         '" fill="' + palette[2] + '" opacity=".16"/>';
+  out += '<circle cx="' + (W * 0.9) + '" cy="' + (H * 0.86) + '" r="' + (H * 0.36) +
+         '" fill="' + palette[0] + '" opacity=".14"/>';
+  out += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (R + 12) + '" fill="#fffdf9"/>';
+  out += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (R + 12) +
+         '" fill="none" stroke="#e3d8c7" stroke-width="1.4"/>';
+  out += '<circle cx="' + cx + '" cy="' + cy + '" r="' + R +
+         '" fill="none" stroke="#efe6d8" stroke-width="1.2"/>';
+  var n = 9;
+  for (var i=0;i<n;i++){
+    var a = (i / n) * Math.PI * 2 + rnd() * 0.5;
+    var dist = R * (0.18 + rnd() * 0.6);
+    var rr = R * (0.15 + rnd() * 0.17);
+    var x = cx + Math.cos(a) * dist, y = cy + Math.sin(a) * dist * 0.92;
+    var col = palette[i % palette.length];
+    out += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + rr.toFixed(1) +
+           '" fill="' + col + '" opacity="' + (0.72 + rnd() * 0.25).toFixed(2) + '"/>';
+  }
+  for (var j=0;j<14;j++){
+    var a2 = rnd() * Math.PI * 2, d2 = R * rnd() * 0.85;
+    out += '<circle cx="' + (cx + Math.cos(a2) * d2).toFixed(1) + '" cy="' +
+           (cy + Math.sin(a2) * d2 * 0.92).toFixed(1) + '" r="' + (1.4 + rnd() * 2).toFixed(1) +
+           '" fill="' + palette[(j + 1) % palette.length] + '" opacity=".55"/>';
+  }
+  return out + '</svg>';
+}
+
+var ACTS = [], TRAJ = [];
+function bind(a){ if (!a) return ''; ACTS.push(a); return ' data-act="' + (ACTS.length-1) + '"'; }
+function bindT(a){ if (!a) return ''; ACTS.push(a); return ' data-actt="' + (ACTS.length-1) + '"'; }
+function tid(id){ return id ? ' data-testid="' + esc(id) + '"' : ''; }
+function R(list){ return (list||[]).map(render).join(''); }
+function tagsHtml(items){
+  return items.map(function(t){ return '<span class="tag ' + (t.cls||'') + '">' + esc(t.text) + '</span>'; }).join('');
+}
+
+function render(n){
+  if (!n || typeof n !== 'object') return '';
+  if (Array.isArray(n)) return R(n);
+  switch (n.t) {
+  case 'screen': return R(n.c);
+  case 'appbar': {
+    var left = (n.back
+      ? '<div class="iconbtn" data-testid="nav_back"' + bind({type:'BACK'}) + '>' + icon('back',19) + '</div>'
+      : '') + R(n.left);
+    return '<div class="n-appbar"' + tid(n.id) + '><div class="ab-side">' + left + '</div>'
+      + '<div class="ab-title">' + esc(n.title) + '</div>'
+      + '<div class="ab-side right">' + R(n.right) + '</div></div>';
+  }
+  case 'iconbtn': return '<div class="iconbtn ' + esc(n.cls||'') + '"' + tid(n.id) + bind(n.act) + '>' + icon(n.icon, 19) + '</div>';
+  case 'scroll':  return '<div class="n-scroll"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'chips':   return '<div class="n-chips"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'chip':    return '<div class="n-chip' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '>' + esc(n.text) + '</div>';
+  case 'card':    return '<div class="n-card ' + esc(n.cls||'') + (n.act?' tap':'') + '"' + tid(n.id) + bind(n.act) + '>' + R(n.c) + '</div>';
+  case 'padded':  return '<div style="padding:5px 16px">' + R(n.c) + '</div>';
+  case 'sec':     return '<div class="n-sec"' + tid(n.id) + '><span>' + esc(n.text) + '</span>'
+                       + (n.side ? '<span>' + esc(n.side) + '</span>' : '') + '</div>';
+  case 'text':    return '<div class="n-text ' + esc(n.cls||'') + '">' + esc(n.text) + '</div>';
+  case 'space':   return '<div class="n-space"></div>';
+  case 'aisle':   return '<div class="aisle"' + tid(n.id) + '>' + esc(n.text) + '</div>';
+  case 'row': {
+    var inline = [], below = [];
+    (n.c||[]).forEach(function(ch){
+      (ch.t==='switch'||ch.t==='radio'||ch.t==='check'||ch.t==='stepper'||ch.t==='btn'||ch.t==='iconbtn')
+        ? inline.push(ch) : below.push(ch);
+    });
+    return '<div class="n-row' + (n.act?' tap':'') + '"' + tid(n.id) + bind(n.act) + '>'
+      + (n.lead ? '<div class="r-lead">' + icon(n.lead, 18) + '</div>' : '')
+      + '<div class="r-main"><div class="r-label' + (n.strike?' strike':'') + '">' + esc(n.text) + '</div>'
+      + (n.sub ? '<div class="r-sub">' + esc(n.sub) + '</div>' : '') + '</div>'
+      + (n.val ? '<div class="r-value ' + esc(n.valCls||'') + '">' + esc(n.val) + '</div>' : '')
+      + R(inline)
+      + (n.arrow && !inline.length ? '<div class="r-arrow">' + icon('arrow',15) + '</div>' : '')
+      + '</div>' + R(below);
+  }
+  case 'btn':
+    return '<div class="n-btn ' + esc(n.cls||'') + (n.disabled?' off':'') + '"' + tid(n.id)
+      + (n.disabled?'':bind(n.act)) + '>' + esc(n.text) + '</div>';
+  case 'btnrow': return '<div class="n-btnrow"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'bar':    return '<div style="flex:0 0 auto;background:var(--card);border-top:1px solid var(--line);'
+                      + 'padding:12px 16px 16px;z-index:30"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'switch': return '<div class="n-switch' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '><i></i></div>';
+  case 'check':  return '<div class="n-check' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '></div>';
+  case 'radio':  return '<div class="n-radio' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '></div>';
+  case 'inputrow':
+    return '<div class="n-input"><div class="i-label">' + esc(n.label) + '</div>'
+      + '<input' + tid(n.id) + bindT(n.act) + ' value="' + esc(n.value) + '" placeholder="'
+      + esc(n.placeholder) + '"></div>';
+  case 'stepper':
+    return '<div style="display:flex;align-items:center;gap:8px"' + tid(n.id) + '>'
+      + '<div class="iconbtn" style="background:#f1eae0;width:30px;height:30px"' + tid(n.minusId) + bind(n.minus) + '>' + icon('minus',14) + '</div>'
+      + '<div style="min-width:46px;text-align:center;font-weight:700;font-size:12.5px;font-variant-numeric:tabular-nums">'
+      + esc(n.value) + '</div>'
+      + '<div class="iconbtn" style="background:#f1eae0;width:30px;height:30px"' + tid(n.plusId) + bind(n.plus) + '>' + icon('plus',14) + '</div></div>';
+
+  case 'plate': return '<div class="plate" style="margin:8px 16px 2px">' + plateSvg(n.palette, n.seed, n.height) + '</div>';
+  case 'hero':
+    return '<div class="hero"' + tid(n.id) + bind(n.act) + '>' + plateSvg(n.palette, n.seed, n.height)
+      + '<div class="hr-b"><div class="hr-k">' + esc(n.kicker) + '</div>'
+      + '<div class="hr-t">' + esc(n.title) + '</div>'
+      + '<div class="hr-s">' + esc(n.sub) + '</div></div></div>';
+  case 'rcard':
+    return '<div class="rcard"' + tid(n.id) + bind(n.act) + '>' + plateSvg(n.palette, n.seed, n.height)
+      + '<div class="rc-b"><div class="rc-t">' + esc(n.title) + '</div>'
+      + '<div class="rc-s">' + esc(n.sub) + '</div>'
+      + '<div class="rc-m">' + tagsHtml(n.tags) + '</div></div></div>';
+  case 'servbar':
+    return '<div class="servbar"' + tid(n.id) + '>'
+      + '<div class="sv-b"' + tid(n.minusId) + bind(n.minus) + '>' + icon('minus',16) + '</div>'
+      + '<div class="sv-l">' + esc(n.label) + '<div style="font-size:11.5px;color:var(--muted)">'
+      + esc(n.note) + '</div></div>'
+      + '<div class="sv-v">' + esc(n.value) + '</div>'
+      + '<div class="sv-b"' + tid(n.plusId) + bind(n.plus) + '>' + icon('plus',16) + '</div></div>';
+  case 'ing':
+    return '<div class="ing' + (n.staple?' staple':'') + '"' + tid(n.id) + bind(n.act) + '>'
+      + '<div class="ig-q">' + esc(n.qty) + '</div>'
+      + '<div class="ig-n">' + esc(n.name) + '<div class="ig-s">' + esc(n.sub) + '</div></div></div>';
+  case 'stepr':
+    return '<div class="stepr"' + tid(n.id) + bind(n.act) + '><div class="sp-n">' + esc(n.n) + '</div>'
+      + '<div class="sp-t">' + esc(n.text)
+      + (n.mins ? '<div class="sp-m">' + esc(n.mins) + '</div>' : '') + '</div></div>';
+  case 'cook':
+    return '<div class="cook"' + tid(n.id) + '><div class="ck-k">' + esc(n.kicker)
+      + (n.mins ? ' · ' + esc(n.mins) : '') + '</div>'
+      + '<div class="ck-p">' + n.dots.map(function(d){ return '<i class="' + (d.on?'on':'') + '"></i>'; }).join('')
+      + '</div><div class="ck-t">' + esc(n.text) + '</div></div>';
+  case 'pills':
+    return '<div style="display:flex;gap:7px;flex-wrap:wrap;padding:8px 18px 4px"' + tid(n.id) + '>'
+      + tagsHtml(n.items) + '</div>';
+  case 'tabbar':
+    return '<div class="n-tabbar"' + tid(n.id) + '>' + n.items.map(function(i){
+      return '<div class="tb' + (i.on?' on':'') + '"' + tid(i.id) + bind(i.act) + '>'
+        + '<i>' + icon(i.icon, 21) + '</i>' + esc(i.text) + '</div>';
+    }).join('') + '</div>';
+  case 'mask':  return '<div class="n-mask"' + tid(n.id) + bind(n.close) + '>' + R(n.c) + '</div>';
+  case 'sheet':
+    return '<div class="n-sheet"' + tid(n.id) + ' data-stop="1"><div class="sh-hd">'
+      + '<div class="t">' + esc(n.title) + '</div>'
+      + '<div class="iconbtn"' + tid(n.closeId) + bind(n.close) + '>' + icon('close',15) + '</div></div>'
+      + '<div class="sh-bd">' + R(n.c) + '</div></div>';
+  case 'dialog':
+    return '<div class="dialog"' + tid(n.id) + ' data-stop="1">'
+      + '<div style="padding:22px 20px 16px;text-align:center">'
+      + (n.title ? '<div style="font:600 19px/1.3 var(--disp);margin-bottom:8px">' + esc(n.title) + '</div>' : '')
+      + '<div style="font-size:13.5px;color:var(--ink2);line-height:1.55">' + esc(n.text) + '</div></div>'
+      + '<div style="display:flex;gap:10px;padding:0 16px 16px">'
+      + '<div class="n-btn" style="flex:1"' + tid(n.cancel.id) + bind(n.cancel.act) + '>' + esc(n.cancel.text) + '</div>'
+      + '<div class="n-btn primary" style="flex:1"' + tid(n.ok.id) + bind(n.ok.act) + '>' + esc(n.ok.text) + '</div>'
+      + '</div></div>';
+  case 'toast': return '<div class="n-toast"' + tid(n.id) + '>' + esc(n.text) + '</div>';
+  default: return '';
+  }
+}
+
+var STATE = null;
+function paint(){
+  ACTS = [];
+  app.innerHTML = render(E.screen(STATE));
+  document.getElementById('sb-clock').textContent = E.select.hhmm(STATE.meta.clock);
+  if (!hud.classList.contains('off')) paintHud();
+}
+app.addEventListener('click', function(ev){
+  var el = ev.target.closest('[data-act]'); if (!el) return;
+  if (el.classList.contains('n-mask') && ev.target.closest('[data-stop]')) return;
+  var act = ACTS[+el.getAttribute('data-act')]; if (!act) return;
+  TRAJ.push({action:'tap', id: el.getAttribute('data-testid') || null});
+  STATE = E.reduce(STATE, act); paint();
+});
+app.addEventListener('input', function(ev){
+  var el = ev.target.closest('[data-actt]'); if (!el) return;
+  var act = JSON.parse(JSON.stringify(ACTS[+el.getAttribute('data-actt')]));
+  for (var k in act) if (act[k] === '$VALUE') act[k] = el.value;
+  var id = el.getAttribute('data-testid'), pos = el.selectionStart;
+  TRAJ.push({action:'type', id:id, text:el.value});
+  STATE = E.reduce(STATE, act); paint();
+  var again = id && app.querySelector('[data-testid="' + id + '"]');
+  if (again && again.focus) { again.focus(); try { again.setSelectionRange(pos, pos); } catch(e){} }
+});
+
+function paintHud(){
+  var d = E.derive(STATE);
+  hud.innerHTML = '<h4>__ENV__ · ' + E.ENV_ID + ' v' + E.VERSION + '</h4>'
+    + '<div><span class="k">route</span> ' + d.route + '  <span class="k">step</span> ' + STATE.meta.steps + '</div>'
+    + '<div><span class="k">list</span> ' + d.listCount + '  <span class="k">planned</span> ' + d.plannedCount + '</div>'
+    + '<div style="margin-top:8px"><button id="hud-reset">reset</button>'
+    + '<button id="hud-a11y">copy a11y</button><button id="hud-state">copy state</button>'
+    + '<button id="hud-traj">copy traj</button><button id="hud-hide">hide (h)</button></div>'
+    + '<pre>' + esc(E.a11y(STATE)) + '</pre>';
+  hud.querySelector('#hud-reset').onclick = function(){ ENVAPI.reset({seed:STATE.meta.seed}); };
+  hud.querySelector('#hud-a11y').onclick  = function(){ copy(E.a11y(STATE)); };
+  hud.querySelector('#hud-state').onclick = function(){ copy(JSON.stringify(E.snapshot(STATE), null, 2)); };
+  hud.querySelector('#hud-traj').onclick  = function(){ copy(JSON.stringify(TRAJ, null, 2)); };
+  hud.querySelector('#hud-hide').onclick  = function(){ hud.classList.add('off'); };
+}
+function copy(t){ try { navigator.clipboard.writeText(t); } catch(e){} }
+document.addEventListener('keydown', function(e){
+  if (e.key === 'h') { hud.classList.toggle('off'); if (!hud.classList.contains('off')) paintHud(); }
+});
+
+var ENVAPI = {
+  ENV_ID: E.ENV_ID, VERSION: E.VERSION,
+  reset: function(opts){
+    opts = opts || {};
+    STATE = E.createInitialState(opts.seed || 0);
+    if (opts.patch) E.applyPatch(STATE, opts.patch);
+    TRAJ = []; paint();
+    return E.snapshot(STATE);
+  },
+  getState:   function(){ return E.snapshot(STATE); },
+  setState:   function(s){ STATE = JSON.parse(JSON.stringify(s)); paint(); return true; },
+  step:       function(a){ var r = E.step(STATE, a); STATE = r.state; TRAJ.push(a); paint();
+                           return {ok:r.ok, error:r.error || null}; },
+  dispatch:   function(act){ STATE = E.reduce(STATE, act); paint(); return true; },
+  a11y:       function(){ return E.a11y(STATE); },
+  elements:   function(){ return E.elements(STATE); },
+  route:      function(){ return E.select.route(STATE); },
+  trajectory: function(){ return JSON.parse(JSON.stringify(TRAJ)); },
+  bounds: function(){
+    var base = document.getElementById('screen').getBoundingClientRect(), out = {};
+    app.querySelectorAll('[data-testid]').forEach(function(el){
+      var r = el.getBoundingClientRect();
+      out[el.getAttribute('data-testid')] = {
+        x:Math.round(r.left-base.left), y:Math.round(r.top-base.top),
+        w:Math.round(r.width), h:Math.round(r.height),
+        cx:Math.round(r.left-base.left+r.width/2), cy:Math.round(r.top-base.top+r.height/2)};
+    });
+    return out;
+  }
+};
+window.__ENV__ = ENVAPI;
+var qs = new URLSearchParams(location.search);
+if (qs.get('bare') === '1') document.body.classList.add('bare');
+if (qs.get('hud')  === '1') hud.classList.remove('off');
+ENVAPI.reset({seed: parseInt(qs.get('seed') || '0', 10) || 0});
+window.__ENV_READY__ = true;
+})();
+</script>
+</body>
+</html>

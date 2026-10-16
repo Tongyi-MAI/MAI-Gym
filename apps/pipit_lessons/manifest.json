@@ -1,0 +1,29 @@
+{
+  "id": "pipit_lessons",
+  "name": "Pipit",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "viewport": {"width": 390, "height": 844},
+  "description": "A single-file H5 language course whose world model is marking. Unlike every other environment here, this one knows which answer is right: a wrong tap costs one of three hearts, breaks the streak and pushes the question to the back of the queue to be asked again, and three wrong ends the lesson. The answers are all in the app — the Words tab is a glossary of the whole course — so 'finish unit one without losing a heart' is really a task about looking things up before answering. 8 screens, 18 words across 3 units, multiple-choice both ways and sentence building from a word bank. Nothing is random: the same taps always produce the same lesson.",
+  "tasks_file": "tasks.json",
+  "oracle_file": "oracle.json",
+  "action_space": {
+    "tap":    {"id": "test-id of the element"},
+    "type":   {"id": "test-id of a text field", "text": "replaces the whole value"},
+    "back":   {}, "home": {}, "wait": {},
+    "finish": {"answer": "final answer for question tasks; optional for action tasks"},
+    "tap_xy": {"x": "screen pixel x", "y": "screen pixel y", "note": "browser backend only"}
+  },
+  "observation": {
+    "text": "engine.a11y(state) — the question, every answer button, the hearts, the streak and the marking all serialise, so a text-only agent can sit the lesson.",
+    "pixels": "390x844 screenshot (browser backend); __ENV__.bounds() maps every test-id to a pixel box",
+    "state": "engine.snapshot(state) — canonical state plus a derived view of the session. For the verifier only."
+  },
+  "world": {
+    "marking": "the engine holds the answer; right advances, wrong costs a heart and requeues the question",
+    "hearts": "three per lesson; at zero the lesson ends as a failure and nothing is credited",
+    "xp": "ten per correct answer, plus twenty for finishing with all three hearts",
+    "options": "answer buttons carry the word's own id, and the seed only permutes the order they appear in — never which one is right",
+    "glossary": "every word in the course is readable in the Words tab, examples included"
+  }
+}

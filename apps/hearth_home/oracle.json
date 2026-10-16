@@ -1,0 +1,439 @@
+{
+  "env": "hearth_home",
+  "note": "Golden action sequences. CI replays them and runs the verifier.",
+  "solutions": {
+    "T01_porch_light": [
+      {
+        "action": "tap",
+        "id": "plan_r_garden"
+      },
+      {
+        "action": "tap",
+        "id": "room_open_d_porch"
+      },
+      {
+        "action": "tap",
+        "id": "dev_power"
+      },
+      {
+        "action": "tap",
+        "id": "bright_dec"
+      }
+    ],
+    "T02_units_and_alerts": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "unit_F"
+      },
+      {
+        "action": "tap",
+        "id": "set_deviceAlerts"
+      }
+    ],
+    "T03_alarm_and_hall": [
+      {
+        "action": "tap",
+        "id": "stat_alarm"
+      },
+      {
+        "action": "tap",
+        "id": "alarm_away"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "plan_r_hall"
+      },
+      {
+        "action": "tap",
+        "id": "room_tile_d_hall"
+      }
+    ],
+    "T04_movie_then_dim": [
+      {
+        "action": "tap",
+        "id": "scene_sc_movie"
+      },
+      {
+        "action": "tap",
+        "id": "plan_r_living"
+      },
+      {
+        "action": "tap",
+        "id": "room_open_d_floorlamp"
+      },
+      {
+        "action": "tap",
+        "id": "bright_inc"
+      },
+      {
+        "action": "tap",
+        "id": "bright_inc"
+      }
+    ],
+    "T05_thermostat": [
+      {
+        "action": "tap",
+        "id": "stat_temp"
+      },
+      {
+        "action": "tap",
+        "id": "mode_heat"
+      },
+      {
+        "action": "tap",
+        "id": "target_inc"
+      },
+      {
+        "action": "tap",
+        "id": "target_inc"
+      },
+      {
+        "action": "tap",
+        "id": "target_inc"
+      }
+    ],
+    "T06_automations": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "go_automations"
+      },
+      {
+        "action": "tap",
+        "id": "auto_toggle_au_sunset"
+      },
+      {
+        "action": "tap",
+        "id": "auto_toggle_au_cams"
+      }
+    ],
+    "T07_query_top_room": [
+      {
+        "action": "tap",
+        "id": "tab_energy"
+      },
+      {
+        "action": "finish",
+        "answer": "Kitchen"
+      }
+    ],
+    "T08_query_power": [
+      {
+        "action": "tap",
+        "id": "tab_energy"
+      },
+      {
+        "action": "finish",
+        "answer": "519"
+      }
+    ],
+    "T09_find_kettle": [
+      {
+        "action": "tap",
+        "id": "home_search_btn"
+      },
+      {
+        "action": "type",
+        "id": "search_input",
+        "text": "kettle"
+      },
+      {
+        "action": "tap",
+        "id": "search_go"
+      },
+      {
+        "action": "tap",
+        "id": "find_tile_d_kettle"
+      }
+    ],
+    "T10_add_device": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "add_device_row"
+      },
+      {
+        "action": "type",
+        "id": "dev_name",
+        "text": "Reading Lamp"
+      },
+      {
+        "action": "tap",
+        "id": "devroom_r_study"
+      },
+      {
+        "action": "tap",
+        "id": "dev_save"
+      }
+    ],
+    "T11_query_activity": [
+      {
+        "action": "tap",
+        "id": "home_activity"
+      },
+      {
+        "action": "finish",
+        "answer": "Mira"
+      }
+    ],
+    "T12_study_all_off": [
+      {
+        "action": "tap",
+        "id": "plan_r_study"
+      },
+      {
+        "action": "tap",
+        "id": "room_all_off"
+      }
+    ],
+    "T13_blinds": [
+      {
+        "action": "tap",
+        "id": "plan_r_living"
+      },
+      {
+        "action": "tap",
+        "id": "room_tile_d_blinds_l"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "plan_r_bed"
+      },
+      {
+        "action": "tap",
+        "id": "room_tile_d_bed_blinds"
+      }
+    ],
+    "T14_bedside_lamp": [
+      {
+        "action": "tap",
+        "id": "plan_r_bed"
+      },
+      {
+        "action": "tap",
+        "id": "room_open_d_bed_lamp"
+      },
+      {
+        "action": "tap",
+        "id": "bright_25"
+      }
+    ],
+    "T15_night_routine": [
+      {
+        "action": "tap",
+        "id": "scene_sc_evening"
+      },
+      {
+        "action": "tap",
+        "id": "stat_temp"
+      },
+      {
+        "action": "tap",
+        "id": "mode_heat"
+      },
+      {
+        "action": "tap",
+        "id": "target_dec"
+      },
+      {
+        "action": "tap",
+        "id": "target_dec"
+      },
+      {
+        "action": "tap",
+        "id": "target_dec"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "plan_r_bed"
+      },
+      {
+        "action": "tap",
+        "id": "room_tile_d_bed_blinds"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "plan_r_study"
+      },
+      {
+        "action": "tap",
+        "id": "room_tile_d_desk_plug"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "stat_alarm"
+      },
+      {
+        "action": "tap",
+        "id": "alarm_home"
+      },
+      {
+        "action": "tap",
+        "id": "sec_lock"
+      }
+    ],
+    "T16_power_budget": [
+      {
+        "action": "tap",
+        "id": "plan_r_study"
+      },
+      {
+        "action": "tap",
+        "id": "room_tile_d_desk_plug"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "plan_r_living"
+      },
+      {
+        "action": "tap",
+        "id": "room_tile_d_tv"
+      },
+      {
+        "action": "tap",
+        "id": "room_tile_d_ceiling"
+      }
+    ],
+    "T17_bedtime_time": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "go_automations"
+      },
+      {
+        "action": "tap",
+        "id": "auto_au_bedtime"
+      },
+      {
+        "action": "tap",
+        "id": "hour_dec"
+      },
+      {
+        "action": "tap",
+        "id": "min_inc"
+      },
+      {
+        "action": "tap",
+        "id": "min_inc"
+      }
+    ],
+    "T18_away_scene": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "go_scenes"
+      },
+      {
+        "action": "tap",
+        "id": "scene_open_sc_away"
+      },
+      {
+        "action": "tap",
+        "id": "scene_apply"
+      }
+    ],
+    "T19_lights_but_hall": [
+      {
+        "action": "tap",
+        "id": "plan_r_living"
+      },
+      {
+        "action": "tap",
+        "id": "room_tile_d_ceiling"
+      },
+      {
+        "action": "tap",
+        "id": "room_tile_d_floorlamp"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "plan_r_kitchen"
+      },
+      {
+        "action": "tap",
+        "id": "room_tile_d_kitchen"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "plan_r_study"
+      },
+      {
+        "action": "tap",
+        "id": "room_tile_d_desk_lamp"
+      }
+    ],
+    "T20_secure_the_house": [
+      {
+        "action": "tap",
+        "id": "stat_alarm"
+      },
+      {
+        "action": "tap",
+        "id": "sec_lock"
+      },
+      {
+        "action": "tap",
+        "id": "alarm_away"
+      },
+      {
+        "action": "tap",
+        "id": "sec_d_garden_cam"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "go_automations"
+      },
+      {
+        "action": "tap",
+        "id": "auto_toggle_au_cams"
+      }
+    ]
+  }
+}

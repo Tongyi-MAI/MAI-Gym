@@ -1,0 +1,32 @@
+{
+  "id": "quill_messages",
+  "name": "信息",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "viewport": {"width": 390, "height": 844},
+  "description": "一个单文件 H5「信息」——手机自带的短信应用（界面为中文）。世界模型是一个字符编码器：一条短信不是一条，而是网络把它切成的若干「段」，切几段取决于文字用得上哪套字母表。全是拉丁字母数字标点就走 GSM-7，一段装 160 个；只要有一个字符落在表外——一个汉字、一个表情——整条立刻转成 UCS-2，一段只装 70 个，而且拆成多段之后每段只剩 67，因为七个字节给了分段头。所以种子局里那条 148 个拉丁字符的草稿是一段、不花钱，加一个「谢」字就变成三段要多付 ¥0.15，而加上七个字母的「 Thanks」一分钱都不多。套餐 200 段已经用掉 198，就卡在悬崖边上。另有定时待发、拦截名单和未读汇总。4 个界面，5 个会话，5 个一键插入的短语。",
+  "tasks_file": "tasks.json",
+  "oracle_file": "oracle.json",
+  "action_space": {
+    "tap":    {"id": "test-id of the element"},
+    "type":   {"id": "test-id of a text field", "text": "replaces the whole value"},
+    "back":   {}, "home": {}, "wait": {},
+    "finish": {"answer": "final answer for question tasks; optional for action tasks"},
+    "tap_xy": {"x": "screen pixel x", "y": "screen pixel y", "note": "browser backend only"}
+  },
+  "observation": {
+    "text": "engine.a11y(state) — 分段面板打印当前编码、字符数、段数和这条要多花的钱，并点名是哪个字符把编码顶成了 UCS-2；会话列表和定时列表各自把段数算好。纯文本也能把账算完。",
+    "pixels": "390x844 screenshot (browser backend); __ENV__.bounds() maps every test-id to a pixel box",
+    "state": "engine.snapshot(state) — canonical state 加上按联系人名索引的草稿、段数与编码。仅供校验器使用。"
+  },
+  "world": {
+    "clock": "周三 21:14",
+    "encoding": "GSM 03.38 基本表内 = GSM-7，一段 160、多段每段 153；表外任一字符 = 整条 UCS-2，一段 70、多段每段 67",
+    "emoji": "一个表情在 UTF-16 里占两个码元",
+    "plan": "套餐 200 段，本月已用 198，超出每段 ¥0.15",
+    "seeded_draft": "王倩会话里存着 148 个拉丁字符的行程草稿：GSM-7、1 段、套餐内",
+    "cliff": "加「谢」→ 149 字符但 3 段 ¥0.15；加「 Thanks」→ 155 字符仍是 1 段 ¥0；加👍 → 150 字符 3 段",
+    "scheduled": "两条定时短信各 1 段，都发出去正好把套餐用满到 200",
+    "blocked": "400 8888 6666 在拦截名单里，给它发会被 reducer 挡回来并说明理由"
+  }
+}

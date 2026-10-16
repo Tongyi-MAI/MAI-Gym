@@ -1,0 +1,817 @@
+{
+  "env": "compass_maps",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_settings",
+      "name": "Two switches",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "settings"
+      ],
+      "instruction": "In Setup, turn off «Show traffic multipliers» and turn off «Keep left». Leave the toll switch alone.",
+      "goal": [
+        {
+          "name": "Traffic multipliers hidden",
+          "path": "derived.settings.showTraffic",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Keep left off",
+          "path": "derived.settings.keepLeft",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Tolls untouched",
+          "path": "derived.settings.avoidTolls",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "The route did not change",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "r_motor"
+        }
+      ]
+    },
+    {
+      "id": "T02_eta",
+      "name": "Question: when do you get there?",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "Leaving at 08:00 on the motorway, how long is the journey and when do you arrive?",
+      "goal": [
+        {
+          "name": "52 minutes",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)52(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "08:52",
+          "source": "answer",
+          "op": "regex",
+          "value": "0?8[:.]?52",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.journeyMinutes",
+          "op": "eq",
+          "value": 52
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T03_fastest_now",
+      "name": "Question: which road is quickest at eight?",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "Leaving at 08:00, which of the three driving routes is quickest, and how long does it take?",
+      "goal": [
+        {
+          "name": "the ring road",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Rr]ing",
+          "weight": 3
+        },
+        {
+          "name": "47 minutes",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)47(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "r_motor"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T04_town",
+      "name": "Question: the shortest road",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "«Through town» is the shortest route on the map. How long does it take at 08:00?",
+      "goal": [
+        {
+          "name": "67 minutes",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)67(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "r_motor"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T05_multiplier",
+      "name": "Question: how bad is eight o'clock",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "What is the traffic multiplier on the motorway for an 08:00 departure, and what is it at 11:00?",
+      "goal": [
+        {
+          "name": "2.15 at eight",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:(2[.,]15|215))(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "1.15 at eleven",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:(1[.,]15|115))(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.departMinute",
+          "op": "eq",
+          "value": 480
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T06_tolls",
+      "name": "Refuse the toll",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "refusal"
+      ],
+      "instruction": "Turn on «Avoid tolls» and say what the app did to your route and whether you still get there on time.",
+      "goal": [
+        {
+          "name": "Tolls are avoided",
+          "path": "derived.settings.avoidTolls",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "It moved you off the motorway",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "r_city"
+        },
+        {
+          "name": "And now you are late",
+          "path": "derived.onTime",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "through town",
+          "source": "answer",
+          "op": "regex",
+          "value": "([Tt]own|city)",
+          "weight": 3
+        },
+        {
+          "name": "late",
+          "source": "answer",
+          "op": "regex",
+          "value": "(late|miss|09:07|not)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T07_pick_fastest",
+      "name": "Take the quick one",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "route"
+      ],
+      "instruction": "Switch to whichever driving route is fastest for an 08:00 departure.",
+      "goal": [
+        {
+          "name": "On the ring road",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "r_ring"
+        },
+        {
+          "name": "47 minutes",
+          "path": "derived.journeyMinutes",
+          "op": "eq",
+          "value": 47
+        },
+        {
+          "name": "Arrives in time",
+          "path": "derived.onTime",
+          "op": "eq",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "T08_eleven",
+      "name": "Question: and at eleven?",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "route",
+        "reasoning"
+      ],
+      "instruction": "Move the departure to 11:00 and tell me which route is fastest now and how long it takes.",
+      "goal": [
+        {
+          "name": "Leaving at 11:00",
+          "path": "derived.departMinute",
+          "op": "eq",
+          "value": 660
+        },
+        {
+          "name": "the motorway",
+          "source": "answer",
+          "op": "regex",
+          "value": "([Mm]otorway|A38)",
+          "weight": 3
+        },
+        {
+          "name": "28 minutes",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)28(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T09_flip",
+      "name": "Question: when does the ranking flip?",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "query",
+        "reasoning"
+      ],
+      "instruction": "The ring road is fastest at 08:00 and the motorway is fastest at 09:00. Say which is fastest at each of those two hours and by how many minutes.",
+      "goal": [
+        {
+          "name": "ring at eight",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Rr]ing",
+          "weight": 3
+        },
+        {
+          "name": "motorway at nine",
+          "source": "answer",
+          "op": "regex",
+          "value": "([Mm]otorway|A38)",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.departMinute",
+          "op": "eq",
+          "value": 480
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T10_transit",
+      "name": "Question: is the bus quicker?",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "mode"
+      ],
+      "instruction": "At 08:00, is the bus quicker than any of the driving routes? Switch to it and say the arrival time.",
+      "goal": [
+        {
+          "name": "On the bus",
+          "path": "derived.mode",
+          "op": "eq",
+          "value": "transit"
+        },
+        {
+          "name": "45 minutes",
+          "path": "derived.journeyMinutes",
+          "op": "eq",
+          "value": 45
+        },
+        {
+          "name": "yes",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:(yes|quick|faster|45))(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "08:45",
+          "source": "answer",
+          "op": "regex",
+          "value": "0?8[:.]?45",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T11_leave_by",
+      "name": "Question: when to leave for nine",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "search"
+      ],
+      "instruction": "Use the «leave by» button to work out the latest you can set off and still be there by 09:00, driving.",
+      "goal": [
+        {
+          "name": "Leaves at 08:10",
+          "path": "derived.departMinute",
+          "op": "eq",
+          "value": 490
+        },
+        {
+          "name": "On the ring road",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "r_ring"
+        },
+        {
+          "name": "Arrives in time",
+          "path": "derived.onTime",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "08:10",
+          "source": "answer",
+          "op": "regex",
+          "value": "0?8[:.]?10",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T12_bike",
+      "name": "Question: the bike",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "mode"
+      ],
+      "instruction": "Switch to cycling and tell me the journey time and what it costs.",
+      "goal": [
+        {
+          "name": "On the bike",
+          "path": "derived.mode",
+          "op": "eq",
+          "value": "bike"
+        },
+        {
+          "name": "53 minutes",
+          "path": "derived.journeyMinutes",
+          "op": "eq",
+          "value": 53
+        },
+        {
+          "name": "£3.00",
+          "path": "derived.costPence",
+          "op": "eq",
+          "value": 300
+        },
+        {
+          "name": "53 minutes",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)53(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "£3",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:3([.,]00)?)(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T13_park",
+      "name": "Question: parking",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "cost"
+      ],
+      "instruction": "Change the parking to two hours and tell me what the motorway trip costs in total then.",
+      "goal": [
+        {
+          "name": "Two hours of parking",
+          "path": "derived.parkHours",
+          "op": "eq",
+          "value": 2
+        },
+        {
+          "name": "On the motorway",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "r_motor"
+        },
+        {
+          "name": "£42.04",
+          "path": "derived.costPence",
+          "op": "eq",
+          "value": 4204
+        },
+        {
+          "name": "£42.04",
+          "source": "answer",
+          "op": "regex",
+          "value": "42[.,]04",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T14_cheapest_drive",
+      "name": "Question: cheapest drive",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "cost",
+        "query"
+      ],
+      "instruction": "Of the three driving routes, which is cheapest at 08:00 and what does it cost? Do not switch to it.",
+      "goal": [
+        {
+          "name": "through town",
+          "source": "answer",
+          "op": "regex",
+          "value": "([Tt]own|city)",
+          "weight": 3
+        },
+        {
+          "name": "£22.86",
+          "source": "answer",
+          "op": "regex",
+          "value": "22[.,]86",
+          "weight": 3
+        },
+        {
+          "name": "Still on the motorway",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "r_motor"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T15_half_eight",
+      "name": "There by half past eight",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "search",
+        "reasoning"
+      ],
+      "instruction": "You now have to be there by 08:30, driving. Work out the latest departure and set it. Then say why «08:30 minus the journey time» would have given the wrong answer.",
+      "goal": [
+        {
+          "name": "Deadline is 08:30",
+          "path": "derived.arriveByMinute",
+          "op": "eq",
+          "value": 510
+        },
+        {
+          "name": "Leaves at 07:50",
+          "path": "derived.departMinute",
+          "op": "eq",
+          "value": 470
+        },
+        {
+          "name": "On the motorway",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "r_motor"
+        },
+        {
+          "name": "Arrives exactly on time",
+          "path": "derived.arrivalMinute",
+          "op": "eq",
+          "value": 510
+        },
+        {
+          "name": "07:50",
+          "source": "answer",
+          "op": "regex",
+          "value": "0?7[:.]?50",
+          "weight": 3
+        },
+        {
+          "name": "because the journey time depends on when you leave",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:(depend|multiplier|hour|leave|traffic|07|08))(?!\\d)",
+          "weight": 3,
+          "hint": "the 47-minute figure is the one for an 08:00 departure, not a 07:50 one"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T16_cheapest_ontime",
+      "name": "Cheapest way that still makes nine",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "optimise",
+        "cost"
+      ],
+      "instruction": "Leaving at 08:00 and having to be there by 09:00, find the cheapest way of any kind that still gets you there. Set it, and say what it costs.",
+      "goal": [
+        {
+          "name": "On the bike",
+          "path": "derived.mode",
+          "op": "eq",
+          "value": "bike"
+        },
+        {
+          "name": "Arrives in time",
+          "path": "derived.onTime",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "£3.00",
+          "path": "derived.costPence",
+          "op": "eq",
+          "value": 300
+        },
+        {
+          "name": "cycling",
+          "source": "answer",
+          "op": "regex",
+          "value": "([Cc]ycl|bike|canal)",
+          "weight": 3
+        },
+        {
+          "name": "£3",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:3([.,]00)?)(?!\\d)",
+          "weight": 3,
+          "hint": "walking is free but check whether it arrives before nine"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T17_bus_wait",
+      "name": "Two departures, one arrival",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "reasoning"
+      ],
+      "instruction": "On the bus, leaving at 08:00 and leaving at 08:04 get you there at the same minute. Set the departure to 08:04 and explain why.",
+      "goal": [
+        {
+          "name": "On the bus",
+          "path": "derived.mode",
+          "op": "eq",
+          "value": "transit"
+        },
+        {
+          "name": "Leaving at 08:04",
+          "path": "derived.departMinute",
+          "op": "eq",
+          "value": 484
+        },
+        {
+          "name": "41 minutes",
+          "path": "derived.journeyMinutes",
+          "op": "eq",
+          "value": 41
+        },
+        {
+          "name": "Arrives 08:45",
+          "path": "derived.arrivalText",
+          "op": "eq",
+          "value": "08:45"
+        },
+        {
+          "name": "the bus goes at :04",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:(:?04|12|wait))(?!\\d)",
+          "weight": 3,
+          "hint": "what were you doing for the first four minutes of the 08:00 journey?"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T18_no_tolls_ontime",
+      "name": "No tolls, still on time",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "constraint",
+        "search"
+      ],
+      "instruction": "Turn on «Avoid tolls». You now cannot use the motorway or the ring road. Still driving, find the latest departure that gets you there by 09:00 and set it.",
+      "goal": [
+        {
+          "name": "Tolls avoided",
+          "path": "derived.settings.avoidTolls",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Through town",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "r_city"
+        },
+        {
+          "name": "Arrives in time",
+          "path": "derived.onTime",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Leaves at 07:55",
+          "path": "derived.departMinute",
+          "op": "eq",
+          "value": 475
+        },
+        {
+          "name": "07:55",
+          "source": "answer",
+          "op": "regex",
+          "value": "0?7[:.]?55",
+          "weight": 3,
+          "hint": "through town at 07:00 is 45 minutes and at 08:00 it is 67"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T19_worst_hour",
+      "name": "The worst possible hour",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 28,
+      "tags": [
+        "search"
+      ],
+      "instruction": "Of the departure times on the strip, which one gives the longest best-case driving journey, and how long is it? Set the departure to it.",
+      "goal": [
+        {
+          "name": "Leaving at 08:00",
+          "path": "derived.departMinute",
+          "op": "eq",
+          "value": 480
+        },
+        {
+          "name": "Best case is 47 minutes",
+          "path": "derived.fastestMinutes",
+          "op": "eq",
+          "value": 47
+        },
+        {
+          "name": "08:00",
+          "source": "answer",
+          "op": "regex",
+          "value": "0?8[:.]?00",
+          "weight": 3
+        },
+        {
+          "name": "47 minutes",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)47(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T20_full_plan",
+      "name": "A whole morning planned",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 34,
+      "tags": [
+        "optimise",
+        "multi-step"
+      ],
+      "instruction": "You must be at the office by 08:45 and you want to spend as little as possible. Parking is only needed for four hours today. Pick the mode and route, set the parking, set the latest departure that works, and tell me the total cost.",
+      "goal": [
+        {
+          "name": "On the bike",
+          "path": "derived.mode",
+          "op": "eq",
+          "value": "bike"
+        },
+        {
+          "name": "Deadline is 08:45",
+          "path": "derived.arriveByMinute",
+          "op": "eq",
+          "value": 525
+        },
+        {
+          "name": "Arrives in time",
+          "path": "derived.onTime",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Costs £3.00",
+          "path": "derived.costPence",
+          "op": "eq",
+          "value": 300
+        },
+        {
+          "name": "Parking set to four hours",
+          "path": "derived.parkHours",
+          "op": "eq",
+          "value": 4
+        },
+        {
+          "name": "£3",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:3([.,]00)?)(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "cycling",
+          "source": "answer",
+          "op": "regex",
+          "value": "([Cc]ycl|bike|canal)",
+          "weight": 3,
+          "hint": "parking only matters if you drive"
+        }
+      ],
+      "answer_expected": true
+    }
+  ]
+}

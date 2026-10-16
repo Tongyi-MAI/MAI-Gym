@@ -1,0 +1,33 @@
+{
+  "id": "anvil_remit",
+  "name": "Anvil",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "viewport": {"width": 390, "height": 844},
+  "description": "A single-file H5 remittance app. Two amount fields are tied together by an exchange rate: type what you send and it works out what arrives, type what has to arrive and it solves backwards for what you must send, and whichever field you typed into last is the anchor that survives a change of route. Underneath sits a cost structure with no single winner — four routes with a banded flat fee, a percentage with a floor, a flat fee and no fee at all, each taking a different margin out of the rate — so the cheapest route depends on the amount, crossing over at £111.32 and again at £475.30. Two routes have ceilings and everything stops at £5,000. 5 screens, 4 recipients, 3 currencies, 2 promo codes.",
+  "tasks_file": "tasks.json",
+  "oracle_file": "oracle.json",
+  "action_space": {
+    "tap":    {"id": "test-id of the element"},
+    "type":   {"id": "test-id of a text field", "text": "replaces the whole value"},
+    "back":   {}, "home": {}, "wait": {},
+    "finish": {"answer": "final answer for question tasks; optional for action tasks"},
+    "tap_xy": {"x": "screen pixel x", "y": "screen pixel y", "note": "browser backend only"}
+  },
+  "observation": {
+    "text": "engine.a11y(state) — both amount fields, the rate in use, the mid-market rate and every route's fee, delivered amount and total cost all serialise, so the whole comparison is legible without pixels.",
+    "pixels": "390x844 screenshot (browser backend); __ENV__.bounds() maps every test-id to a pixel box",
+    "state": "engine.snapshot(state) — canonical state plus a derived view with per-route costs keyed by route name. For the verifier only."
+  },
+  "world": {
+    "clock": "19:04",
+    "money": "sterling in integer pence, destination currencies in their own integer minor unit",
+    "rates": "held as micro-units of destination minor currency per penny, so nothing rounds twice: INR 105.8420, PHP 72.1500, PLN 5.1280",
+    "coupling": "the anchor field is whichever one was typed into last; changing the route re-solves the other one",
+    "fees": "wallet none, debit card 0.85% with a £1.50 floor, cash pickup £3.99 flat, bank transfer £2.99 / £4.99 / nothing in bands at £250 and £1,000",
+    "margins": "wallet 1.90%, card 0.55%, cash 1.20%, bank 0.35% off the mid-market rate",
+    "crossovers": "the wallet is cheapest below £111.32, the debit card up to £475.29, the bank transfer from £475.30",
+    "limits": "mobile wallet £1,000, cash pickup £2,500, and nothing at all above £5,000",
+    "codes": "FIRST0 waives the fee on any route; RATE25 takes 0.25% off every route margin"
+  }
+}

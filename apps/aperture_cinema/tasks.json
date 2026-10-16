@@ -1,0 +1,859 @@
+{
+  "env": "aperture_cinema",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_settings",
+      "name": "Default card and accessible seats",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "settings"
+      ],
+      "instruction": "In Settings, make the Amex the default payment method and turn on highlighting for accessible seats. Leave the two notification settings alone.",
+      "goal": [
+        {
+          "name": "Amex is the default",
+          "path": "settings.defaultPayment",
+          "op": "eq",
+          "value": "pm_amex"
+        },
+        {
+          "name": "Accessible seats highlighted",
+          "path": "settings.accessibleSeats",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Reminders untouched",
+          "path": "settings.reminders",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Email receipts untouched",
+          "path": "settings.emailReceipts",
+          "op": "eq",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "T02_query_points",
+      "name": "Question: what the points are worth",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "answer_expected": true,
+      "tags": [
+        "member",
+        "query",
+        "read-only"
+      ],
+      "instruction": "What is my points balance worth as a discount? Answer with the number of pounds.",
+      "goal": [
+        {
+          "name": "The answer is 18",
+          "source": "answer",
+          "op": "eq",
+          "value": 18,
+          "extract": "number",
+          "weight": 3,
+          "hint": "1840 points, and 100 points is £1.00"
+        },
+        {
+          "name": "Points were not spent",
+          "path": "derived.memberPoints",
+          "op": "eq",
+          "value": 1840
+        }
+      ]
+    },
+    {
+      "id": "T03_cancel",
+      "name": "Cancel the existing booking",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "bookings",
+        "confirm-dialog"
+      ],
+      "instruction": "Cancel my existing booking for Tide Tables.",
+      "goal": [
+        {
+          "name": "The booking is cancelled",
+          "path": "bookings[?id=bk_9001][0].status",
+          "op": "eq",
+          "value": "cancelled",
+          "weight": 2
+        },
+        {
+          "name": "Its seats went back on sale",
+          "path": "derived.takenCounts.sw_9",
+          "op": "eq",
+          "value": 6,
+          "hint": "eight were taken; B2 and B3 were yours"
+        },
+        {
+          "name": "No new booking was made",
+          "path": "derived.bookingCount",
+          "op": "eq",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "T04_simple_booking",
+      "name": "Two seats, two adults",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 22,
+      "tags": [
+        "seatmap",
+        "booking"
+      ],
+      "instruction": "Book seats F5 and F6 for the 18:40 showing of The Lighthouse Keeper tonight, as two adult tickets, no snacks, paying with the default card.",
+      "goal": [
+        {
+          "name": "A second booking exists",
+          "path": "derived.bookingCount",
+          "op": "eq",
+          "value": 2
+        },
+        {
+          "name": "The right seats",
+          "path": "derived.lastBooking.seats",
+          "op": "eq",
+          "value": [
+            "F5",
+            "F6"
+          ],
+          "weight": 2
+        },
+        {
+          "name": "Two adult tickets",
+          "path": "derived.lastBooking.tickets.adult",
+          "op": "eq",
+          "value": 2
+        },
+        {
+          "name": "No other ticket types",
+          "path": "derived.lastBooking.tickets.child",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Total is £25.00",
+          "path": "derived.lastBooking.total",
+          "op": "eq",
+          "value": 2500,
+          "weight": 2
+        },
+        {
+          "name": "Those seats are now taken",
+          "path": "derived.takenCounts.sw_1",
+          "op": "eq",
+          "value": 12
+        }
+      ]
+    },
+    {
+      "id": "T05_query_row",
+      "name": "Question: how full is row C",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "answer_expected": true,
+      "tags": [
+        "seatmap",
+        "query",
+        "read-only"
+      ],
+      "instruction": "Open the seat map for the 18:40 Lighthouse Keeper showing tonight. How many seats in row C are already taken? Answer with just the number.",
+      "goal": [
+        {
+          "name": "The answer is 3",
+          "source": "answer",
+          "op": "eq",
+          "value": 3,
+          "extract": "number",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was booked",
+          "path": "derived.bookingCount",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "No seats were selected",
+          "path": "derived.draftSeatCount",
+          "op": "eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T06_ticket_mix",
+      "name": "Three seats, mixed tickets",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "seatmap",
+        "constraint",
+        "tickets"
+      ],
+      "instruction": "For the 18:40 Lighthouse Keeper showing, take seats A4, A5 and A6 and pay for two adults and one child. Do not add snacks.",
+      "notes": "Checkout stays shut until the ticket counts add up to the seat count.",
+      "goal": [
+        {
+          "name": "Three seats booked",
+          "path": "derived.lastBooking.seats",
+          "op": "eq",
+          "value": [
+            "A4",
+            "A5",
+            "A6"
+          ],
+          "weight": 2
+        },
+        {
+          "name": "Two adults",
+          "path": "derived.lastBooking.tickets.adult",
+          "op": "eq",
+          "value": 2
+        },
+        {
+          "name": "One child",
+          "path": "derived.lastBooking.tickets.child",
+          "op": "eq",
+          "value": 1,
+          "weight": 2
+        },
+        {
+          "name": "Total is £33.00",
+          "path": "derived.lastBooking.total",
+          "op": "eq",
+          "value": 3300,
+          "hint": "2 x £12.50 + £8.00, row A is not premium"
+        }
+      ]
+    },
+    {
+      "id": "T07_premium_row",
+      "name": "Premium row surcharge",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 24,
+      "tags": [
+        "seatmap",
+        "pricing"
+      ],
+      "instruction": "Book seats D7 and D8 for the 18:40 Lighthouse Keeper showing as two adults, nothing else.",
+      "goal": [
+        {
+          "name": "The premium seats are booked",
+          "path": "derived.lastBooking.seats",
+          "op": "eq",
+          "value": [
+            "D7",
+            "D8"
+          ]
+        },
+        {
+          "name": "Both count as premium",
+          "path": "derived.lastBookingPremium",
+          "op": "eq",
+          "value": 2,
+          "weight": 2
+        },
+        {
+          "name": "Total is £29.00",
+          "path": "derived.lastBooking.total",
+          "op": "eq",
+          "value": 2900,
+          "weight": 2,
+          "hint": "£25.00 of tickets plus £2.00 per premium seat"
+        }
+      ]
+    },
+    {
+      "id": "T08_deluxe_screen",
+      "name": "Deluxe screen surcharge",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 24,
+      "tags": [
+        "pricing",
+        "showtimes"
+      ],
+      "instruction": "Book seats A5 and A6 for the 21:10 Lighthouse Keeper showing on Screen 3, as two adults with no snacks.",
+      "goal": [
+        {
+          "name": "Booked on the 21:10 showing",
+          "path": "derived.lastBooking.showing",
+          "op": "eq",
+          "value": "sw_2",
+          "weight": 2
+        },
+        {
+          "name": "On the deluxe screen",
+          "path": "derived.lastBookingScreen",
+          "op": "eq",
+          "value": "Screen 3"
+        },
+        {
+          "name": "Total is £30.00",
+          "path": "derived.lastBooking.total",
+          "op": "eq",
+          "value": 3000,
+          "weight": 2,
+          "hint": "£25.00 of tickets plus £2.50 per seat for the recliners"
+        }
+      ]
+    },
+    {
+      "id": "T09_snacks",
+      "name": "Add two snacks",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "extras",
+        "booking"
+      ],
+      "instruction": "Book F5 and F6 for the 18:40 Lighthouse Keeper showing as two adults, and add the popcorn and drink combo plus the loaded nachos.",
+      "goal": [
+        {
+          "name": "Both snacks on the booking",
+          "path": "derived.lastBooking.extras",
+          "op": "set_eq",
+          "value": [
+            "combo",
+            "nachos"
+          ],
+          "weight": 2
+        },
+        {
+          "name": "Total is £43.80",
+          "path": "derived.lastBooking.total",
+          "op": "eq",
+          "value": 4380,
+          "weight": 2
+        },
+        {
+          "name": "Right seats",
+          "path": "derived.lastBooking.seats",
+          "op": "eq",
+          "value": [
+            "F5",
+            "F6"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "T10_spend_points",
+      "name": "Spend the member points",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "member",
+        "pricing"
+      ],
+      "instruction": "Book F5 and F6 for the 18:40 Lighthouse Keeper showing as two adults, and put your member points towards it.",
+      "goal": [
+        {
+          "name": "Points were applied",
+          "path": "derived.lastBooking.pointsUsed",
+          "op": "eq",
+          "value": 1800,
+          "weight": 2
+        },
+        {
+          "name": "Total is £7.00",
+          "path": "derived.lastBooking.total",
+          "op": "eq",
+          "value": 700,
+          "weight": 2
+        },
+        {
+          "name": "Balance dropped to 40",
+          "path": "derived.memberPoints",
+          "op": "eq",
+          "value": 40,
+          "hint": "1840 points, and only whole pounds can be spent"
+        }
+      ]
+    },
+    {
+      "id": "T11_query_busiest",
+      "name": "Question: the busier Low Orbit showing",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "answer_expected": true,
+      "tags": [
+        "query",
+        "compare",
+        "read-only"
+      ],
+      "instruction": "Low Orbit has two showings. Which one has more seats already taken? Answer with its start time.",
+      "goal": [
+        {
+          "name": "The answer is 19:15",
+          "source": "answer",
+          "op": "contains",
+          "value": "19:15",
+          "weight": 3,
+          "hint": "the showtime rows print how many seats are still free"
+        },
+        {
+          "name": "Nothing was booked",
+          "path": "derived.bookingCount",
+          "op": "eq",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "T12_search_book",
+      "name": "Find the animation and book it",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 28,
+      "tags": [
+        "search",
+        "booking"
+      ],
+      "instruction": "Use search to find the animated film, then book two seats for its showing tonight as two child tickets.",
+      "notes": "Paper Birds, 17:00 on Screen 2.",
+      "goal": [
+        {
+          "name": "Booked the Paper Birds showing",
+          "path": "derived.lastBooking.showing",
+          "op": "eq",
+          "value": "sw_11",
+          "weight": 2
+        },
+        {
+          "name": "Two seats",
+          "path": "derived.lastBooking.seats",
+          "op": "len_eq",
+          "value": 2
+        },
+        {
+          "name": "Two child tickets",
+          "path": "derived.lastBooking.tickets.child",
+          "op": "eq",
+          "value": 2,
+          "weight": 2
+        },
+        {
+          "name": "Total is £16.00",
+          "path": "derived.lastBooking.total",
+          "op": "eq",
+          "value": 1600
+        }
+      ]
+    },
+    {
+      "id": "T13_day_filter",
+      "name": "Filter to tomorrow",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "filter"
+      ],
+      "instruction": "Filter the film list down to films showing tomorrow, and leave it filtered.",
+      "goal": [
+        {
+          "name": "The Tomorrow filter is on",
+          "path": "ui.dayFilter",
+          "op": "eq",
+          "value": "Tomorrow",
+          "weight": 2
+        },
+        {
+          "name": "Nothing was booked",
+          "path": "derived.bookingCount",
+          "op": "eq",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "T14_query_cert",
+      "name": "Question: certificate",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "answer_expected": true,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "What certificate is the film Thorn rated? Answer with just the certificate.",
+      "goal": [
+        {
+          "name": "The answer is 18",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)18(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was booked",
+          "path": "derived.bookingCount",
+          "op": "eq",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "T15_full_booking",
+      "name": "Full booking (flagship)",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 40,
+      "tags": [
+        "seatmap",
+        "tickets",
+        "extras",
+        "payment",
+        "points",
+        "long-horizon"
+      ],
+      "instruction": "Book the 21:10 Lighthouse Keeper showing on Screen 3: seats D7, D8 and E8, as two adults and one senior. Add the popcorn and drink combo and a still water, pay with the Amex, and put your member points towards it.",
+      "notes": "3450 tickets + 600 premium + 750 recliners + 1350 snacks = 6150, minus 1800 points = 4350.",
+      "goal": [
+        {
+          "name": "The three seats are right",
+          "path": "derived.lastBooking.seats",
+          "op": "eq",
+          "value": [
+            "D7",
+            "D8",
+            "E8"
+          ],
+          "weight": 3
+        },
+        {
+          "name": "Two adults",
+          "path": "derived.lastBooking.tickets.adult",
+          "op": "eq",
+          "value": 2
+        },
+        {
+          "name": "One senior",
+          "path": "derived.lastBooking.tickets.senior",
+          "op": "eq",
+          "value": 1,
+          "weight": 2
+        },
+        {
+          "name": "Both snacks",
+          "path": "derived.lastBooking.extras",
+          "op": "set_eq",
+          "value": [
+            "combo",
+            "water"
+          ],
+          "weight": 2
+        },
+        {
+          "name": "Paid with the Amex",
+          "path": "derived.lastBooking.payment",
+          "op": "eq",
+          "value": "pm_amex",
+          "weight": 2,
+          "hint": "the Visa is the default, so this needs switching"
+        },
+        {
+          "name": "Points applied",
+          "path": "derived.lastBooking.pointsUsed",
+          "op": "eq",
+          "value": 1800
+        },
+        {
+          "name": "Total is £43.50",
+          "path": "derived.lastBooking.total",
+          "op": "eq",
+          "value": 4350,
+          "weight": 3
+        },
+        {
+          "name": "Balance dropped to 40",
+          "path": "derived.memberPoints",
+          "op": "eq",
+          "value": 40
+        },
+        {
+          "name": "Efficiency: 18 steps or fewer",
+          "source": "trajectory",
+          "path": "steps",
+          "op": "lte",
+          "value": 18,
+          "critical": false,
+          "weight": 0.5
+        }
+      ]
+    },
+    {
+      "id": "T16_cancel_then_book",
+      "name": "Cancel, then take the freed seats",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 34,
+      "tags": [
+        "bookings",
+        "seatmap",
+        "state-coupling"
+      ],
+      "instruction": "Cancel the existing Tide Tables booking, then book the very seats it freed — B2 and B3 on that same showing — as two students.",
+      "notes": "Cancelling puts seats back on sale, so B2 and B3 only become tappable after the cancellation.",
+      "goal": [
+        {
+          "name": "The old booking is cancelled",
+          "path": "bookings[?id=bk_9001][0].status",
+          "op": "eq",
+          "value": "cancelled",
+          "weight": 2
+        },
+        {
+          "name": "The freed seats were rebooked",
+          "path": "derived.lastBooking.seats",
+          "op": "eq",
+          "value": [
+            "B2",
+            "B3"
+          ],
+          "weight": 3
+        },
+        {
+          "name": "Two student tickets",
+          "path": "derived.lastBooking.tickets.student",
+          "op": "eq",
+          "value": 2,
+          "weight": 2
+        },
+        {
+          "name": "Total is £18.00",
+          "path": "derived.lastBooking.total",
+          "op": "eq",
+          "value": 1800
+        },
+        {
+          "name": "Occupancy is back to eight",
+          "path": "derived.takenCounts.sw_9",
+          "op": "eq",
+          "value": 8
+        }
+      ]
+    },
+    {
+      "id": "T17_adjacent_seats",
+      "name": "Two seats together (many valid answers)",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 24,
+      "unique_solution": false,
+      "tags": [
+        "seatmap",
+        "constraint",
+        "multi-solution"
+      ],
+      "instruction": "Book two seats next to each other in row A for the 18:40 Lighthouse Keeper showing, as two adults. A3 is taken, so pick a pair that is actually free.",
+      "goal": [
+        {
+          "name": "Two seats booked",
+          "path": "derived.lastBooking.seats",
+          "op": "len_eq",
+          "value": 2
+        },
+        {
+          "name": "Both in row A",
+          "path": "derived.lastBookingRows",
+          "op": "eq",
+          "value": [
+            "A"
+          ],
+          "weight": 2
+        },
+        {
+          "name": "They are next to each other",
+          "path": "derived.lastBookingSeatsAdjacent",
+          "op": "eq",
+          "value": true,
+          "weight": 3,
+          "hint": "A2 and A4 are not adjacent — A3 sits between them"
+        },
+        {
+          "name": "Two adult tickets",
+          "path": "derived.lastBooking.tickets.adult",
+          "op": "eq",
+          "value": 2
+        },
+        {
+          "name": "and it is the one asked for (lastBookingShowLabel)",
+          "path": "derived.lastBookingShowLabel",
+          "op": "eq",
+          "value": "Today 18:40"
+        },
+        {
+          "name": "and it is the one asked for (lastBookingScreen)",
+          "path": "derived.lastBookingScreen",
+          "op": "eq",
+          "value": "Screen 1"
+        }
+      ]
+    },
+    {
+      "id": "T18_budget_four",
+      "name": "Four seats under £40 (many valid answers)",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 34,
+      "unique_solution": false,
+      "tags": [
+        "constraint",
+        "pricing",
+        "multi-solution"
+      ],
+      "instruction": "Book four seats for the Marmalade Sunday showing tomorrow morning, keeping the total under £40 and staying out of the premium rows.",
+      "notes": "Four children is £32.00; two children and two seniors is £35.00. Four adults would be £50.00 and misses.",
+      "goal": [
+        {
+          "name": "Four seats booked",
+          "path": "derived.lastBooking.seats",
+          "op": "len_eq",
+          "value": 4,
+          "weight": 2
+        },
+        {
+          "name": "On the Tomorrow showing",
+          "path": "derived.lastBooking.showing",
+          "op": "eq",
+          "value": "sw_7",
+          "weight": 2
+        },
+        {
+          "name": "No premium seats",
+          "path": "derived.lastBookingPremium",
+          "op": "eq",
+          "value": 0,
+          "weight": 2,
+          "hint": "rows D and E carry a surcharge"
+        },
+        {
+          "name": "Total is under £40",
+          "path": "derived.lastBooking.total",
+          "op": "lt",
+          "value": 4000,
+          "weight": 3
+        }
+      ]
+    },
+    {
+      "id": "T19_accessible",
+      "name": "Book the accessible spaces",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 28,
+      "tags": [
+        "seatmap",
+        "accessibility"
+      ],
+      "instruction": "Book the two accessible spaces for the Tide Tables showing tonight, as one adult and one senior ticket.",
+      "goal": [
+        {
+          "name": "The accessible spaces are booked",
+          "path": "derived.lastBooking.seats",
+          "op": "eq",
+          "value": [
+            "F1",
+            "F2"
+          ],
+          "weight": 3,
+          "hint": "the seat map marks them as accessible in row F"
+        },
+        {
+          "name": "On the Tide Tables showing",
+          "path": "derived.lastBooking.showing",
+          "op": "eq",
+          "value": "sw_9"
+        },
+        {
+          "name": "One adult",
+          "path": "derived.lastBooking.tickets.adult",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "One senior",
+          "path": "derived.lastBooking.tickets.senior",
+          "op": "eq",
+          "value": 1,
+          "weight": 2
+        },
+        {
+          "name": "Total is £22.00",
+          "path": "derived.lastBooking.total",
+          "op": "eq",
+          "value": 2200,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T20_repick_seats",
+      "name": "Change your mind about the seats",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "seatmap",
+        "edit"
+      ],
+      "instruction": "Start booking the 18:40 Lighthouse Keeper showing, select C1 and C2, then change your mind: clear the selection and take E9 and E10 instead. Book them as two seniors.",
+      "goal": [
+        {
+          "name": "The final seats are E9 and E10",
+          "path": "derived.lastBooking.seats",
+          "op": "eq",
+          "value": [
+            "E9",
+            "E10"
+          ],
+          "weight": 3
+        },
+        {
+          "name": "C1 and C2 stayed free",
+          "path": "derived.takenCounts.sw_1",
+          "op": "eq",
+          "value": 12,
+          "hint": "only the two seats you actually booked should become taken"
+        },
+        {
+          "name": "Two senior tickets",
+          "path": "derived.lastBooking.tickets.senior",
+          "op": "eq",
+          "value": 2,
+          "weight": 2
+        },
+        {
+          "name": "Total is £23.00",
+          "path": "derived.lastBooking.total",
+          "op": "eq",
+          "value": 2300,
+          "hint": "2 x £9.50 plus £2.00 per premium seat in row E"
+        }
+      ]
+    }
+  ]
+}

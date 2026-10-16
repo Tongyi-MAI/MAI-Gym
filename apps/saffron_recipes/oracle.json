@@ -1,0 +1,459 @@
+{
+  "env": "saffron_recipes",
+  "note": "Golden action sequences replayed by CI.",
+  "solutions": {
+    "T01_settings": [
+      {
+        "action": "tap",
+        "id": "open_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_skipStaples"
+      },
+      {
+        "action": "tap",
+        "id": "dserv_inc"
+      },
+      {
+        "action": "tap",
+        "id": "dserv_inc"
+      }
+    ],
+    "T02_query_time": [
+      {
+        "action": "tap",
+        "id": "rec_r_ragu"
+      },
+      {
+        "action": "finish",
+        "answer": "180 minutes, about three hours"
+      }
+    ],
+    "T03_save": [
+      {
+        "action": "tap",
+        "id": "rec_r_crumble"
+      },
+      {
+        "action": "tap",
+        "id": "fav_toggle"
+      }
+    ],
+    "T04_scale": [
+      {
+        "action": "tap",
+        "id": "rec_r_ragu"
+      },
+      {
+        "action": "tap",
+        "id": "serv_inc"
+      },
+      {
+        "action": "tap",
+        "id": "serv_inc"
+      },
+      {
+        "action": "tap",
+        "id": "add_to_list"
+      }
+    ],
+    "T05_merge": [
+      {
+        "action": "tap",
+        "id": "rec_r_ragu"
+      },
+      {
+        "action": "tap",
+        "id": "add_to_list"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "rec_r_dal"
+      },
+      {
+        "action": "tap",
+        "id": "add_to_list"
+      }
+    ],
+    "T06_query_scale": [
+      {
+        "action": "tap",
+        "id": "rec_r_pesto"
+      },
+      {
+        "action": "tap",
+        "id": "serv_inc"
+      },
+      {
+        "action": "tap",
+        "id": "serv_inc"
+      },
+      {
+        "action": "finish",
+        "answer": "400 g"
+      }
+    ],
+    "T07_staples": [
+      {
+        "action": "tap",
+        "id": "open_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_skipStaples"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "rec_r_tortilla"
+      },
+      {
+        "action": "tap",
+        "id": "add_to_list"
+      }
+    ],
+    "T08_one_ingredient": [
+      {
+        "action": "tap",
+        "id": "rec_r_pesto"
+      },
+      {
+        "action": "tap",
+        "id": "ing_i_pinenut"
+      }
+    ],
+    "T09_tick_clear": [
+      {
+        "action": "tap",
+        "id": "tab_list"
+      },
+      {
+        "action": "tap",
+        "id": "li_i_pasta"
+      },
+      {
+        "action": "tap",
+        "id": "clear_checked"
+      }
+    ],
+    "T10_empty": [
+      {
+        "action": "tap",
+        "id": "rec_r_tagine"
+      },
+      {
+        "action": "tap",
+        "id": "add_to_list"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "tab_list"
+      },
+      {
+        "action": "tap",
+        "id": "clear_all"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      }
+    ],
+    "T11_plan_day": [
+      {
+        "action": "tap",
+        "id": "tab_plan"
+      },
+      {
+        "action": "tap",
+        "id": "day_2"
+      },
+      {
+        "action": "tap",
+        "id": "pick_r_tagine"
+      }
+    ],
+    "T12_plan_servings": [
+      {
+        "action": "tap",
+        "id": "tab_plan"
+      },
+      {
+        "action": "tap",
+        "id": "day_4"
+      },
+      {
+        "action": "tap",
+        "id": "pick_r_bibimbap"
+      },
+      {
+        "action": "tap",
+        "id": "pserv_4_inc"
+      },
+      {
+        "action": "tap",
+        "id": "pserv_4_inc"
+      }
+    ],
+    "T13_week_to_list": [
+      {
+        "action": "tap",
+        "id": "tab_plan"
+      },
+      {
+        "action": "tap",
+        "id": "day_0"
+      },
+      {
+        "action": "tap",
+        "id": "pick_r_dal"
+      },
+      {
+        "action": "tap",
+        "id": "pserv_0_inc"
+      },
+      {
+        "action": "tap",
+        "id": "pserv_0_inc"
+      },
+      {
+        "action": "tap",
+        "id": "day_1"
+      },
+      {
+        "action": "tap",
+        "id": "pick_r_tagine"
+      },
+      {
+        "action": "tap",
+        "id": "pserv_1_inc"
+      },
+      {
+        "action": "tap",
+        "id": "pserv_1_inc"
+      },
+      {
+        "action": "tap",
+        "id": "add_week"
+      }
+    ],
+    "T14_cook": [
+      {
+        "action": "tap",
+        "id": "rec_r_pesto"
+      },
+      {
+        "action": "tap",
+        "id": "start_cook"
+      },
+      {
+        "action": "tap",
+        "id": "cook_next"
+      },
+      {
+        "action": "tap",
+        "id": "cook_next"
+      },
+      {
+        "action": "tap",
+        "id": "cook_next"
+      },
+      {
+        "action": "tap",
+        "id": "cook_next"
+      },
+      {
+        "action": "tap",
+        "id": "cook_done"
+      }
+    ],
+    "T15_flagship": [
+      {
+        "action": "tap",
+        "id": "tab_plan"
+      },
+      {
+        "action": "tap",
+        "id": "day_6"
+      },
+      {
+        "action": "tap",
+        "id": "pick_r_ragu"
+      },
+      {
+        "action": "tap",
+        "id": "pserv_6_inc"
+      },
+      {
+        "action": "tap",
+        "id": "pserv_6_inc"
+      },
+      {
+        "action": "tap",
+        "id": "pserv_6_inc"
+      },
+      {
+        "action": "tap",
+        "id": "pserv_6_inc"
+      },
+      {
+        "action": "tap",
+        "id": "day_0"
+      },
+      {
+        "action": "tap",
+        "id": "pick_r_dal"
+      },
+      {
+        "action": "tap",
+        "id": "add_week"
+      },
+      {
+        "action": "tap",
+        "id": "tab_list"
+      },
+      {
+        "action": "tap",
+        "id": "li_i_pasta"
+      }
+    ],
+    "T16_search": [
+      {
+        "action": "tap",
+        "id": "open_search"
+      },
+      {
+        "action": "type",
+        "id": "q_recipe",
+        "text": "gochujang"
+      },
+      {
+        "action": "tap",
+        "id": "res_r_bibimbap"
+      }
+    ],
+    "T17_filter": [
+      {
+        "action": "tap",
+        "id": "open_search"
+      },
+      {
+        "action": "tap",
+        "id": "f_vegan"
+      },
+      {
+        "action": "tap",
+        "id": "f_gf"
+      },
+      {
+        "action": "finish",
+        "answer": "2"
+      }
+    ],
+    "T18_sort_collection": [
+      {
+        "action": "tap",
+        "id": "open_settings"
+      },
+      {
+        "action": "tap",
+        "id": "sort_time"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "col_batch"
+      }
+    ],
+    "T19_kilo_tomatoes": [
+      {
+        "action": "tap",
+        "id": "rec_r_ragu"
+      },
+      {
+        "action": "tap",
+        "id": "serv_inc"
+      },
+      {
+        "action": "tap",
+        "id": "serv_inc"
+      },
+      {
+        "action": "tap",
+        "id": "serv_inc"
+      },
+      {
+        "action": "tap",
+        "id": "serv_inc"
+      },
+      {
+        "action": "tap",
+        "id": "serv_inc"
+      },
+      {
+        "action": "tap",
+        "id": "serv_inc"
+      },
+      {
+        "action": "tap",
+        "id": "add_to_list"
+      }
+    ],
+    "T20_congee": [
+      {
+        "action": "tap",
+        "id": "rec_r_congee"
+      },
+      {
+        "action": "tap",
+        "id": "serv_inc"
+      },
+      {
+        "action": "tap",
+        "id": "serv_inc"
+      },
+      {
+        "action": "tap",
+        "id": "serv_inc"
+      },
+      {
+        "action": "tap",
+        "id": "add_to_list"
+      },
+      {
+        "action": "tap",
+        "id": "start_cook"
+      },
+      {
+        "action": "tap",
+        "id": "cook_next"
+      },
+      {
+        "action": "tap",
+        "id": "cook_next"
+      },
+      {
+        "action": "tap",
+        "id": "cook_next"
+      },
+      {
+        "action": "tap",
+        "id": "cook_done"
+      }
+    ]
+  }
+}

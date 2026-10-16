@@ -1,0 +1,1421 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>数独 (mocked GUI env)</title>
+<!--
+  ============================================================================
+  数独 Grid — a single-file H5 puzzle for agent research.
+
+  Same two-block contract as every environment here: script#engine is a pure,
+  DOM-free state machine on globalThis.GUI_ENGINE; script#ui renders its screen
+  tree and exposes window.__ENV__.
+
+  What is new: the screen is a six-by-six grid with a number pad under it, and
+  the world is constraint propagation. Every empty cell's candidate set is
+  worked out from its row, its column and its two-by-three box on every single
+  action; so are the conflicts, the cells that have only one candidate left,
+  and the digits that have only one home left in a unit. None of it is stored.
+
+  The seeded board carries a wrong digit that is already in conflict, and a
+  cell whose candidate set collapses to a single number the moment that wrong
+  digit comes out. The puzzle has exactly one solution, which the engine knows
+  and uses to tell a wrong answer from a merely unfinished one.
+  ============================================================================
+-->
+<style>
+:root{
+  --outer:#e3e6ee;
+  --bezel:#12151f;
+  --bg:#f5f3ee;
+  --card:#fffefb;
+  --card2:#f2f4f9;
+  --line:#e3ded2;
+  --line2:#1d1b16;
+  --press:#eeeae0;
+  --chev:#c0b9a7;
+  --ink:#1d1b16;
+  --ink2:#4f4a3d;
+  --muted:#8b8474;
+  --accent:#1b58a6;
+  --accent-d:#134282;
+  --accent-s:#e3ecf8;
+  --on-accent:#fffefb;
+  --good:#2f6b3c;
+  --good-s:#e6f0e7;
+  --warn:#9c6a08;
+  --warn-s:#faf0d9;
+  --bad:#b03024;
+  --bad-s:#fae8e5;
+  --bad-line:#e4c3bd;
+  --btn:#eeeae0;
+  --btn-off:#e6e1d5;
+  --off:#c7bfab;
+  --appbar:#fffefb;
+  --appbar-ink:#161a27;
+  --appbar-line:#e3ded2;
+  --tabbar:#fffefb;
+  --scrim:rgba(29,27,22,.42);
+  --toast:#1d1b16;
+  --toast-ink:#ffffff;
+  --hero:linear-gradient(140deg,#1d1b16,#4f4a3d);
+  --hero-line:transparent;
+  --hero-ink:#fffefb;
+  --disp:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --r:18px; --r2:12px;
+  --shadow:0 1px 2px rgba(16,18,26,.05),0 10px 26px rgba(16,18,26,.07);
+  --ui:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;height:100%}
+body{background:var(--outer);color:var(--ink);font:14px/1.55 var(--ui);
+  display:flex;align-items:center;justify-content:center;overflow:hidden}
+
+#device{position:relative;width:390px;height:844px;background:var(--bezel);border-radius:46px;padding:5px;
+  box-shadow:0 30px 70px rgba(0,0,0,.34);flex:0 0 auto}
+#screen{position:relative;width:100%;height:100%;background:var(--bg);border-radius:41px;
+  overflow:hidden;display:flex;flex-direction:column}
+#notch{position:absolute;top:5px;left:50%;transform:translateX(-50%);width:118px;height:30px;
+  background:var(--bezel);border-radius:0 0 18px 18px;z-index:60}
+body.bare{background:var(--bg)}
+body.bare #device{width:390px;height:844px;padding:0;border-radius:0;box-shadow:none;background:var(--bg)}
+body.bare #screen{border-radius:0}
+body.bare #notch{display:none}
+body.bare .n-sheet{animation:none}
+
+.statusbar{height:44px;flex:0 0 44px;display:flex;align-items:flex-end;justify-content:space-between;
+  padding:0 22px 6px;font-size:13px;font-weight:600;z-index:50;color:var(--ink)}
+.statusbar .sb-r{display:flex;gap:5px;align-items:center}
+.sb-bat{width:22px;height:11px;border:1.3px solid currentColor;border-radius:3px;position:relative;opacity:.9}
+.sb-bat:after{content:"";position:absolute;right:-3px;top:3px;width:2px;height:5px;background:currentColor;border-radius:0 1px 1px 0}
+.sb-bat i{position:absolute;left:1.3px;top:1.3px;bottom:1.3px;width:78%;background:currentColor;border-radius:1px}
+
+#app{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;position:relative}
+
+.n-appbar{flex:0 0 auto;min-height:52px;display:flex;align-items:center;gap:8px;padding:6px 12px;
+  background:var(--appbar);color:var(--appbar-ink);z-index:20;border-bottom:1px solid var(--appbar-line)}
+.n-appbar .ab-title{flex:1 1 auto;text-align:center;font:650 17px/1.3 var(--disp);letter-spacing:-.2px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.n-appbar .ab-side{flex:0 0 auto;min-width:56px;display:flex;align-items:center;gap:2px}
+.n-appbar .ab-side.right{justify-content:flex-end}
+.n-appbar .iconbtn{color:var(--appbar-ink);opacity:.85}
+.iconbtn{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  color:var(--ink2);cursor:pointer}
+.iconbtn:active{background:var(--press)}
+
+.n-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding-bottom:10px}
+.n-scroll::-webkit-scrollbar{width:0}
+
+.n-text{padding:2px 18px;color:var(--ink2)}
+.n-text.h1{font:700 26px/1.18 var(--disp);color:var(--ink);padding:10px 18px 6px;letter-spacing:-.6px}
+.n-text.h2{font:650 18px/1.3 var(--disp);color:var(--ink);padding:12px 18px 2px}
+.n-text.body{font-size:13.5px;padding:5px 18px;line-height:1.7}
+.n-text.muted{font-size:12.5px;color:var(--muted);padding:6px 18px;line-height:1.6}
+.n-text.empty{padding:14px 18px 40px;text-align:center;color:var(--muted);font-size:13.5px}
+.n-sec{padding:18px 18px 6px;font:700 11.5px/1 var(--ui);color:var(--muted);letter-spacing:1.3px;
+  text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.n-space{height:16px}
+
+.n-card{background:var(--card);border-radius:var(--r);margin:9px 16px;overflow:hidden;border:1px solid var(--line)}
+.n-card.flush{padding:0}
+.n-card.pad{padding:14px 16px}
+.n-card.tap{cursor:pointer}
+.n-card.tap:active{background:var(--press)}
+
+.n-row{display:flex;align-items:center;gap:13px;padding:12px 16px;border-bottom:1px solid var(--line);min-height:54px}
+.n-row:last-child{border-bottom:none}
+.n-row.tap{cursor:pointer}
+.n-row.tap:active{background:var(--press)}
+.n-row .r-lead{flex:0 0 auto;width:26px;color:var(--ink2);display:flex;align-items:center;justify-content:center}
+.n-row .r-main{flex:1 1 auto;min-width:0}
+.n-row .r-label{font-size:14.5px}
+.n-row .r-label.strike{text-decoration:line-through;color:var(--muted)}
+.n-row .r-sub{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.5}
+.n-row .r-value{flex:0 0 auto;font-size:14px;color:var(--ink2);text-align:right;font-variant-numeric:tabular-nums}
+.n-row .r-value.strong{color:var(--ink);font-weight:700}
+.n-row .r-value.acc{color:var(--accent);font-weight:700}
+.n-row .r-value.good{color:var(--good);font-weight:700}
+.n-row .r-value.warn{color:var(--warn);font-weight:700}
+.n-row .r-value.bad{color:var(--bad);font-weight:700}
+.n-row .r-arrow{flex:0 0 auto;color:var(--chev);display:flex}
+
+.n-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:47px;padding:0 20px;
+  border-radius:13px;font:650 15px/1 var(--ui);background:var(--btn);color:var(--ink);
+  border:none;cursor:pointer;user-select:none}
+.n-btn:active{filter:brightness(.97)}
+.n-btn.primary{background:var(--accent);color:var(--on-accent)}
+.n-btn.primary.off{background:var(--btn-off);color:var(--muted);cursor:not-allowed}
+.n-btn.ghost{background:transparent;border:1px solid var(--line2);height:37px;font-size:13px;padding:0 14px;color:var(--ink2)}
+.n-btn.danger{background:transparent;border:1px solid var(--bad-line);color:var(--bad);height:37px;font-size:13px;padding:0 14px}
+.n-btn.block{display:flex;width:100%}
+.n-btnrow{display:flex;gap:10px;padding:12px 16px;justify-content:flex-end;align-items:center;flex-wrap:wrap}
+
+.n-chips{display:flex;gap:8px;padding:8px 16px;overflow-x:auto}
+.n-chips::-webkit-scrollbar{height:0}
+.n-chip{flex:0 0 auto;height:34px;padding:0 14px;border-radius:11px;background:var(--card);
+  border:1px solid var(--line2);display:flex;align-items:center;font-size:13px;
+  color:var(--ink2);cursor:pointer;white-space:nowrap;font-weight:600}
+.n-chip.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+
+.n-input{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line);background:var(--card)}
+.n-input .i-label{flex:0 0 78px;font-size:13px;color:var(--muted)}
+.n-input input{flex:1 1 auto;border:none;outline:none;background:transparent;font-size:14.5px;
+  font-family:inherit;color:var(--ink);min-width:0}
+.n-input input::placeholder{color:var(--muted)}
+.n-switch{flex:0 0 auto;width:46px;height:27px;border-radius:14px;background:var(--off);position:relative;cursor:pointer;transition:background .16s}
+.n-switch.on{background:var(--accent)}
+.n-switch i{position:absolute;top:2.5px;left:2.5px;width:22px;height:22px;border-radius:50%;background:#fff;
+  transition:transform .16s;box-shadow:0 1px 3px rgba(0,0,0,.22)}
+.n-switch.on i{transform:translateX(19px)}
+.n-check{flex:0 0 auto;width:23px;height:23px;border-radius:7px;border:1.8px solid var(--off);position:relative;background:var(--card)}
+.n-check.on{border-color:var(--accent);background:var(--accent)}
+.n-check.on:after{content:"";position:absolute;left:7.5px;top:4px;width:5px;height:10px;
+  border:2px solid var(--on-accent);border-top:0;border-left:0;transform:rotate(42deg)}
+.n-radio{flex:0 0 auto;width:22px;height:22px;border-radius:50%;border:1.8px solid var(--off);position:relative}
+.n-radio.on{border-color:var(--accent);background:var(--accent)}
+.n-radio.on:after{content:"";position:absolute;left:7px;top:4px;width:5px;height:9px;
+  border:2px solid var(--on-accent);border-top:0;border-left:0;transform:rotate(42deg)}
+
+.tag{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11px;
+  font-weight:700;background:var(--btn);color:var(--ink2)}
+.tag.acc{background:var(--accent-s);color:var(--accent)}
+.tag.good{background:var(--good-s);color:var(--good)}
+.tag.warn{background:var(--warn-s);color:var(--warn)}
+.tag.bad{background:var(--bad-s);color:var(--bad)}
+
+.n-tabbar{flex:0 0 auto;height:58px;background:var(--tabbar);border-top:1px solid var(--line);display:flex;z-index:30}
+.n-tabbar .tb{flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  color:var(--muted);font-size:10.5px;cursor:pointer;font-weight:600}
+.n-tabbar .tb i{display:flex}
+.n-tabbar .tb.on{color:var(--accent)}
+
+.n-mask{position:absolute;inset:0;background:var(--scrim);z-index:70;display:flex;align-items:flex-end}
+.n-sheet{width:100%;max-height:80%;background:var(--card);border-radius:22px 22px 0 0;display:flex;
+  flex-direction:column;overflow:hidden;animation:up .18s ease-out}
+@keyframes up{from{transform:translateY(24px)}to{transform:none}}
+.n-sheet .sh-hd{padding:16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
+.n-sheet .sh-hd .t{font:650 17px/1.2 var(--disp)}
+.n-sheet .sh-bd{flex:1 1 auto;overflow-y:auto;min-height:0}
+.n-sheet .sh-bd::-webkit-scrollbar{width:0}
+.n-toast{position:absolute;left:50%;bottom:118px;transform:translateX(-50%);background:var(--toast);
+  color:var(--toast-ink);padding:11px 18px;border-radius:11px;font-size:13px;z-index:90;max-width:84%;text-align:center}
+.dialog{margin:auto;width:82%;background:var(--card);border-radius:18px;overflow:hidden;border:1px solid var(--line)}
+
+.stats{display:flex;gap:9px;padding:4px 16px}
+.stat{flex:1 1 0;background:var(--card);border:1px solid var(--line);border-radius:var(--r2);padding:13px 12px}
+.stat.tap{cursor:pointer}
+.stat .st-n{font:800 19px/1.1 var(--disp);letter-spacing:-.5px;font-variant-numeric:tabular-nums}
+.stat .st-l{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.4}
+.stat.acc .st-n{color:var(--accent)}
+
+.hero{margin:8px 16px 4px;padding:18px;border-radius:var(--r);background:var(--hero);
+  border:1px solid var(--hero-line);color:var(--hero-ink)}
+.hero.tap{cursor:pointer}
+.hero .he-k{font-size:11px;letter-spacing:1.3px;text-transform:uppercase;font-weight:800;opacity:.85}
+.hero .he-t{font:800 25px/1.16 var(--disp);margin-top:9px;letter-spacing:-.7px}
+.hero .he-s{font-size:13px;margin-top:8px;line-height:1.6;opacity:.9}
+
+
+.board{margin:10px auto 0;width:342px;border:2px solid var(--line2);background:var(--card);
+  display:grid;grid-template-columns:repeat(6,1fr)}
+.cel{aspect-ratio:1/1;border-right:1px solid var(--line);border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer;
+  font:600 24px/1 var(--disp);color:var(--accent);background:var(--card)}
+.cel.bxr{border-right:2px solid var(--line2)}
+.cel.bxb{border-bottom:2px solid var(--line2)}
+.cel.edge{border-right:none}
+.cel.last{border-bottom:none}
+.cel.fixed{color:var(--ink);font-weight:800;background:#f7f5f0}
+.cel.sel{background:var(--accent-s)}
+.cel.peer{background:#f1efe9}
+.cel.same{background:#dfe9f6}
+.cel.bad{color:var(--bad);background:var(--bad-s)}
+.cel:active{background:var(--press)}
+.cel .nt{position:absolute;inset:3px;display:grid;grid-template-columns:repeat(3,1fr);
+  grid-template-rows:repeat(2,1fr);font:600 9.5px/1 var(--disp);color:var(--muted)}
+.cel .nt span{display:flex;align-items:center;justify-content:center}
+.cel .nt span.on{color:var(--ink2)}
+
+.pad{margin:14px 16px 0;display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.pad div{aspect-ratio:1/1.15;border:1px solid var(--line2);border-radius:8px;background:var(--card);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;
+  font:700 21px/1 var(--disp)}
+.pad div:active{background:var(--press)}
+.pad div.done{opacity:.35}
+.pad div em{font-style:normal;font-size:9px;color:var(--muted);margin-top:4px;font-weight:600}
+
+.tools{margin:10px 16px 0;display:flex;gap:7px}
+.tools div{flex:1 1 0;padding:10px 4px;border:1px solid var(--line);border-radius:8px;
+  background:var(--card);text-align:center;font-size:12px;font-weight:600;cursor:pointer}
+.tools div:active{background:var(--press)}
+.tools div.on{background:var(--ink);color:var(--card);border-color:var(--ink)}
+
+.info{margin:12px 16px 0;padding:13px 15px;border-radius:var(--r);border:1px solid var(--line);
+  background:var(--card);font-size:12.5px;line-height:1.65;color:var(--ink2)}
+.info b{color:var(--ink)}
+.info.bad{background:var(--bad-s);border-color:var(--bad-line);color:var(--bad)}
+.info.good{background:var(--good-s);border-color:#c8ddca;color:var(--good)}
+
+.cands{margin:0 16px;display:flex;gap:6px;flex-wrap:wrap}
+.cands div{padding:7px 12px;border-radius:8px;background:var(--btn);font:700 14px/1 var(--disp)}
+.cands div.no{opacity:.35;text-decoration:line-through;font-weight:500}
+
+</style>
+</head>
+<body>
+<div id="device">
+  <div id="notch"></div>
+  <div id="screen">
+    <div class="statusbar" id="sb">
+      <div id="sb-clock">22:47</div>
+      <div class="sb-r">
+        <svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="4.6" y="5.5" width="3" height="6.5" rx="1"/><rect x="9.2" y="3" width="3" height="9" rx="1"/><rect x="13.8" y="0" width="3" height="12" rx="1"/></svg>
+        <svg width="15" height="12" viewBox="0 0 15 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 4.2a9 9 0 0 1 13 0"/><path d="M3.4 6.9a5.6 5.6 0 0 1 8.2 0"/><circle cx="7.5" cy="10" r=".9" fill="currentColor" stroke="none"/></svg>
+        <span class="sb-bat"><i></i></span>
+      </div>
+    </div>
+    <div id="app"></div>
+  </div>
+</div>
+<div id="hud" class="off"></div>
+
+<script id="engine">
+/* ===========================================================================
+ * ENGINE — pure, deterministic, DOM-free.
+ * 候选、冲突、唯一候选、唯一位置都是每次动作后从棋盘重新算的，
+ * 一个都不存。这一盘的解唯一，所以「填错」和「还没填」分得开。
+ * ======================================================================== */
+(function(root){
+'use strict';
+
+var ENV_ID  = 'grid_puzzle';
+var VERSION = '1.0.0';
+
+/* ------------------------------------------------------------- utilities */
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+function pad2(n){ return (n < 10 ? '0' : '') + n; }
+function hhmm(m){ m = ((m % 1440) + 1440) % 1440; return pad2(Math.floor(m/60)) + ':' + pad2(m%60); }
+function sum(a){ var s = 0; for (var i=0;i<a.length;i++) s += a[i]; return s; }
+function clamp(v, lo, hi){ return v < lo ? lo : (v > hi ? hi : v); }
+function lcg(seed){ var s=(seed>>>0)||1; return function(){ s=(s*1664525+1013904223)>>>0; return s/4294967296; }; }
+function shuffled(list, seed){
+  if (!seed) return list.slice();
+  var r = lcg(seed), a = list.slice();
+  for (var i=a.length-1;i>0;i--){ var j = Math.floor(r()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; }
+  return a;
+}
+function money(p, sym){
+  var neg = p < 0; p = Math.abs(p);
+  return (neg ? '-' : '') + (sym === undefined ? '\u00a3' : sym) +
+         (Math.floor(p/100)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '.' + pad2(p%100);
+}
+function getPath(o, path){
+  var cur = o, parts = String(path).split('.');
+  for (var i=0;i<parts.length;i++){
+    var k = parts[i], m = k.match(/^(.*?)\[(\d+)\]$/);
+    if (m){ cur = cur ? cur[m[1]] : undefined; cur = cur ? cur[+m[2]] : undefined; }
+    else cur = cur ? cur[k] : undefined;
+    if (cur === undefined) return undefined;
+  }
+  return cur;
+}
+function setPath(o, path, value){
+  var parts = String(path).split('.'), cur = o;
+  for (var i=0;i<parts.length-1;i++){
+    var k = parts[i], m = k.match(/^(.*?)\[(\d+)\]$/);
+    cur = m ? cur[m[1]][+m[2]] : (cur[k] = cur[k] || {});
+  }
+  var lastK = parts[parts.length-1], lm = lastK.match(/^(.*?)\[(\d+)\]$/);
+  if (lm) cur[lm[1]][+lm[2]] = value; else cur[lastK] = value;
+  return o;
+}
+
+/* ------------------------------------------- screen-tree node constructors */
+function N(t, o){ o = o || {}; o.t = t; return o; }
+function txt(s, cls){ return N('text', {text:s, cls:cls || ''}); }
+function row(id, text, o){
+  o = o || {}; o.id = id; o.text = text;
+  if (o.arrow === undefined) o.arrow = !!o.act;
+  return N('row', o);
+}
+function btn(id, text, act, cls, disabled){
+  return N('btn', {id:id, text:text, act:act, cls:cls || '', disabled:!!disabled});
+}
+function iconbtn(id, ic, act, cls){ return N('iconbtn', {id:id, icon:ic, act:act, cls:cls || ''}); }
+function appbar(title, o){ o = o || {}; o.title = title; return N('appbar', o); }
+function stepper(id, value, minus, plus){
+  return N('stepper', {id:id, value:value, minusId:id + '_dec', plusId:id + '_inc',
+                       minus:minus, plus:plus});
+}
+function sheet(id, title, kids){
+  return N('sheet', {id:id, title:title, closeId:id + '_close', close:{type:'CLOSE_SHEET'}, c:kids});
+}
+function route(st){ return st.ui.stack[st.ui.stack.length - 1]; }
+function push(st, name, params){ st.ui.stack.push({name:name, params:params || {}}); st.ui.sheet = null; }
+function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
+function toast(st, t){ st.ui.toast = t; }
+
+/* --------------------------------------------------------- 六宫格数独
+ * 宫是 2 行 3 列。所有格子用 r,c（0 起）表示，答案唯一。 */
+var SIZE = 6, BR = 2, BC = 3;
+var SOLUTION = [
+  [1,2,3, 4,5,6],
+  [4,5,6, 1,2,3],
+  [2,3,1, 5,6,4],
+  [5,6,4, 2,3,1],
+  [3,1,2, 6,4,5],
+  [6,4,5, 3,1,2]
+];
+/* 十二个提示，解唯一（穷举验证过），每行每列各两个 */
+var CLUES = [
+  [0,1,2],[0,2,3],
+  [1,0,4],[1,5,3],
+  [2,4,6],[2,5,4],
+  [3,3,2],[3,4,3],
+  [4,2,2],[4,3,6],
+  [5,1,4],[5,2,5]
+];
+function key(r, c){ return 'r' + (r+1) + 'c' + (c+1); }
+function isClue(r, c){
+  for (var i=0;i<CLUES.length;i++) if (CLUES[i][0] === r && CLUES[i][1] === c) return true;
+  return false;
+}
+function clueAt(r, c){
+  for (var i=0;i<CLUES.length;i++) if (CLUES[i][0] === r && CLUES[i][1] === c) return CLUES[i][2];
+  return 0;
+}
+function valueAt(st, r, c){
+  if (isClue(r, c)) return clueAt(r, c);
+  var v = st.cells[key(r, c)];
+  return v ? v : 0;
+}
+function notesAt(st, r, c){ return st.notes[key(r, c)] || []; }
+function boxOf(r, c){ return Math.floor(r / BR) * (SIZE / BC) + Math.floor(c / BC); }
+function peers(r, c){
+  var out = [], i, j;
+  for (i = 0; i < SIZE; i++){
+    if (i !== c) out.push([r, i]);
+    if (i !== r) out.push([i, c]);
+  }
+  var r0 = Math.floor(r / BR) * BR, c0 = Math.floor(c / BC) * BC;
+  for (i = r0; i < r0 + BR; i++) for (j = c0; j < c0 + BC; j++)
+    if (!(i === r && j === c) && i !== r && j !== c) out.push([i, j]);
+  return out;
+}
+/* 一格还能填哪些数 */
+function candidates(st, r, c){
+  if (valueAt(st, r, c)) return [];
+  var used = {}, p = peers(r, c);
+  p.forEach(function(x){ var v = valueAt(st, x[0], x[1]); if (v) used[v] = true; });
+  var out = [];
+  for (var n = 1; n <= SIZE; n++) if (!used[n]) out.push(n);
+  return out;
+}
+/* 同一行、同一列、同一宫里重复的数 */
+function conflicts(st){
+  var out = [], r, c;
+  for (r = 0; r < SIZE; r++) for (c = 0; c < SIZE; c++){
+    var v = valueAt(st, r, c);
+    if (!v) continue;
+    var clash = false;
+    peers(r, c).forEach(function(x){ if (valueAt(st, x[0], x[1]) === v) clash = true; });
+    if (clash) out.push({r:r, c:c, v:v, key:key(r, c)});
+  }
+  return out;
+}
+function wrongCells(st){
+  var out = [], r, c;
+  for (r = 0; r < SIZE; r++) for (c = 0; c < SIZE; c++){
+    var v = valueAt(st, r, c);
+    if (v && v !== SOLUTION[r][c] && !isClue(r, c)) out.push({r:r, c:c, v:v, key:key(r, c)});
+  }
+  return out;
+}
+function filledCount(st){
+  var n = 0, r, c;
+  for (r = 0; r < SIZE; r++) for (c = 0; c < SIZE; c++) if (valueAt(st, r, c)) n += 1;
+  return n;
+}
+function solved(st){
+  var r, c;
+  for (r = 0; r < SIZE; r++) for (c = 0; c < SIZE; c++)
+    if (valueAt(st, r, c) !== SOLUTION[r][c]) return false;
+  return true;
+}
+/* 只剩一个候选的格子 */
+function nakedSingles(st){
+  var out = [], r, c;
+  for (r = 0; r < SIZE; r++) for (c = 0; c < SIZE; c++){
+    if (valueAt(st, r, c)) continue;
+    var k = candidates(st, r, c);
+    if (k.length === 1) out.push({r:r, c:c, v:k[0], key:key(r, c)});
+  }
+  return out;
+}
+/* 某个数在一行/一列/一宫里只剩一个位置 */
+function hiddenSingles(st){
+  var out = [], n, i, j;
+  function scan(cells, unit){
+    for (n = 1; n <= SIZE; n++){
+      var spots = [], has = false;
+      cells.forEach(function(x){
+        if (valueAt(st, x[0], x[1]) === n) has = true;
+        else if (!valueAt(st, x[0], x[1]) && candidates(st, x[0], x[1]).indexOf(n) >= 0)
+          spots.push(x);
+      });
+      if (!has && spots.length === 1)
+        out.push({r:spots[0][0], c:spots[0][1], v:n, unit:unit, key:key(spots[0][0], spots[0][1])});
+    }
+  }
+  for (i = 0; i < SIZE; i++){
+    var rowCells = [], colCells = [];
+    for (j = 0; j < SIZE; j++){ rowCells.push([i, j]); colCells.push([j, i]); }
+    scan(rowCells, '第' + (i+1) + '行');
+    scan(colCells, '第' + (i+1) + '列');
+  }
+  for (i = 0; i < SIZE; i += BR) for (j = 0; j < SIZE; j += BC){
+    var box = [];
+    for (var a = i; a < i + BR; a++) for (var b = j; b < j + BC; b++) box.push([a, b]);
+    scan(box, '第' + (boxOf(i, j) + 1) + '宫');
+  }
+  var seen = {}, uniq = [];
+  out.forEach(function(x){
+    var k = x.key + '=' + x.v;
+    if (!seen[k]) { seen[k] = true; uniq.push(x); }
+  });
+  return uniq;
+}
+function placedCount(st, n){
+  var c2 = 0, r, c;
+  for (r = 0; r < SIZE; r++) for (c = 0; c < SIZE; c++) if (valueAt(st, r, c) === n) c2 += 1;
+  return c2;
+}
+function gridText(st){
+  var out = [], r, c;
+  for (r = 0; r < SIZE; r++){
+    var line = '';
+    for (c = 0; c < SIZE; c++) line += (valueAt(st, r, c) || '.');
+    out.push(line);
+  }
+  return out;
+}
+function parseCell(id){
+  var m = /^r(\d)c(\d)$/.exec(id || '');
+  return m ? {r:parseInt(m[1], 10) - 1, c:parseInt(m[2], 10) - 1} : null;
+}
+
+/* =========================================================== state */
+function createInitialState(seed){
+  seed = seed || 0;
+  return {
+    meta:{env:ENV_ID, version:VERSION, seed:seed, steps:0, finished:false, answer:null},
+    /* 有人先填了两格：r1c1 是对的，r2c2 填了 3，已经跟同一行第六格的 3 撞上了 */
+    cells:{r1c1:1, r2c2:3},
+    notes:{r3c1:[1,2], r6c6:[1,2]},
+    sel:null,
+    noteMode:false,
+    hints:0,
+    /* 种子只打乱下面几个快捷入口的顺序 */
+    order:shuffled(['tip_single', 'tip_hidden', 'tip_conflict', 'tip_left', 'tip_box'], seed),
+    ui:{tab:'play', stack:[{name:'play', params:{}}], sheet:null, confirm:null, inputs:{},
+        toast:null},
+    settings:{showCandidates:false, flagMistakes:true, highlightSame:true}
+  };
+}
+var SELECT = {
+  valueAt:valueAt, candidates:candidates, conflicts:conflicts, wrongCells:wrongCells,
+  nakedSingles:nakedSingles, hiddenSingles:hiddenSingles, solved:solved, filledCount:filledCount,
+  gridText:gridText, notesAt:notesAt, peers:peers, boxOf:boxOf, isClue:isClue, key:key,
+  placedCount:placedCount, solution:SOLUTION, clues:CLUES, size:SIZE, route:route
+};
+
+/* =========================================================== reducer */
+function reduce(prev, action){
+  var st = clone(prev), A = action || {};
+  st.ui.toast = null;
+  st.meta.steps += 1;
+
+  switch (A.type) {
+
+  case 'NOOP': break;
+  case 'FINISH': st.meta.finished = true; st.meta.answer = A.answer === undefined ? null : A.answer; break;
+
+  case 'NAV': push(st, A.to, A.params); break;
+  case 'BACK':
+    if (st.ui.sheet) st.ui.sheet = null;
+    else if (st.ui.confirm) st.ui.confirm = null;
+    else pop(st);
+    break;
+  case 'TAB': {
+    var roots = {play:'play', think:'think', rules:'rules', settings:'settings'};
+    st.ui.tab = A.tab; st.ui.sheet = null; st.ui.confirm = null;
+    st.ui.stack = [{name:roots[A.tab] || 'play', params:{}}];
+    break;
+  }
+  case 'HOME':
+    st.ui.tab = 'play'; st.ui.stack = [{name:'play', params:{}}];
+    st.ui.sheet = null; st.ui.confirm = null;
+    break;
+  case 'SET_INPUT': st.ui.inputs[A.field] = A.value; break;
+  case 'OPEN_SHEET': st.ui.sheet = {type:A.sheet, id:A.id || null}; break;
+  case 'CLOSE_SHEET': st.ui.sheet = null; break;
+  case 'CONFIRM_NO': st.ui.confirm = null; break;
+  case 'CONFIRM_YES': {
+    var yes = st.ui.confirm && st.ui.confirm.yes; st.ui.confirm = null;
+    if (yes) { var keep = st.meta.steps; var out = reduce(st, yes); out.meta.steps = keep; return out; }
+    break;
+  }
+
+  /* ---- 下棋 ---- */
+  case 'SELECT': {
+    var p = parseCell(A.id);
+    if (!p) break;
+    if (isClue(p.r, p.c)) {
+      st.sel = A.id;
+      toast(st, A.id + ' 是题目给的 ' + clueAt(p.r, p.c) + '，改不了');
+      break;
+    }
+    st.sel = A.id;
+    var k = candidates(st, p.r, p.c), v = valueAt(st, p.r, p.c);
+    toast(st, v ? A.id + ' 现在是 ' + v
+                : A.id + ' 还能填 ' + (k.length ? k.join('、') : '什么都填不了了'));
+    break;
+  }
+  case 'DIGIT': {
+    if (!st.sel) { toast(st, '先点一个格子'); break; }
+    var p2 = parseCell(st.sel);
+    if (isClue(p2.r, p2.c)) { toast(st, '题目给的数改不了'); break; }
+    if (st.noteMode) {
+      var arr = (st.notes[st.sel] || []).slice();
+      var i = arr.indexOf(A.n);
+      if (i >= 0) arr.splice(i, 1); else arr.push(A.n);
+      arr.sort();
+      st.notes[st.sel] = arr;
+      toast(st, st.sel + ' 的候选记成 ' + (arr.length ? arr.join('、') : '空'));
+      break;
+    }
+    st.cells[st.sel] = A.n;
+    delete st.notes[st.sel];
+    var bad = false;
+    peers(p2.r, p2.c).forEach(function(x){ if (valueAt(st, x[0], x[1]) === A.n) bad = true; });
+    if (bad && st.settings.flagMistakes)
+      toast(st, st.sel + ' 填 ' + A.n + ' 撞上了 —— 同行、同列或同宫里已经有一个 ' + A.n);
+    else if (solved(st)) toast(st, '整盘做完了。');
+    else toast(st, st.sel + ' 填 ' + A.n + '，还剩 ' + (36 - filledCount(st)) + ' 格');
+    break;
+  }
+  case 'ERASE': {
+    if (!st.sel) { toast(st, '先点一个格子'); break; }
+    var p3 = parseCell(st.sel);
+    if (isClue(p3.r, p3.c)) { toast(st, '题目给的数擦不掉'); break; }
+    if (!st.cells[st.sel] && !(st.notes[st.sel] || []).length) {
+      toast(st, st.sel + ' 本来就是空的');
+      break;
+    }
+    delete st.cells[st.sel];
+    delete st.notes[st.sel];
+    toast(st, st.sel + ' 擦掉了');
+    break;
+  }
+  case 'NOTE_MODE':
+    st.noteMode = !st.noteMode;
+    toast(st, st.noteMode ? '笔记模式：点数字是记候选，不是填答案' : '回到填答案');
+    break;
+
+  case 'CHECK': {
+    var w = wrongCells(st), cf = conflicts(st);
+    if (solved(st)) { toast(st, '全对，做完了。'); break; }
+    if (!cf.length && !w.length)
+      toast(st, '目前填的都没问题，还剩 ' + (36 - filledCount(st)) + ' 格');
+    else if (cf.length)
+      toast(st, cf.length + ' 处撞了：' + cf.map(function(x){ return x.key; }).join('、'));
+    else
+      toast(st, w.length + ' 处填错了（虽然还没撞上）：'
+                + w.map(function(x){ return x.key; }).join('、'));
+    break;
+  }
+  case 'HINT': {
+    var ns = nakedSingles(st);
+    if (!ns.length) {
+      var hs = hiddenSingles(st);
+      if (!hs.length) { toast(st, '眼下没有一步就能定下来的格子'); break; }
+      st.hints += 1;
+      st.sel = hs[0].key;
+      toast(st, hs[0].unit + '里的 ' + hs[0].v + ' 只能放 ' + hs[0].key + ' 这一格');
+      break;
+    }
+    st.hints += 1;
+    st.sel = ns[0].key;
+    toast(st, ns[0].key + ' 只剩一个候选：' + ns[0].v);
+    break;
+  }
+  case 'RESET':
+    st.ui.confirm = {title:'整盘重来？', text:'你填的数和记的候选全部清掉，只留题目给的十二个数。',
+      okText:'重来', yes:{type:'RESET_YES'}};
+    break;
+  case 'RESET_YES':
+    st.cells = {}; st.notes = {}; st.sel = null;
+    toast(st, '清干净了，只剩题目');
+    break;
+
+  case 'SET_TOGGLE': st.settings[A.key] = !st.settings[A.key]; break;
+
+  default: break;
+  }
+  return st;
+}
+
+/* =========================================================== screens */
+function tabbar(st){
+  var items = [
+    {id:'tab_play',     text:'棋盘', icon:'grid',  tab:'play'},
+    {id:'tab_think',    text:'推理', icon:'bulb',  tab:'think'},
+    {id:'tab_rules',    text:'规则', icon:'info',  tab:'rules'},
+    {id:'tab_settings', text:'设置', icon:'gear',  tab:'settings'}
+  ].map(function(i){
+    return {id:i.id, text:i.text, icon:i.icon, on:(st.ui.tab === i.tab), act:{type:'TAB', tab:i.tab}};
+  });
+  return N('tabbar', {id:'tabbar', items:items});
+}
+function board(st){
+  var sel = st.sel ? parseCell(st.sel) : null;
+  var selVal = sel ? valueAt(st, sel.r, sel.c) : 0;
+  var bad = {};
+  if (st.settings.flagMistakes) conflicts(st).forEach(function(x){ bad[x.key] = true; });
+  var cells = [];
+  for (var r = 0; r < SIZE; r++) for (var c = 0; c < SIZE; c++){
+    var k = key(r, c), v = valueAt(st, r, c);
+    var isPeer = false;
+    if (sel && !(sel.r === r && sel.c === c))
+      peers(sel.r, sel.c).forEach(function(x){ if (x[0] === r && x[1] === c) isPeer = true; });
+    var notes = notesAt(st, r, c);
+    var auto = (!v && st.settings.showCandidates && !notes.length) ? candidates(st, r, c) : [];
+    cells.push({id:'cell_' + k, k:k, v:v, fixed:isClue(r, c),
+      sel:st.sel === k, peer:isPeer,
+      same:!!(st.settings.highlightSame && selVal && v === selVal && st.sel !== k),
+      bad:!!bad[k],
+      notes:(notes.length ? notes : auto), autoNotes:!notes.length && auto.length > 0,
+      bxr:(c % BC === BC - 1) && c !== SIZE - 1, bxb:(r % BR === BR - 1) && r !== SIZE - 1,
+      edge:c === SIZE - 1, last:r === SIZE - 1,
+      act:{type:'SELECT', id:k}});
+  }
+  return N('board', {id:'board', cells:cells});
+}
+function pad(st){
+  return N('pad', {id:'pad', keys:[1,2,3,4,5,6].map(function(n){
+    var left = SIZE - placedCount(st, n);
+    return {id:'key_' + n, n:n, left:left ? left + ' 个' : '放满', done:left === 0,
+      act:{type:'DIGIT', n:n}};
+  })});
+}
+/* 棋盘页上的快捷条。隐性唯一的代价高，那一项只给入口不给数字。 */
+function quickTips(st){
+  var ns = nakedSingles(st), cf = conflicts(st), wr = wrongCells(st);
+  var m = {
+    tip_single:  {t:'唯一候选 ' + ns.length, to:ns.length ? ns[0].key : null},
+    tip_hidden:  {t:'唯一位置',              to:null},
+    tip_conflict:{t:'撞上 ' + cf.length,     to:cf.length ? cf[0].key : null},
+    tip_left:    {t:'空格 ' + (36 - filledCount(st)), to:null},
+    tip_box:     {t:'填错 ' + wr.length,     to:wr.length ? wr[0].key : null}
+  };
+  return N('chips', {id:'quick_tips', c: st.order.map(function(id){
+    var x = m[id];
+    return N('chip', {id:'qt_' + id.slice(4), text:x.t, on:!!(x.to && st.sel === x.to),
+      act:x.to ? {type:'SELECT', id:x.to} : {type:'TAB', tab:'think'}});
+  })});
+}
+function statusLine(st){
+  if (solved(st))
+    return N('info', {id:'status', cls:'good',
+      text:'整盘做完了，六行六列六宫都没有重复。'});
+  var cf = conflicts(st);
+  if (cf.length)
+    return N('info', {id:'status', cls:'bad',
+      text:'有 ' + cf.length + ' 格撞上了：' + cf.map(function(x){ return x.key; }).join('、')
+           + '。撞上的意思是同一行、同一列或者同一宫里出现了两个一样的数。'});
+  return N('info', {id:'status', cls:'',
+    text:'已经填了 ' + filledCount(st) + '/36 格，还剩 ' + (36 - filledCount(st))
+         + ' 格。' + (st.sel ? '选中 ' + st.sel + '。' : '点格子选中它，再点下面的数字。')});
+}
+
+function scrPlay(st){
+  var sel = st.sel ? parseCell(st.sel) : null;
+  return N('screen', {id:'scr_play', name:'play', c:[
+    appbar('数独'),
+    N('scroll', {id:'play_scroll', c:[
+      statusLine(st),
+      quickTips(st),
+      board(st),
+      pad(st),
+      N('tools', {id:'tools', items:[
+        {id:'tool_note', text:st.noteMode ? '笔记中' : '笔记', on:st.noteMode,
+         act:{type:'NOTE_MODE'}},
+        {id:'tool_erase', text:'擦掉', on:false, act:{type:'ERASE'}},
+        {id:'tool_check', text:'检查', on:false, act:{type:'CHECK'}},
+        {id:'tool_hint', text:'提示', on:false, act:{type:'HINT'}}
+      ]}),
+      (sel && !isClue(sel.r, sel.c) && !valueAt(st, sel.r, sel.c)
+        ? N('cands', {id:'cands', label:st.sel + ' 还能填',
+            items:[1,2,3,4,5,6].map(function(n){
+              return {n:n, ok:candidates(st, sel.r, sel.c).indexOf(n) >= 0};
+            })})
+        : txt(sel ? (isClue(sel.r, sel.c) ? st.sel + ' 是题目给的数。'
+                                          : st.sel + ' 已经填了 ' + valueAt(st, sel.r, sel.c) + '。')
+                  : '还没选格子。', 'muted')),
+      N('padded', {c:[btn('reset_board', '整盘重来', {type:'RESET'}, 'block')]}),
+      N('space', {})
+    ]}),
+    tabbar(st)
+  ]});
+}
+
+function scrThink(st){
+  var ns = nakedSingles(st), hs = hiddenSingles(st), cf = conflicts(st), wr = wrongCells(st);
+  var tips = {
+    tip_single: {name:'只剩一个候选的格子', n:ns.length,
+      sub:ns.length ? ns.slice(0, 4).map(function(x){ return x.key + '=' + x.v; }).join('、')
+                        + (ns.length > 4 ? ' 等' : '')
+                    : '眼下没有',
+      to:ns.length ? ns[0].key : null},
+    tip_hidden: {name:'某个数在一个单元里只剩一个位置', n:hs.length,
+      sub:hs.length ? hs.slice(0, 3).map(function(x){ return x.unit + '的' + x.v + '→' + x.key; })
+                        .join('、') + (hs.length > 3 ? ' 等' : '')
+                    : '眼下没有',
+      to:hs.length ? hs[0].key : null},
+    tip_conflict: {name:'撞上的格子', n:cf.length,
+      sub:cf.length ? cf.map(function(x){ return x.key + '=' + x.v; }).join('、') : '一个都没有',
+      to:cf.length ? cf[0].key : null},
+    tip_left: {name:'还没填的格子', n:36 - filledCount(st),
+      sub:'一共 36 格，题目给了 12 个', to:null},
+    tip_box: {name:'填错但还没撞上的格子', n:wr.length - cf.filter(function(x){
+        return wr.some(function(y){ return y.key === x.key; }); }).length,
+      sub:wr.length ? '错的一共 ' + wr.length + ' 格：'
+                      + wr.map(function(x){ return x.key; }).join('、')
+                    : '没有',
+      to:wr.length ? wr[0].key : null}
+  };
+  return N('screen', {id:'scr_think', name:'think', c:[
+    appbar('推理'),
+    N('scroll', {id:'think_scroll', c:[
+      statusLine(st),
+      N('sec', {text:'现在这一盘能看出什么'}),
+      N('card', {id:'tip_list', cls:'flush', c: st.order.map(function(id){
+        var t = tips[id];
+        return row(id, t.name, {lead:'bulb', sub:t.sub, val:t.n + '',
+          valCls:t.n ? 'acc' : 'muted',
+          act:t.to ? {type:'SELECT', id:t.to} : {type:'TAB', tab:'play'}});
+      })}),
+      N('sec', {text:'每一行还缺什么'}),
+      N('card', {id:'row_list', cls:'flush', c: [0,1,2,3,4,5].map(function(r){
+        var have = {}, miss = [];
+        for (var c = 0; c < SIZE; c++){ var v = valueAt(st, r, c); if (v) have[v] = true; }
+        for (var n = 1; n <= SIZE; n++) if (!have[n]) miss.push(n);
+        return row('row_' + (r+1), '第 ' + (r+1) + ' 行',
+          {lead:'grid', sub:miss.length ? '缺 ' + miss.join('、') : '满了',
+           val:(SIZE - miss.length) + '/6', valCls:miss.length ? '' : 'good', arrow:false});
+      })}),
+      N('sec', {text:'每一列还缺什么'}),
+      N('card', {id:'col_list', cls:'flush', c: [0,1,2,3,4,5].map(function(c){
+        var have = {}, miss = [];
+        for (var r = 0; r < SIZE; r++){ var v = valueAt(st, r, c); if (v) have[v] = true; }
+        for (var n = 1; n <= SIZE; n++) if (!have[n]) miss.push(n);
+        return row('col_' + (c+1), '第 ' + (c+1) + ' 列',
+          {lead:'grid', sub:miss.length ? '缺 ' + miss.join('、') : '满了',
+           val:(SIZE - miss.length) + '/6', valCls:miss.length ? '' : 'good', arrow:false});
+      })}),
+      N('space', {})
+    ]}),
+    tabbar(st)
+  ]});
+}
+
+function scrRules(st){
+  return N('screen', {id:'scr_rules', name:'rules', c:[
+    appbar('规则'),
+    N('scroll', {id:'rules_scroll', c:[
+      N('sec', {text:'六宫格数独'}),
+      N('card', {id:'rule_card', cls:'flush', c:[
+        row('rl_1', '六行', {lead:'grid', sub:'每一行 1 到 6 各出现一次', arrow:false}),
+        row('rl_2', '六列', {lead:'grid', sub:'每一列 1 到 6 各出现一次', arrow:false}),
+        row('rl_3', '六宫', {lead:'grid', sub:'宫是 2 行 3 列的粗线方块，里面 1 到 6 各一次',
+          arrow:false}),
+        row('rl_4', '答案唯一', {lead:'check', sub:'这一盘只有一个解，所以「填错」和「还没填」'
+          + '是两回事', arrow:false})]}),
+      N('sec', {text:'两种一步就能定的格子'}),
+      N('card', {id:'tech_card', cls:'flush', c:[
+        row('tc_1', '唯一候选', {lead:'bulb',
+          sub:'一个格子把同行、同列、同宫已有的数都去掉之后，只剩一个数能填', arrow:false}),
+        row('tc_2', '唯一位置', {lead:'bulb',
+          sub:'一个数在某一行（或列、宫）里，只有一个格子还容得下它', arrow:false})]}),
+      N('sec', {text:'这一盘'}),
+      N('card', {id:'this_card', cls:'flush', c:[
+        row('th_1', '题目给了几个数', {lead:'info', val:'12', valCls:'strong', arrow:false}),
+        row('th_2', '一共几格', {lead:'info', val:'36', valCls:'strong', arrow:false}),
+        row('th_3', '现在填了几格', {lead:'info', val:filledCount(st) + '', valCls:'strong',
+          arrow:false}),
+        row('th_4', '用过几次提示', {lead:'info', val:st.hints + '', valCls:'strong',
+          arrow:false})]}),
+      N('space', {})
+    ]}),
+    tabbar(st)
+  ]});
+}
+
+function scrSettings(st){
+  function sw(id, text, k2, sub){
+    return row(id, text, {sub:sub, arrow:false,
+      c:[N('switch', {id:'set_' + k2, on:!!st.settings[k2], act:{type:'SET_TOGGLE', key:k2}})]});
+  }
+  return N('screen', {id:'scr_settings', name:'settings', c:[
+    appbar('设置'),
+    N('scroll', {id:'settings_scroll', c:[
+      N('sec', {text:'显示'}),
+      N('card', {id:'show_card', cls:'flush', c:[
+        sw('cand_row', '空格里显示候选数', 'showCandidates',
+           '自己记了笔记的格子以笔记为准'),
+        sw('flag_row', '撞上了就标红', 'flagMistakes',
+           '只标同行同列同宫的重复，不告诉你哪个数其实是错的'),
+        sw('same_row', '高亮同一个数', 'highlightSame', '选中一个已填的格子时，全盘同数字加底色')
+      ]}),
+      N('sec', {text:'这一盘'}),
+      N('card', {id:'game_card', cls:'flush', c:[
+        row('g_filled', '已填', {lead:'grid', val:filledCount(st) + '/36', valCls:'strong',
+          arrow:false}),
+        row('g_conf', '撞上的', {lead:'alert', val:conflicts(st).length + '',
+          valCls:conflicts(st).length ? 'bad' : 'good', arrow:false}),
+        row('g_wrong', '填错的', {lead:'alert', val:wrongCells(st).length + '',
+          valCls:wrongCells(st).length ? 'bad' : 'good', arrow:false,
+          sub:'跟唯一解对不上的格子，不一定已经撞上'}),
+        row('g_done', '做完了吗', {lead:'check', val:solved(st) ? '做完了' : '还没',
+          valCls:solved(st) ? 'good' : '', arrow:false})]}),
+      N('space', {})
+    ]}),
+    tabbar(st)
+  ]});
+}
+
+var ROUTES = {play:scrPlay, think:scrThink, rules:scrRules, settings:scrSettings};
+function screen(st){
+  var r = route(st), fn = ROUTES[r.name] || scrPlay;
+  var rootNode = fn(st, r.params || {});
+  rootNode.route = r.name;
+  var extra = [];
+  if (st.ui.confirm)
+    extra.push(N('mask', {id:'confirm_mask', c:[N('dialog', {id:'confirm_dialog',
+      title:st.ui.confirm.title || '', text:st.ui.confirm.text,
+      ok: btn('confirm_ok', st.ui.confirm.okText || '确定', {type:'CONFIRM_YES'}, 'primary'),
+      cancel: btn('confirm_cancel', '算了', {type:'CONFIRM_NO'}, '')})]}));
+  if (st.ui.toast) extra.push(N('toast', {id:'toast', text:st.ui.toast}));
+  rootNode.c = rootNode.c.concat(extra);
+  return rootNode;
+}
+
+/* =======================================================================
+ * TRAVERSAL — element index, GUI action interface, text observation.
+ * Identical in every environment here: the screen tree is the only thing
+ * that differs, and all three readers below walk that same tree.
+ * ==================================================================== */
+var SKIP_KEYS = {act:1, minus:1, plus:1, close:1, yes:1, params:1, meta:1, notes:1, deps:1};
+
+function labelOf(n){ return n.text || n.title || n.name || n.label || n.main || ''; }
+
+function collect(n, out){
+  if (!n || typeof n !== 'object') return;
+  if (Array.isArray(n)) { for (var i=0;i<n.length;i++) collect(n[i], out); return; }
+  if (n.t === 'appbar' && n.back) out.push({id:'nav_back', act:{type:'BACK'}, text:'Back', t:'back'});
+  if (n.id && n.act)              out.push({id:n.id, act:n.act, text:labelOf(n), t:n.t||'el',
+                                            disabled:!!n.disabled,
+                                            input:(n.t === 'inputrow')});
+  if (n.t === 'mask' && n.close)  out.push({id:n.id, act:n.close, text:'Dismiss overlay', t:'mask'});
+  for (var k in n){
+    /* a node may carry extra buttons as a pair of keys: someId holds the
+     * test-id and some holds the action. That is how steppers, sheet close
+     * buttons and per-row buttons all get into the element index. */
+    if (k.length > 2 && k.slice(-2) === 'Id' && typeof n[k] === 'string'){
+      var sib = n[k.slice(0, -2)];
+      if (sib && typeof sib === 'object' && sib.type)
+        out.push({id:n[k], act:sib, text:k.slice(0, -2), t:'sub'});
+    }
+    if (SKIP_KEYS[k]) continue;
+    var v = n[k];
+    if (v && typeof v === 'object') collect(v, out);
+  }
+}
+function elements(st){
+  var rootNode = (st && st.t === 'screen') ? st : screen(st);
+  var masks = (rootNode.c || []).filter(function(n){ return n.t === 'mask'; });
+  var out = [];
+  collect(masks.length ? masks[masks.length-1] : rootNode, out);
+  return out;
+}
+function findEl(st, id){
+  var els = elements(st);
+  for (var i=0;i<els.length;i++) if (els[i].id === id) return els[i];
+  return null;
+}
+function substitute(act, text){
+  var a = clone(act);
+  for (var k in a) if (a[k] === '$VALUE') a[k] = text;
+  return a;
+}
+function step(st, a){
+  a = a || {};
+  var kind = a.action || a.type;
+  switch (kind) {
+  case 'tap': {
+    var el = findEl(st, a.id);
+    if (!el) return {state:st, ok:false, error:'ELEMENT_NOT_FOUND: ' + a.id};
+    if (el.disabled) return {state:st, ok:false, error:'ELEMENT_DISABLED: ' + a.id};
+    return {state:reduce(st, el.act), ok:true};
+  }
+  case 'type': {
+    var e2 = findEl(st, a.id);
+    if (!e2) return {state:st, ok:false, error:'ELEMENT_NOT_FOUND: ' + a.id};
+    if (!e2.input) return {state:st, ok:false, error:'NOT_A_TEXT_FIELD: ' + a.id};
+    return {state:reduce(st, substitute(e2.act, a.text == null ? '' : String(a.text))), ok:true};
+  }
+  case 'back':   return {state:reduce(st, {type:'BACK'}), ok:true};
+  case 'home':   return {state:reduce(st, {type:'HOME'}), ok:true};
+  case 'wait':   return {state:reduce(st, {type:'NOOP'}), ok:true};
+  case 'finish': return {state:reduce(st, {type:'FINISH', answer:a.answer}), ok:true};
+  case 'raw':    return {state:reduce(st, a.act || {}), ok:true};
+  default:       return {state:st, ok:false, error:'UNKNOWN_ACTION: ' + kind};
+  }
+}
+
+/* ------------------------------------------------- text observation (a11y) */
+function a11y(st){
+  var rootNode = screen(st), lines = [], r = route(st);
+  lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
+             '  step ' + st.meta.steps);
+  lines.push('# 已填 ' + filledCount(st) + '/36，撞上 ' + conflicts(st).length + ' 格，' + (solved(st) ? '整盘做完了' : '还没做完') + (st.noteMode ? '，笔记模式开着' : '') + '。');
+  var masks = (rootNode.c || []).filter(function(n){ return n.t === 'mask'; });
+  if (masks.length) lines.push('# An overlay is open. Nothing behind it can be tapped.');
+  walkText(masks.length ? masks[masks.length-1] : rootNode, 0, lines, st);
+  (rootNode.c || []).forEach(function(n){ if (n.t === 'toast') lines.push('[Toast] ' + n.text); });
+  return lines.join('\n');
+}
+function tid(n){ return (n && n.id && n.act) ? ' #' + n.id : ''; }
+function ind(d){ return new Array(d+1).join('  '); }
+
+function walkText(n, d, out, st){
+  if (!n || typeof n !== 'object') return;
+  if (Array.isArray(n)) { n.forEach(function(x){ walkText(x, d, out, st); }); return; }
+  var line = null;
+  switch (n.t) {
+  case 'screen': break;
+  case 'appbar': line = '[AppBar] ' + (n.title || '') + (n.back ? '   Back #nav_back' : ''); break;
+  case 'iconbtn': line = '[IconButton]' + tid(n) + ' ' + n.icon; break;
+  case 'inputrow':
+    line = '[TextField]' + tid(n) + ' ' + (n.label || '') + ' value="' + (n.value || '') + '"'; break;
+  case 'chip':   line = '[Chip]' + tid(n) + ' ' + n.text + (n.on ? '  [selected]' : ''); break;
+  case 'btn':    line = '[Button]' + (n.id ? ' #' + n.id : '') + ' ' + n.text + (n.disabled ? ' (disabled)' : ''); break;
+  case 'row': {
+    var s = '[Row]' + tid(n) + ' ' + (n.text || '') + (n.strike ? ' (crossed out)' : '');
+    if (n.val) s += ' \u2014 ' + n.val;
+    if (n.sub) s += '   (' + n.sub + ')';
+    line = s; break;
+  }
+  case 'switch': line = '[Toggle]' + tid(n) + ' ' + (n.on ? 'ON' : 'OFF'); break;
+  case 'check':  line = '[Checkbox]' + tid(n) + ' ' + (n.on ? 'ticked' : 'not ticked'); break;
+  case 'radio':  line = '[Radio]' + tid(n) + ' ' + (n.on ? 'selected' : 'not selected'); break;
+  case 'stepper':
+    line = '[Stepper] ' + n.value + '  down #' + n.minusId + '  up #' + n.plusId; break;
+  case 'hero':
+    out.push(ind(d) + '[Hero]' + tid(n) + ' ' + n.kicker + ' \u2014 ' + n.title + '. ' + n.sub);
+    return;
+  case 'stat':   line = '[Stat]' + tid(n) + ' ' + n.l + ': ' + n.n; break;
+  case 'pills':  line = n.items.map(function(p){ return '[' + p.text + ']'; }).join(' '); break;
+  case 'sec':    line = '\u2014 ' + n.text + (n.side ? ' (' + n.side + ')' : '') + ' \u2014'; break;
+  case 'text':   line = n.text || null; break;
+  case 'tabbar':
+    out.push(ind(d) + '[TabBar] ' + n.items.map(function(i){
+      return i.text + ' #' + i.id + (i.on ? '[current]' : ''); }).join('  '));
+    return;
+  case 'sheet':  line = '[Sheet] ' + n.title + '   close #' + n.closeId; break;
+  case 'dialog': line = '[Dialog] ' + (n.title ? n.title + ' \u2014 ' : '') + n.text; break;
+  case 'mask': case 'toast': line = null; break;
+  default: {
+    var extra = walkExtra(n, d, out, st);
+    if (extra === true) return;
+    line = extra || null;
+  }
+  }
+  if (line !== null) out.push(ind(d) + line);
+  for (var k in n){
+    if (SKIP_KEYS[k]) continue;
+    var v = n[k];
+    if (v && typeof v === 'object') walkText(v, line !== null ? d+1 : d, out, st);
+  }
+}
+/* per-environment nodes: return a string to print, true if already printed,
+ * or null to ignore */
+function walkExtra(n, d, out, st){
+
+  if (n.t === 'board'){
+    out.push(ind(d) + '[棋盘] 6x6，宫是 2 行 3 列');
+    for (var r = 0; r < 6; r++){
+      var line = '', ids = [];
+      for (var c = 0; c < 6; c++){
+        var cell = n.cells[r * 6 + c];
+        line += (cell.v ? cell.v : (cell.notes.length ? '(' + cell.notes.join('') + ')' : '.'));
+        line += (c === 2 ? ' | ' : ' ');
+        ids.push('#' + cell.id + (cell.fixed ? '固' : '') + (cell.bad ? '撞' : '')
+                 + (cell.sel ? '选' : ''));
+      }
+      out.push(ind(d+1) + '第' + (r+1) + '行: ' + line);
+      out.push(ind(d+2) + ids.join(' '));
+    }
+    return true;
+  }
+  if (n.t === 'pad'){
+    out.push(ind(d) + '[数字键] ' + n.keys.map(function(k){
+      return k.n + '(' + k.left + ') #' + k.id; }).join('  '));
+    return true;
+  }
+  if (n.t === 'tools'){
+    out.push(ind(d) + '[工具] ' + n.items.map(function(t){
+      return t.text + (t.on ? '[开]' : '') + ' #' + t.id; }).join('  '));
+    return true;
+  }
+  if (n.t === 'info'){ out.push(ind(d) + n.text); return true; }
+  if (n.t === 'cands'){
+    out.push(ind(d) + n.label + '：' + n.items.filter(function(x){ return x.ok; })
+             .map(function(x){ return x.n; }).join('、'));
+    return true;
+  }
+
+  return null;
+}
+
+/* --------------------------------------------------------- derived view */
+function derive(st){
+  var sel = st.sel ? parseCell(st.sel) : null;
+  var cells = {};
+  for (var r = 0; r < SIZE; r++) for (var c = 0; c < SIZE; c++)
+    cells[key(r, c)] = valueAt(st, r, c) || null;
+  var ns = nakedSingles(st), hs = hiddenSingles(st);
+  return {
+    route: route(st).name,
+    tab: st.ui.tab,
+    grid: gridText(st),
+    cells: cells,
+    filled: filledCount(st),
+    solved: solved(st),
+    conflictCount: conflicts(st).length,
+    conflictCells: conflicts(st).map(function(x){ return x.key; }).sort(),
+    wrongCount: wrongCells(st).length,
+    wrongCells: wrongCells(st).map(function(x){ return x.key; }).sort(),
+    selected: st.sel,
+    selectedCandidates: sel ? candidates(st, sel.r, sel.c) : [],
+    nakedSingleCount: ns.length,
+    nakedSingles: ns.map(function(x){ return x.key + '=' + x.v; }).sort(),
+    hiddenSingleCount: hs.length,
+    noteMode: st.noteMode,
+    notes: clone(st.notes),
+    hints: st.hints,
+    settings: clone(st.settings),
+    finished: !!st.meta.finished,
+    answer: st.meta.answer
+  };
+}
+
+function snapshot(st){ var o = clone(st); o.derived = derive(st); return o; }
+function applyPatch(st, patch){
+  (patch || []).forEach(function(p){ setPath(st, p.path, clone(p.value)); });
+  return st;
+}
+
+var ENGINE = {
+  ENV_ID: ENV_ID, VERSION: VERSION, CATALOG: {clues:CLUES, size:SIZE},
+  createInitialState: createInitialState,
+  reduce: reduce, step: step, screen: screen, a11y: a11y,
+  elements: elements, findEl: findEl, applyPatch: applyPatch,
+  getPath: getPath, setPath: setPath, clone: clone,
+  derive: derive, snapshot: snapshot,
+  select: SELECT
+};
+root.SUDOKU_ENGINE = ENGINE;
+root.GUI_ENGINE = ENGINE;
+
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+</script>
+
+<script id="ui">
+/* ===========================================================================
+ * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
+ * ======================================================================== */
+(function(){
+'use strict';
+var E = window.GUI_ENGINE;
+var app = document.getElementById('app');
+var hud = document.getElementById('hud');
+function esc(s){
+  return String(s === undefined || s === null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+var SVG = {
+  back: '<path d="M15 4.5 8 12l7 7.5"/>',
+  arrow: '<path d="M9 4.5 16 12l-7 7.5"/>',
+  plus: '<path d="M12 5.6v12.8M5.6 12h12.8"/>',
+  minus: '<path d="M5.6 12h12.8"/>',
+  close: '<path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5"/>',
+  check: '<path d="M4.8 12.6 9.8 17.6 19.2 6.8"/>',
+  gear: '<circle cx="12" cy="12" r="3.4"/><path d="M19.1 14.4a1.6 1.6 0 0 0 .3 1.8l.1.1a1.9 1.9 0 1 1-2.7 2.7l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5v.2a1.9 1.9 0 1 1-3.8 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a1.9 1.9 0 1 1-2.7-2.7l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1h-.2a1.9 1.9 0 1 1 0-3.8h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a1.9 1.9 0 1 1 2.7-2.7l.1.1a1.6 1.6 0 0 0 1.8.3h.1a1.6 1.6 0 0 0 1-1.5v-.2a1.9 1.9 0 1 1 3.8 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a1.9 1.9 0 1 1 2.7 2.7l-.1.1a1.6 1.6 0 0 0-.3 1.8v.1a1.6 1.6 0 0 0 1.5 1h.2a1.9 1.9 0 1 1 0 3.8h-.1a1.6 1.6 0 0 0-1.5 1z"/>',
+  list: '<path d="M8.6 6.4h11M8.6 12h11M8.6 17.6h11"/><circle cx="4.7" cy="6.4" r="1.2" fill="currentColor" stroke="none"/><circle cx="4.7" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="4.7" cy="17.6" r="1.2" fill="currentColor" stroke="none"/>',
+  info: '<circle cx="12" cy="12" r="8.8"/><path d="M12 11.1v5.4"/><circle cx="12" cy="7.9" r=".95" fill="currentColor" stroke="none"/>',
+  alert: '<path d="M12 4.2 2.9 19.4h18.2z"/><path d="M12 10.2v4"/><circle cx="12" cy="16.9" r=".95" fill="currentColor" stroke="none"/>',
+  money: '<rect x="2.8" y="6" width="18.4" height="12" rx="2.4"/><circle cx="12" cy="12" r="2.8"/><path d="M6.4 9.6v4.8M17.6 9.6v4.8"/>',
+  trash: '<path d="M4.6 6.6h14.8"/><path d="M9.4 6.6V4.8h5.2v1.8"/><path d="M6.6 6.6 7.6 20a1.4 1.4 0 0 0 1.4 1.3h6a1.4 1.4 0 0 0 1.4-1.3l1-13.4"/><path d="M10.4 10.6v6M13.6 10.6v6"/>',
+  search: '<circle cx="10.8" cy="10.8" r="6.6"/><path d="m15.6 15.6 4.4 4.4"/>',
+  user: '<circle cx="12" cy="8.2" r="3.8"/><path d="M4.4 20.4c0-3.8 3.4-6.4 7.6-6.4s7.6 2.6 7.6 6.4"/>',
+  clock: '<circle cx="12" cy="12" r="8.8"/><path d="M12 6.8V12l3.6 2.2"/>',
+  grid: '<rect x="3.4" y="3.4" width="17.2" height="17.2" rx="2"/><path d="M3.4 9.2h17.2M3.4 15h17.2M9.2 3.4v17.2M15 3.4v17.2"/>',
+  bulb: '<path d="M9.2 18.4h5.6"/><path d="M10 21h4"/><path d="M12 3.2a5.6 5.6 0 0 0-3.2 10.2c.7.5 1.1 1.2 1.2 2h4c.1-.8.5-1.5 1.2-2A5.6 5.6 0 0 0 12 3.2z"/>'
+};
+var FILLED = {};
+function icon(name, size, cls){
+  var d = SVG[name]; if (!d) return '';
+  return '<span class="ico ' + (cls||'') + '" style="width:' + (size||20) + 'px;height:' + (size||20) +
+    'px;display:inline-flex;flex:0 0 auto"><svg viewBox="0 0 24 24" width="100%" height="100%" fill="' +
+    (FILLED[name] ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="1.7" ' +
+    'stroke-linecap="round" stroke-linejoin="round">' + d + '</svg></span>';
+}
+
+var ACTS = [], TRAJ = [];
+function bind(a){ if (!a) return ''; ACTS.push(a); return ' data-act="' + (ACTS.length-1) + '"'; }
+function bindT(a){ if (!a) return ''; ACTS.push(a); return ' data-actt="' + (ACTS.length-1) + '"'; }
+function tid(id){ return id ? ' data-testid="' + esc(id) + '"' : ''; }
+function R(list){ return (list||[]).map(render).join(''); }
+function tagsHtml(items){
+  return (items||[]).map(function(t){
+    return '<span class="tag ' + (t.cls||'') + '">' + esc(t.text) + '</span>'; }).join('');
+}
+
+function render(n){
+  if (!n || typeof n !== 'object') return '';
+  if (Array.isArray(n)) return R(n);
+  switch (n.t) {
+  case 'screen': return R(n.c);
+  case 'appbar': {
+    var left = (n.back
+      ? '<div class="iconbtn" data-testid="nav_back"' + bind({type:'BACK'}) + '>' + icon('back',19) + '</div>'
+      : '') + R(n.left);
+    return '<div class="n-appbar"' + tid(n.id) + '><div class="ab-side">' + left + '</div>'
+      + '<div class="ab-title">' + esc(n.title) + '</div>'
+      + '<div class="ab-side right">' + R(n.right) + '</div></div>';
+  }
+  case 'iconbtn': return '<div class="iconbtn ' + esc(n.cls||'') + '"' + tid(n.id) + bind(n.act) + '>' + icon(n.icon, 19) + '</div>';
+  case 'scroll':  return '<div class="n-scroll"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'chips':   return '<div class="n-chips"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'chip':    return '<div class="n-chip' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '>' + esc(n.text) + '</div>';
+  case 'card':    return '<div class="n-card ' + esc(n.cls||'') + (n.act?' tap':'') + '"' + tid(n.id) + bind(n.act) + '>' + R(n.c) + '</div>';
+  case 'padded':  return '<div style="padding:5px 16px">' + R(n.c) + '</div>';
+  case 'sec':     return '<div class="n-sec"' + tid(n.id) + '><span>' + esc(n.text) + '</span>'
+                       + (n.side ? '<span>' + esc(n.side) + '</span>' : '') + '</div>';
+  case 'text':    return '<div class="n-text ' + esc(n.cls||'') + '">' + esc(n.text) + '</div>';
+  case 'space':   return '<div class="n-space"></div>';
+  case 'row': {
+    var inline = [], below = [];
+    (n.c||[]).forEach(function(ch){
+      (ch.t==='switch'||ch.t==='radio'||ch.t==='check'||ch.t==='stepper'||ch.t==='btn'||ch.t==='iconbtn')
+        ? inline.push(ch) : below.push(ch);
+    });
+    return '<div class="n-row' + (n.act?' tap':'') + '"' + tid(n.id) + bind(n.act) + '>'
+      + (n.lead ? '<div class="r-lead"' + (n.leadColour ? ' style="color:' + esc(n.leadColour) + '"' : '')
+                + '>' + icon(n.lead, 19) + '</div>' : '')
+      + (n.avatar ? avatarHtml(n.avatar) : '')
+      + (n.thumb && typeof thumbHtml === 'function' ? thumbHtml(n.thumb) : '')
+      + '<div class="r-main"><div class="r-label' + (n.strike?' strike':'') + '">' + esc(n.text) + '</div>'
+      + (n.sub ? '<div class="r-sub">' + esc(n.sub) + '</div>' : '') + '</div>'
+      + (n.val ? '<div class="r-value ' + esc(n.valCls||'') + '">' + esc(n.val) + '</div>' : '')
+      + R(inline)
+      + (n.arrow && !inline.length ? '<div class="r-arrow">' + icon('arrow',15) + '</div>' : '')
+      + '</div>' + R(below);
+  }
+  case 'btn':
+    return '<div class="n-btn ' + esc(n.cls||'') + (n.disabled?' off':'') + '"' + tid(n.id)
+      + (n.disabled?'':bind(n.act)) + '>' + esc(n.text) + '</div>';
+  case 'btnrow': return '<div class="n-btnrow"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'bar':    return '<div style="flex:0 0 auto;background:var(--card);border-top:1px solid var(--line);'
+                      + 'padding:12px 16px 16px;z-index:30"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'switch': return '<div class="n-switch' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '><i></i></div>';
+  case 'check':  return '<div class="n-check' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '></div>';
+  case 'radio':  return '<div class="n-radio' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '></div>';
+  case 'inputrow':
+    return '<div class="n-input"><div class="i-label">' + esc(n.label) + '</div>'
+      + '<input' + tid(n.id) + bindT(n.act) + ' value="' + esc(n.value) + '" placeholder="'
+      + esc(n.placeholder) + '"></div>';
+  case 'stepper':
+    return '<div style="display:flex;align-items:center;gap:8px"' + tid(n.id) + '>'
+      + '<div class="iconbtn" style="background:var(--btn);width:30px;height:30px"' + tid(n.minusId) + bind(n.minus) + '>' + icon('minus',14) + '</div>'
+      + '<div style="min-width:52px;text-align:center;font-weight:700;font-size:12.5px;font-variant-numeric:tabular-nums">'
+      + esc(n.value) + '</div>'
+      + '<div class="iconbtn" style="background:var(--btn);width:30px;height:30px"' + tid(n.plusId) + bind(n.plus) + '>' + icon('plus',14) + '</div></div>';
+  case 'stats':  return '<div class="stats"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'stat':
+    return '<div class="stat' + (n.acc?' acc':'') + (n.act?' tap':'') + '"' + tid(n.id) + bind(n.act)
+      + '><div class="st-n">' + esc(n.n) + '</div><div class="st-l">' + esc(n.l) + '</div></div>';
+  case 'hero':
+    return '<div class="hero' + (n.act?' tap':'') + '"' + tid(n.id) + bind(n.act) + '>'
+      + '<div class="he-k">' + esc(n.kicker) + '</div>'
+      + '<div class="he-t">' + esc(n.title) + '</div>'
+      + '<div class="he-s">' + esc(n.sub) + '</div>' + R(n.c) + '</div>';
+  case 'pills':
+    return '<div style="display:flex;gap:7px;flex-wrap:wrap;padding:8px 18px 4px"' + tid(n.id) + '>'
+      + tagsHtml(n.items) + '</div>';
+  case 'tabbar':
+    return '<div class="n-tabbar"' + tid(n.id) + '>' + n.items.map(function(i){
+      return '<div class="tb' + (i.on?' on':'') + '"' + tid(i.id) + bind(i.act) + '>'
+        + '<i>' + icon(i.icon, 21) + '</i>' + esc(i.text) + '</div>';
+    }).join('') + '</div>';
+  case 'mask':  return '<div class="n-mask"' + tid(n.id) + bind(n.close) + '>' + R(n.c) + '</div>';
+  case 'sheet':
+    return '<div class="n-sheet"' + tid(n.id) + ' data-stop="1"><div class="sh-hd">'
+      + '<div class="t">' + esc(n.title) + '</div>'
+      + '<div class="iconbtn"' + tid(n.closeId) + bind(n.close) + '>' + icon('close',15) + '</div></div>'
+      + '<div class="sh-bd">' + R(n.c) + '</div></div>';
+  case 'dialog':
+    return '<div class="dialog"' + tid(n.id) + ' data-stop="1">'
+      + '<div style="padding:22px 20px 16px;text-align:center">'
+      + (n.title ? '<div style="font:650 17px/1.3 var(--disp);margin-bottom:8px">' + esc(n.title) + '</div>' : '')
+      + '<div style="font-size:13.5px;color:var(--ink2);line-height:1.55">' + esc(n.text) + '</div></div>'
+      + '<div style="display:flex;gap:10px;padding:0 16px 16px">'
+      + '<div class="n-btn" style="flex:1"' + tid(n.cancel.id) + bind(n.cancel.act) + '>' + esc(n.cancel.text) + '</div>'
+      + '<div class="n-btn primary" style="flex:1"' + tid(n.ok.id) + bind(n.ok.act) + '>' + esc(n.ok.text) + '</div>'
+      + '</div></div>';
+  case 'toast': return '<div class="n-toast"' + tid(n.id) + '>' + esc(n.text) + '</div>';
+  default: return renderExtra(n);
+  }
+}
+function avatarHtml(a){
+  return '<div class="av" style="width:38px;height:38px;border-radius:50%;flex:0 0 auto;display:flex;'
+    + 'align-items:center;justify-content:center;font:700 14px/1 var(--disp);color:#fff;background:hsl('
+    + a.hue + ' 52% 46%)">' + esc(a.initial) + '</div>';
+}
+
+function renderExtra(n){
+  switch (n.t) {
+  case 'board':
+    return '<div class="board"' + tid(n.id) + '>' + n.cells.map(function(c){
+      var cls = 'cel' + (c.fixed?' fixed':'') + (c.sel?' sel':'') + (c.same?' same':'')
+        + (!c.sel && !c.same && c.peer?' peer':'') + (c.bad?' bad':'')
+        + (c.bxr?' bxr':'') + (c.bxb?' bxb':'') + (c.edge?' edge':'') + (c.last?' last':'');
+      var inner = c.v ? ('' + c.v)
+        : (c.notes.length
+           ? '<div class="nt">' + [1,2,3,4,5,6].map(function(k){
+               return '<span class="' + (c.notes.indexOf(k) >= 0 ? 'on' : '') + '">'
+                 + (c.notes.indexOf(k) >= 0 ? k : '') + '</span>';
+             }).join('') + '</div>'
+           : '');
+      return '<div class="' + cls + '"' + tid(c.id) + bind(c.act) + '>' + inner + '</div>';
+    }).join('') + '</div>';
+  case 'pad':
+    return '<div class="pad"' + tid(n.id) + '>' + n.keys.map(function(k){
+      return '<div class="' + (k.done?'done':'') + '"' + tid(k.id) + bind(k.act) + '>'
+        + k.n + '<em>' + esc(k.left) + '</em></div>';
+    }).join('') + '</div>';
+  case 'tools':
+    return '<div class="tools"' + tid(n.id) + '>' + n.items.map(function(t){
+      return '<div class="' + (t.on?'on':'') + '"' + tid(t.id) + bind(t.act) + '>'
+        + esc(t.text) + '</div>';
+    }).join('') + '</div>';
+  case 'info':
+    return '<div class="info ' + esc(n.cls) + '"' + tid(n.id) + '>' + esc(n.text) + '</div>';
+  case 'cands':
+    return '<div style="padding:6px 16px;font-size:11.5px;color:var(--muted)">' + esc(n.label)
+      + '</div><div class="cands"' + tid(n.id) + '>' + n.items.map(function(x){
+        return '<div class="' + (x.ok?'':'no') + '">' + x.n + '</div>';
+      }).join('') + '</div>';
+  default: return '';
+  }
+}
+
+var STATE = null;
+function paint(){
+  ACTS = [];
+  app.innerHTML = render(E.screen(STATE));
+  var c = '';
+  if (c) document.getElementById('sb-clock').textContent = c;
+  if (!hud.classList.contains('off')) paintHud();
+}
+app.addEventListener('click', function(ev){
+  var el = ev.target.closest('[data-act]'); if (!el) return;
+  if (el.classList.contains('n-mask') && ev.target.closest('[data-stop]')) return;
+  var act = ACTS[+el.getAttribute('data-act')]; if (!act) return;
+  TRAJ.push({action:'tap', id: el.getAttribute('data-testid') || null});
+  STATE = E.reduce(STATE, act); paint();
+});
+app.addEventListener('input', function(ev){
+  var el = ev.target.closest('[data-actt]'); if (!el) return;
+  var act = JSON.parse(JSON.stringify(ACTS[+el.getAttribute('data-actt')]));
+  for (var k in act) if (act[k] === '$VALUE') act[k] = el.value;
+  var id = el.getAttribute('data-testid'), pos = el.selectionStart;
+  TRAJ.push({action:'type', id:id, text:el.value});
+  STATE = E.reduce(STATE, act); paint();
+  var again = id && app.querySelector('[data-testid="' + id + '"]');
+  if (again && again.focus) { again.focus(); try { again.setSelectionRange(pos, pos); } catch(e){} }
+});
+
+function paintHud(){
+  var d = E.derive(STATE);
+  hud.innerHTML = '<h4>__ENV__ \u00b7 ' + E.ENV_ID + ' v' + E.VERSION + '</h4>'
+    + '<div><span class="k">route</span> ' + d.route + '  <span class="k">step</span> ' + STATE.meta.steps + '</div>'
+    + '<div><span class="k">filled</span> ' + d.filled + '  <span class="k">clash</span> ' + d.conflictCount + '  <span class="k">wrong</span> ' + d.wrongCount + '</div>'
+    + '<div style="margin-top:8px"><button id="hud-reset">reset</button>'
+    + '<button id="hud-a11y">copy a11y</button><button id="hud-state">copy state</button>'
+    + '<button id="hud-traj">copy traj</button><button id="hud-hide">hide (h)</button></div>'
+    + '<pre>' + esc(E.a11y(STATE)) + '</pre>';
+  hud.querySelector('#hud-reset').onclick = function(){ ENVAPI.reset({seed:STATE.meta.seed}); };
+  hud.querySelector('#hud-a11y').onclick  = function(){ copy(E.a11y(STATE)); };
+  hud.querySelector('#hud-state').onclick = function(){ copy(JSON.stringify(E.snapshot(STATE), null, 2)); };
+  hud.querySelector('#hud-traj').onclick  = function(){ copy(JSON.stringify(TRAJ, null, 2)); };
+  hud.querySelector('#hud-hide').onclick  = function(){ hud.classList.add('off'); };
+}
+function copy(t){ try { navigator.clipboard.writeText(t); } catch(e){} }
+document.addEventListener('keydown', function(e){
+  if (e.key === 'h') { hud.classList.toggle('off'); if (!hud.classList.contains('off')) paintHud(); }
+});
+
+var ENVAPI = {
+  ENV_ID: E.ENV_ID, VERSION: E.VERSION,
+  reset: function(opts){
+    opts = opts || {};
+    STATE = E.createInitialState(opts.seed || 0);
+    if (opts.patch) E.applyPatch(STATE, opts.patch);
+    TRAJ = []; paint();
+    return E.snapshot(STATE);
+  },
+  getState:   function(){ return E.snapshot(STATE); },
+  setState:   function(s){ STATE = JSON.parse(JSON.stringify(s)); paint(); return true; },
+  step:       function(a){ var r = E.step(STATE, a); STATE = r.state; TRAJ.push(a); paint();
+                           return {ok:r.ok, error:r.error || null}; },
+  dispatch:   function(act){ STATE = E.reduce(STATE, act); paint(); return true; },
+  a11y:       function(){ return E.a11y(STATE); },
+  elements:   function(){ return E.elements(STATE); },
+  route:      function(){ return E.select.route(STATE); },
+  trajectory: function(){ return JSON.parse(JSON.stringify(TRAJ)); },
+  bounds: function(){
+    var base = document.getElementById('screen').getBoundingClientRect(), out = {};
+    app.querySelectorAll('[data-testid]').forEach(function(el){
+      var r = el.getBoundingClientRect();
+      out[el.getAttribute('data-testid')] = {
+        x:Math.round(r.left-base.left), y:Math.round(r.top-base.top),
+        w:Math.round(r.width), h:Math.round(r.height),
+        cx:Math.round(r.left-base.left+r.width/2), cy:Math.round(r.top-base.top+r.height/2)};
+    });
+    return out;
+  }
+};
+window.__ENV__ = ENVAPI;
+var qs = new URLSearchParams(location.search);
+if (qs.get('bare') === '1') document.body.classList.add('bare');
+if (qs.get('hud')  === '1') hud.classList.remove('off');
+ENVAPI.reset({seed: parseInt(qs.get('seed') || '0', 10) || 0});
+window.__ENV_READY__ = true;
+})();
+</script>
+</body>
+</html>

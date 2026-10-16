@@ -1,0 +1,29 @@
+{
+  "id": "cinder_vault",
+  "name": "Cinder",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "viewport": {"width": 390, "height": 844},
+  "description": "A single-file H5 password vault whose world model is a derived number. The health score is stored nowhere: it is a hundred, less eight for every weak password, six for every password used twice, three for anything older than a year and two for every account without a second factor. Strength is read off the string itself — length, character classes, and a list of words that no amount of leetspeak rescues, so Passw0rd! scores as badly as password. Because changing a password also resets its age, fixing one weak entry can be worth eleven points rather than eight, which is the sort of arithmetic the tasks here turn on. 5 screens, 8 entries, a counter-driven passphrase generator that is never random.",
+  "tasks_file": "tasks.json",
+  "oracle_file": "oracle.json",
+  "action_space": {
+    "tap":    {"id": "test-id of the element"},
+    "type":   {"id": "test-id of a text field", "text": "replaces the whole value"},
+    "back":   {}, "home": {}, "wait": {},
+    "finish": {"answer": "final answer for question tasks; optional for action tasks"},
+    "tap_xy": {"x": "screen pixel x", "y": "screen pixel y", "note": "browser backend only"}
+  },
+  "observation": {
+    "text": "engine.a11y(state) — the score, the four issue counts and every entry's problems serialise as text.",
+    "pixels": "390x844 screenshot (browser backend); __ENV__.bounds() maps every test-id to a pixel box",
+    "state": "engine.snapshot(state) — canonical state plus a derived view with per-site strength and issues. For the verifier only."
+  },
+  "world": {
+    "score": "100 - 8·weak - 6·reused - 3·older-than-a-year - 2·no-second-factor, floored at zero",
+    "strength": "0 to 4 from length and character classes; a recognisable common word caps it at 1",
+    "reuse": "any password string that appears in two entries marks both of them",
+    "generator": "a counter over three word lists; the same number of taps always gives the same passphrase",
+    "seeded": "the vault starts at 26 out of 100 — 5 weak, 2 reused, 4 stale, 5 without a second factor"
+  }
+}

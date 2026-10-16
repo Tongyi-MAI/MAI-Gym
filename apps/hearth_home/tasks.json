@@ -1,0 +1,853 @@
+{
+  "env": "hearth_home",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_porch_light",
+      "name": "Porch light on at 60%",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "light",
+        "slider"
+      ],
+      "instruction": "Turn the Porch Light on and set its brightness to 60%.",
+      "goal": [
+        {
+          "name": "Porch light is on",
+          "path": "devices.d_porch.on",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Brightness is 60%",
+          "path": "devices.d_porch.brightness",
+          "op": "eq",
+          "value": 60,
+          "weight": 2,
+          "hint": "it comes on at 70% — one step down on the brightness slider"
+        },
+        {
+          "name": "No other light was touched",
+          "path": "derived.lightsOnCount",
+          "op": "eq",
+          "value": 6,
+          "hint": "five were already on; the porch makes six"
+        }
+      ]
+    },
+    {
+      "id": "T02_units_and_alerts",
+      "name": "Fahrenheit, alerts off",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "settings",
+        "toggle"
+      ],
+      "instruction": "In Settings, switch the temperature units to Fahrenheit and turn off device alerts. Leave every other setting alone.",
+      "goal": [
+        {
+          "name": "Units are Fahrenheit",
+          "path": "profile.settings.units",
+          "op": "eq",
+          "value": "F"
+        },
+        {
+          "name": "Device alerts are off",
+          "path": "profile.settings.deviceAlerts",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Weekly energy report untouched",
+          "path": "profile.settings.energyReports",
+          "op": "eq",
+          "value": true,
+          "hint": "distractor — it sits directly below device alerts"
+        },
+        {
+          "name": "Guest access untouched",
+          "path": "profile.settings.guestAccess",
+          "op": "eq",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "T03_alarm_and_hall",
+      "name": "Arm the alarm, kill the hall light",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "security",
+        "light"
+      ],
+      "instruction": "Set the alarm to Away and turn the Hallway Light off.",
+      "goal": [
+        {
+          "name": "Alarm is Away",
+          "path": "home.alarm",
+          "op": "eq",
+          "value": "away"
+        },
+        {
+          "name": "Hallway light is off",
+          "path": "devices.d_hall.on",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Front door is still locked",
+          "path": "derived.doorLocked",
+          "op": "eq",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "T04_movie_then_dim",
+      "name": "Movie Night, then dim the lamp",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "scene",
+        "slider"
+      ],
+      "instruction": "Run the Movie Night scene, then set the Floor Lamp to 30% brightness.",
+      "notes": "The scene drops the floor lamp to 10%; two steps up gets it to 30%.",
+      "goal": [
+        {
+          "name": "Movie Night was the last scene run",
+          "path": "derived.lastScene",
+          "op": "eq",
+          "value": "sc_movie"
+        },
+        {
+          "name": "Floor lamp is at 30%",
+          "path": "devices.d_floorlamp.brightness",
+          "op": "eq",
+          "value": 30,
+          "weight": 2
+        },
+        {
+          "name": "Ceiling light is off",
+          "path": "devices.d_ceiling.on",
+          "op": "eq",
+          "value": false,
+          "hint": "the scene does this — undoing it fails the task"
+        },
+        {
+          "name": "Living blinds are closed",
+          "path": "devices.d_blinds_l.position",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "TV socket is on",
+          "path": "devices.d_tv.on",
+          "op": "eq",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "T05_thermostat",
+      "name": "Heat to 22°",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "thermostat",
+        "segmented",
+        "stepper"
+      ],
+      "instruction": "Put the thermostat into heat mode with a target temperature of 22°C.",
+      "goal": [
+        {
+          "name": "Mode is heat",
+          "path": "devices.d_thermostat.mode",
+          "op": "eq",
+          "value": "heat"
+        },
+        {
+          "name": "Target is 22°",
+          "path": "devices.d_thermostat.target",
+          "op": "approx",
+          "value": 22,
+          "tol": 0.01,
+          "weight": 2,
+          "hint": "the set-point moves in half degrees from 20.5"
+        }
+      ]
+    },
+    {
+      "id": "T06_automations",
+      "name": "Swap two automations",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "automation",
+        "toggle"
+      ],
+      "instruction": "Turn off the sunset porch-light automation, and enable the one that arms the cameras when everyone leaves.",
+      "goal": [
+        {
+          "name": "Exactly the right automations are enabled",
+          "path": "derived.enabledAutomations",
+          "op": "set_eq",
+          "value": [
+            "au_bedtime",
+            "au_cams",
+            "au_warm"
+          ],
+          "weight": 3,
+          "hint": "bedtime and warm-up were already on and must stay on"
+        }
+      ]
+    },
+    {
+      "id": "T07_query_top_room",
+      "name": "Question: hungriest room",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "answer_expected": true,
+      "tags": [
+        "energy",
+        "query",
+        "read-only"
+      ],
+      "instruction": "Which room used the most energy this week? Answer with the room name.",
+      "goal": [
+        {
+          "name": "The answer is the Kitchen",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Kk]itchen",
+          "weight": 3,
+          "hint": "the Energy tab breaks the week down by room"
+        },
+        {
+          "name": "Nothing was switched",
+          "path": "derived.totalWatts",
+          "op": "eq",
+          "value": 519,
+          "hint": "read-only task"
+        }
+      ]
+    },
+    {
+      "id": "T08_query_power",
+      "name": "Question: live power draw",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "answer_expected": true,
+      "tags": [
+        "energy",
+        "query",
+        "read-only"
+      ],
+      "instruction": "What is the whole-home power draw right now, in watts? Answer with just the number.",
+      "goal": [
+        {
+          "name": "The answer is 519",
+          "source": "answer",
+          "op": "eq",
+          "value": 519,
+          "extract": "number",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was switched",
+          "path": "derived.totalWatts",
+          "op": "eq",
+          "value": 519
+        }
+      ]
+    },
+    {
+      "id": "T09_find_kettle",
+      "name": "Find and kill the kettle",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "search",
+        "plug",
+        "text-input"
+      ],
+      "instruction": "Someone left the kettle switched on. Use search to find the Kettle Socket and turn it off.",
+      "init": {
+        "patch": [
+          {
+            "path": "devices.d_kettle.on",
+            "value": true
+          }
+        ]
+      },
+      "goal": [
+        {
+          "name": "Kettle socket is off",
+          "path": "devices.d_kettle.on",
+          "op": "eq",
+          "value": false,
+          "weight": 2
+        },
+        {
+          "name": "Fridge socket is still on",
+          "path": "devices.d_fridge.on",
+          "op": "eq",
+          "value": true,
+          "hint": "the other socket in the kitchen — leave it alone"
+        },
+        {
+          "name": "Draw is back to 519 W",
+          "path": "derived.totalWatts",
+          "op": "eq",
+          "value": 519
+        }
+      ]
+    },
+    {
+      "id": "T10_add_device",
+      "name": "Add a device to the Study",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "form",
+        "text-input",
+        "rooms"
+      ],
+      "instruction": "Add a new light called \"Reading Lamp\" to the Study.",
+      "goal": [
+        {
+          "name": "Reading Lamp exists",
+          "path": "derived.addedDeviceNames",
+          "op": "set_eq",
+          "value": [
+            "Reading Lamp"
+          ],
+          "weight": 2
+        },
+        {
+          "name": "It is in the Study",
+          "path": "extraDevices[0].room",
+          "op": "eq",
+          "value": "r_study"
+        },
+        {
+          "name": "It is a light",
+          "path": "extraDevices[0].kind",
+          "op": "eq",
+          "value": "light"
+        },
+        {
+          "name": "It starts switched off",
+          "path": "derived.totalWatts",
+          "op": "eq",
+          "value": 519,
+          "hint": "new devices come in off, so the draw should not move"
+        }
+      ]
+    },
+    {
+      "id": "T11_query_activity",
+      "name": "Question: who unlocked the door",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "answer_expected": true,
+      "tags": [
+        "activity",
+        "query",
+        "read-only"
+      ],
+      "instruction": "Check the activity log: who unlocked the front door at 18:42? Answer with the name.",
+      "goal": [
+        {
+          "name": "The answer is Mira",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Mm]ira",
+          "weight": 3,
+          "hint": "the clock icon in the top right of the dashboard opens the log"
+        },
+        {
+          "name": "Nothing was switched",
+          "path": "derived.totalWatts",
+          "op": "eq",
+          "value": 519
+        }
+      ]
+    },
+    {
+      "id": "T12_study_all_off",
+      "name": "Empty the Study",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "rooms",
+        "bulk"
+      ],
+      "instruction": "Turn everything in the Study off.",
+      "goal": [
+        {
+          "name": "Nothing is on in the Study",
+          "path": "derived.roomOnCounts.r_study",
+          "op": "eq",
+          "value": 0,
+          "weight": 2
+        },
+        {
+          "name": "The living room is untouched",
+          "path": "devices.d_ceiling.on",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "The kitchen is untouched",
+          "path": "devices.d_kitchen.on",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Draw drops by 188 W",
+          "path": "derived.totalWatts",
+          "op": "eq",
+          "value": 331
+        }
+      ]
+    },
+    {
+      "id": "T13_blinds",
+      "name": "Blinds: one shut, one open",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "blind",
+        "two-rooms"
+      ],
+      "instruction": "Close the Living Blinds completely and open the Bedroom Blinds completely.",
+      "goal": [
+        {
+          "name": "Living blinds are shut",
+          "path": "devices.d_blinds_l.position",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Bedroom blinds are fully open",
+          "path": "devices.d_bed_blinds.position",
+          "op": "eq",
+          "value": 100,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T14_bedside_lamp",
+      "name": "Bedside lamp, warm at 25%",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "light",
+        "slider",
+        "tone"
+      ],
+      "instruction": "Turn the Bedside Lamp on, set it to 25% brightness, and make sure its tone is Warm.",
+      "goal": [
+        {
+          "name": "Bedside lamp is on",
+          "path": "devices.d_bed_lamp.on",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Brightness is 25%",
+          "path": "devices.d_bed_lamp.brightness",
+          "op": "eq",
+          "value": 25,
+          "weight": 2,
+          "hint": "25% is one of the slider presets"
+        },
+        {
+          "name": "Tone is Warm",
+          "path": "devices.d_bed_lamp.tone",
+          "op": "eq",
+          "value": "warm"
+        },
+        {
+          "name": "The bedroom ceiling light stays off",
+          "path": "devices.d_bed_ceiling.on",
+          "op": "eq",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "T15_night_routine",
+      "name": "Night routine (flagship)",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 40,
+      "tags": [
+        "scene",
+        "thermostat",
+        "blind",
+        "security",
+        "long-horizon"
+      ],
+      "instruction": "Set the house up for the night. Run the Evening scene, put the thermostat into heat mode at 19°C, make sure both sets of blinds are closed, turn the Desk Socket off, set the alarm to Home, and lock the front door.",
+      "notes": "Starts with the alarm off, the door unlocked and the bedroom blinds open, so none of it is already done.",
+      "init": {
+        "patch": [
+          {
+            "path": "home.alarm",
+            "value": "off"
+          },
+          {
+            "path": "devices.d_lock.locked",
+            "value": false
+          },
+          {
+            "path": "devices.d_bed_blinds.position",
+            "value": 100
+          }
+        ]
+      },
+      "goal": [
+        {
+          "name": "Evening was the last scene run",
+          "path": "derived.lastScene",
+          "op": "eq",
+          "value": "sc_evening",
+          "weight": 2
+        },
+        {
+          "name": "Thermostat is heating",
+          "path": "devices.d_thermostat.mode",
+          "op": "eq",
+          "value": "heat"
+        },
+        {
+          "name": "Target is 19°",
+          "path": "devices.d_thermostat.target",
+          "op": "approx",
+          "value": 19,
+          "tol": 0.01,
+          "weight": 2
+        },
+        {
+          "name": "Living blinds closed",
+          "path": "devices.d_blinds_l.position",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Bedroom blinds closed",
+          "path": "devices.d_bed_blinds.position",
+          "op": "eq",
+          "value": 0,
+          "weight": 2
+        },
+        {
+          "name": "Desk socket is off",
+          "path": "devices.d_desk_plug.on",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Alarm is Home",
+          "path": "home.alarm",
+          "op": "eq",
+          "value": "home"
+        },
+        {
+          "name": "Front door is locked",
+          "path": "derived.doorLocked",
+          "op": "eq",
+          "value": true,
+          "weight": 2
+        },
+        {
+          "name": "Kitchen is off (the scene does this)",
+          "path": "devices.d_kitchen.on",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Efficiency: 24 steps or fewer",
+          "source": "trajectory",
+          "path": "steps",
+          "op": "lte",
+          "value": 24,
+          "critical": false,
+          "weight": 0.5
+        }
+      ]
+    },
+    {
+      "id": "T16_power_budget",
+      "name": "Power budget (many valid answers)",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "unique_solution": false,
+      "tags": [
+        "energy",
+        "constraint",
+        "multi-solution"
+      ],
+      "instruction": "Bring the live power draw under 200 W. You can switch off whatever you like, except the Fridge Socket, the Hallway Light and the Kitchen Spots — those three must stay on.",
+      "notes": "519 W at reset, and 141 W of that is protected. Turning off the Desk Socket (180 W) and the TV Socket (120 W) still leaves 219 W, so something else has to go as well.",
+      "goal": [
+        {
+          "name": "Draw is under 200 W",
+          "path": "derived.totalWatts",
+          "op": "lt",
+          "value": 200,
+          "weight": 3
+        },
+        {
+          "name": "Fridge socket still on",
+          "path": "devices.d_fridge.on",
+          "op": "eq",
+          "value": true,
+          "weight": 2
+        },
+        {
+          "name": "Hallway light still on",
+          "path": "devices.d_hall.on",
+          "op": "eq",
+          "value": true,
+          "weight": 2
+        },
+        {
+          "name": "Kitchen spots still on",
+          "path": "devices.d_kitchen.on",
+          "op": "eq",
+          "value": true,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T17_bedtime_time",
+      "name": "Move bedtime to 22:30",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "automation",
+        "time-picker",
+        "stepper"
+      ],
+      "instruction": "The Bedtime automation runs at 23:00. Change it to 22:30 and leave it enabled.",
+      "goal": [
+        {
+          "name": "Bedtime runs at 22:30",
+          "path": "derived.bedtimeAt",
+          "op": "eq",
+          "value": "22:30",
+          "weight": 3,
+          "hint": "the hour and minute steppers are on the automation's detail screen; minutes move in 15s"
+        },
+        {
+          "name": "It is still enabled",
+          "path": "automations.au_bedtime.enabled",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "The morning warm-up is untouched",
+          "path": "derived.warmUpAt",
+          "op": "eq",
+          "value": "06:30"
+        }
+      ]
+    },
+    {
+      "id": "T18_away_scene",
+      "name": "Read the Away scene, then run it",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "scene",
+        "security"
+      ],
+      "instruction": "Open the Away scene to see what it changes, then run it.",
+      "goal": [
+        {
+          "name": "Away was the last scene run",
+          "path": "derived.lastScene",
+          "op": "eq",
+          "value": "sc_away",
+          "weight": 2
+        },
+        {
+          "name": "Every light is off",
+          "path": "derived.lightsOnCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Alarm armed to Away",
+          "path": "home.alarm",
+          "op": "eq",
+          "value": "away"
+        },
+        {
+          "name": "Only the fridge and cameras draw power",
+          "path": "derived.totalWatts",
+          "op": "eq",
+          "value": 106,
+          "weight": 2,
+          "hint": "95 W fridge + 5 W doorbell + 6 W garden camera"
+        },
+        {
+          "name": "Front door locked",
+          "path": "derived.doorLocked",
+          "op": "eq",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "T19_lights_but_hall",
+      "name": "Every light off except the hallway",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 24,
+      "tags": [
+        "multi-room",
+        "precision"
+      ],
+      "instruction": "Turn off every light in the house except the Hallway Light. Do not change anything that is not a light.",
+      "goal": [
+        {
+          "name": "Only the hallway light is on",
+          "path": "derived.lightsOnNames",
+          "op": "set_eq",
+          "value": [
+            "Hallway Light"
+          ],
+          "weight": 3,
+          "hint": "the ceiling light, floor lamp, kitchen spots and desk lamp all start on"
+        },
+        {
+          "name": "TV socket untouched",
+          "path": "devices.d_tv.on",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Speaker untouched",
+          "path": "devices.d_speaker.on",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Desk socket untouched",
+          "path": "devices.d_desk_plug.on",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Fridge untouched",
+          "path": "devices.d_fridge.on",
+          "op": "eq",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "T20_secure_the_house",
+      "name": "Secure the house and stop it happening again",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "security",
+        "automation",
+        "cameras",
+        "long-horizon"
+      ],
+      "instruction": "Someone left the house unlocked with the alarm off and the garden camera disabled. Lock the front door, set the alarm to Away, make sure both cameras are recording, and enable the automation that arms the cameras when everyone leaves.",
+      "init": {
+        "patch": [
+          {
+            "path": "home.alarm",
+            "value": "off"
+          },
+          {
+            "path": "devices.d_lock.locked",
+            "value": false
+          },
+          {
+            "path": "devices.d_garden_cam.on",
+            "value": false
+          }
+        ]
+      },
+      "goal": [
+        {
+          "name": "Front door locked",
+          "path": "derived.doorLocked",
+          "op": "eq",
+          "value": true,
+          "weight": 2
+        },
+        {
+          "name": "Alarm is Away",
+          "path": "home.alarm",
+          "op": "eq",
+          "value": "away",
+          "weight": 2
+        },
+        {
+          "name": "Doorbell camera recording",
+          "path": "devices.d_doorbell.on",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Garden camera recording",
+          "path": "devices.d_garden_cam.on",
+          "op": "eq",
+          "value": true,
+          "weight": 2
+        },
+        {
+          "name": "Camera automation enabled",
+          "path": "automations.au_cams.enabled",
+          "op": "eq",
+          "value": true,
+          "weight": 2
+        },
+        {
+          "name": "The other automations are untouched",
+          "path": "derived.enabledAutomations",
+          "op": "set_eq",
+          "value": [
+            "au_bedtime",
+            "au_cams",
+            "au_sunset",
+            "au_warm"
+          ]
+        }
+      ]
+    }
+  ]
+}

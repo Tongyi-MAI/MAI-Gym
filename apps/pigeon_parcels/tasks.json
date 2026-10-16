@@ -1,0 +1,712 @@
+{
+  "env": "pigeon_parcels",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_settings",
+      "name": "Two notification settings",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "settings"
+      ],
+      "instruction": "In Settings, stop telling me when a parcel goes out for delivery, and stop asking for a doorstep photo. Keep the delivered notification on.",
+      "goal": [
+        {
+          "name": "Out-for-delivery is off",
+          "path": "derived.settings.notifyOut",
+          "op": "eq",
+          "value": false,
+          "weight": 2
+        },
+        {
+          "name": "Photo proof is off",
+          "path": "derived.settings.photoProof",
+          "op": "eq",
+          "value": false,
+          "weight": 2
+        },
+        {
+          "name": "Delivered notification untouched",
+          "path": "derived.settings.notifyDelivered",
+          "op": "eq",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "T02_query_van",
+      "name": "Question: what is on the van",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "answer_expected": true,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "One parcel is out for delivery today. What is in it, and in what time window?",
+      "goal": [
+        {
+          "name": "The barbell collars",
+          "source": "answer",
+          "op": "contains",
+          "value": "collar",
+          "weight": 3
+        },
+        {
+          "name": "Between one and three",
+          "source": "answer",
+          "op": "contains",
+          "value": "13:00",
+          "weight": 2
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.activeCount",
+          "op": "eq",
+          "value": 5
+        }
+      ]
+    },
+    {
+      "id": "T03_follow",
+      "name": "Follow the travel card holder",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "notifications"
+      ],
+      "instruction": "Turn notifications on for the travel card holder from Larkline.",
+      "goal": [
+        {
+          "name": "Following it now",
+          "path": "derived.parcelFollow.Travel card holder",
+          "op": "eq",
+          "value": true,
+          "weight": 3
+        },
+        {
+          "name": "The card reader is still unfollowed",
+          "path": "derived.parcelFollow.Card reader",
+          "op": "eq",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "T04_rebook",
+      "name": "Rebook the failed delivery",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "state-machine",
+        "slots"
+      ],
+      "instruction": "Nobody was in for the Foxglove paperbacks. Book them in again for Thursday morning.",
+      "goal": [
+        {
+          "name": "Booked for Thursday morning",
+          "path": "derived.parcelSlot.Paperbacks, three of them",
+          "op": "eq",
+          "value": "Thursday 16 May, 08:00 – 12:00",
+          "weight": 3
+        },
+        {
+          "name": "It is back in the depot's hands",
+          "path": "derived.parcelStages.Paperbacks, three of them",
+          "op": "eq",
+          "value": "At your depot",
+          "weight": 2
+        },
+        {
+          "name": "Nothing else moved",
+          "path": "derived.activeCount",
+          "op": "eq",
+          "value": 5
+        }
+      ]
+    },
+    {
+      "id": "T05_divert_near",
+      "name": "Divert to the nearest point",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "pickup",
+        "compare"
+      ],
+      "instruction": "Send the saffron spice tin to a pickup point instead — whichever one is closest to home.",
+      "goal": [
+        {
+          "name": "Going to the newsagent",
+          "path": "derived.parcelWhere.Spice tin, saffron",
+          "op": "eq",
+          "value": "Larkfield Newsagent",
+          "weight": 3,
+          "hint": "0.4 km, the shortest of the four"
+        },
+        {
+          "name": "Nothing else was diverted",
+          "path": "derived.parcelWhere.Photo frames, set of three",
+          "op": "eq",
+          "value": "Home"
+        }
+      ]
+    },
+    {
+      "id": "T06_safe_place",
+      "name": "Leave it in the shed",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "state-machine",
+        "sheet"
+      ],
+      "instruction": "Tell the driver to leave the Umber photo frames in the shed.",
+      "goal": [
+        {
+          "name": "Safe place set",
+          "path": "derived.parcelSafe.Photo frames, set of three",
+          "op": "eq",
+          "value": "In the shed",
+          "weight": 3
+        },
+        {
+          "name": "The porch instruction on the delivered one is untouched",
+          "path": "derived.parcelSafe.Travel card holder",
+          "op": "eq",
+          "value": "In the porch"
+        }
+      ]
+    },
+    {
+      "id": "T07_refused",
+      "name": "Question: why it will not move",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "answer_expected": true,
+      "tags": [
+        "state-machine",
+        "query"
+      ],
+      "instruction": "Try to send the barbell collars to a different address. The app will not let you — tell me why.",
+      "goal": [
+        {
+          "name": "Because it is on the van",
+          "source": "answer",
+          "op": "regex",
+          "value": "van|loaded|out for delivery",
+          "weight": 3
+        },
+        {
+          "name": "The address really did not change",
+          "path": "derived.parcelWhere.Barbell collar pair",
+          "op": "eq",
+          "value": "Home",
+          "weight": 2
+        },
+        {
+          "name": "You actually tried",
+          "source": "trajectory",
+          "path": "ids",
+          "op": "contains",
+          "value": "do_address",
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T08_return",
+      "name": "Send the card holder back",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "returns",
+        "sheet"
+      ],
+      "instruction": "Start a return for the Larkline travel card holder. It is the wrong size.",
+      "goal": [
+        {
+          "name": "A return is open",
+          "path": "derived.returnCount",
+          "op": "eq",
+          "value": 1,
+          "weight": 2
+        },
+        {
+          "name": "For the right parcel",
+          "path": "derived.lastReturn.parcel",
+          "op": "eq",
+          "value": "Travel card holder",
+          "weight": 3
+        },
+        {
+          "name": "With the right reason",
+          "path": "derived.lastReturn.reason",
+          "op": "eq",
+          "value": "Wrong size",
+          "weight": 2
+        },
+        {
+          "name": "And a drop-off code",
+          "path": "derived.lastReturn.code",
+          "op": "eq",
+          "value": "RT4180"
+        }
+      ]
+    },
+    {
+      "id": "T09_query_window",
+      "name": "Question: how long left to send it back",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "answer_expected": true,
+      "tags": [
+        "returns",
+        "query",
+        "read-only"
+      ],
+      "instruction": "How many days have you got left to return the travel card holder? Answer with just the number.",
+      "goal": [
+        {
+          "name": "Eleven",
+          "source": "answer",
+          "op": "eq",
+          "value": 11,
+          "extract": "number",
+          "weight": 3,
+          "hint": "delivered on the 11th, fourteen days from then"
+        },
+        {
+          "name": "No return was started",
+          "path": "derived.returnCount",
+          "op": "eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T10_query_expired",
+      "name": "Question: the one that is too late",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "answer_expected": true,
+      "tags": [
+        "returns",
+        "query",
+        "state-machine"
+      ],
+      "instruction": "Try to return the Kestrel card reader. How many days ago did its return window close? Answer with just the number.",
+      "goal": [
+        {
+          "name": "Six days ago",
+          "source": "answer",
+          "op": "eq",
+          "value": 6,
+          "extract": "number",
+          "weight": 3
+        },
+        {
+          "name": "No return was created",
+          "path": "derived.returnCount",
+          "op": "eq",
+          "value": 0,
+          "weight": 2
+        },
+        {
+          "name": "You actually tried it",
+          "source": "trajectory",
+          "path": "ids",
+          "op": "contains",
+          "value": "back_pk_6",
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T11_address",
+      "name": "Send the spice tin to work",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "address",
+        "state-machine"
+      ],
+      "instruction": "Have the saffron spice tin delivered to Work instead of Home.",
+      "goal": [
+        {
+          "name": "Going to Work",
+          "path": "derived.parcelWhere.Spice tin, saffron",
+          "op": "eq",
+          "value": "Work",
+          "weight": 3
+        },
+        {
+          "name": "It is still a home delivery, not a pickup",
+          "path": "derived.parcelStages.Spice tin, saffron",
+          "op": "eq",
+          "value": "At your depot"
+        }
+      ]
+    },
+    {
+      "id": "T12_query_locker",
+      "name": "Question: the locker that will not do",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "answer_expected": true,
+      "tags": [
+        "pickup",
+        "query"
+      ],
+      "instruction": "One pickup point is open all hours but cannot take your parcel. Which one, and what is wrong with it?",
+      "goal": [
+        {
+          "name": "Quay Street",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Qq]uay",
+          "weight": 3
+        },
+        {
+          "name": "Because it is full",
+          "source": "answer",
+          "op": "regex",
+          "value": "full|taken|no (space|lockers)",
+          "weight": 2
+        },
+        {
+          "name": "Nothing was diverted",
+          "path": "derived.parcelWhere.Spice tin, saffron",
+          "op": "eq",
+          "value": "Home"
+        }
+      ]
+    },
+    {
+      "id": "T13_missing",
+      "name": "Report the paperbacks missing",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "state-machine",
+        "confirm-dialog"
+      ],
+      "instruction": "The card says the Foxglove paperbacks were attempted, but there is no sign of them. Report that parcel missing.",
+      "goal": [
+        {
+          "name": "A case is open on the paperbacks",
+          "path": "derived.missingReported",
+          "op": "contains",
+          "value": "Paperbacks, three of them",
+          "weight": 3
+        },
+        {
+          "name": "Only that one",
+          "path": "derived.missingReported",
+          "op": "len_eq",
+          "value": 1,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T14_flagship",
+      "name": "Rebook, redirect, and leave it safe (flagship)",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "state-machine",
+        "slots",
+        "address",
+        "sheet",
+        "long-horizon"
+      ],
+      "instruction": "Sort the Foxglove paperbacks out properly: book them for Saturday evening, send them to Mum's address instead of yours, and tell the driver to leave them with the neighbour at 16.",
+      "goal": [
+        {
+          "name": "Saturday evening",
+          "path": "derived.parcelSlot.Paperbacks, three of them",
+          "op": "eq",
+          "value": "Saturday 18 May, 16:00 – 20:00",
+          "weight": 3
+        },
+        {
+          "name": "Going to Mum",
+          "path": "derived.parcelWhere.Paperbacks, three of them",
+          "op": "eq",
+          "value": "Mum",
+          "weight": 3
+        },
+        {
+          "name": "With the neighbour if nobody is in",
+          "path": "derived.parcelSafe.Paperbacks, three of them",
+          "op": "eq",
+          "value": "With the neighbour at 16",
+          "weight": 3
+        },
+        {
+          "name": "Nothing else was touched",
+          "path": "derived.parcelWhere.Spice tin, saffron",
+          "op": "eq",
+          "value": "Home"
+        },
+        {
+          "name": "Efficiency: 12 steps or fewer",
+          "source": "trajectory",
+          "path": "steps",
+          "op": "lte",
+          "value": 12,
+          "critical": false,
+          "weight": 0.5
+        }
+      ]
+    },
+    {
+      "id": "T15_cancel_slot",
+      "name": "Book it, then think better of it",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "slots",
+        "undo"
+      ],
+      "instruction": "Book the paperbacks in for Friday afternoon, then cancel that redelivery again — you would rather collect them.",
+      "goal": [
+        {
+          "name": "No slot booked",
+          "path": "derived.parcelSlot.Paperbacks, three of them",
+          "op": "eq",
+          "weight": 3,
+          "value": null
+        },
+        {
+          "name": "Back to waiting on you",
+          "path": "derived.parcelStages.Paperbacks, three of them",
+          "op": "eq",
+          "value": "Delivery attempted",
+          "weight": 2
+        },
+        {
+          "name": "You did book one first",
+          "source": "trajectory",
+          "path": "ids",
+          "op": "contains",
+          "value": "slot_confirm",
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T16_defaults",
+      "name": "Set your two defaults",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "settings",
+        "sheet"
+      ],
+      "instruction": "On your own page, set the default safe place to the porch and the preferred pickup point to Bellrope Pharmacy.",
+      "goal": [
+        {
+          "name": "Default safe place",
+          "path": "derived.settings.defaultSafe",
+          "op": "eq",
+          "value": "In the porch",
+          "weight": 3
+        },
+        {
+          "name": "Preferred pickup",
+          "path": "derived.settings.preferredPoint",
+          "op": "eq",
+          "value": "Bellrope Pharmacy",
+          "weight": 3
+        }
+      ]
+    },
+    {
+      "id": "T17_return_to_pref",
+      "name": "Return it to the pharmacy",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "returns",
+        "settings",
+        "order-matters",
+        "long-horizon"
+      ],
+      "instruction": "You would rather drop returns at Bellrope Pharmacy. Make that your preferred pickup point, then start a faulty-goods return for the travel card holder so it goes there.",
+      "notes": "A return picks up whichever point is preferred at the moment it is created.",
+      "goal": [
+        {
+          "name": "Preferred point set",
+          "path": "derived.settings.preferredPoint",
+          "op": "eq",
+          "value": "Bellrope Pharmacy",
+          "weight": 2
+        },
+        {
+          "name": "The return exists",
+          "path": "derived.lastReturn.parcel",
+          "op": "eq",
+          "value": "Travel card holder",
+          "weight": 2
+        },
+        {
+          "name": "Faulty or damaged",
+          "path": "derived.lastReturn.reason",
+          "op": "eq",
+          "value": "Faulty or damaged",
+          "weight": 2
+        },
+        {
+          "name": "Dropping at the pharmacy",
+          "path": "derived.lastReturn.point",
+          "op": "eq",
+          "value": "Bellrope Pharmacy",
+          "weight": 3,
+          "hint": "set the preference before creating the return, not after"
+        }
+      ]
+    },
+    {
+      "id": "T18_track",
+      "name": "Find it by number",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "search",
+        "navigation"
+      ],
+      "instruction": "Look up the parcel whose tracking number ends 7742 and open it.",
+      "goal": [
+        {
+          "name": "On a parcel page",
+          "path": "derived.route",
+          "op": "eq",
+          "value": "parcel"
+        },
+        {
+          "name": "It is the paperbacks",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "pk_4",
+          "weight": 3
+        },
+        {
+          "name": "You used the tracking box",
+          "source": "trajectory",
+          "path": "ids",
+          "op": "contains",
+          "value": "q_track",
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T19_collect_anyhow",
+      "name": "Nothing to the door this week (many valid answers)",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 26,
+      "unique_solution": false,
+      "tags": [
+        "state-machine",
+        "pickup",
+        "multi-solution"
+      ],
+      "instruction": "You are away all week, so nothing should come to your door: get both the Foxglove paperbacks and the saffron spice tin sent somewhere you can collect them from instead. Which points you use is up to you, as long as they can actually take a parcel.",
+      "goal": [
+        {
+          "name": "The paperbacks go to a pickup point",
+          "path": "derived.parcelWhere.Paperbacks, three of them",
+          "op": "in",
+          "value": [
+            "Larkfield Newsagent",
+            "Bellrope Pharmacy",
+            "Millgate Hardware"
+          ],
+          "weight": 3,
+          "hint": "the Quay Street locker is full, so it is not an option"
+        },
+        {
+          "name": "So does the spice tin",
+          "path": "derived.parcelWhere.Spice tin, saffron",
+          "op": "in",
+          "value": [
+            "Larkfield Newsagent",
+            "Bellrope Pharmacy",
+            "Millgate Hardware"
+          ],
+          "weight": 3
+        },
+        {
+          "name": "No van is coming for the paperbacks",
+          "path": "derived.parcelSlot.Paperbacks, three of them",
+          "op": "eq",
+          "value": null,
+          "weight": 2
+        },
+        {
+          "name": "Nor for the spice tin",
+          "path": "derived.parcelSlot.Spice tin, saffron",
+          "op": "eq",
+          "value": null,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T20_unfollow_two",
+      "name": "Quieten two of them down",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "notifications"
+      ],
+      "instruction": "Turn notifications off for both the barbell collars and the saffron spice tin. Leave the others as they are.",
+      "goal": [
+        {
+          "name": "Collars quiet",
+          "path": "derived.parcelFollow.Barbell collar pair",
+          "op": "eq",
+          "value": false,
+          "weight": 2
+        },
+        {
+          "name": "Spice tin quiet",
+          "path": "derived.parcelFollow.Spice tin, saffron",
+          "op": "eq",
+          "value": false,
+          "weight": 2
+        },
+        {
+          "name": "The photo frames are still followed",
+          "path": "derived.parcelFollow.Photo frames, set of three",
+          "op": "eq",
+          "value": true,
+          "weight": 2
+        }
+      ]
+    }
+  ]
+}

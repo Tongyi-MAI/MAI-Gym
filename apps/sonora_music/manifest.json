@@ -1,0 +1,31 @@
+{
+  "id": "sonora_music",
+  "name": "Sonora",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "viewport": {"width": 390, "height": 844},
+  "description": "A single-file H5 music player. There is no browse-and-buy loop: the world is a transport that is always playing or paused at a position, plus a queue you reorder in place. 10 screens, 6 albums, 28 tracks, 2 seeded playlists, a seek bar with jump marks, tri-state repeat, shuffle, a persistent mini player that follows you across screens, downloads and an explicit-content filter that actually hides tracks. Album covers are generated from each album's palette and style, so there are no image files.",
+  "tasks_file": "tasks.json",
+  "oracle_file": "oracle.json",
+  "action_space": {
+    "tap":    {"id": "test-id of the element"},
+    "type":   {"id": "test-id of a text field", "text": "replaces the whole value"},
+    "back":   {},
+    "home":   {},
+    "wait":   {},
+    "finish": {"answer": "final answer for question tasks; optional for action tasks"},
+    "tap_xy": {"x": "screen pixel x", "y": "screen pixel y", "note": "browser backend only"}
+  },
+  "observation": {
+    "text": "engine.a11y(state) — an accessibility tree with #test-ids. Every screen is prefixed by a transport line (what is playing, where, shuffle/repeat/queue depth), so the player state is legible from anywhere.",
+    "pixels": "390x844 screenshot (browser backend); __ENV__.bounds() maps every test-id to a pixel box",
+    "state": "engine.snapshot(state) — canonical state plus a derived view. For the verifier only."
+  },
+  "world": {
+    "clock": "22:07",
+    "transport": "position is in seconds and never advances on its own — only seeking, skipping and starting a new context move it",
+    "seek": "the ±15s buttons step, and the 0/25/50/75% marks jump to an exact fraction of the track",
+    "repeat": "off -> all -> one, cycled by a single control",
+    "explicit_filter": "when on, the two explicit tracks disappear from every list and from playback contexts"
+  }
+}

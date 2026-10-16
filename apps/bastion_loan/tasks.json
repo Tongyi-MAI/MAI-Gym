@@ -1,0 +1,786 @@
+{
+  "env": "bastion_loan",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_settings",
+      "name": "Two switches",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "settings"
+      ],
+      "instruction": "In Setup, switch off the month-by-month table and stop the app spelling the transfer fee out. Leave the third switch alone.",
+      "goal": [
+        {
+          "name": "The table is off",
+          "path": "derived.settings.showSchedule",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "The fee is no longer spelled out",
+          "path": "derived.settings.showFee",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "The third switch is untouched",
+          "path": "derived.settings.notifyCleared",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "The plan was not changed",
+          "path": "derived.budget",
+          "op": "eq",
+          "value": 52000
+        }
+      ]
+    },
+    {
+      "id": "T02_now",
+      "name": "Question: where does this plan end up?",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "On the plan as it is set up, how many months until both debts are gone, and what does the whole thing cost in interest?",
+      "goal": [
+        {
+          "name": "47 months",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)47(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "£3,718.41",
+          "source": "answer",
+          "op": "regex",
+          "value": "3[,.]?718",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.months",
+          "op": "eq",
+          "value": 47
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T03_cheapest_target",
+      "name": "Question: which way of aiming is cheapest?",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "query",
+        "compare"
+      ],
+      "instruction": "At £520 a month, which of the three ways of aiming the surplus costs the least, and how much does it cost? Do not change anything.",
+      "goal": [
+        {
+          "name": "everything at the card",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Cc]ard",
+          "weight": 3
+        },
+        {
+          "name": "£2,688.76",
+          "source": "answer",
+          "op": "regex",
+          "value": "2[,.]?688",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.target",
+          "op": "eq",
+          "value": "loan"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T04_card_clears",
+      "name": "Open the card",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "query",
+        "navigate"
+      ],
+      "instruction": "Open the credit card and tell me which month it finally clears on the current plan.",
+      "goal": [
+        {
+          "name": "month 47",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)47(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "You are on the card page",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "d_card"
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.target",
+          "op": "eq",
+          "value": "loan"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T05_rules",
+      "name": "Question: how the card works",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "What monthly interest rate does the credit card charge, and how is its minimum payment worked out?",
+      "goal": [
+        {
+          "name": "1.825% a month",
+          "source": "answer",
+          "op": "regex",
+          "value": "1[.,]825",
+          "weight": 3
+        },
+        {
+          "name": "2.5% or £25",
+          "source": "answer",
+          "op": "regex",
+          "value": "2[.,]5",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.budget",
+          "op": "eq",
+          "value": 52000
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T06_too_little",
+      "name": "Four hundred is not enough",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "refusal"
+      ],
+      "instruction": "Pull the monthly budget down to £400 and tell me why the app cannot plan anything with it.",
+      "goal": [
+        {
+          "name": "The budget is £400",
+          "path": "derived.budget",
+          "op": "eq",
+          "value": 40000
+        },
+        {
+          "name": "It is not workable",
+          "path": "derived.feasible",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "the loan payment plus the card minimum",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:(348|minimum|cover|408))(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T07_switch_target",
+      "name": "Aim it at the dear one",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "multi-step"
+      ],
+      "instruction": "Send the surplus to the credit card instead, and tell me how much that saves against where the plan started.",
+      "goal": [
+        {
+          "name": "The surplus goes to the card",
+          "path": "derived.target",
+          "op": "eq",
+          "value": "card"
+        },
+        {
+          "name": "It costs £2,688.76",
+          "path": "derived.cost",
+          "op": "eq",
+          "value": 268876
+        },
+        {
+          "name": "No transfer taken",
+          "path": "derived.transfer",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "£1,029.65 saved",
+          "source": "answer",
+          "op": "regex",
+          "value": "(1[,.]?029|2[,.]?688)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T08_use_best",
+      "name": "Let it pick",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "navigate"
+      ],
+      "instruction": "Use the button that switches to whichever way of aiming the surplus is cheapest.",
+      "goal": [
+        {
+          "name": "It landed on the card",
+          "path": "derived.target",
+          "op": "eq",
+          "value": "card"
+        },
+        {
+          "name": "The budget did not move",
+          "path": "derived.budget",
+          "op": "eq",
+          "value": 52000
+        },
+        {
+          "name": "No transfer taken",
+          "path": "derived.transfer",
+          "op": "eq",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "T09_take_transfer",
+      "name": "Take the 0% deal",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "multi-step",
+        "commit"
+      ],
+      "instruction": "With the surplus aimed at the card, take the 0% balance transfer as well, and tell me what the plan costs now.",
+      "goal": [
+        {
+          "name": "The surplus goes to the card",
+          "path": "derived.target",
+          "op": "eq",
+          "value": "card"
+        },
+        {
+          "name": "The transfer is taken",
+          "path": "derived.transfer",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "It costs £2,311.63",
+          "path": "derived.cost",
+          "op": "eq",
+          "value": 231163
+        },
+        {
+          "name": "£2,311.63",
+          "source": "answer",
+          "op": "regex",
+          "value": "2[,.]?311",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T10_six_hundred",
+      "name": "Six hundred a month",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "multi-step"
+      ],
+      "instruction": "Put the budget up to £600 with the surplus on the card and no transfer. How many months does that take?",
+      "goal": [
+        {
+          "name": "The budget is £600",
+          "path": "derived.budget",
+          "op": "eq",
+          "value": 60000
+        },
+        {
+          "name": "The surplus goes to the card",
+          "path": "derived.target",
+          "op": "eq",
+          "value": "card"
+        },
+        {
+          "name": "No transfer",
+          "path": "derived.transfer",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "38 months",
+          "path": "derived.months",
+          "op": "eq",
+          "value": 38
+        },
+        {
+          "name": "38 months",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)38(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T11_interest_split",
+      "name": "Question: which debt costs more?",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "On the plan as it was handed to you, how much interest does each debt cost? Give both figures. Do not change anything.",
+      "goal": [
+        {
+          "name": "£1,698.41 on the card",
+          "source": "answer",
+          "op": "regex",
+          "value": "1[,.]?698",
+          "weight": 3
+        },
+        {
+          "name": "£2,020.00 on the loan",
+          "source": "answer",
+          "op": "regex",
+          "value": "2[,.]?020",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.target",
+          "op": "eq",
+          "value": "loan"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T12_which_first",
+      "name": "Question: which one goes first?",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "query",
+        "counter-intuitive"
+      ],
+      "instruction": "On the plan as it stands, which debt clears first — the £2,400 card at 21.9%, or the £18,000 loan at 5.9%? Say which, and in which month.",
+      "goal": [
+        {
+          "name": "the loan",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Ll]oan",
+          "weight": 3
+        },
+        {
+          "name": "month 43",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)43(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.target",
+          "op": "eq",
+          "value": "loan"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T13_card_gone",
+      "name": "When the card goes",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "multi-step"
+      ],
+      "instruction": "Keep the budget at £520 but aim the surplus at the card. Which month does the card clear in?",
+      "goal": [
+        {
+          "name": "The budget is still £520",
+          "path": "derived.budget",
+          "op": "eq",
+          "value": 52000
+        },
+        {
+          "name": "The surplus goes to the card",
+          "path": "derived.target",
+          "op": "eq",
+          "value": "card"
+        },
+        {
+          "name": "The card clears at month 17",
+          "path": "derived.cardMonth",
+          "op": "eq",
+          "value": 17
+        },
+        {
+          "name": "month 17",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)17(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T14_transfer_worth",
+      "name": "What the deal is worth here",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 22,
+      "tags": [
+        "compare",
+        "undo"
+      ],
+      "instruction": "Leaving the surplus where it is — on the loan — work out what the 0% transfer would save, then leave the transfer switched off again.",
+      "goal": [
+        {
+          "name": "The surplus is still on the loan",
+          "path": "derived.target",
+          "op": "eq",
+          "value": "loan"
+        },
+        {
+          "name": "The transfer is off",
+          "path": "derived.transfer",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Back to the original cost",
+          "path": "derived.cost",
+          "op": "eq",
+          "value": 371841
+        },
+        {
+          "name": "£874.12",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:874)(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T15_best_at_520",
+      "name": "The cheapest thing you can do with £520",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "optimise",
+        "surprise"
+      ],
+      "instruction": "Still at £520 a month, find the cheapest combination of the two levers you have — where the surplus goes, and whether to take the 0% deal. Set it, and tell me what it costs.",
+      "goal": [
+        {
+          "name": "The budget is still £520",
+          "path": "derived.budget",
+          "op": "eq",
+          "value": 52000
+        },
+        {
+          "name": "The transfer is taken",
+          "path": "derived.transfer",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "The surplus is split",
+          "path": "derived.target",
+          "op": "eq",
+          "value": "split"
+        },
+        {
+          "name": "It costs £2,288.96",
+          "path": "derived.cost",
+          "op": "eq",
+          "value": 228896
+        },
+        {
+          "name": "£2,288.96",
+          "source": "answer",
+          "op": "regex",
+          "value": "2[,.]?288",
+          "weight": 3,
+          "hint": "once the card charges nothing, is there still a reason to rush it?"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T16_why_split",
+      "name": "Why splitting wins once the card is free",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "reasoning"
+      ],
+      "instruction": "With the 0% deal taken, splitting the surplus beats throwing all of it at the card. Set it that way and explain why in a line.",
+      "goal": [
+        {
+          "name": "The transfer is taken",
+          "path": "derived.transfer",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "The surplus is split",
+          "path": "derived.target",
+          "op": "eq",
+          "value": "split"
+        },
+        {
+          "name": "The budget is still £520",
+          "path": "derived.budget",
+          "op": "eq",
+          "value": 52000
+        },
+        {
+          "name": "the card stops charging interest",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:(0%|no interest|free|18|zero))(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "so the loan is the only thing costing anything",
+          "source": "answer",
+          "op": "regex",
+          "value": "([Ll]oan|5[.,]9|0[.,]492)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T17_under_six",
+      "name": "The best you can do on six hundred",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 28,
+      "tags": [
+        "optimise",
+        "budget"
+      ],
+      "instruction": "Suppose £600 a month is the absolute most you could find. Set everything to whatever costs the least in interest and fees within that, and tell me the figure.",
+      "goal": [
+        {
+          "name": "The budget is no more than £600",
+          "path": "derived.budget",
+          "op": "lte",
+          "value": 60000
+        },
+        {
+          "name": "It costs £1,949.33 or less",
+          "path": "derived.cost",
+          "op": "lte",
+          "value": 194933
+        },
+        {
+          "name": "It is workable",
+          "path": "derived.feasible",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "£1,949.33",
+          "source": "answer",
+          "op": "regex",
+          "value": "1[,.]?949",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T18_two_years",
+      "name": "Two years is not on offer",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "reasoning",
+        "impossible"
+      ],
+      "instruction": "Could you be free of both debts inside two years on any settings this app allows? Work it out and, if not, say the soonest that is actually reachable.",
+      "goal": [
+        {
+          "name": "no",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![A-Za-z])(?:([Nn]o|not|cannot|can't|impossible))",
+          "weight": 3
+        },
+        {
+          "name": "32 months at the soonest",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)32(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "It is workable wherever you left it",
+          "path": "derived.feasible",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T19_forty_months",
+      "name": "The smallest budget that does it in forty",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "search",
+        "optimise"
+      ],
+      "instruction": "Aiming everything at the card and refusing the 0% deal, what is the lowest monthly budget that still clears both debts inside 40 months? Leave it set there.",
+      "goal": [
+        {
+          "name": "The budget is £580",
+          "path": "derived.budget",
+          "op": "eq",
+          "value": 58000
+        },
+        {
+          "name": "The surplus goes to the card",
+          "path": "derived.target",
+          "op": "eq",
+          "value": "card"
+        },
+        {
+          "name": "No transfer taken",
+          "path": "derived.transfer",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Inside 40 months",
+          "path": "derived.months",
+          "op": "lte",
+          "value": 40
+        },
+        {
+          "name": "£580",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)580(?!\\d)",
+          "weight": 3,
+          "hint": "£560 gets you to 41, which is one month too many"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T20_cheapest_ever",
+      "name": "The cheapest it can possibly be",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 28,
+      "tags": [
+        "optimise"
+      ],
+      "instruction": "Ignore what you can actually afford. Across every setting this app offers, what is the least interest and fees you could pay? Set it that way and tell me the figure and how long it takes.",
+      "goal": [
+        {
+          "name": "It costs £1,667.11 or less",
+          "path": "derived.cost",
+          "op": "lte",
+          "value": 166711
+        },
+        {
+          "name": "It is workable",
+          "path": "derived.feasible",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "The transfer is taken",
+          "path": "derived.transfer",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "The surplus is split",
+          "path": "derived.target",
+          "op": "eq",
+          "value": "split"
+        },
+        {
+          "name": "£1,667.11",
+          "source": "answer",
+          "op": "regex",
+          "value": "1[,.]?667",
+          "weight": 3
+        },
+        {
+          "name": "32 months",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)32(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    }
+  ]
+}

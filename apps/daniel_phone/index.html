@@ -1,0 +1,1846 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Daniel's iPhone (mocked GUI env)</title>
+<!--
+  ============================================================================
+  Daniel's iPhone — an iOS home screen and Settings app laid over the other
+  forty environments in this directory.
+
+  Same two-block contract as every environment here: script#engine is a pure,
+  DOM-free state machine on globalThis.GUI_ENGINE; script#ui renders its screen
+  tree and exposes window.__ENV__.
+
+  Nothing on the home screen is invented. Every tile's NAME comes from that
+  environment's own manifest, and every tile's COLOUR is the --accent this
+  build read straight out of that environment's index.html — so the mosaic on
+  the home screen is literally the forty brand colours, and the tile you tap is
+  the colour of the app you land in. The app-detail page carries a real <a>
+  link to ../<env>/index.html: click it in a browser and you are in that
+  environment. That link deliberately has no test-id, so elements() and
+  bounds() never see it — a human can click it, an agent cannot, and gate G
+  stays byte-identical.
+
+  The world here is the one piece of arithmetic every iPhone owner gets wrong:
+  DEVICE storage and iCLOUD storage are two different pools, and almost every
+  switch moves exactly one of them.
+
+    · Offload App frees the app's binary and keeps its Documents & Data.
+      Delete App frees both. So offloading is a much weaker lever than it
+      looks: offloading ALL FORTY apps frees 3,620 MB, and the iOS 26.1
+      update needs 3,660 MB more than is free. It cannot be done that way.
+    · Emptying Recently Deleted frees 2,180 MB — and it is the only action on
+      the phone that frees space in BOTH pools at once. After it, the update
+      needs 1,480 MB more, and the four largest app binaries come to 1,490.
+      Four offloads. Three (1,230) is not enough.
+    · Turning off an app's iCloud backup frees iCloud and not one byte of the
+      device. Tonight's backup wants 33,044 MB against 12,600 MB free, so five
+      of them have to go off — or four, if Recently Deleted was emptied first,
+      because that gave iCloud 2,180 MB back too.
+    · Optimise iPhone Storage is already on. Switching to Download and Keep
+      Originals would want the full 135,200 MB library on a 128 GB phone. The
+      switch that looks like the big saving is the one that cannot be flipped.
+
+  The owner is Daniel Okafor, 41, engineering manager at Meridian Labs in
+  London — the Daniel Okafor already sitting in covey_contacts, and the London
+  end of the same company as 张三 over on sam_phone, who is in his contacts as
+  Sam Zhang. Family Sharing carries his partner Ama, and Zoe and Kwame, whose
+  iPad is the 18.2 GB backup nobody has looked at in a year.
+  ============================================================================
+-->
+<style>
+:root{
+  --outer:#d8dae2;
+  --bezel:#1c1c1e;
+  --bg:#f2f2f7;
+  --card:#ffffff;
+  --card2:#f2f2f7;
+  --line:#e4e4e9;
+  --line2:#d1d1d6;
+  --press:#e9e9ee;
+  --chev:#c7c7cc;
+  --ink:#000000;
+  --ink2:#3c3c43;
+  --muted:#8e8e93;
+  --accent:#007aff;
+  --accent-d:#0060d0;
+  --accent-s:#e8f1ff;
+  --on-accent:#ffffff;
+  --good:#34c759;
+  --good-s:#e6f8ec;
+  --warn:#ff9500;
+  --warn-s:#fff2e0;
+  --bad:#ff3b30;
+  --bad-s:#ffecea;
+  --bad-line:#ffc9c4;
+  --btn:#efeff4;
+  --btn-off:#f5f5f8;
+  --off:#e4e4e9;
+  --appbar:rgba(249,249,249,.86);
+  --appbar-ink:#161a27;
+  --appbar-line:#d8d8dc;
+  --tabbar:#ffffff;
+  --scrim:rgba(0,0,0,.35);
+  --toast:#1c1c1e;
+  --toast-ink:#ffffff;
+  --hero:linear-gradient(150deg,#0a84ff,#5ac8fa);
+  --hero-line:transparent;
+  --hero-ink:#ffffff;
+  --disp:-apple-system,"SF Pro Display","SF Pro Text",Inter,"Helvetica Neue",sans-serif;
+  --r:10px;
+  --r:18px; --r2:12px;
+  --shadow:0 1px 2px rgba(16,18,26,.05),0 10px 26px rgba(16,18,26,.07);
+  --ui:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;height:100%}
+body{background:var(--outer);color:var(--ink);font:14px/1.55 var(--ui);
+  display:flex;align-items:center;justify-content:center;overflow:hidden}
+
+#device{position:relative;width:390px;height:844px;background:var(--bezel);border-radius:46px;padding:5px;
+  box-shadow:0 30px 70px rgba(0,0,0,.34);flex:0 0 auto}
+#screen{position:relative;width:100%;height:100%;background:var(--bg);border-radius:41px;
+  overflow:hidden;display:flex;flex-direction:column}
+#notch{position:absolute;top:5px;left:50%;transform:translateX(-50%);width:118px;height:30px;
+  background:var(--bezel);border-radius:0 0 18px 18px;z-index:60}
+body.bare{background:var(--bg)}
+body.bare #device{width:390px;height:844px;padding:0;border-radius:0;box-shadow:none;background:var(--bg)}
+body.bare #screen{border-radius:0}
+body.bare #notch{display:none}
+body.bare .n-sheet{animation:none}
+
+.statusbar{height:44px;flex:0 0 44px;display:flex;align-items:flex-end;justify-content:space-between;
+  padding:0 22px 6px;font-size:13px;font-weight:600;z-index:50;color:var(--ink)}
+.statusbar .sb-r{display:flex;gap:5px;align-items:center}
+.sb-bat{width:22px;height:11px;border:1.3px solid currentColor;border-radius:3px;position:relative;opacity:.9}
+.sb-bat:after{content:"";position:absolute;right:-3px;top:3px;width:2px;height:5px;background:currentColor;border-radius:0 1px 1px 0}
+.sb-bat i{position:absolute;left:1.3px;top:1.3px;bottom:1.3px;width:78%;background:currentColor;border-radius:1px}
+
+#app{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;position:relative}
+
+.n-appbar{flex:0 0 auto;min-height:52px;display:flex;align-items:center;gap:8px;padding:6px 12px;
+  background:var(--appbar);color:var(--appbar-ink);z-index:20;border-bottom:1px solid var(--appbar-line)}
+.n-appbar .ab-title{flex:1 1 auto;text-align:center;font:650 17px/1.3 var(--disp);letter-spacing:-.2px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.n-appbar .ab-side{flex:0 0 auto;min-width:56px;display:flex;align-items:center;gap:2px}
+.n-appbar .ab-side.right{justify-content:flex-end}
+.n-appbar .iconbtn{color:var(--appbar-ink);opacity:.85}
+.iconbtn{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  color:var(--ink2);cursor:pointer}
+.iconbtn:active{background:var(--press)}
+
+.n-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding-bottom:10px}
+.n-scroll::-webkit-scrollbar{width:0}
+
+.n-text{padding:2px 18px;color:var(--ink2)}
+.n-text.h1{font:700 26px/1.18 var(--disp);color:var(--ink);padding:10px 18px 6px;letter-spacing:-.6px}
+.n-text.h2{font:650 18px/1.3 var(--disp);color:var(--ink);padding:12px 18px 2px}
+.n-text.body{font-size:13.5px;padding:5px 18px;line-height:1.7}
+.n-text.muted{font-size:12.5px;color:var(--muted);padding:6px 18px;line-height:1.6}
+.n-text.empty{padding:14px 18px 40px;text-align:center;color:var(--muted);font-size:13.5px}
+.n-sec{padding:18px 18px 6px;font:700 11.5px/1 var(--ui);color:var(--muted);letter-spacing:1.3px;
+  text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.n-space{height:16px}
+
+.n-card{background:var(--card);border-radius:var(--r);margin:9px 16px;overflow:hidden;border:1px solid var(--line)}
+.n-card.flush{padding:0}
+.n-card.pad{padding:14px 16px}
+.n-card.tap{cursor:pointer}
+.n-card.tap:active{background:var(--press)}
+
+.n-row{display:flex;align-items:center;gap:13px;padding:12px 16px;border-bottom:1px solid var(--line);min-height:54px}
+.n-row:last-child{border-bottom:none}
+.n-row.tap{cursor:pointer}
+.n-row.tap:active{background:var(--press)}
+.n-row .r-lead{flex:0 0 auto;width:26px;color:var(--ink2);display:flex;align-items:center;justify-content:center}
+.n-row .r-main{flex:1 1 auto;min-width:0}
+.n-row .r-label{font-size:14.5px}
+.n-row .r-label.strike{text-decoration:line-through;color:var(--muted)}
+.n-row .r-sub{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.5}
+.n-row .r-value{flex:0 0 auto;font-size:14px;color:var(--ink2);text-align:right;font-variant-numeric:tabular-nums}
+.n-row .r-value.strong{color:var(--ink);font-weight:700}
+.n-row .r-value.acc{color:var(--accent);font-weight:700}
+.n-row .r-value.good{color:var(--good);font-weight:700}
+.n-row .r-value.warn{color:var(--warn);font-weight:700}
+.n-row .r-value.bad{color:var(--bad);font-weight:700}
+.n-row .r-arrow{flex:0 0 auto;color:var(--chev);display:flex}
+
+.n-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:47px;padding:0 20px;
+  border-radius:13px;font:650 15px/1 var(--ui);background:var(--btn);color:var(--ink);
+  border:none;cursor:pointer;user-select:none}
+.n-btn:active{filter:brightness(.97)}
+.n-btn.primary{background:var(--accent);color:var(--on-accent)}
+.n-btn.primary.off{background:var(--btn-off);color:var(--muted);cursor:not-allowed}
+.n-btn.ghost{background:transparent;border:1px solid var(--line2);height:37px;font-size:13px;padding:0 14px;color:var(--ink2)}
+.n-btn.danger{background:transparent;border:1px solid var(--bad-line);color:var(--bad);height:37px;font-size:13px;padding:0 14px}
+.n-btn.block{display:flex;width:100%}
+.n-btnrow{display:flex;gap:10px;padding:12px 16px;justify-content:flex-end;align-items:center;flex-wrap:wrap}
+
+.n-chips{display:flex;gap:8px;padding:8px 16px;overflow-x:auto}
+.n-chips::-webkit-scrollbar{height:0}
+.n-chip{flex:0 0 auto;height:34px;padding:0 14px;border-radius:11px;background:var(--card);
+  border:1px solid var(--line2);display:flex;align-items:center;font-size:13px;
+  color:var(--ink2);cursor:pointer;white-space:nowrap;font-weight:600}
+.n-chip.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+
+.n-input{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line);background:var(--card)}
+.n-input .i-label{flex:0 0 78px;font-size:13px;color:var(--muted)}
+.n-input input{flex:1 1 auto;border:none;outline:none;background:transparent;font-size:14.5px;
+  font-family:inherit;color:var(--ink);min-width:0}
+.n-input input::placeholder{color:var(--muted)}
+.n-switch{flex:0 0 auto;width:46px;height:27px;border-radius:14px;background:var(--off);position:relative;cursor:pointer;transition:background .16s}
+.n-switch.on{background:var(--accent)}
+.n-switch i{position:absolute;top:2.5px;left:2.5px;width:22px;height:22px;border-radius:50%;background:#fff;
+  transition:transform .16s;box-shadow:0 1px 3px rgba(0,0,0,.22)}
+.n-switch.on i{transform:translateX(19px)}
+.n-check{flex:0 0 auto;width:23px;height:23px;border-radius:7px;border:1.8px solid var(--off);position:relative;background:var(--card)}
+.n-check.on{border-color:var(--accent);background:var(--accent)}
+.n-check.on:after{content:"";position:absolute;left:7.5px;top:4px;width:5px;height:10px;
+  border:2px solid var(--on-accent);border-top:0;border-left:0;transform:rotate(42deg)}
+.n-radio{flex:0 0 auto;width:22px;height:22px;border-radius:50%;border:1.8px solid var(--off);position:relative}
+.n-radio.on{border-color:var(--accent);background:var(--accent)}
+.n-radio.on:after{content:"";position:absolute;left:7px;top:4px;width:5px;height:9px;
+  border:2px solid var(--on-accent);border-top:0;border-left:0;transform:rotate(42deg)}
+
+.tag{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11px;
+  font-weight:700;background:var(--btn);color:var(--ink2)}
+.tag.acc{background:var(--accent-s);color:var(--accent)}
+.tag.good{background:var(--good-s);color:var(--good)}
+.tag.warn{background:var(--warn-s);color:var(--warn)}
+.tag.bad{background:var(--bad-s);color:var(--bad)}
+
+.n-tabbar{flex:0 0 auto;height:58px;background:var(--tabbar);border-top:1px solid var(--line);display:flex;z-index:30}
+.n-tabbar .tb{flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  color:var(--muted);font-size:10.5px;cursor:pointer;font-weight:600}
+.n-tabbar .tb i{display:flex}
+.n-tabbar .tb.on{color:var(--accent)}
+
+.n-mask{position:absolute;inset:0;background:var(--scrim);z-index:70;display:flex;align-items:flex-end}
+.n-sheet{width:100%;max-height:80%;background:var(--card);border-radius:22px 22px 0 0;display:flex;
+  flex-direction:column;overflow:hidden;animation:up .18s ease-out}
+@keyframes up{from{transform:translateY(24px)}to{transform:none}}
+.n-sheet .sh-hd{padding:16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
+.n-sheet .sh-hd .t{font:650 17px/1.2 var(--disp)}
+.n-sheet .sh-bd{flex:1 1 auto;overflow-y:auto;min-height:0}
+.n-sheet .sh-bd::-webkit-scrollbar{width:0}
+.n-toast{position:absolute;left:50%;bottom:118px;transform:translateX(-50%);background:var(--toast);
+  color:var(--toast-ink);padding:11px 18px;border-radius:11px;font-size:13px;z-index:90;max-width:84%;text-align:center}
+.dialog{margin:auto;width:82%;background:var(--card);border-radius:18px;overflow:hidden;border:1px solid var(--line)}
+
+.stats{display:flex;gap:9px;padding:4px 16px}
+.stat{flex:1 1 0;background:var(--card);border:1px solid var(--line);border-radius:var(--r2);padding:13px 12px}
+.stat.tap{cursor:pointer}
+.stat .st-n{font:800 19px/1.1 var(--disp);letter-spacing:-.5px;font-variant-numeric:tabular-nums}
+.stat .st-l{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.4}
+.stat.acc .st-n{color:var(--accent)}
+
+.hero{margin:8px 16px 4px;padding:18px;border-radius:var(--r);background:var(--hero);
+  border:1px solid var(--hero-line);color:var(--hero-ink)}
+.hero.tap{cursor:pointer}
+.hero .he-k{font-size:11px;letter-spacing:1.3px;text-transform:uppercase;font-weight:800;opacity:.85}
+.hero .he-t{font:800 25px/1.16 var(--disp);margin-top:9px;letter-spacing:-.7px}
+.hero .he-s{font-size:13px;margin-top:8px;line-height:1.6;opacity:.9}
+
+
+/* ---------------------------------------------------------- iOS chrome */
+.n-scroll{background:var(--bg)}
+.n-appbar{backdrop-filter:saturate(180%) blur(20px)}
+.n-sec{font-size:13px;letter-spacing:0;text-transform:none;color:#6c6c70;font-weight:400;
+  padding:22px 32px 7px}
+.n-card{border:none;box-shadow:none;margin:0 16px;border-radius:10px;overflow:hidden}
+.n-row{padding:11px 16px;min-height:44px}
+.n-row .r-label{font-size:16px;font-weight:400;letter-spacing:-.2px}
+.n-row .r-sub{font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.4}
+.n-row .r-value{font-size:16px;color:var(--muted);letter-spacing:-.2px}
+.n-switch{width:51px;height:31px;border-radius:16px}
+.n-switch i{width:27px;height:27px}
+.n-switch.on{background:var(--good)}
+.n-switch.on i{transform:translateX(20px)}
+.n-btn{border-radius:12px;font-size:16px;font-weight:400;padding:13px}
+.n-btn.primary{font-weight:600}
+.n-btn.danger{color:var(--bad);background:var(--card)}
+.big{padding:6px 16px 2px;font:700 34px/1.15 var(--disp);letter-spacing:-.8px}
+
+/* ---------------------------------------------------------- home screen */
+.wall{position:absolute;inset:0;z-index:0}
+.wall svg{width:100%;height:100%;display:block}
+.hs{position:relative;z-index:1;display:flex;flex-direction:column;min-height:100%;
+  background-size:cover;background-position:center;background-repeat:no-repeat;
+  background-color:#151a3e}
+.hs .grow{flex:1 1 auto}
+
+.wgs{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 18px 2px}
+.wgc{background:rgba(255,255,255,.16);border:.5px solid rgba(255,255,255,.3);border-radius:19px;
+  padding:12px 13px;cursor:pointer;backdrop-filter:blur(22px) saturate(160%);
+  box-shadow:0 6px 18px rgba(0,0,0,.16);color:#fff;min-height:70px}
+.wgc:active{background:rgba(255,255,255,.28)}
+.wgc .k{font-size:10px;letter-spacing:.3px;opacity:.85;display:flex;align-items:center;gap:5px}
+.wgc .n{font:700 20px/1.1 var(--disp);margin-top:7px;letter-spacing:-.5px}
+.wgc .s{font-size:10.5px;opacity:.82;margin-top:5px;line-height:1.4}
+.wgc.alert .n{color:#ffd8d4}
+
+.pg{display:grid;grid-template-columns:repeat(4,1fr);gap:13px 4px;padding:7px 14px 2px}
+.pg.light .ic-n{color:var(--ink);text-shadow:none}
+.ic{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;position:relative}
+.ic:active{transform:scale(.92)}
+
+.tile{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;
+  color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.3),0 8px 18px rgba(0,0,0,.16)}
+.tile:before{content:"";position:absolute;inset:0;border-radius:inherit;
+  background:linear-gradient(180deg,rgba(255,255,255,.34),rgba(255,255,255,0) 52%,rgba(0,0,0,.16))}
+.tile:after{content:"";position:absolute;inset:0;border-radius:inherit;
+  box-shadow:inset 0 0 0 .5px rgba(255,255,255,.32)}
+.tile .ico{position:relative;z-index:1;filter:drop-shadow(0 1px 1px rgba(0,0,0,.22))}
+.tile.fold{background:rgba(255,255,255,.24);backdrop-filter:blur(16px);display:grid;
+  grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:3px;padding:6px;
+  align-items:stretch;justify-items:stretch;border-radius:14px}
+.tile.fold i{border-radius:5px;display:block;min-height:0;position:relative;z-index:1}
+
+.ic-n{font-size:11px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.45);max-width:74px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:-.1px}
+.ic-d{position:absolute;top:-4px;right:6px;min-width:20px;height:20px;border-radius:10px;
+  background:#ff3b30;color:#fff;font:600 11px/20px var(--disp);text-align:center;padding:0 5px;
+  box-shadow:0 0 0 1.6px rgba(255,255,255,.85)}
+
+.dots{display:flex;justify-content:center;gap:7px;padding:8px 0 6px}
+.dots div{width:7px;height:7px;border-radius:4px;background:rgba(255,255,255,.4);cursor:pointer}
+.dots div.on{background:#fff}
+
+.srch{display:flex;justify-content:center;padding:0 0 9px}
+.srch .pill{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:16px;
+  background:rgba(255,255,255,.22);backdrop-filter:blur(18px);color:#fff;font-size:13px;
+  border:.5px solid rgba(255,255,255,.22)}
+.dock{margin:0 10px 6px;padding:10px 6px;border-radius:26px;background:rgba(255,255,255,.2);
+  border:.5px solid rgba(255,255,255,.24);display:grid;grid-template-columns:repeat(4,1fr);
+  gap:4px;backdrop-filter:blur(24px) saturate(160%)}
+
+.n-input{background:transparent;border-bottom:none;padding:8px 18px 4px}
+.n-input .i-label{display:none}
+.n-input{display:flex;justify-content:center}
+.n-input input{flex:0 1 auto;max-width:200px;background:rgba(255,255,255,.22);
+  border:.5px solid rgba(255,255,255,.26);border-radius:16px;padding:7px 16px;font-size:13.5px;
+  color:#fff;text-align:center;backdrop-filter:blur(18px)}
+.n-input input::placeholder{color:rgba(255,255,255,.72)}
+
+/* ---------------------------------------------------------- storage bar */
+.sbar{margin:14px 16px 0}
+.sbar .track{display:flex;height:22px;border-radius:5px;overflow:hidden;background:#e4e4e9}
+.sbar .track i{display:block;height:100%}
+.sbar .free{font-size:12.5px;color:var(--muted);margin-top:9px;display:flex;
+  justify-content:space-between}
+.sbar .free b{color:var(--ink);font-weight:600}
+.leg{display:flex;flex-wrap:wrap;gap:5px 14px;margin:11px 16px 0}
+.leg div{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink2)}
+.leg span{width:9px;height:9px;border-radius:3px;flex:0 0 auto}
+.leg em{font-style:normal;color:var(--muted);margin-left:2px}
+
+.reco{margin:0 16px;background:var(--card);border-radius:10px;overflow:hidden}
+.rc{display:flex;gap:12px;padding:12px 16px;border-bottom:.5px solid var(--line);
+  align-items:flex-start}
+.rc:last-child{border-bottom:none}
+.rc .m{flex:1 1 auto;min-width:0}
+.rc .t{font-size:15.5px;letter-spacing:-.2px}
+.rc .d{font-size:12.5px;color:var(--muted);margin-top:4px;line-height:1.45}
+.rc .a{flex:0 0 auto;align-self:center;font-size:15px;color:var(--accent);cursor:pointer;
+  padding:4px 2px}
+.rc .a.off{color:var(--muted)}
+.rc .sz{flex:0 0 auto;align-self:center;font-size:14px;color:var(--muted);
+  font-variant-numeric:tabular-nums}
+
+.arow{display:flex;align-items:center;gap:12px;padding:9px 16px;border-bottom:.5px solid var(--line);
+  cursor:pointer}
+.arow:last-child{border-bottom:none}
+.arow .t2{width:30px;height:30px;border-radius:7px;flex:0 0 auto;display:flex;align-items:center;
+  justify-content:center;color:#fff;position:relative;overflow:hidden}
+.arow .t2:before{content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(255,255,255,.3),rgba(0,0,0,.12))}
+.arow .m{flex:1 1 auto;min-width:0}
+.arow .n{font-size:16px;letter-spacing:-.2px}
+.arow .s{font-size:12px;color:var(--muted);margin-top:2px}
+.arow .v{flex:0 0 auto;font-size:15.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.arow.gone .n{color:var(--muted)}
+
+.seg{display:flex;margin:0 16px;background:#e9e9ee;border-radius:9px;padding:2px}
+.seg div{flex:1 1 0;text-align:center;font-size:13.5px;padding:7px 4px;border-radius:7px;
+  cursor:pointer;color:var(--ink);letter-spacing:-.1px}
+.seg div.on{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.14);font-weight:500}
+
+.acct{margin:8px 16px 0;background:var(--card);border-radius:10px;padding:14px;display:flex;
+  gap:13px;align-items:center}
+.acct .av{width:60px;height:60px;border-radius:30px;flex:0 0 auto;display:flex;
+  align-items:center;justify-content:center;color:#fff;font:600 22px/1 var(--disp);
+  background:linear-gradient(150deg,#5ac8fa,#0a84ff)}
+.acct .n{font:600 21px/1.2 var(--disp);letter-spacing:-.4px}
+.acct .s{font-size:13px;color:var(--muted);margin-top:5px;line-height:1.45}
+
+.note{margin:9px 32px 0;font-size:12.5px;color:var(--muted);line-height:1.5}
+.pool{margin:12px 16px 0;background:var(--card);border-radius:10px;padding:14px 16px}
+.pool .h{display:flex;justify-content:space-between;align-items:baseline}
+.pool .h b{font:600 17px/1 var(--disp);letter-spacing:-.3px}
+.pool .h span{font-size:13px;color:var(--muted)}
+.pool .t{display:flex;height:14px;border-radius:4px;overflow:hidden;background:#e4e4e9;
+  margin-top:11px}
+.pool .t i{display:block;height:100%}
+.pool .ax{font-size:11px;color:var(--muted);margin-top:6px}
+.pool .d{font-size:12.5px;color:var(--ink2);margin-top:10px;line-height:1.5}
+.pool .d em{font-style:normal;color:var(--bad);font-weight:600}
+.pool .d b{font-weight:600}
+
+</style>
+</head>
+<body>
+<div id="device">
+  <div id="notch"></div>
+  <div id="screen">
+    <div class="statusbar" id="sb">
+      <div id="sb-clock">21:08</div>
+      <div class="sb-r">
+        <svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="4.6" y="5.5" width="3" height="6.5" rx="1"/><rect x="9.2" y="3" width="3" height="9" rx="1"/><rect x="13.8" y="0" width="3" height="12" rx="1"/></svg>
+        <svg width="15" height="12" viewBox="0 0 15 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 4.2a9 9 0 0 1 13 0"/><path d="M3.4 6.9a5.6 5.6 0 0 1 8.2 0"/><circle cx="7.5" cy="10" r=".9" fill="currentColor" stroke="none"/></svg>
+        <span class="sb-bat"><i></i></span>
+      </div>
+    </div>
+    <div id="app"></div>
+  </div>
+</div>
+<div id="hud" class="off"></div>
+
+<script id="engine">
+/* ===========================================================================
+ * ENGINE — pure, deterministic, DOM-free.
+ * Device storage and iCloud storage are two separate pools measured in whole
+ * megabytes (1 GB = 1000 MB, as iOS reports it). Almost every switch here
+ * moves exactly one of them; one action moves both.
+ * ======================================================================== */
+(function(root){
+'use strict';
+
+var ENV_ID  = 'daniel_phone';
+var VERSION = '1.0.0';
+
+/* ------------------------------------------------------------- utilities */
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+function pad2(n){ return (n < 10 ? '0' : '') + n; }
+function hhmm(m){ m = ((m % 1440) + 1440) % 1440; return pad2(Math.floor(m/60)) + ':' + pad2(m%60); }
+function sum(a){ var s = 0; for (var i=0;i<a.length;i++) s += a[i]; return s; }
+function clamp(v, lo, hi){ return v < lo ? lo : (v > hi ? hi : v); }
+function lcg(seed){ var s=(seed>>>0)||1; return function(){ s=(s*1664525+1013904223)>>>0; return s/4294967296; }; }
+function shuffled(list, seed){
+  if (!seed) return list.slice();
+  var r = lcg(seed), a = list.slice();
+  for (var i=a.length-1;i>0;i--){ var j = Math.floor(r()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; }
+  return a;
+}
+function money(p, sym){
+  var neg = p < 0; p = Math.abs(p);
+  return (neg ? '-' : '') + (sym === undefined ? '\u00a3' : sym) +
+         (Math.floor(p/100)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '.' + pad2(p%100);
+}
+function getPath(o, path){
+  var cur = o, parts = String(path).split('.');
+  for (var i=0;i<parts.length;i++){
+    var k = parts[i], m = k.match(/^(.*?)\[(\d+)\]$/);
+    if (m){ cur = cur ? cur[m[1]] : undefined; cur = cur ? cur[+m[2]] : undefined; }
+    else cur = cur ? cur[k] : undefined;
+    if (cur === undefined) return undefined;
+  }
+  return cur;
+}
+function setPath(o, path, value){
+  var parts = String(path).split('.'), cur = o;
+  for (var i=0;i<parts.length-1;i++){
+    var k = parts[i], m = k.match(/^(.*?)\[(\d+)\]$/);
+    cur = m ? cur[m[1]][+m[2]] : (cur[k] = cur[k] || {});
+  }
+  var lastK = parts[parts.length-1], lm = lastK.match(/^(.*?)\[(\d+)\]$/);
+  if (lm) cur[lm[1]][+lm[2]] = value; else cur[lastK] = value;
+  return o;
+}
+
+/* ------------------------------------------- screen-tree node constructors */
+function N(t, o){ o = o || {}; o.t = t; return o; }
+function txt(s, cls){ return N('text', {text:s, cls:cls || ''}); }
+function row(id, text, o){
+  o = o || {}; o.id = id; o.text = text;
+  if (o.arrow === undefined) o.arrow = !!o.act;
+  return N('row', o);
+}
+function btn(id, text, act, cls, disabled){
+  return N('btn', {id:id, text:text, act:act, cls:cls || '', disabled:!!disabled});
+}
+function iconbtn(id, ic, act, cls){ return N('iconbtn', {id:id, icon:ic, act:act, cls:cls || ''}); }
+function appbar(title, o){ o = o || {}; o.title = title; return N('appbar', o); }
+function stepper(id, value, minus, plus){
+  return N('stepper', {id:id, value:value, minusId:id + '_dec', plusId:id + '_inc',
+                       minus:minus, plus:plus});
+}
+function sheet(id, title, kids){
+  return N('sheet', {id:id, title:title, closeId:id + '_close', close:{type:'CLOSE_SHEET'}, c:kids});
+}
+function route(st){ return st.ui.stack[st.ui.stack.length - 1]; }
+function push(st, name, params){ st.ui.stack.push({name:name, params:params || {}}); st.ui.sheet = null; }
+function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
+function toast(st, t){ st.ui.toast = t; }
+
+/* ------------------------------------------------------------- the device
+ * Everything is integer megabytes and 1 GB = 1000 MB, the way iOS reports it.
+ */
+var CAP = 128000, IOSMB = 9140, PHOTOS_DEV = 42600, TRASH0 = 2180, SYSDATA = 9707;
+var UPDATE_NEED = 6800, UPDATE_DL = 4820, UPDATE_NAME = 'iOS 26.1';
+var ICLOUD_PLAN = 200000, ICLOUD_LIB0 = 135200, ICLOUD_IPAD = 18200,
+    ICLOUD_DRIVE = 9400, ICLOUD_CUR = 24600, BAK_BASE = 3100;
+
+function gb(mb){
+  if (mb < 1000) return mb + ' MB';
+  var v = mb / 1000;
+  return (v >= 100 ? v.toFixed(0) : v.toFixed(v >= 10 ? 1 : 2)) + ' GB';
+}
+function AP(id, short, envName, glyph, where, brand, size, docs, bak, bakOn){
+  return {id:id, short:short, envName:envName, glyph:glyph, where:where, brand:brand,
+          size:size, docs:docs, bak:bak, bakOn:bakOn, off:false, del:false};
+}
+var APPS = [
+  AP("quill_messages", "Messages", "\u4fe1\u606f", "chat", "dock", "#0a84ff", 100, 4800, 4800, true),
+  AP("compass_maps", "Maps", "Maps", "pin", "dock", "#1b6ac9", 480, 980, 180, true),
+  AP("lumen_camera", "Camera", "Camera", "camera", "dock", "#ffd60a", 140, 60, 0, true),
+  AP("nightjar_clock", "Clock", "\u65f6\u949f", "clock", "p1", "#ff9f0a", 21, 12, 10, true),
+  AP("cirrus_weather", "Weather", "\u5929\u6c14", "sun", "p1", "#5ac8fa", 68, 140, 40, true),
+  AP("umber_photos", "Umber", "Umber", "image", "p1", "#e0a35c", 410, 2760, 2760, true),
+  AP("sonora_music", "Sonora", "Sonora", "music", "p1", "#c084fc", 340, 18400, 0, true),
+  AP("slate_calc", "Calculator", "\u8ba1\u7b97\u5668", "calc", "p1", "#ff9f0a", 12, 6, 4, true),
+  AP("covey_contacts", "Contacts", "\u901a\u8baf\u5f55", "user", "p1", "#007aff", 72, 180, 60, true),
+  AP("marlin_mail", "Mail", "Marlin Mail", "mail", "p1", "#1f6feb", 80, 3240, 0, true),
+  AP("harbour_files", "Files", "Files", "folder", "p1", "#1a73e8", 110, 9800, 6200, true),
+  AP("foxglove_reader", "Books", "Foxglove", "book", "p1", "#8a5a2b", 150, 4240, 4240, true),
+  AP("squirrel_eats", "Eats", "\u677e\u9f20\u5916\u5356 \u00b7 Squirrel Eats", "bag", "p1", "#ff6b35", 120, 1180, 940, true),
+  AP("kestrel_bank", "Kestrel", "Kestrel", "bank", "p1", "#1d63d1", 76, 220, 140, true),
+  AP("ironwood_gym", "Fitness", "Ironwood", "dumbbell", "p1", "#c9f24a", 105, 880, 640, true),
+  AP("roost_stays", "Roost", "Roost \u00b7 Stays", "bed", "p2", "#2f6f5e", 190, 1140, 1140, true),
+  AP("aperture_cinema", "Aperture", "Aperture Cinema", "film", "p2", "#f5c451", 260, 3180, 3180, true),
+  AP("larkline_transit", "Larkline", "Larkline", "bus", "p2", "#0f766e", 64, 160, 60, true),
+  AP("pigeon_parcels", "Pigeon", "Pigeon", "box", "p2", "#b0442c", 60, 760, 720, true),
+  AP("tally_split", "Tally", "Tally", "split", "p2", "#4f46e5", 37, 420, 360, true),
+  AP("anvil_remit", "Anvil", "Anvil", "swap", "p2", "#a8321e", 34, 90, 40, true),
+  AP("bastion_loan", "Bastion", "Bastion", "card", "p2", "#4c3bcf", 36, 110, 50, true),
+  AP("cinder_vault", "Cinder", "Cinder", "key", "p2", "#e2704a", 30, 40, 30, true),
+  AP("gavel_auction", "Gavel", "Gavel", "gavel", "p2", "#1f4d3d", 42, 140, 120, true),
+  AP("pitchside_league", "Pitchside", "Pitchside", "football", "p2", "#146b45", 90, 260, 240, true),
+  AP("larkspur_fest", "Larkspur", "Larkspur", "ticket", "p2", "#e8b04b", 85, 300, 280, true),
+  AP("saffron_recipes", "Saffron", "Saffron", "chef", "p2", "#1f6f4a", 95, 1980, 1860, true),
+  AP("rota_shifts", "Rota", "\u6392\u73ed", "cal", "f_work", "#0f766e", 22, 90, 80, true),
+  AP("trellis_build", "Trellis", "Trellis", "hammer", "f_work", "#38bdf8", 31, 95, 80, true),
+  AP("quorum_vote", "Quorum", "Quorum", "ballot", "f_work", "#c8102e", 18, 30, 20, true),
+  AP("bench_workshop", "Bench", "Bench", "saw", "f_work", "#8a5a1e", 20, 120, 100, true),
+  AP("hearth_home", "Hearth", "Hearth \u00b7 Home", "home", "f_home", "#f0a24b", 33, 360, 320, true),
+  AP("meter_energy", "Meter", "\u6284\u8868", "bolt", "f_home", "#1668c8", 24, 70, 50, true),
+  AP("willow_meds", "Willow", "Willow", "pill", "f_home", "#2b7f8f", 27, 180, 160, true),
+  AP("levain_bake", "Levain", "Levain", "wheat", "f_home", "#e0a33c", 25, 200, 180, true),
+  AP("sable_privacy", "Privacy", "Privacy", "shield", "f_util", "#007aff", 14, 20, 10, true),
+  AP("tideline_screen", "Screen Time", "\u5c4f\u5e55\u4f7f\u7528\u65f6\u95f4", "hourglass", "f_util", "#5856d6", 15, 50, 30, true),
+  AP("kitbag_pack", "Kitbag", "Kitbag", "suitcase", "f_util", "#3c6e47", 28, 520, 480, true),
+  AP("grid_puzzle", "Sudoku", "\u6570\u72ec", "grid9", "f_util", "#1b58a6", 16, 60, 40, true),
+  AP("pipit_lessons", "Pipit", "Pipit", "cap", "f_util", "#3f9d54", 40, 340, 300, true)
+];
+function appOf(st, id){
+  for (var i=0;i<st.apps.length;i++) if (st.apps[i].id === id) return st.apps[i];
+  return null;
+}
+var FOLDERS = [
+  {id:'f_work', name:'Work',      page:'p1'},
+  {id:'f_home', name:'Household', page:'p1'},
+  {id:'f_util', name:'Utilities', page:'p2'}
+];
+function folderOf(id){ for (var i=0;i<FOLDERS.length;i++) if (FOLDERS[i].id === id) return FOLDERS[i]; return null; }
+var PAGES = ['p1', 'p2'];
+var SETTINGS_TILE = {id:'settings_app', short:'Settings', glyph:'gear', brand:'#8e8e93',
+                     where:'dock', settings:true};
+function inDock(st){
+  var out = st.apps.filter(function(a){ return a.where === 'dock' && !a.del; });
+  out.push(SETTINGS_TILE);
+  return out;
+}
+function onPage(st, p){ return st.apps.filter(function(a){ return a.where === p && !a.del; }); }
+function inFolder(st, f){ return st.apps.filter(function(a){ return a.where === f && !a.del; }); }
+function placeName(where){
+  if (where === 'dock') return 'the Dock';
+  if (where === 'p1') return 'Home Screen page 1';
+  if (where === 'p2') return 'Home Screen page 2';
+  var f = folderOf(where);
+  return f ? 'the ' + f.name + ' folder' : where;
+}
+
+/* ------------------------------------------------------------ pool 1: device
+ * Offload frees the binary and keeps Documents & Data. Delete frees both.
+ */
+function appDevice(a){ return a.del ? 0 : (a.off ? a.docs : a.size + a.docs); }
+function appsDevice(st){ return sum(st.apps.map(appDevice)); }
+function usedDevice(st){ return IOSMB + SYSDATA + PHOTOS_DEV + st.trash + appsDevice(st); }
+function freeDevice(st){ return CAP - usedDevice(st); }
+function canUpdate(st){ return freeDevice(st) >= UPDATE_NEED; }
+function updateShort(st){ return Math.max(0, UPDATE_NEED - freeDevice(st)); }
+function offloadableTotal(st){
+  return sum(st.apps.filter(function(a){ return !a.del && !a.off; })
+                    .map(function(a){ return a.size; }));
+}
+function bySize(st){
+  return st.apps.filter(function(a){ return !a.del; })
+    .slice().sort(function(x, y){ return appDevice(y) - appDevice(x) || (x.id < y.id ? -1 : 1); });
+}
+var CATS = [
+  {k:'apps',   name:'Apps',            colour:'#007aff'},
+  {k:'photos', name:'Photos',          colour:'#ffcc00'},
+  {k:'ios',    name:'iOS',             colour:'#8e8e93'},
+  {k:'system', name:'System Data',     colour:'#c7c7cc'},
+  {k:'trash',  name:'Recently Deleted', colour:'#ff9500'}
+];
+function catValue(st, k){
+  if (k === 'apps') return appsDevice(st);
+  if (k === 'photos') return PHOTOS_DEV;
+  if (k === 'ios') return IOSMB;
+  if (k === 'system') return SYSDATA;
+  return st.trash;
+}
+
+/* ------------------------------------------------------------ pool 2: iCloud
+ * Turning off an app's backup frees iCloud and not one byte of the device.
+ */
+function cloudLibrary(st){ return ICLOUD_LIB0 - (TRASH0 - st.trash); }
+function usedCloud(st){ return cloudLibrary(st) + ICLOUD_IPAD + ICLOUD_DRIVE + ICLOUD_CUR; }
+function freeCloud(st){ return ICLOUD_PLAN - usedCloud(st); }
+function backupApps(st){
+  return st.apps.filter(function(a){ return !a.del && a.bak > 0; })
+    .slice().sort(function(x, y){ return y.bak - x.bak || (x.id < y.id ? -1 : 1); });
+}
+function nextBackup(st){
+  return BAK_BASE + sum(st.apps.filter(function(a){ return !a.del && a.bakOn; })
+                                .map(function(a){ return a.bak; }));
+}
+function backupFits(st){ return nextBackup(st) <= freeCloud(st); }
+function backupOver(st){ return Math.max(0, nextBackup(st) - freeCloud(st)); }
+
+/* ------------------------------------------------------------- the owner */
+var OWNER = {
+  name:'Daniel Okafor', initial:'DO', device:"Daniel's iPhone",
+  email:'daniel.okafor@meridianlabs.co.uk',
+  job:'Engineering manager · Meridian Labs, London',
+  home:'Bellenden Road, Peckham', model:'iPhone 15 Pro · 128 GB',
+  family:[
+    ['Ama Okafor',   'Partner · GP at the Rye Lane practice · organiser'],
+    ['Zoe Okafor',   'Daughter, 11 · the iPad with the 18.2 GB backup'],
+    ['Kwame Okafor', 'Son, 7 · Ask to Buy is on for him'],
+    ['Grace Okafor', 'Mum · Lagos · Sunday video call']
+  ],
+  people:[
+    ['Femi Okafor',  'Brother · Manchester'],
+    ['Sam Zhang',    'Meridian Labs, Shanghai · the other phone in this folder'],
+    ['Yuki Tanaka',  'Meridian Labs, Tokyo'],
+    ['Sam Lawrence', 'Client · not the same Sam']
+  ],
+  likes:[
+    ['Cycling',      'Peckham to the office along the canal, most days'],
+    ['Five-a-side',  'Thursdays — he runs the league table in Pitchside'],
+    ['Cooking',      'Saffron is the most-opened app in the Household folder'],
+    ['Audiobooks',   'Books is holding 4.24 GB of downloads he has finished']
+  ]
+};
+
+/* =========================================================== state */
+function createInitialState(seed){
+  seed = seed || 0;
+  return {
+    meta:{env:ENV_ID, version:VERSION, seed:seed, steps:0, finished:false, answer:null},
+    apps:clone(APPS),
+    trash:TRASH0,
+    photosMode:'optimise',
+    page:'p1',
+    openFolder:null,
+    query:'',
+    updated:false,
+    backupDone:false,
+    lastBackup:'Yesterday, 03:14',
+    /* the seed only permutes the widgets on the home screen */
+    order:shuffled(['w_storage', 'w_icloud', 'w_update', 'w_backup'], seed),
+    ui:{stack:[{name:'home', params:{}}], sheet:null, confirm:null, inputs:{}, toast:null},
+    settings:{cellularBackup:false, autoUpdate:true, shared:true}
+  };
+}
+var SELECT = {
+  appOf:appOf, folderOf:folderOf, inDock:inDock, onPage:onPage, inFolder:inFolder,
+  placeName:placeName, appDevice:appDevice, usedDevice:usedDevice, freeDevice:freeDevice,
+  canUpdate:canUpdate, updateShort:updateShort, offloadableTotal:offloadableTotal,
+  bySize:bySize, catValue:catValue, cloudLibrary:cloudLibrary, usedCloud:usedCloud,
+  freeCloud:freeCloud, backupApps:backupApps, nextBackup:nextBackup, backupFits:backupFits,
+  backupOver:backupOver, gb:gb, apps:APPS, folders:FOLDERS, cats:CATS, owner:OWNER,
+  route:route
+};
+
+/* =========================================================== reducer */
+function reduce(prev, action){
+  var st = clone(prev), A = action || {};
+  st.ui.toast = null;
+  st.meta.steps += 1;
+
+  function stor(){
+    return gb(freeDevice(st)) + ' free' + (canUpdate(st) ? ' — enough for ' + UPDATE_NAME
+      : ', still ' + gb(updateShort(st)) + ' short of ' + UPDATE_NAME);
+  }
+  function cloud(){
+    return 'Next backup ' + gb(nextBackup(st)) + ' against ' + gb(freeCloud(st)) + ' free'
+      + (backupFits(st) ? ' — it fits' : ', ' + gb(backupOver(st)) + ' too big');
+  }
+
+  switch (A.type) {
+
+  case 'NOOP': break;
+  case 'FINISH': st.meta.finished = true; st.meta.answer = A.answer === undefined ? null : A.answer; break;
+
+  case 'NAV': push(st, A.to, A.params); break;
+  case 'BACK':
+    if (st.ui.sheet) st.ui.sheet = null;
+    else if (st.ui.confirm) st.ui.confirm = null;
+    else if (st.openFolder) st.openFolder = null;
+    else pop(st);
+    break;
+  case 'HOME':
+    st.ui.stack = [{name:'home', params:{}}];
+    st.ui.sheet = null; st.ui.confirm = null; st.openFolder = null; st.page = 'p1'; st.query = '';
+    break;
+  case 'CONFIRM_NO': st.ui.confirm = null; break;
+  case 'CONFIRM_YES': {
+    var yes = st.ui.confirm && st.ui.confirm.yes; st.ui.confirm = null;
+    if (yes) { var keep = st.meta.steps; var out = reduce(st, yes); out.meta.steps = keep; return out; }
+    break;
+  }
+
+  /* ---- home screen ---- */
+  case 'PAGE': st.page = A.id; st.openFolder = null; break;
+  case 'OPEN_FOLDER': st.openFolder = A.id; break;
+  case 'CLOSE_FOLDER': st.openFolder = null; break;
+  case 'OPEN_APP': st.openFolder = null; push(st, 'app', {id:A.id}); break;
+  case 'SEARCH': st.query = A.value === undefined ? '' : A.value; st.ui.inputs.q = st.query; break;
+  case 'MOVE_APP': {
+    var m = appOf(st, A.id);
+    if (!m) break;
+    if (A.to === 'dock' && inDock(st).length >= 4 && m.where !== 'dock'){
+      toast(st, 'The Dock holds four. Move one out first.');
+      break;
+    }
+    var from = m.where; m.where = A.to; st.openFolder = null;
+    toast(st, m.short + ' moved from ' + placeName(from) + ' to ' + placeName(A.to) + '.');
+    break;
+  }
+
+  /* ---- device storage ---- */
+  case 'OFFLOAD': {
+    var a = appOf(st, A.id);
+    if (!a || a.del) break;
+    if (a.off){ toast(st, a.short + ' is already offloaded.'); break; }
+    a.off = true;
+    toast(st, 'Offloaded ' + a.short + '. ' + gb(a.size) + ' back, its '
+              + gb(a.docs) + ' of documents kept. ' + stor());
+    break;
+  }
+  case 'REINSTALL': {
+    var a2 = appOf(st, A.id);
+    if (!a2 || a2.del || !a2.off) break;
+    a2.off = false;
+    toast(st, 'Reinstalled ' + a2.short + '. ' + stor());
+    break;
+  }
+  case 'DELETE': {
+    var a3 = appOf(st, A.id);
+    if (!a3 || a3.del) break;
+    st.ui.confirm = {title:'Delete ' + a3.short + '?',
+      text:'Deleting removes the app and its ' + gb(a3.docs)
+           + ' of documents and data. Offloading keeps the documents.',
+      okText:'Delete App', yes:{type:'DELETE_YES', id:A.id}};
+    break;
+  }
+  case 'DELETE_YES': {
+    var a4 = appOf(st, A.id);
+    if (!a4 || a4.del) break;
+    var was = appDevice(a4);
+    a4.del = true; a4.off = false;
+    if (route(st).name === 'app' && route(st).params.id === A.id) pop(st);
+    toast(st, 'Deleted ' + a4.short + ' — ' + gb(was) + ' back on the device. '
+              + 'Its iCloud backup went with it. ' + stor());
+    break;
+  }
+  case 'EMPTY_TRASH': {
+    if (!st.trash){ toast(st, 'Recently Deleted is already empty.'); break; }
+    st.ui.confirm = {title:'Empty Recently Deleted?',
+      text:gb(st.trash) + ' of photos and videos will be removed for good — from this iPhone '
+           + 'and from iCloud Photos.',
+      okText:'Delete Permanently', yes:{type:'EMPTY_TRASH_YES'}};
+    break;
+  }
+  case 'EMPTY_TRASH_YES': {
+    var t = st.trash; st.trash = 0;
+    toast(st, gb(t) + ' back on the device and ' + gb(t) + ' back in iCloud — the only lever '
+              + 'that moves both. ' + stor());
+    break;
+  }
+  case 'SET_PHOTOS': {
+    if (A.mode === st.photosMode) break;
+    if (A.mode === 'originals'){
+      var wanted = cloudLibrary(st) - PHOTOS_DEV;
+      if (wanted > freeDevice(st)){
+        toast(st, 'Cannot: keeping originals wants the whole ' + gb(cloudLibrary(st))
+                  + ' library on a 128 GB iPhone — ' + gb(wanted - freeDevice(st))
+                  + ' more than this device has. Optimise stays on.');
+        break;
+      }
+    }
+    st.photosMode = A.mode;
+    toast(st, A.mode === 'optimise' ? 'Optimise iPhone Storage is on.'
+                                    : 'Downloading originals.');
+    break;
+  }
+  case 'INSTALL_UPDATE': {
+    if (!canUpdate(st)){
+      toast(st, UPDATE_NAME + ' needs ' + gb(UPDATE_NEED) + ' free to install. There is '
+                + gb(freeDevice(st)) + ' — ' + gb(updateShort(st)) + ' short.');
+      break;
+    }
+    st.updated = true;
+    toast(st, UPDATE_NAME + ' installed.');
+    break;
+  }
+
+  /* ---- iCloud ---- */
+  case 'TOGGLE_BAK': {
+    var b = appOf(st, A.id);
+    if (!b || b.del) break;
+    b.bakOn = !b.bakOn;
+    toast(st, b.short + ' backup ' + (b.bakOn ? 'on' : 'off') + '. ' + cloud()
+              + '. Device storage did not change.');
+    break;
+  }
+  case 'BACKUP_NOW': {
+    if (!backupFits(st)){
+      st.backupDone = false;
+      toast(st, 'Backup failed: ' + cloud() + '.');
+      break;
+    }
+    st.backupDone = true;
+    toast(st, 'Backed up ' + gb(nextBackup(st)) + ' to iCloud.');
+    break;
+  }
+
+  case 'SET_TOGGLE': st.settings[A.key] = !st.settings[A.key]; break;
+
+  default: break;
+  }
+  return st;
+}
+
+/* =========================================================== screens */
+function iconNode(st, a, prefix){
+  return N('icon', {id:prefix + a.id, act:(a.settings ? {type:'NAV', to:'settings'}
+                                                      : {type:'OPEN_APP', id:a.id}),
+    name:a.short, glyph:a.glyph, brand:a.brand, off:!!a.off});
+}
+function folderIcon(st, f){
+  var kids = inFolder(st, f.id);
+  return N('icon', {id:'fo_' + f.id, act:{type:'OPEN_FOLDER', id:f.id}, name:f.name,
+    folder:true, count:kids.length,
+    tiles:kids.slice(0, 4).map(function(a){ return a.brand; })});
+}
+function widgetNode(st, id){
+  var w;
+  if (id === 'w_storage'){
+    w = {k:'iPhone Storage', icon:'chart', n:gb(freeDevice(st)) + ' free',
+         s:gb(usedDevice(st)) + ' of 128 GB used · Apps ' + gb(appsDevice(st)),
+         alert:!canUpdate(st), act:{type:'NAV', to:'storage'}};
+  } else if (id === 'w_icloud'){
+    w = {k:'iCloud', icon:'cloud', n:gb(freeCloud(st)) + ' free',
+         s:gb(usedCloud(st)) + ' of 200 GB · Photos ' + gb(cloudLibrary(st)),
+         alert:false, act:{type:'NAV', to:'icloud'}};
+  } else if (id === 'w_update'){
+    w = {k:'Software Update', icon:'down', n:(st.updated ? 'Up to date' : UPDATE_NAME),
+         s:(st.updated ? 'Installed' : 'Needs ' + gb(UPDATE_NEED) + ' free · '
+            + (canUpdate(st) ? 'ready to install' : gb(updateShort(st)) + ' short')),
+         alert:!st.updated && !canUpdate(st), act:{type:'NAV', to:'update'}};
+  } else {
+    w = {k:'iCloud Backup', icon:'cloud', n:(backupFits(st) ? 'Will back up' : 'Will fail'),
+         s:'Next backup ' + gb(nextBackup(st)) + ' · '
+           + (backupFits(st) ? gb(freeCloud(st)) + ' free' : gb(backupOver(st)) + ' too big'),
+         alert:!backupFits(st), act:{type:'NAV', to:'backup'}};
+  }
+  return N('widget', {id:id, act:w.act, k:w.k, icon:w.icon, n:w.n, s:w.s, alert:!!w.alert});
+}
+
+function scrHome(st){
+  var body = [], q = st.query.trim().toLowerCase();
+  if (q){
+    var hits = st.apps.filter(function(a){
+      return !a.del && (a.short.toLowerCase().indexOf(q) >= 0 || a.id.indexOf(q) >= 0);
+    });
+    body.push(N('searchhead', {text:hits.length + ' result' + (hits.length === 1 ? '' : 's')}));
+    body.push(N('card', {c:hits.map(function(a){
+      return N('arow', {id:'sr_' + a.id, act:{type:'OPEN_APP', id:a.id}, name:a.short,
+        glyph:a.glyph, brand:a.brand, sub:placeName(a.where), val:gb(appDevice(a))});
+    })}));
+    if (!hits.length) body.push(N('note', {text:'No apps match that.'}));
+  } else {
+    body.push(N('widgets', {c:st.order.map(function(id){ return widgetNode(st, id); })}));
+    var tiles = onPage(st, st.page).map(function(a){ return iconNode(st, a, 'ic_'); });
+    FOLDERS.forEach(function(f){ if (f.page === st.page) tiles.push(folderIcon(st, f)); });
+    body.push(N('grid', {id:'grid_' + st.page, cls:'pg', c:tiles}));
+    body.push(N('dots', {items:PAGES.map(function(p, i){
+      return {id:'pg_' + p, act:{type:'PAGE', id:p}, on:(st.page === p), text:'Page ' + (i + 1)};
+    })}));
+  }
+  var tail = [
+    N('inputrow', {id:'q', label:'Search', value:st.query, placeholder:'Search',
+                   act:{type:'SEARCH', value:'$VALUE'}}),
+    N('grid', {id:'dock', cls:'dock', c:inDock(st).map(function(a){
+      var ic = iconNode(st, a, 'dk_'); ic.bare = true; return ic; })})
+  ];
+  return [N('home', {c:body, tail:tail, dark:!q})];
+}
+
+/* ---------------------------------------------------------------- Settings */
+function scrSettings(st){
+  return [appbar('Settings'),
+    N('acct', {name:OWNER.name, initial:OWNER.initial, id:'st_account',
+      act:{type:'NAV', to:'account'},
+      sub:'Apple Account, iCloud, Family Sharing\n' + OWNER.email}),
+    N('space', {}),
+    N('card', {c:[
+      row('st_general', 'General', {lead:'gear', leadColour:'#8e8e93',
+        act:{type:'NAV', to:'general'}}),
+      row('st_photos', 'Photos', {lead:'image', leadColour:'#ffcc00',
+        sub:st.photosMode === 'optimise' ? 'Optimise iPhone Storage' : 'Keep Originals',
+        act:{type:'NAV', to:'photos'}})
+    ]}),
+    N('note', {text:'This iPhone has two separate storage pools and almost every switch in '
+      + 'here moves exactly one of them.'}),
+    N('space', {})];
+}
+
+function scrAccount(st){
+  return [appbar('Apple Account', {back:true}),
+    N('acct', {name:OWNER.name, initial:OWNER.initial, sub:OWNER.email + '\n' + OWNER.job}),
+    N('space', {}),
+    N('card', {c:[
+      row('ac_icloud', 'iCloud', {lead:'cloud', leadColour:'#3a9cff',
+        val:gb(freeCloud(st)) + ' free', act:{type:'NAV', to:'icloud'}})
+    ]}),
+    N('sec', {text:'Family Sharing'}),
+    N('card', {c:OWNER.family.map(function(p){ return row(null, p[0], {sub:p[1]}); })}),
+    N('sec', {text:'Frequently in touch'}),
+    N('card', {c:OWNER.people.map(function(p){ return row(null, p[0], {sub:p[1]}); })}),
+    N('sec', {text:'What he actually does with it'}),
+    N('card', {c:OWNER.likes.map(function(p){ return row(null, p[0], {sub:p[1]}); })}),
+    N('space', {})];
+}
+
+function scrGeneral(st){
+  return [appbar('General', {back:true}),
+    N('card', {c:[
+      row('gn_about', 'About', {act:{type:'NAV', to:'about'}}),
+      row('gn_update', 'Software Update',
+        {val:st.updated ? 'Up to date' : '1', act:{type:'NAV', to:'update'}}),
+      row('gn_storage', 'iPhone Storage',
+        {val:gb(freeDevice(st)) + ' free', act:{type:'NAV', to:'storage'}})
+    ]}),
+    N('space', {}),
+    N('card', {c:[
+      row(null, 'Automatic Updates', {c:[N('switch', {id:'sw_autoUpdate',
+        on:st.settings.autoUpdate, act:{type:'SET_TOGGLE', key:'autoUpdate'}})]}),
+      row(null, 'Back Up Over Cellular', {sub:'Off keeps the backup on Wi-Fi only',
+        c:[N('switch', {id:'sw_cellularBackup', on:st.settings.cellularBackup,
+          act:{type:'SET_TOGGLE', key:'cellularBackup'}})]})
+    ]}),
+    N('space', {})];
+}
+
+function scrAbout(st){
+  return [appbar('About', {back:true}),
+    N('card', {c:[
+      row(null, 'Name', {val:OWNER.device}),
+      row(null, 'Owner', {val:OWNER.name}),
+      row(null, 'Model', {val:'iPhone 15 Pro'}),
+      row(null, 'Capacity', {val:'128 GB'}),
+      row(null, 'Available', {val:gb(freeDevice(st))}),
+      row(null, 'Apps', {val:st.apps.filter(function(a){ return !a.del; }).length + ''}),
+      row(null, 'Software Version', {val:st.updated ? '26.1' : '26.0.2'})
+    ]}),
+    N('sec', {text:'Home Screen'}),
+    N('card', {c:[
+      row(null, 'Dock', {val:inDock(st).length + ' of 4'}),
+      row(null, 'Page 1', {val:onPage(st, 'p1').length + ' apps'}),
+      row(null, 'Page 2', {val:onPage(st, 'p2').length + ' apps'})
+    ].concat(FOLDERS.map(function(f){
+      return row(null, f.name + ' folder', {val:inFolder(st, f.id).length + ' apps'});
+    }))}),
+    N('note', {text:'Every icon on the Home Screen opens one of the other forty environments '
+      + 'in this folder. The names and the colours are read out of those environments at '
+      + 'build time, so this launcher cannot drift away from what is on disk.'}),
+    N('space', {})];
+}
+
+function scrUpdate(st){
+  var ok = canUpdate(st);
+  return [appbar('Software Update', {back:true}),
+    N('pool', {title:st.updated ? 'Up to date' : UPDATE_NAME,
+      side:st.updated ? '26.1' : gb(UPDATE_DL),
+      bars:[], detail:st.updated
+        ? 'This iPhone is running ' + UPDATE_NAME + '.'
+        : 'The download is <b>' + gb(UPDATE_DL) + '</b>, but installing needs <b>'
+          + gb(UPDATE_NEED) + '</b> free while it unpacks. This iPhone has <b>'
+          + gb(freeDevice(st)) + '</b>'
+          + (ok ? ' — enough.' : ', so it is <em>' + gb(updateShort(st)) + ' short</em>.')}),
+    N('padded', {c:[btn('up_install', st.updated ? 'Installed' : 'Install Now',
+      {type:'INSTALL_UPDATE'}, 'primary', st.updated || !ok)]}),
+    N('note', {text:ok || st.updated ? 'Freeing more will not make it install any faster.'
+      : 'Offloading every app on this iPhone would free ' + gb(offloadableTotal(st))
+        + ' — still less than the ' + gb(updateShort(st)) + ' this needs. Offloading alone '
+        + 'cannot get there.'}),
+    N('space', {})];
+}
+
+function scrStorage(st){
+  var out = [appbar('iPhone Storage', {back:true})];
+  out.push(N('sbar', {segs:CATS.map(function(c){
+      return {name:c.name, colour:c.colour, mb:catValue(st, c.k),
+              pct:catValue(st, c.k) * 100 / CAP};
+    }), used:gb(usedDevice(st)), free:gb(freeDevice(st)), cap:'128 GB'}));
+  out.push(N('sec', {text:'Recommendations'}));
+  var recs = [];
+  if (st.trash) recs.push(N('rc', {id:'rc_trash', act:{type:'EMPTY_TRASH'}, action:'Empty',
+    title:'Empty Recently Deleted', size:gb(st.trash),
+    detail:'The only thing here that frees the same amount in iCloud as it does on the phone.'}));
+  recs.push(N('rc', {id:'rc_msg', act:{type:'OPEN_APP', id:'quill_messages'}, action:'Review',
+    title:'Review Large Attachments', size:gb(appOf(st, 'quill_messages') ?
+      appOf(st, 'quill_messages').docs : 0),
+    detail:'Photos and files from four years of conversations.'}));
+  recs.push(N('rc', {id:'rc_books', act:{type:'OPEN_APP', id:'foxglove_reader'}, action:'Review',
+    title:'Review Downloaded Books', size:gb(appOf(st, 'foxglove_reader') ?
+      appOf(st, 'foxglove_reader').docs : 0),
+    detail:'Finished audiobooks that re-download from the store any time.'}));
+  recs.push(N('rc', {id:null, action:null, title:'Offload Unused Apps',
+    size:gb(offloadableTotal(st)),
+    detail:'Offloading keeps the documents. Every app on this iPhone offloaded comes to '
+      + 'this much — and no more.'}));
+  out.push(N('reco', {c:recs}));
+  out.push(N('sec', {text:'Apps', side:'Largest first'}));
+  out.push(N('card', {c:bySize(st).map(function(a){
+    return N('arow', {id:'sa_' + a.id, act:{type:'OPEN_APP', id:a.id}, name:a.short,
+      glyph:a.glyph, brand:a.brand, gone:a.off,
+      sub:(a.off ? 'Offloaded · ' + gb(a.docs) + ' documents kept'
+                 : gb(a.size) + ' app + ' + gb(a.docs) + ' data'),
+      val:gb(appDevice(a))});
+  })}));
+  out.push(N('space', {}));
+  return out;
+}
+
+function scrApp(st, id){
+  var a = appOf(st, id);
+  if (!a || a.del) return [appbar('Not installed', {back:true}),
+    N('note', {text:'That app is no longer on this iPhone.'})];
+  var out = [appbar(a.short, {back:true})];
+  out.push(N('apphead', {name:a.short, glyph:a.glyph, brand:a.brand,
+    sub:placeName(a.where) + (a.off ? ' · offloaded' : ''),
+    env:'Environment · ' + a.id + (a.envName !== a.short ? '  (' + a.envName + ')' : '')}));
+  out.push(N('card', {c:[
+    row(null, 'App Size', {val:gb(a.size), sub:a.off ? 'Removed while offloaded' : ''}),
+    row(null, 'Documents & Data', {val:gb(a.docs), sub:'Kept when offloaded, gone when deleted'}),
+    row(null, 'On this iPhone', {val:gb(appDevice(a))}),
+    row(null, 'In tonight’s backup', {val:a.bakOn ? gb(a.bak) : 'Off',
+      sub:a.bak ? '' : 'Nothing from this app is backed up — it all re-downloads'})
+  ]}));
+  out.push(N('space', {}));
+  out.push(N('card', {c:[
+    (a.off ? N('actrow', {id:'act_reinstall', act:{type:'REINSTALL', id:id}, tone:'blue',
+               title:'Reinstall App', sub:'Downloads the ' + gb(a.size) + ' app again'})
+           : N('actrow', {id:'act_offload', act:{type:'OFFLOAD', id:id}, tone:'blue',
+               title:'Offload App', sub:'Frees ' + gb(a.size) + ' and keeps the documents'})),
+    N('actrow', {id:'act_delete', act:{type:'DELETE', id:id}, tone:'red',
+      title:'Delete App', sub:'Frees ' + gb(appDevice(a)) + ' and loses the documents'})
+  ]}));
+  out.push(N('sec', {text:'Move to'}));
+  var targets = ['dock', 'p1', 'p2'].concat(FOLDERS.map(function(f){ return f.id; }));
+  out.push(N('card', {c:targets.filter(function(t){ return t !== a.where; }).map(function(t){
+    return row('mv_' + t, placeName(t).replace(/^the /, ''), {act:{type:'MOVE_APP', id:id, to:t}});
+  })}));
+  out.push(N('link', {href:'../' + a.id + '/index.html', text:'Open ' + a.envName}));
+  out.push(N('space', {}));
+  return out;
+}
+
+function scrPhotos(st){
+  return [appbar('Photos', {back:true}),
+    N('sec', {text:'iCloud Photos', side:gb(cloudLibrary(st)) + ' library'}),
+    N('seg', {items:[
+      {id:'seg_optimise', text:'Optimise iPhone Storage', on:st.photosMode === 'optimise',
+       act:{type:'SET_PHOTOS', mode:'optimise'}},
+      {id:'seg_originals', text:'Download and Keep Originals', on:st.photosMode === 'originals',
+       act:{type:'SET_PHOTOS', mode:'originals'}}
+    ]}),
+    N('note', {text:'Optimise is already on: full-resolution originals live in iCloud and this '
+      + 'iPhone keeps ' + gb(PHOTOS_DEV) + ' of smaller copies. Keeping originals would want the '
+      + 'whole ' + gb(cloudLibrary(st)) + ' library on a 128 GB phone.'}),
+    N('sec', {text:'Recently Deleted'}),
+    N('card', {c:[
+      row(null, 'Photos and videos', {val:gb(st.trash),
+        sub:st.trash ? 'Still counted against both this iPhone and iCloud' : 'Empty'}),
+      N('actrow', {id:'act_empty', act:{type:'EMPTY_TRASH'}, tone:'red',
+        title:'Empty Recently Deleted',
+        sub:st.trash ? 'Frees ' + gb(st.trash) + ' here and ' + gb(st.trash) + ' in iCloud'
+                     : 'Nothing to remove'})
+    ]}),
+    N('space', {})];
+}
+
+function scrICloud(st){
+  var out = [appbar('iCloud', {back:true})];
+  out.push(N('sbar', {segs:[
+      {name:'Photos', colour:'#ffcc00', mb:cloudLibrary(st), pct:cloudLibrary(st) * 100 / ICLOUD_PLAN},
+      {name:'Backups', colour:'#34c759', mb:ICLOUD_IPAD + ICLOUD_CUR,
+       pct:(ICLOUD_IPAD + ICLOUD_CUR) * 100 / ICLOUD_PLAN},
+      {name:'Drive and Mail', colour:'#5856d6', mb:ICLOUD_DRIVE,
+       pct:ICLOUD_DRIVE * 100 / ICLOUD_PLAN}
+    ], used:gb(usedCloud(st)), free:gb(freeCloud(st)), cap:'200 GB'}));
+  out.push(N('sec', {text:'Manage Account Storage'}));
+  out.push(N('card', {c:[
+    row('cl_backups', 'Backups', {val:gb(ICLOUD_IPAD + ICLOUD_CUR),
+      sub:"This iPhone " + gb(ICLOUD_CUR) + " · Zoe's iPad " + gb(ICLOUD_IPAD),
+      act:{type:'NAV', to:'backup'}}),
+    row('cl_photos', 'Photos', {val:gb(cloudLibrary(st)), act:{type:'NAV', to:'photos'}}),
+    row(null, 'Drive and Mail', {val:gb(ICLOUD_DRIVE)})
+  ]}));
+  out.push(N('note', {text:'This is a different 200 GB from the 128 GB on the device. '
+    + 'Offloading an app frees the phone and nothing here; turning off its backup frees this '
+    + 'and nothing on the phone.'}));
+  out.push(N('space', {}));
+  return out;
+}
+
+function scrBackup(st){
+  var out = [appbar('Backups', {back:true}), N('big', {text:OWNER.device})];
+  out.push(N('pool', {title:backupFits(st) ? 'Next backup will fit' : 'Next backup will fail',
+    side:gb(nextBackup(st)), bad:!backupFits(st), bars:[
+      {colour:'#34c759', pct:Math.min(100, freeCloud(st) * 100 / nextBackup(st))},
+      {colour:'#ff3b30', pct:Math.max(0, 100 - freeCloud(st) * 100 / nextBackup(st))}],
+    axis:'green is what iCloud has free, red is what the backup still wants',
+    detail:'Last backup ' + st.lastBackup + '. The next one comes to <b>' + gb(nextBackup(st))
+      + '</b> — ' + gb(BAK_BASE) + ' of settings, Home Screen layout and Health, plus every app '
+      + 'below that is switched on. iCloud has <b>' + gb(freeCloud(st)) + '</b> free'
+      + (backupFits(st) ? ', so it fits.' : ', so it is <em>' + gb(backupOver(st))
+         + ' too big</em>.')}));
+  out.push(N('padded', {c:[btn('bk_now', 'Back Up Now', {type:'BACKUP_NOW'}, 'primary')]}));
+  out.push(N('sec', {text:'Apps backing up to iCloud',
+    side:st.apps.filter(function(a){ return !a.del && a.bakOn && a.bak > 0; }).length + ' on'}));
+  out.push(N('card', {c:backupApps(st).map(function(a){
+    return row(null, a.short, {val:gb(a.bak),
+      c:[N('switch', {id:'bak_' + a.id, on:a.bakOn, act:{type:'TOGGLE_BAK', id:a.id}})]});
+  })}));
+  out.push(N('note', {text:'Music downloads and Mail are not in the backup at all — they '
+    + 're-download. Sonora is the largest thing on the device and contributes nothing here.'}));
+  out.push(N('space', {}));
+  return out;
+}
+
+function screen(st){
+  var r = route(st), kids;
+  switch (r.name) {
+  case 'settings': kids = scrSettings(st); break;
+  case 'account':  kids = scrAccount(st); break;
+  case 'general':  kids = scrGeneral(st); break;
+  case 'about':    kids = scrAbout(st); break;
+  case 'update':   kids = scrUpdate(st); break;
+  case 'storage':  kids = scrStorage(st); break;
+  case 'icloud':   kids = scrICloud(st); break;
+  case 'backup':   kids = scrBackup(st); break;
+  case 'photos':   kids = scrPhotos(st); break;
+  case 'app':      kids = scrApp(st, r.params.id); break;
+  default:         kids = scrHome(st);
+  }
+  var out = [N('scroll', {c:kids})];
+  if (st.openFolder){
+    var f = folderOf(st.openFolder), kidsIn = inFolder(st, f.id);
+    out.push(N('mask', {id:'folder_mask', close:{type:'CLOSE_FOLDER'},
+      c:[N('sheet', {id:'folder_sheet', title:f.name + ' · ' + kidsIn.length + ' apps',
+        closeId:'folder_close', close:{type:'CLOSE_FOLDER'},
+        c:[N('grid', {id:'grid_' + f.id, cls:'pg light', c:kidsIn.map(function(a){
+          return iconNode(st, a, 'fi_'); })})]})]}));
+  }
+  if (st.ui.confirm)
+    out.push(N('mask', {id:'confirm_mask', c:[N('dialog', {id:'confirm_dialog',
+      title:st.ui.confirm.title || '', text:st.ui.confirm.text,
+      ok:btn('confirm_ok', st.ui.confirm.okText || 'OK', {type:'CONFIRM_YES'}, 'primary'),
+      cancel:btn('confirm_cancel', 'Cancel', {type:'CONFIRM_NO'}, '')})]}));
+  if (st.ui.toast) out.push(N('toast', {id:'toast', text:st.ui.toast}));
+  return N('screen', {c:out, route:r.name});
+}
+
+/* =======================================================================
+ * TRAVERSAL — element index, GUI action interface, text observation.
+ * Identical in every environment here: the screen tree is the only thing
+ * that differs, and all three readers below walk that same tree.
+ * ==================================================================== */
+var SKIP_KEYS = {act:1, minus:1, plus:1, close:1, yes:1, params:1, meta:1, tiles:1, segs:1, bars:1, place:1, family:1, people:1, likes:1};
+
+function labelOf(n){ return n.text || n.title || n.name || n.label || n.main || ''; }
+
+function collect(n, out){
+  if (!n || typeof n !== 'object') return;
+  if (Array.isArray(n)) { for (var i=0;i<n.length;i++) collect(n[i], out); return; }
+  if (n.t === 'appbar' && n.back) out.push({id:'nav_back', act:{type:'BACK'}, text:'Back', t:'back'});
+  if (n.id && n.act)              out.push({id:n.id, act:n.act, text:labelOf(n), t:n.t||'el',
+                                            disabled:!!n.disabled,
+                                            input:(n.t === 'inputrow')});
+  if (n.t === 'mask' && n.close)  out.push({id:n.id, act:n.close, text:'Dismiss overlay', t:'mask'});
+  for (var k in n){
+    /* a node may carry extra buttons as a pair of keys: someId holds the
+     * test-id and some holds the action. That is how steppers, sheet close
+     * buttons and per-row buttons all get into the element index. */
+    if (k.length > 2 && k.slice(-2) === 'Id' && typeof n[k] === 'string'){
+      var sib = n[k.slice(0, -2)];
+      if (sib && typeof sib === 'object' && sib.type)
+        out.push({id:n[k], act:sib, text:k.slice(0, -2), t:'sub'});
+    }
+    if (SKIP_KEYS[k]) continue;
+    var v = n[k];
+    if (v && typeof v === 'object') collect(v, out);
+  }
+}
+function elements(st){
+  var rootNode = (st && st.t === 'screen') ? st : screen(st);
+  var masks = (rootNode.c || []).filter(function(n){ return n.t === 'mask'; });
+  var out = [];
+  collect(masks.length ? masks[masks.length-1] : rootNode, out);
+  return out;
+}
+function findEl(st, id){
+  var els = elements(st);
+  for (var i=0;i<els.length;i++) if (els[i].id === id) return els[i];
+  return null;
+}
+function substitute(act, text){
+  var a = clone(act);
+  for (var k in a) if (a[k] === '$VALUE') a[k] = text;
+  return a;
+}
+function step(st, a){
+  a = a || {};
+  var kind = a.action || a.type;
+  switch (kind) {
+  case 'tap': {
+    var el = findEl(st, a.id);
+    if (!el) return {state:st, ok:false, error:'ELEMENT_NOT_FOUND: ' + a.id};
+    if (el.disabled) return {state:st, ok:false, error:'ELEMENT_DISABLED: ' + a.id};
+    return {state:reduce(st, el.act), ok:true};
+  }
+  case 'type': {
+    var e2 = findEl(st, a.id);
+    if (!e2) return {state:st, ok:false, error:'ELEMENT_NOT_FOUND: ' + a.id};
+    if (!e2.input) return {state:st, ok:false, error:'NOT_A_TEXT_FIELD: ' + a.id};
+    return {state:reduce(st, substitute(e2.act, a.text == null ? '' : String(a.text))), ok:true};
+  }
+  case 'back':   return {state:reduce(st, {type:'BACK'}), ok:true};
+  case 'home':   return {state:reduce(st, {type:'HOME'}), ok:true};
+  case 'wait':   return {state:reduce(st, {type:'NOOP'}), ok:true};
+  case 'finish': return {state:reduce(st, {type:'FINISH', answer:a.answer}), ok:true};
+  case 'raw':    return {state:reduce(st, a.act || {}), ok:true};
+  default:       return {state:st, ok:false, error:'UNKNOWN_ACTION: ' + kind};
+  }
+}
+
+/* ------------------------------------------------- text observation (a11y) */
+function a11y(st){
+  var rootNode = screen(st), lines = [], r = route(st);
+  lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
+             '  step ' + st.meta.steps);
+  lines.push('# Device: ' + gb(freeDevice(st)) + ' free of 128 GB. ' + UPDATE_NAME + ' needs ' + gb(UPDATE_NEED) + ' free' + (canUpdate(st) ? ' — enough.' : ', still ' + gb(updateShort(st)) + ' short.'));
+  lines.push('# iCloud: ' + gb(freeCloud(st)) + ' free of 200 GB. Next backup ' + gb(nextBackup(st)) + (backupFits(st) ? ' — it fits.' : ', ' + gb(backupOver(st)) + ' too big.'));
+  lines.push('# Offloading keeps Documents & Data; deleting does not. Backup switches move ' + 'iCloud only. Emptying Recently Deleted moves both.');
+  var masks = (rootNode.c || []).filter(function(n){ return n.t === 'mask'; });
+  if (masks.length) lines.push('# An overlay is open. Nothing behind it can be tapped.');
+  walkText(masks.length ? masks[masks.length-1] : rootNode, 0, lines, st);
+  (rootNode.c || []).forEach(function(n){ if (n.t === 'toast') lines.push('[Toast] ' + n.text); });
+  return lines.join('\n');
+}
+function tid(n){ return (n && n.id && n.act) ? ' #' + n.id : ''; }
+function ind(d){ return new Array(d+1).join('  '); }
+
+function walkText(n, d, out, st){
+  if (!n || typeof n !== 'object') return;
+  if (Array.isArray(n)) { n.forEach(function(x){ walkText(x, d, out, st); }); return; }
+  var line = null;
+  switch (n.t) {
+  case 'screen': break;
+  case 'appbar': line = '[AppBar] ' + (n.title || '') + (n.back ? '   Back #nav_back' : ''); break;
+  case 'iconbtn': line = '[IconButton]' + tid(n) + ' ' + n.icon; break;
+  case 'inputrow':
+    line = '[TextField]' + tid(n) + ' ' + (n.label || '') + ' value="' + (n.value || '') + '"'; break;
+  case 'chip':   line = '[Chip]' + tid(n) + ' ' + n.text + (n.on ? '  [selected]' : ''); break;
+  case 'btn':    line = '[Button]' + (n.id ? ' #' + n.id : '') + ' ' + n.text + (n.disabled ? ' (disabled)' : ''); break;
+  case 'row': {
+    var s = '[Row]' + tid(n) + ' ' + (n.text || '') + (n.strike ? ' (crossed out)' : '');
+    if (n.val) s += ' \u2014 ' + n.val;
+    if (n.sub) s += '   (' + n.sub + ')';
+    line = s; break;
+  }
+  case 'switch': line = '[Toggle]' + tid(n) + ' ' + (n.on ? 'ON' : 'OFF'); break;
+  case 'check':  line = '[Checkbox]' + tid(n) + ' ' + (n.on ? 'ticked' : 'not ticked'); break;
+  case 'radio':  line = '[Radio]' + tid(n) + ' ' + (n.on ? 'selected' : 'not selected'); break;
+  case 'stepper':
+    line = '[Stepper] ' + n.value + '  down #' + n.minusId + '  up #' + n.plusId; break;
+  case 'hero':
+    out.push(ind(d) + '[Hero]' + tid(n) + ' ' + n.kicker + ' \u2014 ' + n.title + '. ' + n.sub);
+    return;
+  case 'stat':   line = '[Stat]' + tid(n) + ' ' + n.l + ': ' + n.n; break;
+  case 'pills':  line = n.items.map(function(p){ return '[' + p.text + ']'; }).join(' '); break;
+  case 'sec':    line = '\u2014 ' + n.text + (n.side ? ' (' + n.side + ')' : '') + ' \u2014'; break;
+  case 'text':   line = n.text || null; break;
+  case 'tabbar':
+    out.push(ind(d) + '[TabBar] ' + n.items.map(function(i){
+      return i.text + ' #' + i.id + (i.on ? '[current]' : ''); }).join('  '));
+    return;
+  case 'sheet':  line = '[Sheet] ' + n.title + '   close #' + n.closeId; break;
+  case 'dialog': line = '[Dialog] ' + (n.title ? n.title + ' \u2014 ' : '') + n.text; break;
+  case 'mask': case 'toast': line = null; break;
+  default: {
+    var extra = walkExtra(n, d, out, st);
+    if (extra === true) return;
+    line = extra || null;
+  }
+  }
+  if (line !== null) out.push(ind(d) + line);
+  for (var k in n){
+    if (SKIP_KEYS[k]) continue;
+    var v = n[k];
+    if (v && typeof v === 'object') walkText(v, line !== null ? d+1 : d, out, st);
+  }
+}
+/* per-environment nodes: return a string to print, true if already printed,
+ * or null to ignore */
+function walkExtra(n, d, out, st){
+
+  if (n.t === 'home'){
+    walkText(n.c, d, out, st); walkText(n.tail, d, out, st); return true;
+  }
+  if (n.t === 'widgets' || n.t === 'grid' || n.t === 'reco') return null;
+  if (n.t === 'widget'){
+    out.push(ind(d) + '[Widget]' + tid(n) + ' ' + n.k + ' — ' + n.n + '. ' + n.s);
+    return true;
+  }
+  if (n.t === 'icon'){
+    out.push(ind(d) + (n.folder ? '[Folder]' : '[AppIcon]') + tid(n) + ' ' + n.name
+             + (n.folder ? ' (' + n.count + ' apps)' : '') + (n.off ? '  (offloaded)' : ''));
+    return true;
+  }
+  if (n.t === 'dots'){
+    out.push(ind(d) + '[Pages] ' + n.items.map(function(p){
+      return p.text + ' #' + p.id + (p.on ? '[current]' : ''); }).join('  '));
+    return true;
+  }
+  if (n.t === 'big')  return '# ' + n.text;
+  if (n.t === 'note') return n.text;
+  if (n.t === 'searchhead') return '— ' + n.text + ' —';
+  if (n.t === 'acct'){
+    out.push(ind(d) + '[Account]' + tid(n) + ' ' + n.name + ' — '
+             + n.sub.replace(/\n/g, ' · '));
+    return true;
+  }
+  if (n.t === 'apphead'){
+    out.push(ind(d) + '[App] ' + n.name + ' — ' + n.sub + '. ' + n.env);
+    return true;
+  }
+  if (n.t === 'sbar'){
+    out.push(ind(d) + '[StorageBar] ' + n.used + ' of ' + n.cap + ' used, ' + n.free + ' free');
+    n.segs.forEach(function(s){ out.push(ind(d + 1) + s.name + ': ' + gb(s.mb)); });
+    return true;
+  }
+  if (n.t === 'rc'){
+    out.push(ind(d) + '[Recommendation] ' + n.title + '  ' + n.size
+             + (n.action ? '   ' + n.action + ' #' + n.id : '   (no button)'));
+    out.push(ind(d + 1) + n.detail);
+    return true;
+  }
+  if (n.t === 'arow'){
+    out.push(ind(d) + '[App]' + tid(n) + ' ' + n.name + '  ' + n.val + '   (' + n.sub + ')');
+    return true;
+  }
+  if (n.t === 'actrow'){
+    out.push(ind(d) + '[Button]' + tid(n) + ' ' + n.title + (n.sub ? '   (' + n.sub + ')' : ''));
+    return true;
+  }
+  if (n.t === 'seg'){
+    out.push(ind(d) + '[Segmented] ' + n.items.map(function(i){
+      return i.text + ' #' + i.id + (i.on ? '[selected]' : ''); }).join('   '));
+    return true;
+  }
+  if (n.t === 'pool'){
+    out.push(ind(d) + '[Panel] ' + n.title + '  ' + n.side);
+    out.push(ind(d + 1) + n.detail.replace(/<[^>]+>/g, ''));
+    return true;
+  }
+  if (n.t === 'link') return null;
+
+  return null;
+}
+
+/* =========================================================== derived */
+function derive(st){
+  var place = {}, live = st.apps.filter(function(a){ return !a.del; });
+  st.apps.forEach(function(a){ place[a.id] = a.del ? 'deleted' : a.where; });
+  return {
+    route:route(st).name,
+    appOpen:(route(st).name === 'app' ? (route(st).params.id || '') : ''),
+    page:st.page,
+    openFolder:st.openFolder || '',
+    freeDevice:freeDevice(st),
+    usedDevice:usedDevice(st),
+    appsDevice:appsDevice(st),
+    canUpdate:canUpdate(st),
+    updateShort:updateShort(st),
+    updated:!!st.updated,
+    offloadableTotal:offloadableTotal(st),
+    trash:st.trash,
+    photosMode:st.photosMode,
+    offloadedIds:st.apps.filter(function(a){ return a.off && !a.del; })
+                        .map(function(a){ return a.id; }),
+    offloadedCount:st.apps.filter(function(a){ return a.off && !a.del; }).length,
+    deletedIds:st.apps.filter(function(a){ return a.del; }).map(function(a){ return a.id; }),
+    deletedCount:st.apps.filter(function(a){ return a.del; }).length,
+    freeCloud:freeCloud(st),
+    usedCloud:usedCloud(st),
+    cloudLibrary:cloudLibrary(st),
+    nextBackup:nextBackup(st),
+    backupFits:backupFits(st),
+    backupOver:backupOver(st),
+    backupDone:!!st.backupDone,
+    bakOffIds:st.apps.filter(function(a){ return !a.del && a.bak > 0 && !a.bakOn; })
+                     .map(function(a){ return a.id; }),
+    bakOffCount:st.apps.filter(function(a){ return !a.del && a.bak > 0 && !a.bakOn; }).length,
+    bakOnCount:st.apps.filter(function(a){ return !a.del && a.bak > 0 && a.bakOn; }).length,
+    appCount:live.length,
+    dock:inDock(st).map(function(a){ return a.id; }),
+    dockCount:inDock(st).length,
+    place:place,
+    query:st.query,
+    finished:!!st.meta.finished,
+    answer:st.meta.answer
+  };
+}
+
+function snapshot(st){ var o = clone(st); o.derived = derive(st); return o; }
+function applyPatch(st, patch){
+  (patch || []).forEach(function(p){ setPath(st, p.path, clone(p.value)); });
+  return st;
+}
+
+var ENGINE = {
+  ENV_ID: ENV_ID, VERSION: VERSION, CATALOG: {apps:APPS, folders:FOLDERS, cats:CATS, owner:OWNER},
+  createInitialState: createInitialState,
+  reduce: reduce, step: step, screen: screen, a11y: a11y,
+  elements: elements, findEl: findEl, applyPatch: applyPatch,
+  getPath: getPath, setPath: setPath, clone: clone,
+  derive: derive, snapshot: snapshot,
+  select: SELECT
+};
+root.IPHONE_ENGINE = ENGINE;
+root.GUI_ENGINE = ENGINE;
+
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+</script>
+
+<script id="ui">
+/* ===========================================================================
+ * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
+ * ======================================================================== */
+(function(){
+'use strict';
+var E = window.GUI_ENGINE;
+var app = document.getElementById('app');
+var hud = document.getElementById('hud');
+function esc(s){
+  return String(s === undefined || s === null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+var SVG = {
+  back: '<path d="M15 4.5 8 12l7 7.5"/>',
+  arrow: '<path d="M9 4.5 16 12l-7 7.5"/>',
+  plus: '<path d="M12 5.6v12.8M5.6 12h12.8"/>',
+  minus: '<path d="M5.6 12h12.8"/>',
+  close: '<path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5"/>',
+  check: '<path d="M4.8 12.6 9.8 17.6 19.2 6.8"/>',
+  search: '<circle cx="10.8" cy="10.8" r="6.6"/><path d="m15.6 15.6 4.4 4.4"/>',
+  gear: '<circle cx="12" cy="12" r="3.4"/><path d="M19.1 14.4a1.6 1.6 0 0 0 .3 1.8l.1.1a1.9 1.9 0 1 1-2.7 2.7l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5v.2a1.9 1.9 0 1 1-3.8 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a1.9 1.9 0 1 1-2.7-2.7l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1h-.2a1.9 1.9 0 1 1 0-3.8h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a1.9 1.9 0 1 1 2.7-2.7l.1.1a1.6 1.6 0 0 0 1.8.3h.1a1.6 1.6 0 0 0 1-1.5v-.2a1.9 1.9 0 1 1 3.8 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a1.9 1.9 0 1 1 2.7 2.7l-.1.1a1.6 1.6 0 0 0-.3 1.8v.1a1.6 1.6 0 0 0 1.5 1h.2a1.9 1.9 0 1 1 0 3.8h-.1a1.6 1.6 0 0 0-1.5 1z"/>',
+  clock: '<circle cx="12" cy="12" r="8.8"/><path d="M12 6.8V12l3.6 2.2"/>',
+  info: '<circle cx="12" cy="12" r="8.8"/><path d="M12 11.1v5.4"/><circle cx="12" cy="7.9" r=".95" fill="currentColor" stroke="none"/>',
+  alert: '<path d="M12 4.2 2.9 19.4h18.2z"/><path d="M12 10.2v4"/><circle cx="12" cy="16.9" r=".95" fill="currentColor" stroke="none"/>',
+  list: '<path d="M8.6 6.4h11M8.6 12h11M8.6 17.6h11"/><circle cx="4.7" cy="6.4" r="1.2" fill="currentColor" stroke="none"/><circle cx="4.7" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="4.7" cy="17.6" r="1.2" fill="currentColor" stroke="none"/>',
+  chart: '<path d="M3.4 20.3h17.2"/><rect x="5" y="11" width="3.4" height="6.6" rx="1.2"/><rect x="10.3" y="6.4" width="3.4" height="11.2" rx="1.2"/><rect x="15.6" y="9" width="3.4" height="8.6" rx="1.2"/>',
+  user: '<circle cx="12" cy="8.2" r="3.8"/><path d="M4.4 20.4c0-3.8 3.4-6.4 7.6-6.4s7.6 2.6 7.6 6.4"/>',
+  pin: '<path d="M12 21.3s6.9-6 6.9-11A6.9 6.9 0 0 0 5.1 10.3c0 5 6.9 11 6.9 11z"/><circle cx="12" cy="10.1" r="2.6"/>',
+  lock: '<rect x="4.8" y="10.4" width="14.4" height="10" rx="2.4"/><path d="M8.2 10.4V7.8a3.8 3.8 0 0 1 7.6 0v2.6"/>',
+  eye: '<path d="M1.8 12S5.4 5.6 12 5.6 22.2 12 22.2 12 18.6 18.4 12 18.4 1.8 12 1.8 12z"/><circle cx="12" cy="12" r="3.2"/>',
+  bell: '<path d="M18 9.4a6 6 0 1 0-12 0c0 5.2-2 6.6-2 6.6h16s-2-1.4-2-6.6z"/><path d="M13.7 19.4a2 2 0 0 1-3.4 0"/>',
+  image: '<rect x="3.4" y="4.8" width="17.2" height="14.4" rx="2.6"/><circle cx="8.8" cy="9.8" r="1.8"/><path d="m4.6 17.4 4.8-4.6 3.4 3.2 3-2.6 4.6 4"/>',
+  book: '<path d="M4.6 5.4a2 2 0 0 1 2-2h12.8v14.2H6.6a2 2 0 0 0-2 2z"/><path d="M4.6 19.6a2 2 0 0 1 2-2h12.8v3H6.6a2 2 0 0 1-2-1z"/>',
+  music: '<path d="M9 18.2V5.4l10-1.8v12.4"/><circle cx="6.6" cy="18.2" r="2.6"/><circle cx="16.6" cy="16" r="2.6"/>',
+  gavel: '<path d="m14.4 4.6 5 5-2.6 2.6-5-5z"/><path d="m11 8.2 5 5-6.4 6.4-5-5z"/><path d="M3.4 21.4h9"/>',
+  cal: '<rect x="3.6" y="5.2" width="16.8" height="15.2" rx="2.4"/><path d="M3.6 9.8h16.8M8.4 3.4v3.6M15.6 3.4v3.6"/>',
+  pill: '<rect x="2.8" y="8.6" width="18.4" height="6.8" rx="3.4" transform="rotate(-45 12 12)"/><path d="M8.4 8.4 15.6 15.6"/>',
+  trash: '<path d="M4.6 6.6h14.8"/><path d="M9.4 6.6V4.8h5.2v1.8"/><path d="M6.6 6.6 7.6 20a1.4 1.4 0 0 0 1.4 1.3h6a1.4 1.4 0 0 0 1.4-1.3l1-13.4"/><path d="M10.4 10.6v6M13.6 10.6v6"/>',
+  star: '<path d="m12 3.7 2.6 5.5 6 .8-4.4 4.2 1.1 6-5.3-2.9-5.3 2.9 1.1-6L3.4 10l6-.8z"/>',
+  box: '<path d="M3.6 8.2 12 4l8.4 4.2v7.6L12 20l-8.4-4.2z"/><path d="M3.6 8.2 12 12.4l8.4-4.2M12 12.4V20"/>',
+  money: '<rect x="2.8" y="6" width="18.4" height="12" rx="2.4"/><circle cx="12" cy="12" r="2.8"/><path d="M6.4 9.6v4.8M17.6 9.6v4.8"/>',
+  swap: '<path d="M7.5 4.4v13.2"/><path d="M4 14.2 7.5 17.6 11 14.2"/><path d="M16.5 19.6V6.4"/><path d="M13 9.8 16.5 6.4 20 9.8"/>',
+  chat: '<path d="M20.4 12.2c0 3.9-3.8 7-8.4 7-1 0-2-.15-2.9-.42L4.2 20.4l1.3-3.5A6.6 6.6 0 0 1 3.6 12.2c0-3.9 3.8-7 8.4-7s8.4 3.1 8.4 7z"/>',
+  camera: '<path d="M3.6 8.6h2.9l1.6-2.4h7.8l1.6 2.4h2.9a1.6 1.6 0 0 1 1.6 1.6v7.2a1.6 1.6 0 0 1-1.6 1.6H3.6A1.6 1.6 0 0 1 2 17.4v-7.2a1.6 1.6 0 0 1 1.6-1.6z"/><circle cx="12" cy="13.6" r="3.3"/>',
+  mail: '<rect x="2.6" y="5.4" width="18.8" height="13.2" rx="2.4"/><path d="m3.6 7.2 8.4 5.8 8.4-5.8"/>',
+  sun: '<circle cx="9.4" cy="9" r="3.1"/><path d="M9.4 2.9v1.5M2.9 9h1.5M4.8 4.4l1.1 1.1M14 4.4l-1.1 1.1M9.4 13.6v1"/><path d="M10.2 20.4h7.9a2.9 2.9 0 0 0 .2-5.8 4.2 4.2 0 0 0-7.9-.6 3.2 3.2 0 0 0-.2 6.4z"/>',
+  calc: '<rect x="4.8" y="2.8" width="14.4" height="18.4" rx="2.6"/><path d="M7.8 7.4h8.4"/><path d="M8.4 12h.01M12 12h.01M15.6 12h.01M8.4 16.4h.01M12 16.4h.01M15.6 16.4h.01"/>',
+  folder: '<path d="M3.2 7.6a2 2 0 0 1 2-2h3.3l2 2.4h6.3a2 2 0 0 1 2 2v7.2a2 2 0 0 1-2 2H5.2a2 2 0 0 1-2-2z"/>',
+  bag: '<path d="M5.4 8.2h13.2l-1 11a1.8 1.8 0 0 1-1.8 1.6H8.2a1.8 1.8 0 0 1-1.8-1.6z"/><path d="M9 8.2V6.6a3 3 0 0 1 6 0v1.6"/>',
+  bank: '<path d="M3.4 9.6 12 4.4l8.6 5.2"/><path d="M5.8 9.9v7.7M9.9 9.9v7.7M14.1 9.9v7.7M18.2 9.9v7.7"/><path d="M3.4 20h17.2"/>',
+  dumbbell: '<path d="M4.6 9.2v5.6M7.4 7.2v9.6M16.6 7.2v9.6M19.4 9.2v5.6M7.4 12h9.2"/>',
+  bed: '<path d="M3.2 18.8V7.2"/><path d="M3.2 12.4h13.8a3.8 3.8 0 0 1 3.8 3.8v2.6"/><path d="M3.2 18.8h17.6"/><circle cx="7.6" cy="9.4" r="1.9"/>',
+  film: '<rect x="2.8" y="4.6" width="18.4" height="14.8" rx="2.2"/><path d="M7.4 4.6v14.8M16.6 4.6v14.8M2.8 12h18.4"/>',
+  bus: '<rect x="4.2" y="3.6" width="15.6" height="13.2" rx="2.4"/><path d="M4.2 11.4h15.6"/><circle cx="8" cy="19.4" r="1.4"/><circle cx="16" cy="19.4" r="1.4"/><path d="M7.8 14.2h.01M16.2 14.2h.01"/>',
+  split: '<circle cx="7.6" cy="8.4" r="2.7"/><path d="M3.1 18.4c0-2.4 2-4.1 4.5-4.1s4.5 1.7 4.5 4.1"/><circle cx="16.9" cy="9.8" r="2.1"/><path d="M13.8 18.4c0-1.9 1.4-3.3 3.1-3.3s3.1 1.4 3.1 3.3"/>',
+  card: '<rect x="2.6" y="5.6" width="18.8" height="12.8" rx="2.4"/><path d="M2.6 9.8h18.8"/><path d="M6.2 14.6h3.6"/>',
+  key: '<circle cx="8.4" cy="8.6" r="4.1"/><path d="m11.3 11.5 8.3 8.3"/><path d="m16.6 15 1.8-1.8M18.6 17 20.4 15.2"/>',
+  football: '<circle cx="12" cy="12" r="8.6"/><path d="m12 7.4 3.7 2.7-1.4 4.4H9.7L8.3 10.1z"/><path d="M12 3.4v4M4.8 9.6l3.5.5M19.2 9.6l-3.5.5M7.4 19.2l2.3-4.7M16.6 19.2l-2.3-4.7"/>',
+  ticket: '<path d="M3.4 8.4a2 2 0 0 1 2-2h13.2a2 2 0 0 1 2 2v1.4a2.2 2.2 0 0 0 0 4.4v1.4a2 2 0 0 1-2 2H5.4a2 2 0 0 1-2-2v-1.4a2.2 2.2 0 0 0 0-4.4z"/><path d="M13.8 6.4v11.2"/>',
+  chef: '<path d="M7.2 20.2h9.6v-6.4a4.5 4.5 0 1 0-3.2-8.2 3.9 3.9 0 0 0-3.2 0 4.5 4.5 0 1 0-3.2 8.2z"/><path d="M7.2 17.1h9.6"/>',
+  hammer: '<path d="m13.8 7.2 3-3 4 4-3 3z"/><path d="m13.4 8.6-9 9a1.9 1.9 0 0 0 2.7 2.7l9-9"/>',
+  ballot: '<rect x="4.4" y="3.6" width="15.2" height="16.8" rx="2.2"/><path d="m8.4 11.6 2.4 2.4 4.8-5.2"/>',
+  saw: '<path d="M3.6 16.6h12.6l4.2-4"/><path d="M3.6 16.6v3.4h12.6v-3.4"/><path d="m5.2 16.6 1.5-2.4 1.5 2.4 1.5-2.4 1.5 2.4 1.5-2.4 1.5 2.4"/>',
+  home: '<path d="M3.6 10.6 12 3.9l8.4 6.7"/><path d="M5.9 12.3v7.9h12.2v-7.9"/><path d="M10 20.2v-4.9h4v4.9"/>',
+  bolt: '<path d="M13.4 2.8 4.6 13.6h6.2l-1.2 7.6 8.8-10.8h-6.2z"/>',
+  wheat: '<path d="M12 21V9.4"/><path d="M12 9.4c0-2.3 1.4-3.9 3.3-3.9 0 2.3-1.4 3.9-3.3 3.9zM12 9.4c0-2.3-1.4-3.9-3.3-3.9 0 2.3 1.4 3.9 3.3 3.9z"/><path d="M12 14.6c0-2.3 1.4-3.9 3.3-3.9 0 2.3-1.4 3.9-3.3 3.9zM12 14.6c0-2.3-1.4-3.9-3.3-3.9 0 2.3 1.4 3.9 3.3 3.9z"/>',
+  shield: '<path d="M12 3.2 4.8 5.9v6c0 4.3 3 7.5 7.2 8.7 4.2-1.2 7.2-4.4 7.2-8.7v-6z"/><path d="m8.9 11.9 2.2 2.2 4.1-4.3"/>',
+  hourglass: '<path d="M6.8 3.6h10.4M6.8 20.4h10.4"/><path d="M7.8 3.6v3.1L12 10.9l4.2-4.2V3.6M7.8 20.4v-3.1L12 13.1l4.2 4.2v3.1"/>',
+  suitcase: '<rect x="2.8" y="7.4" width="18.4" height="12.4" rx="2.4"/><path d="M8.6 7.4V5.6a1.8 1.8 0 0 1 1.8-1.8h3.2a1.8 1.8 0 0 1 1.8 1.8v1.8"/><path d="M2.8 12.2h18.4"/>',
+  grid9: '<rect x="3.6" y="3.6" width="16.8" height="16.8" rx="2.2"/><path d="M9.2 3.6v16.8M14.8 3.6v16.8M3.6 9.2h16.8M3.6 14.8h16.8"/>',
+  cap: '<path d="M2.6 9.2 12 5l9.4 4.2L12 13.4z"/><path d="M6.4 11.3v4.5c0 1.6 2.5 2.8 5.6 2.8s5.6-1.2 5.6-2.8v-4.5"/><path d="M21.4 9.4v4.8"/>',
+  cloud: '<path d="M7.2 19.4h9.6a3.9 3.9 0 0 0 .3-7.8 5.6 5.6 0 0 0-10.6-.8 3.9 3.9 0 0 0 .7 8.6z"/>',
+  phone: '<rect x="6.2" y="2.4" width="11.6" height="19.2" rx="2.6"/><path d="M10.4 4.9h3.2"/><path d="M10.6 18.9h2.8"/>',
+  down: '<path d="M12 4.2v11.6"/><path d="m7.4 11.6 4.6 4.6 4.6-4.6"/><path d="M4.6 19.8h14.8"/>'
+};
+var FILLED = {};
+function icon(name, size, cls){
+  var d = SVG[name]; if (!d) return '';
+  return '<span class="ico ' + (cls||'') + '" style="width:' + (size||20) + 'px;height:' + (size||20) +
+    'px;display:inline-flex;flex:0 0 auto"><svg viewBox="0 0 24 24" width="100%" height="100%" fill="' +
+    (FILLED[name] ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="1.7" ' +
+    'stroke-linecap="round" stroke-linejoin="round">' + d + '</svg></span>';
+}
+
+var ACTS = [], TRAJ = [];
+function bind(a){ if (!a) return ''; ACTS.push(a); return ' data-act="' + (ACTS.length-1) + '"'; }
+function bindT(a){ if (!a) return ''; ACTS.push(a); return ' data-actt="' + (ACTS.length-1) + '"'; }
+function tid(id){ return id ? ' data-testid="' + esc(id) + '"' : ''; }
+function R(list){ return (list||[]).map(render).join(''); }
+function tagsHtml(items){
+  return (items||[]).map(function(t){
+    return '<span class="tag ' + (t.cls||'') + '">' + esc(t.text) + '</span>'; }).join('');
+}
+
+function render(n){
+  if (!n || typeof n !== 'object') return '';
+  if (Array.isArray(n)) return R(n);
+  switch (n.t) {
+  case 'screen': return R(n.c);
+  case 'appbar': {
+    var left = (n.back
+      ? '<div class="iconbtn" data-testid="nav_back"' + bind({type:'BACK'}) + '>' + icon('back',19) + '</div>'
+      : '') + R(n.left);
+    return '<div class="n-appbar"' + tid(n.id) + '><div class="ab-side">' + left + '</div>'
+      + '<div class="ab-title">' + esc(n.title) + '</div>'
+      + '<div class="ab-side right">' + R(n.right) + '</div></div>';
+  }
+  case 'iconbtn': return '<div class="iconbtn ' + esc(n.cls||'') + '"' + tid(n.id) + bind(n.act) + '>' + icon(n.icon, 19) + '</div>';
+  case 'scroll':  return '<div class="n-scroll"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'chips':   return '<div class="n-chips"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'chip':    return '<div class="n-chip' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '>' + esc(n.text) + '</div>';
+  case 'card':    return '<div class="n-card ' + esc(n.cls||'') + (n.act?' tap':'') + '"' + tid(n.id) + bind(n.act) + '>' + R(n.c) + '</div>';
+  case 'padded':  return '<div style="padding:5px 16px">' + R(n.c) + '</div>';
+  case 'sec':     return '<div class="n-sec"' + tid(n.id) + '><span>' + esc(n.text) + '</span>'
+                       + (n.side ? '<span>' + esc(n.side) + '</span>' : '') + '</div>';
+  case 'text':    return '<div class="n-text ' + esc(n.cls||'') + '">' + esc(n.text) + '</div>';
+  case 'space':   return '<div class="n-space"></div>';
+  case 'row': {
+    var inline = [], below = [];
+    (n.c||[]).forEach(function(ch){
+      (ch.t==='switch'||ch.t==='radio'||ch.t==='check'||ch.t==='stepper'||ch.t==='btn'||ch.t==='iconbtn')
+        ? inline.push(ch) : below.push(ch);
+    });
+    return '<div class="n-row' + (n.act?' tap':'') + '"' + tid(n.id) + bind(n.act) + '>'
+      + (n.lead ? '<div class="r-lead"' + (n.leadColour ? ' style="color:' + esc(n.leadColour) + '"' : '')
+                + '>' + icon(n.lead, 19) + '</div>' : '')
+      + (n.avatar ? avatarHtml(n.avatar) : '')
+      + (n.thumb && typeof thumbHtml === 'function' ? thumbHtml(n.thumb) : '')
+      + '<div class="r-main"><div class="r-label' + (n.strike?' strike':'') + '">' + esc(n.text) + '</div>'
+      + (n.sub ? '<div class="r-sub">' + esc(n.sub) + '</div>' : '') + '</div>'
+      + (n.val ? '<div class="r-value ' + esc(n.valCls||'') + '">' + esc(n.val) + '</div>' : '')
+      + R(inline)
+      + (n.arrow && !inline.length ? '<div class="r-arrow">' + icon('arrow',15) + '</div>' : '')
+      + '</div>' + R(below);
+  }
+  case 'btn':
+    return '<div class="n-btn ' + esc(n.cls||'') + (n.disabled?' off':'') + '"' + tid(n.id)
+      + (n.disabled?'':bind(n.act)) + '>' + esc(n.text) + '</div>';
+  case 'btnrow': return '<div class="n-btnrow"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'bar':    return '<div style="flex:0 0 auto;background:var(--card);border-top:1px solid var(--line);'
+                      + 'padding:12px 16px 16px;z-index:30"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'switch': return '<div class="n-switch' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '><i></i></div>';
+  case 'check':  return '<div class="n-check' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '></div>';
+  case 'radio':  return '<div class="n-radio' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '></div>';
+  case 'inputrow':
+    return '<div class="n-input"><div class="i-label">' + esc(n.label) + '</div>'
+      + '<input' + tid(n.id) + bindT(n.act) + ' value="' + esc(n.value) + '" placeholder="'
+      + esc(n.placeholder) + '"></div>';
+  case 'stepper':
+    return '<div style="display:flex;align-items:center;gap:8px"' + tid(n.id) + '>'
+      + '<div class="iconbtn" style="background:var(--btn);width:30px;height:30px"' + tid(n.minusId) + bind(n.minus) + '>' + icon('minus',14) + '</div>'
+      + '<div style="min-width:52px;text-align:center;font-weight:700;font-size:12.5px;font-variant-numeric:tabular-nums">'
+      + esc(n.value) + '</div>'
+      + '<div class="iconbtn" style="background:var(--btn);width:30px;height:30px"' + tid(n.plusId) + bind(n.plus) + '>' + icon('plus',14) + '</div></div>';
+  case 'stats':  return '<div class="stats"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'stat':
+    return '<div class="stat' + (n.acc?' acc':'') + (n.act?' tap':'') + '"' + tid(n.id) + bind(n.act)
+      + '><div class="st-n">' + esc(n.n) + '</div><div class="st-l">' + esc(n.l) + '</div></div>';
+  case 'hero':
+    return '<div class="hero' + (n.act?' tap':'') + '"' + tid(n.id) + bind(n.act) + '>'
+      + '<div class="he-k">' + esc(n.kicker) + '</div>'
+      + '<div class="he-t">' + esc(n.title) + '</div>'
+      + '<div class="he-s">' + esc(n.sub) + '</div>' + R(n.c) + '</div>';
+  case 'pills':
+    return '<div style="display:flex;gap:7px;flex-wrap:wrap;padding:8px 18px 4px"' + tid(n.id) + '>'
+      + tagsHtml(n.items) + '</div>';
+  case 'tabbar':
+    return '<div class="n-tabbar"' + tid(n.id) + '>' + n.items.map(function(i){
+      return '<div class="tb' + (i.on?' on':'') + '"' + tid(i.id) + bind(i.act) + '>'
+        + '<i>' + icon(i.icon, 21) + '</i>' + esc(i.text) + '</div>';
+    }).join('') + '</div>';
+  case 'mask':  return '<div class="n-mask"' + tid(n.id) + bind(n.close) + '>' + R(n.c) + '</div>';
+  case 'sheet':
+    return '<div class="n-sheet"' + tid(n.id) + ' data-stop="1"><div class="sh-hd">'
+      + '<div class="t">' + esc(n.title) + '</div>'
+      + '<div class="iconbtn"' + tid(n.closeId) + bind(n.close) + '>' + icon('close',15) + '</div></div>'
+      + '<div class="sh-bd">' + R(n.c) + '</div></div>';
+  case 'dialog':
+    return '<div class="dialog"' + tid(n.id) + ' data-stop="1">'
+      + '<div style="padding:22px 20px 16px;text-align:center">'
+      + (n.title ? '<div style="font:650 17px/1.3 var(--disp);margin-bottom:8px">' + esc(n.title) + '</div>' : '')
+      + '<div style="font-size:13.5px;color:var(--ink2);line-height:1.55">' + esc(n.text) + '</div></div>'
+      + '<div style="display:flex;gap:10px;padding:0 16px 16px">'
+      + '<div class="n-btn" style="flex:1"' + tid(n.cancel.id) + bind(n.cancel.act) + '>' + esc(n.cancel.text) + '</div>'
+      + '<div class="n-btn primary" style="flex:1"' + tid(n.ok.id) + bind(n.ok.act) + '>' + esc(n.ok.text) + '</div>'
+      + '</div></div>';
+  case 'toast': return '<div class="n-toast"' + tid(n.id) + '>' + esc(n.text) + '</div>';
+  default: return renderExtra(n);
+  }
+}
+function avatarHtml(a){
+  return '<div class="av" style="width:38px;height:38px;border-radius:50%;flex:0 0 auto;display:flex;'
+    + 'align-items:center;justify-content:center;font:700 14px/1 var(--disp);color:#fff;background:hsl('
+    + a.hue + ' 52% 46%)">' + esc(a.initial) + '</div>';
+}
+
+var WALL = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="g" x1="0" y1="0" x2=".35" y2="1"><stop offset="0" stop-color="#151a3e"/><stop offset=".5" stop-color="#241f4e"/><stop offset="1" stop-color="#0c1130"/></linearGradient><radialGradient id="v" cx=".5" cy=".42" r=".78"><stop offset=".55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".45"/></radialGradient><filter id="b" x="-45%" y="-45%" width="190%" height="190%"><feGaussianBlur stdDeviation="62"/></filter></defs><rect width="390" height="844" fill="url(#g)"/><g filter="url(#b)" opacity=".92"><ellipse cx="58" cy="126" rx="158" ry="132" fill="#4b39d6"/><ellipse cx="342" cy="238" rx="146" ry="122" fill="#0a84ff"/><ellipse cx="196" cy="512" rx="186" ry="146" fill="#6c33a6"/><ellipse cx="34" cy="726" rx="152" ry="128" fill="#bf3f14"/><ellipse cx="356" cy="806" rx="136" ry="112" fill="#0d7185"/></g><rect width="390" height="844" fill="url(#v)"/></svg>';
+
+function tint(hex, dir){
+  return 'color-mix(in srgb,' + esc(hex) + ' ' + (dir > 0 ? '62%,#ffffff' : '90%,#000000') + ')';
+}
+function tileHtml(n, px, r){
+  if (n.folder)
+    return '<div class="tile fold" style="width:' + px + 'px;height:' + px + 'px">'
+      + (n.tiles || []).map(function(c){
+          return '<i style="background:' + esc(c) + '"></i>'; }).join('') + '</div>';
+  return '<div class="tile" style="width:' + px + 'px;height:' + px + 'px;border-radius:'
+    + r + 'px;background:linear-gradient(163deg,' + tint(n.brand, 1) + ',' + esc(n.brand)
+    + ' 58%,' + tint(n.brand, -1) + ')">' + icon(n.glyph, Math.round(px * 0.54)) + '</div>';
+}
+
+function renderExtra(n){
+  switch (n.t) {
+  case 'home':
+    return '<div class="hs"' + (n.dark ? ' style="background-image:url(&quot;data:image/svg+xml,'
+        + encodeURIComponent(WALL).replace(/'/g, '%27') + '&quot;)"' : '')
+      + '>' + R(n.c) + '<div class="grow"></div>' + R(n.tail) + '</div>';
+  case 'widgets': return '<div class="wgs">' + R(n.c) + '</div>';
+  case 'widget':
+    return '<div class="wgc' + (n.alert ? ' alert' : '') + '"' + tid(n.id) + bind(n.act) + '>'
+      + '<div class="k">' + icon(n.icon, 12) + esc(n.k) + '</div>'
+      + '<div class="n">' + esc(n.n) + '</div>'
+      + '<div class="s">' + esc(n.s) + '</div></div>';
+  case 'grid': return '<div class="' + esc(n.cls) + '"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'icon':
+    return '<div class="ic' + (n.off ? ' faded' : '') + '"' + tid(n.id) + bind(n.act) + '>'
+      + tileHtml(n, 57, 14)
+      + (n.bare ? '' : '<div class="ic-n">' + esc(n.name) + '</div>') + '</div>';
+  case 'dots':
+    return '<div class="dots">' + n.items.map(function(p){
+      return '<div class="' + (p.on ? 'on' : '') + '"' + tid(p.id) + bind(p.act) + '></div>';
+    }).join('') + '</div>';
+  case 'big': return '<div class="big">' + esc(n.text) + '</div>';
+  case 'note': return '<div class="note">' + esc(n.text) + '</div>';
+  case 'searchhead': return '<div class="n-sec"><span>' + esc(n.text) + '</span></div>';
+  case 'acct':
+    return '<div class="acct"' + tid(n.id) + bind(n.act) + '>'
+      + '<div class="av">' + esc(n.initial) + '</div><div style="flex:1 1 auto;min-width:0">'
+      + '<div class="n">' + esc(n.name) + '</div>'
+      + '<div class="s">' + esc(n.sub).replace(/\n/g, '<br>') + '</div></div>'
+      + (n.act ? '<div class="r-arrow">' + icon('arrow', 15) + '</div>' : '') + '</div>';
+  case 'sbar': {
+    var t = n.segs.map(function(s){
+      return '<i style="width:' + s.pct.toFixed(3) + '%;background:' + esc(s.colour) + '"></i>';
+    }).join('');
+    return '<div class="sbar"><div class="track">' + t + '</div>'
+      + '<div class="free"><span>' + esc(n.used) + ' of ' + esc(n.cap) + ' used</span>'
+      + '<b>' + esc(n.free) + ' free</b></div>'
+      + '<div class="leg" style="margin-left:0;margin-right:0">' + n.segs.map(function(s){
+          return '<div><span style="background:' + esc(s.colour) + '"></span>' + esc(s.name)
+            + '<em>' + gbjs(s.mb) + '</em></div>'; }).join('') + '</div></div>';
+  }
+  case 'reco': return '<div class="reco">' + R(n.c) + '</div>';
+  case 'rc':
+    return '<div class="rc"><div class="m"><div class="t">' + esc(n.title) + '</div>'
+      + '<div class="d">' + esc(n.detail) + '</div></div>'
+      + '<div class="sz">' + esc(n.size) + '</div>'
+      + (n.action ? '<div class="a"' + tid(n.id) + bind(n.act) + '>' + esc(n.action) + '</div>'
+                  : '<div class="a off">Manual</div>') + '</div>';
+  case 'arow':
+    return '<div class="arow' + (n.gone ? ' gone' : '') + '"' + tid(n.id) + bind(n.act) + '>'
+      + '<div class="t2" style="background:' + esc(n.brand) + '">'
+      + '<span style="position:relative;z-index:1;display:flex">' + icon(n.glyph, 17) + '</span>'
+      + '</div><div class="m"><div class="n">' + esc(n.name) + '</div>'
+      + '<div class="s">' + esc(n.sub) + '</div></div>'
+      + '<div class="v">' + esc(n.val) + '</div>'
+      + '<div class="r-arrow">' + icon('arrow', 14) + '</div></div>';
+  case 'apphead':
+    return '<div class="acct" style="align-items:center">' + tileHtml(n, 60, 15)
+      + '<div style="flex:1 1 auto;min-width:0"><div class="n">' + esc(n.name) + '</div>'
+      + '<div class="s">' + esc(n.sub) + '<br>' + esc(n.env) + '</div></div></div>';
+  case 'actrow':
+    return '<div class="n-row tap"' + tid(n.id) + bind(n.act) + '>'
+      + '<div class="r-main"><div class="r-label" style="color:var(--'
+      + (n.tone === 'red' ? 'bad' : 'accent') + ')">' + esc(n.title) + '</div>'
+      + (n.sub ? '<div class="r-sub">' + esc(n.sub) + '</div>' : '') + '</div></div>';
+  case 'seg':
+    return '<div class="seg">' + n.items.map(function(i){
+      return '<div class="' + (i.on ? 'on' : '') + '"' + tid(i.id) + bind(i.act) + '>'
+        + esc(i.text) + '</div>'; }).join('') + '</div>';
+  case 'pool': {
+    var bars = (n.bars || []).map(function(b){
+      return '<i style="width:' + b.pct.toFixed(3) + '%;background:' + esc(b.colour) + '"></i>';
+    }).join('');
+    return '<div class="pool"><div class="h"><b' + (n.bad ? ' style="color:var(--bad)"' : '')
+      + '>' + esc(n.title) + '</b><span>' + esc(n.side) + '</span></div>'
+      + (bars ? '<div class="t">' + bars + '</div>' : '')
+      + (n.axis ? '<div class="ax">' + esc(n.axis) + '</div>' : '')
+      + '<div class="d">' + n.detail + '</div></div>';
+  }
+  case 'link':
+    return '<div style="padding:12px 16px"><a href="' + esc(n.href) + '" '
+      + 'style="display:block;padding:13px;border-radius:12px;background:var(--card);'
+      + 'color:var(--accent);text-align:center;font-size:16px;text-decoration:none">'
+      + esc(n.text) + ' ↗</a></div>';
+  default: return '';
+  }
+}
+function gbjs(mb){
+  if (mb < 1000) return mb + ' MB';
+  var v = mb / 1000;
+  return (v >= 100 ? v.toFixed(0) : v.toFixed(v >= 10 ? 1 : 2)) + ' GB';
+}
+
+var STATE = null;
+function paint(){
+  ACTS = [];
+  app.innerHTML = render(E.screen(STATE));
+  var c = '';
+  if (c) document.getElementById('sb-clock').textContent = c;
+  if (!hud.classList.contains('off')) paintHud();
+}
+app.addEventListener('click', function(ev){
+  var el = ev.target.closest('[data-act]'); if (!el) return;
+  if (el.classList.contains('n-mask') && ev.target.closest('[data-stop]')) return;
+  var act = ACTS[+el.getAttribute('data-act')]; if (!act) return;
+  TRAJ.push({action:'tap', id: el.getAttribute('data-testid') || null});
+  STATE = E.reduce(STATE, act); paint();
+});
+app.addEventListener('input', function(ev){
+  var el = ev.target.closest('[data-actt]'); if (!el) return;
+  var act = JSON.parse(JSON.stringify(ACTS[+el.getAttribute('data-actt')]));
+  for (var k in act) if (act[k] === '$VALUE') act[k] = el.value;
+  var id = el.getAttribute('data-testid'), pos = el.selectionStart;
+  TRAJ.push({action:'type', id:id, text:el.value});
+  STATE = E.reduce(STATE, act); paint();
+  var again = id && app.querySelector('[data-testid="' + id + '"]');
+  if (again && again.focus) { again.focus(); try { again.setSelectionRange(pos, pos); } catch(e){} }
+});
+
+function paintHud(){
+  var d = E.derive(STATE);
+  hud.innerHTML = '<h4>__ENV__ \u00b7 ' + E.ENV_ID + ' v' + E.VERSION + '</h4>'
+    + '<div><span class="k">route</span> ' + d.route + '  <span class="k">step</span> ' + STATE.meta.steps + '</div>'
+    + '<div><span class="k">free</span> ' + gbjs(d.freeDevice) + '  <span class="k">short</span> ' + gbjs(d.updateShort) + '  <span class="k">icloud</span> ' + gbjs(d.freeCloud) + '  <span class="k">backup</span> ' + gbjs(d.nextBackup) + '</div>'
+    + '<div style="margin-top:8px"><button id="hud-reset">reset</button>'
+    + '<button id="hud-a11y">copy a11y</button><button id="hud-state">copy state</button>'
+    + '<button id="hud-traj">copy traj</button><button id="hud-hide">hide (h)</button></div>'
+    + '<pre>' + esc(E.a11y(STATE)) + '</pre>';
+  hud.querySelector('#hud-reset').onclick = function(){ ENVAPI.reset({seed:STATE.meta.seed}); };
+  hud.querySelector('#hud-a11y').onclick  = function(){ copy(E.a11y(STATE)); };
+  hud.querySelector('#hud-state').onclick = function(){ copy(JSON.stringify(E.snapshot(STATE), null, 2)); };
+  hud.querySelector('#hud-traj').onclick  = function(){ copy(JSON.stringify(TRAJ, null, 2)); };
+  hud.querySelector('#hud-hide').onclick  = function(){ hud.classList.add('off'); };
+}
+function copy(t){ try { navigator.clipboard.writeText(t); } catch(e){} }
+document.addEventListener('keydown', function(e){
+  if (e.key === 'h') { hud.classList.toggle('off'); if (!hud.classList.contains('off')) paintHud(); }
+});
+
+var ENVAPI = {
+  ENV_ID: E.ENV_ID, VERSION: E.VERSION,
+  reset: function(opts){
+    opts = opts || {};
+    STATE = E.createInitialState(opts.seed || 0);
+    if (opts.patch) E.applyPatch(STATE, opts.patch);
+    TRAJ = []; paint();
+    return E.snapshot(STATE);
+  },
+  getState:   function(){ return E.snapshot(STATE); },
+  setState:   function(s){ STATE = JSON.parse(JSON.stringify(s)); paint(); return true; },
+  step:       function(a){ var r = E.step(STATE, a); STATE = r.state; TRAJ.push(a); paint();
+                           return {ok:r.ok, error:r.error || null}; },
+  dispatch:   function(act){ STATE = E.reduce(STATE, act); paint(); return true; },
+  a11y:       function(){ return E.a11y(STATE); },
+  elements:   function(){ return E.elements(STATE); },
+  route:      function(){ return E.select.route(STATE); },
+  trajectory: function(){ return JSON.parse(JSON.stringify(TRAJ)); },
+  bounds: function(){
+    var base = document.getElementById('screen').getBoundingClientRect(), out = {};
+    app.querySelectorAll('[data-testid]').forEach(function(el){
+      var r = el.getBoundingClientRect();
+      out[el.getAttribute('data-testid')] = {
+        x:Math.round(r.left-base.left), y:Math.round(r.top-base.top),
+        w:Math.round(r.width), h:Math.round(r.height),
+        cx:Math.round(r.left-base.left+r.width/2), cy:Math.round(r.top-base.top+r.height/2)};
+    });
+    return out;
+  }
+};
+window.__ENV__ = ENVAPI;
+var qs = new URLSearchParams(location.search);
+if (qs.get('bare') === '1') document.body.classList.add('bare');
+if (qs.get('hud')  === '1') hud.classList.remove('off');
+ENVAPI.reset({seed: parseInt(qs.get('seed') || '0', 10) || 0});
+window.__ENV_READY__ = true;
+})();
+</script>
+</body>
+</html>

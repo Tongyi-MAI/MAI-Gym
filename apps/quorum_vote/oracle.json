@@ -1,0 +1,346 @@
+{
+  "env": "quorum_vote",
+  "note": "Golden action sequences replayed by CI.",
+  "solutions": {
+    "T01_settings": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_showTransfers"
+      },
+      {
+        "action": "tap",
+        "id": "set_showPercent"
+      }
+    ],
+    "T02_first_prefs": [
+      {
+        "action": "tap",
+        "id": "tab_who"
+      },
+      {
+        "action": "finish",
+        "answer": "Morag Bain, with six."
+      }
+    ],
+    "T03_first_out": [
+      {
+        "action": "tap",
+        "id": "tab_rounds"
+      },
+      {
+        "action": "finish",
+        "answer": "Jude Fenwick, on two."
+      }
+    ],
+    "T04_tan_page": [
+      {
+        "action": "tap",
+        "id": "tab_who"
+      },
+      {
+        "action": "tap",
+        "id": "cand_c_wei"
+      },
+      {
+        "action": "finish",
+        "answer": "Four first preferences."
+      }
+    ],
+    "T05_quorum": [
+      {
+        "action": "finish",
+        "answer": "Twenty are in; the quorum is twenty-one."
+      }
+    ],
+    "T06_locked": [
+      {
+        "action": "tap",
+        "id": "mark_c_owusu"
+      },
+      {
+        "action": "tap",
+        "id": "submit"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "tap",
+        "id": "tab_ballot"
+      },
+      {
+        "action": "tap",
+        "id": "mark_c_wei"
+      },
+      {
+        "action": "finish",
+        "answer": "It refused — the ballot is in the box, and it has to be withdrawn before anything on it can change."
+      }
+    ],
+    "T07_cast_morag": [
+      {
+        "action": "tap",
+        "id": "mark_c_bain"
+      },
+      {
+        "action": "tap",
+        "id": "submit"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      }
+    ],
+    "T08_reorder": [
+      {
+        "action": "tap",
+        "id": "mark_c_owusu"
+      },
+      {
+        "action": "tap",
+        "id": "mark_c_wei"
+      },
+      {
+        "action": "tap",
+        "id": "up_c_wei"
+      }
+    ],
+    "T09_withdraw": [
+      {
+        "action": "tap",
+        "id": "mark_c_wei"
+      },
+      {
+        "action": "tap",
+        "id": "submit"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "tap",
+        "id": "tab_ballot"
+      },
+      {
+        "action": "tap",
+        "id": "withdraw"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "finish",
+        "answer": "Twenty papers again, which is one short of the quorum, so the result would not stand."
+      }
+    ],
+    "T10_round_of_esi": [
+      {
+        "action": "tap",
+        "id": "mark_c_wei"
+      },
+      {
+        "action": "tap",
+        "id": "tab_rounds"
+      },
+      {
+        "action": "finish",
+        "answer": "Round three, on five votes."
+      }
+    ],
+    "T11_tiebreak": [
+      {
+        "action": "tap",
+        "id": "tab_rounds"
+      },
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "finish",
+        "answer": "Morag Bain — the last round is ten each, and the tie-break goes on round-one first preferences, where Morag had six to Tan's four."
+      }
+    ],
+    "T12_elect_tan": [
+      {
+        "action": "tap",
+        "id": "mark_c_wei"
+      },
+      {
+        "action": "tap",
+        "id": "submit"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      }
+    ],
+    "T13_strike_out": [
+      {
+        "action": "tap",
+        "id": "mark_c_raman"
+      },
+      {
+        "action": "tap",
+        "id": "mark_c_fen"
+      },
+      {
+        "action": "tap",
+        "id": "mark_c_owusu"
+      },
+      {
+        "action": "tap",
+        "id": "mark_c_fen"
+      },
+      {
+        "action": "tap",
+        "id": "submit"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      }
+    ],
+    "T14_priya_transfer": [
+      {
+        "action": "tap",
+        "id": "tab_rounds"
+      },
+      {
+        "action": "tap",
+        "id": "gone_c_raman"
+      },
+      {
+        "action": "finish",
+        "answer": "All three go to Tan Wei — the second-vote group put Tan second."
+      }
+    ],
+    "T15_esi_then_tan": [
+      {
+        "action": "tap",
+        "id": "mark_c_owusu"
+      },
+      {
+        "action": "tap",
+        "id": "mark_c_wei"
+      },
+      {
+        "action": "tap",
+        "id": "submit"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "finish",
+        "answer": "The second mark. Esi goes out in round three, so the paper moves on — put Tan there and Tan wins 11–10."
+      }
+    ],
+    "T16_esi_then_morag": [
+      {
+        "action": "tap",
+        "id": "mark_c_owusu"
+      },
+      {
+        "action": "tap",
+        "id": "mark_c_bain"
+      },
+      {
+        "action": "tap",
+        "id": "submit"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      }
+    ],
+    "T17_exhausted": [
+      {
+        "action": "tap",
+        "id": "mark_c_fen"
+      },
+      {
+        "action": "tap",
+        "id": "submit"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "finish",
+        "answer": "It runs out — with Jude gone the paper has no surviving preference, so it stops counting. That leaves ten each again and Morag Bain takes it on the tie-break, even though the poll now has its twenty-one papers."
+      }
+    ],
+    "T18_impossible": [
+      {
+        "action": "tap",
+        "id": "tab_rounds"
+      },
+      {
+        "action": "finish",
+        "answer": "No. The last round is always Morag Bain against Tan Wei at ten each, so your paper either sits with Morag, or runs out and leaves the tie-break to Morag. The only way it lands on Tan is if Tan is written on it."
+      }
+    ],
+    "T19_shortest_change": [
+      {
+        "action": "tap",
+        "id": "mark_c_wei"
+      },
+      {
+        "action": "tap",
+        "id": "submit"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "finish",
+        "answer": "One mark — Tan Wei, and nothing else. That is enough to make the last round 11–10."
+      }
+    ],
+    "T20_full_ranking": [
+      {
+        "action": "tap",
+        "id": "mark_c_owusu"
+      },
+      {
+        "action": "tap",
+        "id": "mark_c_wei"
+      },
+      {
+        "action": "tap",
+        "id": "mark_c_raman"
+      },
+      {
+        "action": "tap",
+        "id": "mark_c_fen"
+      },
+      {
+        "action": "tap",
+        "id": "mark_c_bain"
+      },
+      {
+        "action": "tap",
+        "id": "submit"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "finish",
+        "answer": "The second. Jude, Priya and Esi are all knocked out regardless, so the only mark that matters is which of Tan and Morag stands higher — here Tan, at number two."
+      }
+    ]
+  }
+}

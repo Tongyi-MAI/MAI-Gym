@@ -1,0 +1,874 @@
+{
+  "env": "kitbag_pack",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_settings",
+      "name": "Two switches",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "settings"
+      ],
+      "instruction": "On the Booking tab, turn on \"Show grams as well as kilos\" and turn off \"Warn me when a bag gets heavy\". Do not add priority boarding or a second bag.",
+      "goal": [
+        {
+          "name": "Grams are shown",
+          "path": "derived.settings.showGrams",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "The heavy warning is off",
+          "path": "derived.settings.warnHeavy",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Priority was left alone",
+          "path": "derived.settings.priority",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "No second bag was added",
+          "path": "derived.extraBagBooked",
+          "op": "eq",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "T02_fee_now",
+      "name": "Question: what would the desk charge?",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "How much would you be charged at the bag drop right now? Answer in pounds and pence.",
+      "goal": [
+        {
+          "name": "£45.00",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)45(?!\\d)(\\.(?<!\\d)00(?!\\d))?",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was moved",
+          "path": "derived.totalFee",
+          "op": "eq",
+          "value": 4500
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T03_over_by",
+      "name": "Question: how far over?",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "How much over its allowance is the hold bag? Give the weight.",
+      "goal": [
+        {
+          "name": "2.36 kg",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)2(?!\\d)[.,]?(?<!\\d)36(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was moved",
+          "path": "derived.holdWeight",
+          "op": "eq",
+          "value": 17360
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T04_band",
+      "name": "Open the hold bag and read the band",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "query",
+        "navigate"
+      ],
+      "instruction": "Open the hold bag and tell me which excess band it falls in and what that band costs.",
+      "goal": [
+        {
+          "name": "the first band, £45",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)45(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "You are on the hold bag screen",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "b_hold"
+        },
+        {
+          "name": "Nothing was moved",
+          "path": "derived.holdWeight",
+          "op": "eq",
+          "value": 17360
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T05_wrong_bag",
+      "name": "Question: what is in the wrong bag?",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "Two things are in a bag they are not allowed to fly in. Name both of them.",
+      "goal": [
+        {
+          "name": "the laptop",
+          "source": "answer",
+          "op": "contains",
+          "value": "aptop",
+          "weight": 3
+        },
+        {
+          "name": "the power bank",
+          "source": "answer",
+          "op": "contains",
+          "value": "ower bank",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was moved",
+          "path": "derived.violationCount",
+          "op": "eq",
+          "value": 2
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T06_refused",
+      "name": "The app should say no",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "refusal"
+      ],
+      "instruction": "Try to put the penknife in the cabin bag. If the app refuses, leave it where it is and tell me the reason it gave.",
+      "goal": [
+        {
+          "name": "The penknife is still in the hold",
+          "path": "derived.itemBag.Penknife",
+          "op": "eq",
+          "value": "Hold bag"
+        },
+        {
+          "name": "because it is sharp",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Ss]harp",
+          "weight": 3
+        },
+        {
+          "name": "Nothing else moved",
+          "path": "derived.violationCount",
+          "op": "eq",
+          "value": 2
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T07_fix_rules_only",
+      "name": "Fix the rules, then look at the fee",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 22,
+      "tags": [
+        "multi-step",
+        "trap"
+      ],
+      "instruction": "Put the two mis-packed things into a bag they are allowed to fly in. Do not move anything else and do not add a bag. Then tell me what the desk would charge.",
+      "goal": [
+        {
+          "name": "The laptop is in the cabin",
+          "path": "derived.itemBag.Laptop",
+          "op": "eq",
+          "value": "Cabin bag"
+        },
+        {
+          "name": "The power bank is in the cabin",
+          "path": "derived.itemBag.Power bank",
+          "op": "eq",
+          "value": "Cabin bag"
+        },
+        {
+          "name": "Nothing is in the wrong bag",
+          "path": "derived.violationCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Nothing was left at home",
+          "path": "derived.unpackedCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "No second bag",
+          "path": "derived.extraBagBooked",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "still £45 — the hold is 260 g over",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)45(?!\\d)(\\.(?<!\\d)00(?!\\d))?",
+          "weight": 3,
+          "hint": "the band does not care how far over you are"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T08_hold_under",
+      "name": "Get the hold bag legal",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "multi-step",
+        "constraint"
+      ],
+      "instruction": "Get the hold bag under its allowance. Everything you own still has to travel, you may not add a second bag, and nothing may be in a bag it is not allowed in.",
+      "goal": [
+        {
+          "name": "The hold is inside its allowance",
+          "path": "derived.bagOver.Hold bag",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "The cabin is inside its allowance",
+          "path": "derived.bagOver.Cabin bag",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Nothing is in the wrong bag",
+          "path": "derived.violationCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Everything is packed",
+          "path": "derived.unpackedCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "No second bag",
+          "path": "derived.extraBagBooked",
+          "op": "eq",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "T09_zero_total",
+      "name": "Nothing to pay",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "multi-step",
+        "optimise"
+      ],
+      "instruction": "Get the total charge at the desk down to nothing, with all twenty things travelling with you.",
+      "goal": [
+        {
+          "name": "Nothing to pay",
+          "path": "derived.totalFee",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Everything is packed",
+          "path": "derived.unpackedCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Nothing is in the wrong bag",
+          "path": "derived.violationCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "No second bag",
+          "path": "derived.extraBagBooked",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "No priority boarding",
+          "path": "derived.settings.priority",
+          "op": "eq",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "T10_lightest_move",
+      "name": "The lightest thing that fixes it",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "multi-step",
+        "optimise"
+      ],
+      "instruction": "First put the two mis-packed things where they belong. The hold will still be over. Move the single lightest thing you legally can from the hold into the cabin to clear the fee — and tell me what it was.",
+      "goal": [
+        {
+          "name": "The travel towel went to the cabin",
+          "path": "derived.itemBag.Travel towel",
+          "op": "eq",
+          "value": "Cabin bag"
+        },
+        {
+          "name": "Nothing to pay",
+          "path": "derived.totalFee",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Everything is packed",
+          "path": "derived.unpackedCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Nothing is in the wrong bag",
+          "path": "derived.violationCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "the travel towel",
+          "source": "answer",
+          "op": "contains",
+          "value": "owel",
+          "weight": 3,
+          "hint": "the hold is 260 g over; the lighter things in it are liquids or sharp"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T11_priority_no",
+      "name": "Is priority boarding worth it here?",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 22,
+      "tags": [
+        "trade-off"
+      ],
+      "instruction": "Priority boarding buys 2 kg of extra cabin allowance for £12. Work out whether it would reduce what you pay from where you are now, then leave the booking in the cheaper of the two states and tell me your reasoning in one line.",
+      "goal": [
+        {
+          "name": "Priority is off",
+          "path": "derived.settings.priority",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "No second bag",
+          "path": "derived.extraBagBooked",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "it does not help",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![A-Za-z])(?:(no|not|doesn|does not|isn|is not|worse|cabin is))",
+          "weight": 3,
+          "hint": "which bag is actually over?"
+        },
+        {
+          "name": "Nothing was left at home",
+          "path": "derived.unpackedCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "and says which bag is the problem",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![A-Za-z])(?:hold)"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T12_second_bag_no",
+      "name": "Is the second hold bag worth it?",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 22,
+      "tags": [
+        "trade-off"
+      ],
+      "instruction": "A second hold bag costs £50 and the excess you are facing is £45. Decide whether to add it, leave the booking the way you decided, and say what the cheapest option actually is.",
+      "goal": [
+        {
+          "name": "The second bag was not kept",
+          "path": "derived.extraBagBooked",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "repacking is free",
+          "source": "answer",
+          "op": "regex",
+          "value": "(free|nothing|zero|£?(?<!\\d)0(?!\\d)|repack|move|cabin)",
+          "weight": 3,
+          "hint": "there is a third option that costs neither £50 nor £45"
+        },
+        {
+          "name": "Nothing was left at home",
+          "path": "derived.unpackedCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "and weighs it against the £45 excess",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:45|50)(?!\\d)"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T13_battery_rule",
+      "name": "Everything with a battery",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "multi-step",
+        "navigate"
+      ],
+      "instruction": "Open the rules, use the rule about batteries to pull up the things it applies to, and make sure every one of them is in the cabin.",
+      "goal": [
+        {
+          "name": "Laptop in the cabin",
+          "path": "derived.itemBag.Laptop",
+          "op": "eq",
+          "value": "Cabin bag"
+        },
+        {
+          "name": "Power bank in the cabin",
+          "path": "derived.itemBag.Power bank",
+          "op": "eq",
+          "value": "Cabin bag"
+        },
+        {
+          "name": "Camera in the cabin",
+          "path": "derived.itemBag.Camera",
+          "op": "eq",
+          "value": "Cabin bag"
+        },
+        {
+          "name": "You filtered by the battery rule",
+          "path": "derived.filter",
+          "op": "eq",
+          "value": "battery"
+        },
+        {
+          "name": "Nothing is in the wrong bag",
+          "path": "derived.violationCount",
+          "op": "eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T14_rules_only_pack",
+      "name": "Only the awkward things",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 32,
+      "tags": [
+        "multi-step",
+        "reset"
+      ],
+      "instruction": "Empty both bags, then pack only the eight things that have a rule attached to them, each in a bag it is allowed to fly in. Everything else stays at home.",
+      "goal": [
+        {
+          "name": "Twelve things stayed at home",
+          "path": "derived.unpackedCount",
+          "op": "eq",
+          "value": 12
+        },
+        {
+          "name": "Nothing is in the wrong bag",
+          "path": "derived.violationCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Nothing to pay",
+          "path": "derived.totalFee",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "The three battery things travel",
+          "path": "derived.itemBag.Power bank",
+          "op": "eq",
+          "value": "Cabin bag"
+        },
+        {
+          "name": "The penknife travels",
+          "path": "derived.itemBag.Penknife",
+          "op": "eq",
+          "value": "Hold bag"
+        }
+      ]
+    },
+    {
+      "id": "T15_leave_behind",
+      "name": "The lightest thing to leave at home",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "optimise",
+        "cliff"
+      ],
+      "instruction": "Put the two mis-packed things right, and then clear the remaining excess without moving anything into the cabin and without adding a bag — by leaving exactly one thing at home. It has to be the lightest thing that does the job. Say what it was and how many grams you were over.",
+      "goal": [
+        {
+          "name": "Exactly one thing stayed behind",
+          "path": "derived.unpackedNames",
+          "op": "set_eq",
+          "value": [
+            "Shampoo"
+          ],
+          "hint": "260 g over: the towel is 380 g, but there is something lighter"
+        },
+        {
+          "name": "Nothing to pay",
+          "path": "derived.totalFee",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Nothing is in the wrong bag",
+          "path": "derived.violationCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "No second bag",
+          "path": "derived.extraBagBooked",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Nothing went into the cabin beyond the two batteries",
+          "path": "derived.cabinWeight",
+          "op": "eq",
+          "value": 4640
+        },
+        {
+          "name": "the shampoo, 260 g over",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Ss]hampoo",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T16_cabin_headroom",
+      "name": "Question: how much loose kit fits in the cabin?",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "query",
+        "arithmetic"
+      ],
+      "instruction": "Three things have to fly in the cabin whatever else happens. Once they are in it, how much weight of ordinary kit — things with no rule of their own — would still fit in the cabin bag on the current booking? Give the weight.",
+      "goal": [
+        {
+          "name": "4.26 kg",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)4(?!\\d)[.,]?(?<!\\d)26(?!\\d)",
+          "weight": 3,
+          "hint": "7 kg less the laptop, the power bank and the camera"
+        },
+        {
+          "name": "Nothing was moved",
+          "path": "derived.totalFee",
+          "op": "eq",
+          "value": 4500
+        },
+        {
+          "name": "Priority was not turned on",
+          "path": "derived.settings.priority",
+          "op": "eq",
+          "value": false
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T17_both_extras",
+      "name": "Price the worst case, then the best",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 34,
+      "tags": [
+        "trade-off",
+        "multi-step"
+      ],
+      "instruction": "Add both paid extras — priority boarding and the second hold bag — and note the total the desk would charge. Then take both off again and repack so the total is as low as it can be with everything still travelling. Tell me the difference between the two totals.",
+      "goal": [
+        {
+          "name": "Priority is off again",
+          "path": "derived.settings.priority",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "The second bag is off again",
+          "path": "derived.extraBagBooked",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Nothing to pay",
+          "path": "derived.totalFee",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Everything is packed",
+          "path": "derived.unpackedCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Nothing is in the wrong bag",
+          "path": "derived.violationCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "£107",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)107(?!\\d)",
+          "weight": 3,
+          "hint": "£12 + £50 + the £45 that was there all along"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T18_hold_window",
+      "name": "Fill the hold, but not over",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "constraint",
+        "optimise"
+      ],
+      "instruction": "Pack so that the hold bag holds at least 14 kg but is not over its allowance, the cabin is not over either, nothing is in a bag it is not allowed in, and nothing is left at home.",
+      "goal": [
+        {
+          "name": "The hold is at least 14 kg",
+          "path": "derived.holdWeight",
+          "op": "gte",
+          "value": 14000
+        },
+        {
+          "name": "The hold is not over",
+          "path": "derived.bagOver.Hold bag",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "The cabin is not over",
+          "path": "derived.bagOver.Cabin bag",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Nothing is in the wrong bag",
+          "path": "derived.violationCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Everything is packed",
+          "path": "derived.unpackedCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "No second bag",
+          "path": "derived.extraBagBooked",
+          "op": "eq",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "T19_priority_yes",
+      "name": "When the £12 is worth paying",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 34,
+      "tags": [
+        "trade-off",
+        "optimise"
+      ],
+      "instruction": "You want the wetsuit, the snorkel set and the winter coat all in the cabin so they are not waiting on a carousel. Make that happen for the least money, with everything else still travelling and nothing in a bag it is not allowed in. Tell me the total.",
+      "goal": [
+        {
+          "name": "The wetsuit is in the cabin",
+          "path": "derived.itemBag.Wetsuit",
+          "op": "eq",
+          "value": "Cabin bag"
+        },
+        {
+          "name": "The snorkel set is in the cabin",
+          "path": "derived.itemBag.Snorkel set",
+          "op": "eq",
+          "value": "Cabin bag"
+        },
+        {
+          "name": "The winter coat is in the cabin",
+          "path": "derived.itemBag.Winter coat",
+          "op": "eq",
+          "value": "Cabin bag"
+        },
+        {
+          "name": "Priority boarding was bought",
+          "path": "derived.settings.priority",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "The total is £12",
+          "path": "derived.totalFee",
+          "op": "eq",
+          "value": 1200
+        },
+        {
+          "name": "Everything is packed",
+          "path": "derived.unpackedCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Nothing is in the wrong bag",
+          "path": "derived.violationCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "£12",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)12(?!\\d)",
+          "weight": 3,
+          "hint": "£12 of allowance is cheaper than a £45 band"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T20_spare_room",
+      "name": "Cheapest, then how much room is left",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 34,
+      "tags": [
+        "optimise",
+        "arithmetic"
+      ],
+      "instruction": "Get the desk charge as low as it will go with all twenty things travelling and no paid extras, then tell me how much spare room you are left with across the two bags in total.",
+      "goal": [
+        {
+          "name": "Nothing to pay",
+          "path": "derived.totalFee",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Everything is packed",
+          "path": "derived.unpackedCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Nothing is in the wrong bag",
+          "path": "derived.violationCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "No second bag",
+          "path": "derived.extraBagBooked",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "No priority boarding",
+          "path": "derived.settings.priority",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "2.1 kg",
+          "source": "answer",
+          "op": "regex",
+          "value": "((?<!\\d)2(?!\\d)[.,]1|(?<!\\d)2100(?!\\d))",
+          "weight": 3,
+          "hint": "22 kg of allowance against 19.9 kg of kit — the arrangement does not change it"
+        }
+      ],
+      "answer_expected": true
+    }
+  ]
+}

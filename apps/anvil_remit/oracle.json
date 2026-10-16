@@ -1,0 +1,362 @@
+{
+  "env": "anvil_remit",
+  "note": "Golden action sequences replayed by CI.",
+  "solutions": {
+    "T01_settings": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_showMid"
+      },
+      {
+        "action": "tap",
+        "id": "set_autoBest"
+      }
+    ],
+    "T02_receives": [
+      {
+        "action": "finish",
+        "answer": "₹20,914.37"
+      }
+    ],
+    "T03_total": [
+      {
+        "action": "finish",
+        "answer": "£203.99 — £200 plus the £3.99 cash pickup fee."
+      }
+    ],
+    "T04_cheapest_now": [
+      {
+        "action": "finish",
+        "answer": "The debit card, at £2.80."
+      }
+    ],
+    "T05_pln_rate": [
+      {
+        "action": "tap",
+        "id": "tab_people"
+      },
+      {
+        "action": "finish",
+        "answer": "1 GBP = 5.1280 PLN"
+      }
+    ],
+    "T06_wallet_cap": [
+      {
+        "action": "type",
+        "id": "amt_send",
+        "text": "1200"
+      },
+      {
+        "action": "tap",
+        "id": "rt_r_wallet"
+      },
+      {
+        "action": "finish",
+        "answer": "It refused — the mobile wallet caps out at £1,000 a transfer."
+      }
+    ],
+    "T07_reverse": [
+      {
+        "action": "type",
+        "id": "amt_recv",
+        "text": "50000"
+      },
+      {
+        "action": "finish",
+        "answer": "£478.14, plus the £3.99 fee."
+      }
+    ],
+    "T08_least_send": [
+      {
+        "action": "type",
+        "id": "amt_recv",
+        "text": "50000"
+      },
+      {
+        "action": "tap",
+        "id": "rt_r_bank"
+      },
+      {
+        "action": "finish",
+        "answer": "The bank transfer — £474.07 before its £4.99 fee."
+      }
+    ],
+    "T09_switch_person": [
+      {
+        "action": "tap",
+        "id": "pick_person"
+      },
+      {
+        "action": "tap",
+        "id": "sp_p_kasia"
+      },
+      {
+        "action": "type",
+        "id": "amt_send",
+        "text": "250"
+      },
+      {
+        "action": "tap",
+        "id": "rt_r_card"
+      }
+    ],
+    "T10_promo": [
+      {
+        "action": "type",
+        "id": "promo",
+        "text": "FIRST0"
+      },
+      {
+        "action": "tap",
+        "id": "promo_apply"
+      },
+      {
+        "action": "finish",
+        "answer": "£200.00 — the £3.99 fee is gone."
+      }
+    ],
+    "T11_bad_promo": [
+      {
+        "action": "type",
+        "id": "promo",
+        "text": "SUMMER50"
+      },
+      {
+        "action": "tap",
+        "id": "promo_apply"
+      },
+      {
+        "action": "finish",
+        "answer": "It refused it — SUMMER50 is not a code it knows, and the £3.99 fee stands."
+      }
+    ],
+    "T12_send_lito": [
+      {
+        "action": "tap",
+        "id": "pick_person"
+      },
+      {
+        "action": "tap",
+        "id": "sp_p_lito"
+      },
+      {
+        "action": "type",
+        "id": "amt_send",
+        "text": "150"
+      },
+      {
+        "action": "tap",
+        "id": "rt_r_card"
+      },
+      {
+        "action": "tap",
+        "id": "go_review"
+      },
+      {
+        "action": "tap",
+        "id": "send_now"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      }
+    ],
+    "T13_auto_route": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_autoBest"
+      },
+      {
+        "action": "tap",
+        "id": "tab_send"
+      },
+      {
+        "action": "type",
+        "id": "amt_send",
+        "text": "50"
+      },
+      {
+        "action": "type",
+        "id": "amt_send",
+        "text": "600"
+      },
+      {
+        "action": "finish",
+        "answer": "Mobile wallet at £50, bank transfer at £600."
+      }
+    ],
+    "T14_nine_hundred": [
+      {
+        "action": "type",
+        "id": "amt_send",
+        "text": "900"
+      },
+      {
+        "action": "tap",
+        "id": "rt_r_bank"
+      }
+    ],
+    "T15_crossover": [
+      {
+        "action": "type",
+        "id": "amt_send",
+        "text": "475.29"
+      },
+      {
+        "action": "type",
+        "id": "amt_send",
+        "text": "475.30"
+      },
+      {
+        "action": "finish",
+        "answer": "£475.30 — at £475.29 the card still wins by a penny."
+      }
+    ],
+    "T16_seventy_five_k": [
+      {
+        "action": "type",
+        "id": "amt_recv",
+        "text": "75000"
+      },
+      {
+        "action": "tap",
+        "id": "rt_r_bank"
+      },
+      {
+        "action": "finish",
+        "answer": "£716.09 — £711.10 on the bank transfer plus its £4.99 fee."
+      }
+    ],
+    "T17_deposit": [
+      {
+        "action": "tap",
+        "id": "pick_person"
+      },
+      {
+        "action": "tap",
+        "id": "sp_p_kasia"
+      },
+      {
+        "action": "type",
+        "id": "amt_recv",
+        "text": "12000"
+      },
+      {
+        "action": "tap",
+        "id": "rt_r_bank"
+      },
+      {
+        "action": "finish",
+        "answer": "£2,348.32 — the bank transfer, whose fee is nothing above £1,000."
+      }
+    ],
+    "T18_too_big": [
+      {
+        "action": "tap",
+        "id": "pick_person"
+      },
+      {
+        "action": "tap",
+        "id": "sp_p_ravi"
+      },
+      {
+        "action": "type",
+        "id": "amt_recv",
+        "text": "600000"
+      },
+      {
+        "action": "finish",
+        "answer": "It cannot. That is about £5,690, and anything over £5,000 needs identity checks the app does not do — and the wallet and cash routes are capped well below it anyway."
+      }
+    ],
+    "T19_two_codes": [
+      {
+        "action": "type",
+        "id": "amt_send",
+        "text": "1500"
+      },
+      {
+        "action": "tap",
+        "id": "rt_r_bank"
+      },
+      {
+        "action": "type",
+        "id": "promo",
+        "text": "FIRST0"
+      },
+      {
+        "action": "tap",
+        "id": "promo_apply"
+      },
+      {
+        "action": "tap",
+        "id": "promo_clear"
+      },
+      {
+        "action": "type",
+        "id": "promo",
+        "text": "RATE25"
+      },
+      {
+        "action": "tap",
+        "id": "promo_apply"
+      },
+      {
+        "action": "finish",
+        "answer": "RATE25, by £3.75. The bank transfer's fee is already nothing at £1,500, so FIRST0 saves you literally zero; RATE25 takes the margin from 0.35% to 0.10% and saves £3.75."
+      }
+    ],
+    "T20_hundred_k": [
+      {
+        "action": "tap",
+        "id": "pick_person"
+      },
+      {
+        "action": "tap",
+        "id": "sp_p_ravi"
+      },
+      {
+        "action": "type",
+        "id": "amt_recv",
+        "text": "100000"
+      },
+      {
+        "action": "tap",
+        "id": "rt_r_bank"
+      },
+      {
+        "action": "type",
+        "id": "promo",
+        "text": "FIRST0"
+      },
+      {
+        "action": "tap",
+        "id": "promo_apply"
+      },
+      {
+        "action": "tap",
+        "id": "go_review"
+      },
+      {
+        "action": "tap",
+        "id": "send_now"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "finish",
+        "answer": "£948.13 — bank transfer with FIRST0, which removes the £4.99. RATE25 would have left you paying £950.75."
+      }
+    ]
+  }
+}

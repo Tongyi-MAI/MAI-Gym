@@ -1,0 +1,824 @@
+{
+  "env": "covey_contacts",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_settings",
+      "name": "两个开关",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "settings"
+      ],
+      "instruction": "在设置里关掉「显示来自哪个账号」，打开「按姓氏排序」。「提示可能重复的卡」别动。",
+      "goal": [
+        {
+          "name": "来源不显示了",
+          "path": "derived.settings.showSource",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "按姓氏排序开着",
+          "path": "derived.settings.sortBySurname",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "列表真的重排了",
+          "path": "derived.listOrder[0]",
+          "op": "eq",
+          "value": "Idris Bello"
+        },
+        {
+          "name": "重复提示没动",
+          "path": "derived.settings.suggestDupes",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "一张卡都没合",
+          "path": "derived.contactCount",
+          "op": "eq",
+          "value": 12
+        }
+      ]
+    },
+    {
+      "id": "T02_count",
+      "name": "问一句：一共几个人",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "通讯录里一共有多少个联系人？应用提示了几组可能重复？",
+      "goal": [
+        {
+          "name": "12 个",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)12(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "4 组",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)4(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "一张卡都没合",
+          "path": "derived.contactCount",
+          "op": "eq",
+          "value": 12
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T03_strong",
+      "name": "问一句：几组证据充分",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "四组建议里，有几组是「证据充分」的？剩下的那组凭的是什么？",
+      "goal": [
+        {
+          "name": "3 组",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)3(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "只是同名",
+          "source": "answer",
+          "op": "regex",
+          "value": "(同名|名字|重名)",
+          "weight": 3
+        },
+        {
+          "name": "一组都没处理",
+          "path": "derived.suggestionCount",
+          "op": "eq",
+          "value": 4
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T04_norm",
+      "name": "问一句：这个号规范化成什么",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "query",
+        "navigate"
+      ],
+      "instruction": "打开 Daniel Okafor 里存着 +44 7700 900123 的那张卡，说说这个号规范化以后是什么样。",
+      "goal": [
+        {
+          "name": "停在那张卡上",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "p_dan1"
+        },
+        {
+          "name": "+447700900123",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:\\+?447700900123)(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "什么都没改",
+          "path": "derived.contactCount",
+          "op": "eq",
+          "value": 12
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T05_blocked",
+      "name": "问一句：谁被拦了",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "通讯录里谁被拦截了？哪两个人在常用里？",
+      "goal": [
+        {
+          "name": "Deliveries",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Dd]eliveries",
+          "weight": 3
+        },
+        {
+          "name": "Daniel",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Dd]aniel",
+          "weight": 3
+        },
+        {
+          "name": "Helen",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Hh]elen",
+          "weight": 3
+        },
+        {
+          "name": "什么都没改",
+          "path": "derived.contactCount",
+          "op": "eq",
+          "value": 12
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T06_must_pick",
+      "name": "不选就合不了",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "refusal"
+      ],
+      "instruction": "打开 Daniel Okafor 那两张卡的合并页，什么都不选就直接按合并，把应用的说法讲给我听。",
+      "goal": [
+        {
+          "name": "还是 12 个",
+          "path": "derived.contactCount",
+          "op": "eq",
+          "value": 12
+        },
+        {
+          "name": "一次都没合成",
+          "path": "derived.mergedCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "公司字段还没选",
+          "source": "answer",
+          "op": "regex",
+          "value": "(公司|company|冲突|选)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T07_merge_priya",
+      "name": "合并 Priya",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "merge"
+      ],
+      "instruction": "Priya Raman 有两张卡，而且没有需要挑的字段。把它们合了。",
+      "goal": [
+        {
+          "name": "变成 11 个",
+          "path": "derived.contactCount",
+          "op": "eq",
+          "value": 11
+        },
+        {
+          "name": "合了一次",
+          "path": "derived.mergedCount",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "Priya 只剩一张卡",
+          "path": "derived.nameCounts.Priya Raman",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "邮箱并起来了",
+          "path": "derived.emailCounts.Priya Raman",
+          "op": "eq",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "T08_merge_yuki",
+      "name": "合并 Yuki",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "merge"
+      ],
+      "instruction": "Yuki Tanaka 那两张是靠同一个邮箱认出来的。合了它们，然后告诉我合完那张卡上有几个号码。",
+      "goal": [
+        {
+          "name": "变成 11 个",
+          "path": "derived.contactCount",
+          "op": "eq",
+          "value": 11
+        },
+        {
+          "name": "Yuki 只剩一张卡",
+          "path": "derived.nameCounts.Yuki Tanaka",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "公司补上了",
+          "path": "derived.companies.Yuki Tanaka",
+          "op": "eq",
+          "value": "Meridian Labs"
+        },
+        {
+          "name": "1 个号码",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![\\d-])1(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T09_dismiss_sam",
+      "name": "先把没争议的处理掉",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 24,
+      "tags": [
+        "merge",
+        "reasoning"
+      ],
+      "instruction": "Sam Lawrence 那一组只是重名，标成「不是同一个人」。然后把三组真重复里不需要挑字段的那两组（Priya 和 Yuki）合掉，剩下那组先别动。",
+      "goal": [
+        {
+          "name": "剩 10 个",
+          "path": "derived.contactCount",
+          "op": "eq",
+          "value": 10
+        },
+        {
+          "name": "合了两次",
+          "path": "derived.mergedCount",
+          "op": "eq",
+          "value": 2
+        },
+        {
+          "name": "忽略了一条",
+          "path": "derived.dismissedCount",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "只剩 Daniel 那一组",
+          "path": "derived.suggestionCount",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "Sam 还是两张卡",
+          "path": "derived.nameCounts.Sam Lawrence",
+          "op": "eq",
+          "value": 2
+        }
+      ]
+    },
+    {
+      "id": "T10_merge_daniel",
+      "name": "合并 Daniel，公司留短的那个",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 22,
+      "tags": [
+        "merge",
+        "conflict"
+      ],
+      "instruction": "把 Daniel Okafor 那两张卡合了，公司名留「Meridian Labs」这个短的。",
+      "goal": [
+        {
+          "name": "变成 11 个",
+          "path": "derived.contactCount",
+          "op": "eq",
+          "value": 11
+        },
+        {
+          "name": "公司是短的那个",
+          "path": "derived.companies.Daniel Okafor",
+          "op": "eq",
+          "value": "Meridian Labs"
+        },
+        {
+          "name": "两个邮箱都在",
+          "path": "derived.emailCounts.Daniel Okafor",
+          "op": "eq",
+          "value": 2
+        },
+        {
+          "name": "号码去重成一个",
+          "path": "derived.phoneCounts.Daniel Okafor",
+          "op": "eq",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "T11_merge_long",
+      "name": "同样是 Daniel，这次留长的",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 22,
+      "tags": [
+        "merge",
+        "conflict"
+      ],
+      "instruction": "还是那两张 Daniel 的卡，这次公司名留「Meridian Laboratories」。合完告诉我卡上有几个邮箱。",
+      "goal": [
+        {
+          "name": "公司是长的那个",
+          "path": "derived.companies.Daniel Okafor",
+          "op": "eq",
+          "value": "Meridian Laboratories"
+        },
+        {
+          "name": "变成 11 个",
+          "path": "derived.contactCount",
+          "op": "eq",
+          "value": 11
+        },
+        {
+          "name": "两个邮箱都留下了",
+          "path": "derived.emailCounts.Daniel Okafor",
+          "op": "eq",
+          "value": 2
+        },
+        {
+          "name": "2 个邮箱",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)2(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T12_groups",
+      "name": "问一句：各组几个人",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "Work、Family、Clients 三个群组各有几个人？",
+      "goal": [
+        {
+          "name": "Work 3 人",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)3(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "Family 2 人",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)2(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "什么都没改",
+          "path": "derived.contactCount",
+          "op": "eq",
+          "value": 12
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T13_favourite",
+      "name": "把 Marta 加进常用和 Work",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "multi-step"
+      ],
+      "instruction": "Marta Kowalska 现在既不在常用也不在任何群组。把她加进常用，再加进 Work。",
+      "goal": [
+        {
+          "name": "常用里有 Marta",
+          "path": "derived.favourites",
+          "op": "contains",
+          "value": "Marta Kowalska"
+        },
+        {
+          "name": "常用一共三个",
+          "path": "derived.favourites",
+          "op": "len_eq",
+          "value": 3
+        },
+        {
+          "name": "Work 变成四个人",
+          "path": "derived.groupCounts.Work",
+          "op": "eq",
+          "value": 4
+        },
+        {
+          "name": "一张卡都没合",
+          "path": "derived.contactCount",
+          "op": "eq",
+          "value": 12
+        }
+      ]
+    },
+    {
+      "id": "T14_filter",
+      "name": "只看 Clients",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "navigate",
+        "query"
+      ],
+      "instruction": "把列表筛成只看 Clients 这个群组，然后告诉我里面是哪两个人。",
+      "goal": [
+        {
+          "name": "筛的是 Clients",
+          "path": "derived.filter",
+          "op": "eq",
+          "value": "g_clients"
+        },
+        {
+          "name": "两个都叫 Sam Lawrence",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Ss]am",
+          "weight": 3
+        },
+        {
+          "name": "什么都没改",
+          "path": "derived.contactCount",
+          "op": "eq",
+          "value": 12
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T15_merge_all_real",
+      "name": "把该合的都合了",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 34,
+      "tags": [
+        "merge",
+        "multi-step"
+      ],
+      "instruction": "把三组证据充分的重复全部合并掉，公司冲突时留短的那个。剩下那组重名的别动。合完告诉我还剩几个联系人。",
+      "goal": [
+        {
+          "name": "剩 9 个",
+          "path": "derived.contactCount",
+          "op": "eq",
+          "value": 9
+        },
+        {
+          "name": "合了三次",
+          "path": "derived.mergedCount",
+          "op": "eq",
+          "value": 3
+        },
+        {
+          "name": "Sam 还是两张卡",
+          "path": "derived.nameCounts.Sam Lawrence",
+          "op": "eq",
+          "value": 2
+        },
+        {
+          "name": "证据充分的一组都不剩",
+          "path": "derived.strongCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "9 个",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)9(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T16_why_not_sam",
+      "name": "为什么 Sam 不能合",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 24,
+      "tags": [
+        "reasoning"
+      ],
+      "instruction": "应用把两个 Sam Lawrence 也列成了可能重复。看看这两张卡，说清楚为什么不该合，然后把这条建议标成「不是同一个人」。三组真的重复先别动。",
+      "goal": [
+        {
+          "name": "还是 12 个",
+          "path": "derived.contactCount",
+          "op": "eq",
+          "value": 12
+        },
+        {
+          "name": "一次都没合",
+          "path": "derived.mergedCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "忽略了一条",
+          "path": "derived.dismissedCount",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "建议剩三条",
+          "path": "derived.suggestionCount",
+          "op": "eq",
+          "value": 3
+        },
+        {
+          "name": "号码不一样",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:(号码|电话|415|628|不一样|不同))(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "公司也不一样",
+          "source": "answer",
+          "op": "regex",
+          "value": "(公司|Northgate|Halliwell)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T17_zero_prefix",
+      "name": "0 开头和 +44 开头",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 24,
+      "tags": [
+        "reasoning",
+        "read-only"
+      ],
+      "instruction": "Daniel 那两张卡上一个写着 +44 7700 900123，一个写着 07700 900123。应用凭什么说它们是同一个号？说清楚规则，别改任何东西。",
+      "goal": [
+        {
+          "name": "什么都没改",
+          "path": "derived.contactCount",
+          "op": "eq",
+          "value": 12
+        },
+        {
+          "name": "一条建议也没处理",
+          "path": "derived.suggestionCount",
+          "op": "eq",
+          "value": 4
+        },
+        {
+          "name": "前导 0 换成国家码",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:(\\+44|国家|前导|开头|0))(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "规范化后一样",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:(规范|一样|相同|447700900123))(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T18_destructive",
+      "name": "合错了会怎样",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 28,
+      "tags": [
+        "reasoning",
+        "destructive"
+      ],
+      "instruction": "先把两个 Sam Lawrence 合掉（名字和公司都留左边那张），看看合出来的卡上有几个号码，并说说这么做为什么是错的。",
+      "goal": [
+        {
+          "name": "变成 11 个",
+          "path": "derived.contactCount",
+          "op": "eq",
+          "value": 11
+        },
+        {
+          "name": "Sam 只剩一张卡",
+          "path": "derived.nameCounts.Sam Lawrence",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "两个号码并到一起了",
+          "path": "derived.phoneCounts.Sam Lawrence",
+          "op": "eq",
+          "value": 2
+        },
+        {
+          "name": "2 个号码",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)2(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "把两个不同的人并成了一个",
+          "source": "answer",
+          "op": "regex",
+          "value": "(两个人|不同的人|两个真人|错|不该)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T19_clean_inbox",
+      "name": "把通讯录整干净",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 36,
+      "tags": [
+        "merge",
+        "multi-step"
+      ],
+      "instruction": "把三组真的重复合掉（公司留长的那个），把重名那组标成不是同一个人。做完以后应该一条建议都不剩。告诉我最后剩几个联系人。",
+      "goal": [
+        {
+          "name": "剩 9 个",
+          "path": "derived.contactCount",
+          "op": "eq",
+          "value": 9
+        },
+        {
+          "name": "一条建议都不剩",
+          "path": "derived.suggestionCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "合了三次",
+          "path": "derived.mergedCount",
+          "op": "eq",
+          "value": 3
+        },
+        {
+          "name": "忽略了一条",
+          "path": "derived.dismissedCount",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "公司留的是长的",
+          "path": "derived.companies.Daniel Okafor",
+          "op": "eq",
+          "value": "Meridian Laboratories"
+        },
+        {
+          "name": "9 个",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)9(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T20_after_merge_groups",
+      "name": "合完再看群组",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 34,
+      "tags": [
+        "merge",
+        "reasoning"
+      ],
+      "instruction": "把 Daniel（公司留短的）和 Priya 两组合掉，然后告诉我 Work 群组里还剩几个人、为什么没变。",
+      "goal": [
+        {
+          "name": "剩 10 个",
+          "path": "derived.contactCount",
+          "op": "eq",
+          "value": 10
+        },
+        {
+          "name": "合了两次",
+          "path": "derived.mergedCount",
+          "op": "eq",
+          "value": 2
+        },
+        {
+          "name": "Work 还是 3 个人",
+          "path": "derived.groupCounts.Work",
+          "op": "eq",
+          "value": 3
+        },
+        {
+          "name": "Family 还是 2 个人",
+          "path": "derived.groupCounts.Family",
+          "op": "eq",
+          "value": 2
+        },
+        {
+          "name": "Work 还是 3 个",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)3(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "群组是取并集的",
+          "source": "answer",
+          "op": "regex",
+          "value": "(并集|合起来|本来就|只有一张|重复的那张不在)",
+          "weight": 3,
+          "hint": "被合掉的那两张卡本来在不在 Work 里？"
+        }
+      ],
+      "answer_expected": true
+    }
+  ]
+}

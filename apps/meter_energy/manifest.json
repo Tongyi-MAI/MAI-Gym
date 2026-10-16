@@ -1,0 +1,33 @@
+{
+  "id": "meter_energy",
+  "name": "抄表",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "viewport": {"width": 390, "height": 844},
+  "description": "一个单文件 H5 水电燃气应用（界面为中文）。这里没有一个数字是直接填进去的：你输入的是表的读数，屏幕上所有的量都是「本次减上次」的差，再送进一套不是费率而是台阶的计价规则。电的阶梯还不是按月算的，而是按年度累计走，所以本月开头在一档、结尾可能已经进了二档，同一个月的电分两个价结算。种子状态离第一档上限只剩 140 度，随便一个正常的月份都会跨过去。再往上叠一层峰谷分时：峰时每度加 0.30、谷时每度减 0.30，因此只有谷时用量超过一半才划算 —— 而这个月不是。最后是预存余额，充值只有 50/100/200/500 四档，差六毛七也得充五十。4 个界面，3 块表，4 个读数字段。",
+  "tasks_file": "tasks.json",
+  "oracle_file": "oracle.json",
+  "action_space": {
+    "tap":    {"id": "test-id of the element"},
+    "type":   {"id": "test-id of a text field", "text": "replaces the whole value"},
+    "back":   {}, "home": {}, "wait": {},
+    "finish": {"answer": "final answer for question tasks; optional for action tasks"},
+    "tap_xy": {"x": "screen pixel x", "y": "screen pixel y", "note": "browser backend only"}
+  },
+  "observation": {
+    "text": "engine.a11y(state) — 每块表都打印上次读数、输入框和算出来的用量，账单把每一档的度数、单价、金额分行列出，所以纯文本也能把账核完。",
+    "pixels": "390x844 screenshot (browser backend); __ENV__.bounds() maps every test-id to a pixel box",
+    "state": "engine.snapshot(state) — canonical state 加上按中文表名索引的 derived view。仅供校验器使用。",
+    "refusals": "读数比上次小、或者一个月走了两千以上，都会被拒收并给出理由"
+  },
+  "world": {
+    "clock": "10:26",
+    "units": "读数和用量是整数，单价是整数（万分之一元），钱是整数分",
+    "electric": "年度阶梯：2520 度以内 0.5583，2520–4800 度 0.6083，再往上 0.8583；峰谷分时峰 +0.30、谷 −0.30",
+    "water": "月度阶梯：17 方以内 2.80，17–27 方 3.70，再往上 5.60",
+    "gas": "单一价 3.05 元/方",
+    "seeded": "上次读数 电峰 12486、电谷 5204、水 486、气 1246；年度累计 2380 度；预存余额 250.00 元",
+    "worked": "抄成 12672/5322/500/1254 时：电 304 度分成 140+164 两档共 177.92 元，水 14 方 39.20，气 8 方 24.40，合计 241.52 元",
+    "topups": "只有 50/100/200/500 四档"
+  }
+}

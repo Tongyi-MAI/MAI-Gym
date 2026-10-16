@@ -1,0 +1,935 @@
+{
+  "env": "pipit_lessons",
+  "note": "Golden action sequences replayed by CI.",
+  "solutions": {
+    "T01_settings": [
+      {
+        "action": "tap",
+        "id": "open_settings"
+      },
+      {
+        "action": "tap",
+        "id": "goal_30"
+      },
+      {
+        "action": "tap",
+        "id": "set_sound"
+      }
+    ],
+    "T02_query_word": [
+      {
+        "action": "tap",
+        "id": "tab_words"
+      },
+      {
+        "action": "tap",
+        "id": "word_w_queijo"
+      },
+      {
+        "action": "finish",
+        "answer": "the cheese"
+      }
+    ],
+    "T03_clear_practice": [
+      {
+        "action": "tap",
+        "id": "tab_practice"
+      },
+      {
+        "action": "tap",
+        "id": "clear_wrong"
+      }
+    ],
+    "T04_one_then_quit": [
+      {
+        "action": "tap",
+        "id": "lesson_ls_1"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_agua"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "quit_lesson"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      }
+    ],
+    "T05_three_right": [
+      {
+        "action": "tap",
+        "id": "lesson_ls_1"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_agua"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_pao"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_leite"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      }
+    ],
+    "T06_query_example": [
+      {
+        "action": "tap",
+        "id": "tab_words"
+      },
+      {
+        "action": "tap",
+        "id": "unit_chip_3"
+      },
+      {
+        "action": "tap",
+        "id": "word_w_amanha"
+      },
+      {
+        "action": "finish",
+        "answer": "Tomorrow I go to work"
+      }
+    ],
+    "T07_wrong_on_purpose": [
+      {
+        "action": "tap",
+        "id": "lesson_ls_2"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_cao"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      }
+    ],
+    "T08_flagship": [
+      {
+        "action": "tap",
+        "id": "lesson_ls_1"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_agua"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_pao"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_leite"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_cafe"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "tile_t0"
+      },
+      {
+        "action": "tap",
+        "id": "tile_t1"
+      },
+      {
+        "action": "tap",
+        "id": "tile_t2"
+      },
+      {
+        "action": "tap",
+        "id": "tile_t3"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_maca"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      }
+    ],
+    "T09_unit_two": [
+      {
+        "action": "tap",
+        "id": "lesson_ls_2"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_gato"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_casa"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_cao"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "tile_t0"
+      },
+      {
+        "action": "tap",
+        "id": "tile_t1"
+      },
+      {
+        "action": "tap",
+        "id": "tile_t2"
+      },
+      {
+        "action": "tap",
+        "id": "tile_t3"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_livro"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_janela"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      }
+    ],
+    "T10_word_bank": [
+      {
+        "action": "tap",
+        "id": "lesson_ls_2"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_gato"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_casa"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_cao"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "tile_t0"
+      },
+      {
+        "action": "tap",
+        "id": "tile_t1"
+      },
+      {
+        "action": "tap",
+        "id": "tile_t2"
+      },
+      {
+        "action": "tap",
+        "id": "tile_t3"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      }
+    ],
+    "T11_fail": [
+      {
+        "action": "tap",
+        "id": "lesson_ls_1"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_pao"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_maca"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_agua"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      }
+    ],
+    "T12_retry": [
+      {
+        "action": "tap",
+        "id": "lesson_ls_1"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_pao"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_maca"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_agua"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "retry"
+      }
+    ],
+    "T13_query_count": [
+      {
+        "action": "tap",
+        "id": "tab_words"
+      },
+      {
+        "action": "tap",
+        "id": "unit_chip_3"
+      },
+      {
+        "action": "finish",
+        "answer": "6"
+      }
+    ],
+    "T14_practice_run": [
+      {
+        "action": "tap",
+        "id": "tab_practice"
+      },
+      {
+        "action": "tap",
+        "id": "practice_go"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_agua"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_pao"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      }
+    ],
+    "T15_two_units": [
+      {
+        "action": "tap",
+        "id": "lesson_ls_1"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_agua"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_pao"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_leite"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_cafe"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "tile_t0"
+      },
+      {
+        "action": "tap",
+        "id": "tile_t1"
+      },
+      {
+        "action": "tap",
+        "id": "tile_t2"
+      },
+      {
+        "action": "tap",
+        "id": "tile_t3"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_maca"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "result_done"
+      },
+      {
+        "action": "tap",
+        "id": "lesson_ls_2"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_gato"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_casa"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_cao"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "tile_t0"
+      },
+      {
+        "action": "tap",
+        "id": "tile_t1"
+      },
+      {
+        "action": "tap",
+        "id": "tile_t2"
+      },
+      {
+        "action": "tap",
+        "id": "tile_t3"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_livro"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_janela"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      }
+    ],
+    "T16_words_unit": [
+      {
+        "action": "tap",
+        "id": "tab_words"
+      },
+      {
+        "action": "tap",
+        "id": "unit_chip_2"
+      },
+      {
+        "action": "tap",
+        "id": "word_w_janela"
+      }
+    ],
+    "T17_streak_four": [
+      {
+        "action": "tap",
+        "id": "lesson_ls_1"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_agua"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_pao"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_leite"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_cafe"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      }
+    ],
+    "T18_search": [
+      {
+        "action": "tap",
+        "id": "tab_words"
+      },
+      {
+        "action": "type",
+        "id": "q_word",
+        "text": "never"
+      },
+      {
+        "action": "tap",
+        "id": "word_w_nunca"
+      }
+    ],
+    "T19_fail_then_perfect": [
+      {
+        "action": "tap",
+        "id": "lesson_ls_1"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_pao"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_maca"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_agua"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "retry"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_agua"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_pao"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_leite"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_cafe"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "tile_t0"
+      },
+      {
+        "action": "tap",
+        "id": "tile_t1"
+      },
+      {
+        "action": "tap",
+        "id": "tile_t2"
+      },
+      {
+        "action": "tap",
+        "id": "tile_t3"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      },
+      {
+        "action": "tap",
+        "id": "opt_w_maca"
+      },
+      {
+        "action": "tap",
+        "id": "check"
+      },
+      {
+        "action": "tap",
+        "id": "next_q"
+      }
+    ],
+    "T20_hard_mode": [
+      {
+        "action": "tap",
+        "id": "open_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_hardMode"
+      },
+      {
+        "action": "tap",
+        "id": "goal_50"
+      }
+    ]
+  }
+}

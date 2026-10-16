@@ -1,0 +1,32 @@
+{
+  "id": "grid_puzzle",
+  "name": "数独",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "viewport": {"width": 390, "height": 844},
+  "description": "一个单文件 H5 六宫格数独（界面为中文）。主屏是一张 6×6 的网格加一排数字键，世界模型是约束传播：每个空格还能填哪些数，是从它所在的行、列和 2×3 宫里每一次动作后重新推出来的，冲突、只剩一个候选的格子、某个数在一个单元里只剩一个位置，同样都是现算的，没有一个存下来。题目给的十二个提示保证解唯一（穷举验证过），所以引擎分得清「填错了」和「还没填」—— 种子局里就有一格是别人填错的，而且已经和两个题目数撞上了。另有笔记模式、候选显示、检查与提示。4 个界面，36 格，6 个数字键。",
+  "tasks_file": "tasks.json",
+  "oracle_file": "oracle.json",
+  "action_space": {
+    "tap":    {"id": "test-id of the element"},
+    "type":   {"id": "test-id of a text field", "text": "replaces the whole value"},
+    "back":   {}, "home": {}, "wait": {},
+    "finish": {"answer": "final answer for question tasks; optional for action tasks"},
+    "tap_xy": {"x": "screen pixel x", "y": "screen pixel y", "note": "browser backend only"}
+  },
+  "observation": {
+    "text": "engine.a11y(state) — 整张棋盘按行打印，题目给的数、撞上的格、选中的格都有标记，笔记以括号形式列出，选中格的候选单独一行，所以纯文本也能把整盘推完。",
+    "pixels": "390x844 screenshot (browser backend); __ENV__.bounds() maps every test-id to a pixel box",
+    "state": "engine.snapshot(state) — canonical state 加上按 rXcY 索引的 derived view。仅供校验器使用。"
+  },
+  "world": {
+    "clock": "22:47",
+    "rules": "6×6，宫是 2 行 3 列，每行每列每宫 1 到 6 各一次",
+    "clues": "12 个，每行每列各两个，解唯一",
+    "solution": "123456 / 456123 / 231564 / 564231 / 312645 / 645312",
+    "seeded": "r1c1 已经填对了 1，r2c2 被填成 3 是错的（正解是 5），并且已经和 r1c3、r2c6 的 3 撞上；另有两格笔记",
+    "propagation": "候选 = 1..6 去掉同行、同列、同宫已出现的数；擦掉那个错的 3 之后，只剩一个候选的格子从四个变成三个",
+    "hidden": "r1c4 的候选是 4 和 5，单看这一格定不下来，但第 4 列里 4 只有这一个位置放得下",
+    "distinction": "因为解唯一，引擎可以把「填错」和「还没填」分开报"
+  }
+}

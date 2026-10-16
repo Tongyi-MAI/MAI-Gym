@@ -1,0 +1,869 @@
+{
+  "env": "bench_workshop",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_settings",
+      "name": "Two switches",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "settings"
+      ],
+      "instruction": "In Setup, stop the shelf printing pack sizes and switch the app over to gross requirements instead of netting the plan off what is in stock. Leave the third switch alone.",
+      "goal": [
+        {
+          "name": "Pack sizes are hidden",
+          "path": "derived.settings.showPacks",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Gross requirements",
+          "path": "derived.settings.netOffStock",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "The third switch is untouched",
+          "path": "derived.settings.warnShort",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "The plan was not changed",
+          "path": "derived.benches",
+          "op": "eq",
+          "value": 6
+        }
+      ]
+    },
+    {
+      "id": "T02_fix_cost",
+      "name": "Question: what does the shortfall cost?",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "The plan as it stands does not fit on the shelf. How much would it cost to order what is missing?",
+      "goal": [
+        {
+          "name": "£39.00",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)39(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was ordered",
+          "path": "derived.basketCost",
+          "op": "eq",
+          "value": 0
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T03_what_short",
+      "name": "Question: what is short?",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "Which parts is the plan short of, and by how many of each?",
+      "goal": [
+        {
+          "name": "dowels",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Dd]owel",
+          "weight": 3
+        },
+        {
+          "name": "ten of them",
+          "source": "answer",
+          "op": "regex",
+          "value": "((?<!\\d)10(?!\\d)|[Tt]en)",
+          "weight": 3
+        },
+        {
+          "name": "screws",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Ss]crew",
+          "weight": 3
+        },
+        {
+          "name": "sixteen of them",
+          "source": "answer",
+          "op": "regex",
+          "value": "((?<!\\d)16(?!\\d)|[Ss]ixteen)",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was ordered",
+          "path": "derived.basketCost",
+          "op": "eq",
+          "value": 0
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T04_screws",
+      "name": "Open the screws",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "query",
+        "navigate"
+      ],
+      "instruction": "Open the M8 screw and tell me how many this plan needs in total.",
+      "goal": [
+        {
+          "name": "216",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)216(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "You are on the screw page",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "r_screw"
+        },
+        {
+          "name": "The plan was not changed",
+          "path": "derived.benches",
+          "op": "eq",
+          "value": 6
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T05_legs",
+      "name": "Question: the legs",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "How many leg assemblies does this plan need, and how many of those have to be built rather than taken off the rack?",
+      "goal": [
+        {
+          "name": "thirty-six",
+          "source": "answer",
+          "op": "regex",
+          "value": "((?<!\\d)36(?!\\d)|thirty[- ]six)",
+          "weight": 3
+        },
+        {
+          "name": "thirty built",
+          "source": "answer",
+          "op": "regex",
+          "value": "((?<!\\d)30(?!\\d)|[Tt]hirty)",
+          "weight": 3
+        },
+        {
+          "name": "The plan was not changed",
+          "path": "derived.legsWanted",
+          "op": "eq",
+          "value": 36
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T06_no_room",
+      "name": "No room for another",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "refusal"
+      ],
+      "instruction": "Press the max button on the garden bench and tell me what the app says.",
+      "goal": [
+        {
+          "name": "The plan did not move",
+          "path": "derived.benches",
+          "op": "eq",
+          "value": 6
+        },
+        {
+          "name": "Tables did not move either",
+          "path": "derived.tables",
+          "op": "eq",
+          "value": 3
+        },
+        {
+          "name": "no room for another",
+          "source": "answer",
+          "op": "regex",
+          "value": "(no room|none|(?<!\\d)0(?!\\d)|cannot|can't|short)",
+          "weight": 3
+        },
+        {
+          "name": "and says what runs out",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![A-Za-z])(?:shelf|carri|carry|past|already|room)"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T07_max_bench",
+      "name": "As many benches as the shelf carries",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "optimise"
+      ],
+      "instruction": "Empty the plan, then make as many garden benches as you can without ordering anything. How many is that?",
+      "goal": [
+        {
+          "name": "Seven benches",
+          "path": "derived.benches",
+          "op": "eq",
+          "value": 7
+        },
+        {
+          "name": "No tables",
+          "path": "derived.tables",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "It fits on the shelf",
+          "path": "derived.feasible",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Nothing was ordered",
+          "path": "derived.basketCost",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "seven",
+          "source": "answer",
+          "op": "regex",
+          "value": "((?<!\\d)7(?!\\d)|[Ss]even)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T08_max_table",
+      "name": "As many side tables as the shelf carries",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "optimise"
+      ],
+      "instruction": "Empty the plan and do the same for side tables — as many as the shelf carries, nothing ordered. How many, and what stops you at that number?",
+      "goal": [
+        {
+          "name": "Three tables",
+          "path": "derived.tables",
+          "op": "eq",
+          "value": 3
+        },
+        {
+          "name": "No benches",
+          "path": "derived.benches",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "It fits on the shelf",
+          "path": "derived.feasible",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "three",
+          "source": "answer",
+          "op": "regex",
+          "value": "((?<!\\d)3(?!\\d)|[Tt]hree)",
+          "weight": 3
+        },
+        {
+          "name": "the table tops",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Tt]op",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T09_trade",
+      "name": "Three tables, then benches",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 24,
+      "tags": [
+        "optimise",
+        "trade-off"
+      ],
+      "instruction": "Empty the plan, put three side tables in it, and then add as many benches as the shelf will still carry. How many benches?",
+      "goal": [
+        {
+          "name": "Three tables",
+          "path": "derived.tables",
+          "op": "eq",
+          "value": 3
+        },
+        {
+          "name": "Four benches",
+          "path": "derived.benches",
+          "op": "eq",
+          "value": 4
+        },
+        {
+          "name": "It fits on the shelf",
+          "path": "derived.feasible",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Nothing was ordered",
+          "path": "derived.basketCost",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "four",
+          "source": "answer",
+          "op": "regex",
+          "value": "((?<!\\d)4(?!\\d)|[Ff]our)",
+          "weight": 3,
+          "hint": "every table takes four legs off the same rack the benches want"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T10_order",
+      "name": "Order the shortfall",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "multi-step",
+        "commit"
+      ],
+      "instruction": "Order exactly what the current plan is missing, and tell me what it came to.",
+      "goal": [
+        {
+          "name": "£39 was ordered",
+          "path": "derived.basketCost",
+          "op": "eq",
+          "value": 3900
+        },
+        {
+          "name": "The plan now fits",
+          "path": "derived.feasible",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "The plan itself did not change",
+          "path": "derived.benches",
+          "op": "eq",
+          "value": 6
+        },
+        {
+          "name": "£39.00",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)39(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T11_pack_cliff",
+      "name": "Two dowels, fifteen pounds",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "cliff",
+        "multi-step"
+      ],
+      "instruction": "Empty the plan and set it to seven benches and one side table. You will be short by a handful of one part. Say how many you are short and what putting it right costs.",
+      "goal": [
+        {
+          "name": "Seven benches",
+          "path": "derived.benches",
+          "op": "eq",
+          "value": 7
+        },
+        {
+          "name": "One table",
+          "path": "derived.tables",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "It costs £15 to fix",
+          "path": "derived.fixCost",
+          "op": "eq",
+          "value": 1500
+        },
+        {
+          "name": "Nothing was ordered yet",
+          "path": "derived.basketCost",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "two dowels short",
+          "source": "answer",
+          "op": "regex",
+          "value": "((?<!\\d)2(?!\\d)|[Tt]wo)",
+          "weight": 3
+        },
+        {
+          "name": "£15",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)15(?!\\d)",
+          "weight": 3,
+          "hint": "dowels come twenty-five to a pack"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T12_tree",
+      "name": "Take a leg apart",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "navigate",
+        "query"
+      ],
+      "instruction": "On the Parts tab, open the bench and then the leg assembly, and tell me what one leg assembly is made of.",
+      "goal": [
+        {
+          "name": "You are on the parts tree",
+          "path": "derived.route",
+          "op": "eq",
+          "value": "tree"
+        },
+        {
+          "name": "square stock",
+          "source": "answer",
+          "op": "regex",
+          "value": "([Ss]quare|stock)",
+          "weight": 3
+        },
+        {
+          "name": "two dowels",
+          "source": "answer",
+          "op": "regex",
+          "value": "((?<!\\d)2(?!\\d)|[Tt]wo)",
+          "weight": 3
+        },
+        {
+          "name": "four screws",
+          "source": "answer",
+          "op": "regex",
+          "value": "((?<!\\d)4(?!\\d)|[Ff]our)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T13_gross",
+      "name": "Gross instead of net",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "settings",
+        "arithmetic"
+      ],
+      "instruction": "Switch the app to gross requirements — no crediting the legs already on the rack — and tell me what the screw figure becomes. Leave it switched that way.",
+      "goal": [
+        {
+          "name": "Gross requirements",
+          "path": "derived.settings.netOffStock",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Screws come to 240",
+          "path": "derived.need.M8 screw",
+          "op": "eq",
+          "value": 240
+        },
+        {
+          "name": "The plan itself did not change",
+          "path": "derived.benches",
+          "op": "eq",
+          "value": 6
+        },
+        {
+          "name": "240",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)240(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T14_part_order",
+      "name": "Order half of it",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "multi-step",
+        "undo"
+      ],
+      "instruction": "Order the shortfall, then clear the order again — and this time order only the dowels, nothing else. Leave it like that.",
+      "goal": [
+        {
+          "name": "One pack of dowels on order",
+          "path": "derived.packsBought.Dowel",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "Nothing else on order",
+          "path": "derived.basketCost",
+          "op": "eq",
+          "value": 1500
+        },
+        {
+          "name": "Only the screws are still short",
+          "path": "derived.shortParts",
+          "op": "set_eq",
+          "value": [
+            "M8 screw"
+          ]
+        },
+        {
+          "name": "The plan still does not fit",
+          "path": "derived.feasible",
+          "op": "eq",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "T15_where_screws",
+      "name": "Where the screws go",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 22,
+      "tags": [
+        "reasoning",
+        "query"
+      ],
+      "instruction": "The two products between them ask for 96 screws on this plan, but the app wants 216. Where do the other 120 go? Do not change anything.",
+      "goal": [
+        {
+          "name": "The plan is untouched",
+          "path": "derived.benches",
+          "op": "eq",
+          "value": 6
+        },
+        {
+          "name": "Nothing was ordered",
+          "path": "derived.basketCost",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "120",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)120(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "into the legs that have to be built",
+          "source": "answer",
+          "op": "regex",
+          "value": "(leg|assembl|built)",
+          "weight": 3,
+          "hint": "thirty legs have to be built and each one takes four"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T16_eight_benches",
+      "name": "Eight benches, cheapest",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "optimise",
+        "commit"
+      ],
+      "instruction": "Empty the plan, set it to eight garden benches and nothing else, and order the least you can to make it possible. What did it cost?",
+      "goal": [
+        {
+          "name": "Eight benches",
+          "path": "derived.benches",
+          "op": "eq",
+          "value": 8
+        },
+        {
+          "name": "No tables",
+          "path": "derived.tables",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "It now fits",
+          "path": "derived.feasible",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Only £15 was spent",
+          "path": "derived.basketCost",
+          "op": "eq",
+          "value": 1500
+        },
+        {
+          "name": "£15",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)15(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T17_budget_forty",
+      "name": "Forty pounds of parts",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 34,
+      "tags": [
+        "optimise",
+        "budget"
+      ],
+      "instruction": "You have £40 to spend on parts. Empty the plan and make as many garden benches as that money reaches, buying only what you need. How many benches?",
+      "goal": [
+        {
+          "name": "Nine benches",
+          "path": "derived.benches",
+          "op": "eq",
+          "value": 9
+        },
+        {
+          "name": "No tables",
+          "path": "derived.tables",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "It fits",
+          "path": "derived.feasible",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Inside the budget",
+          "path": "derived.basketCost",
+          "op": "lte",
+          "value": 4000
+        },
+        {
+          "name": "nine",
+          "source": "answer",
+          "op": "regex",
+          "value": "((?<!\\d)9(?!\\d)|[Nn]ine)",
+          "weight": 3,
+          "hint": "one pack of dowels and one box of screws is £39"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T18_ten_benches",
+      "name": "What ten would cost",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "reasoning",
+        "budget"
+      ],
+      "instruction": "Work out what it would cost in parts to make ten garden benches and nothing else, and say whether a £50 budget covers it. Do not actually order anything.",
+      "goal": [
+        {
+          "name": "Nothing was ordered",
+          "path": "derived.basketCost",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "£129",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)129(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "no, it does not",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![A-Za-z])(?:([Nn]o|not|doesn|over|short|cannot|can't))",
+          "weight": 3,
+          "hint": "the tenth bench pulls in square stock, which comes ten to a pack at £90"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T19_frontier",
+      "name": "The whole trade",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 34,
+      "tags": [
+        "optimise",
+        "reasoning"
+      ],
+      "instruction": "Without ordering anything, work out the most benches you can make alongside nought, one, two and three side tables. Give all four numbers, and leave the plan on the three-table case.",
+      "goal": [
+        {
+          "name": "Three tables",
+          "path": "derived.tables",
+          "op": "eq",
+          "value": 3
+        },
+        {
+          "name": "Four benches",
+          "path": "derived.benches",
+          "op": "eq",
+          "value": 4
+        },
+        {
+          "name": "Nothing was ordered",
+          "path": "derived.basketCost",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "seven with none",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)7(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "six with one",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)6(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "five with two",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)5(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "four with three",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)4(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T20_hundred",
+      "name": "A hundred pounds that buys nothing extra",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 34,
+      "tags": [
+        "optimise",
+        "cliff"
+      ],
+      "instruction": "You have been given £100 for parts. Make as many pieces of furniture as you can in total — benches and tables count the same — and tell me what you actually spent and why the rest of the money is no use to you.",
+      "goal": [
+        {
+          "name": "Nine pieces in all",
+          "path": "derived.piecesPlanned",
+          "op": "eq",
+          "value": 9
+        },
+        {
+          "name": "It fits",
+          "path": "derived.feasible",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Inside the budget",
+          "path": "derived.basketCost",
+          "op": "lte",
+          "value": 10000
+        },
+        {
+          "name": "nine pieces",
+          "source": "answer",
+          "op": "regex",
+          "value": "((?<!\\d)9(?!\\d)|[Nn]ine)",
+          "weight": 3
+        },
+        {
+          "name": "£39 spent",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)39(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "square stock at £90 a pack",
+          "source": "answer",
+          "op": "regex",
+          "value": "((?<!\\d)90(?!\\d)|square|stock)",
+          "weight": 3,
+          "hint": "what is the next thing you run out of, and what does a pack of it cost?"
+        }
+      ],
+      "answer_expected": true
+    }
+  ]
+}

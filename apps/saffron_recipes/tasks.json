@@ -1,0 +1,794 @@
+{
+  "env": "saffron_recipes",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_settings",
+      "name": "Two settings",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "settings"
+      ],
+      "instruction": "In Settings, stop the app leaving cupboard staples off the shopping list, and make planned meals default to four servings.",
+      "goal": [
+        {
+          "name": "Staples are included now",
+          "path": "settings.skipStaples",
+          "op": "eq",
+          "value": false,
+          "weight": 2
+        },
+        {
+          "name": "Four servings by default",
+          "path": "settings.defaultServings",
+          "op": "eq",
+          "value": 4,
+          "weight": 2
+        },
+        {
+          "name": "Nutrition setting untouched",
+          "path": "settings.showNutrition",
+          "op": "eq",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "T02_query_time",
+      "name": "Question: how long the ragu takes",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "answer_expected": true,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "How long does the Sunday ragu take?",
+      "goal": [
+        {
+          "name": "Three hours",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:180|3 ?h)(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was added to the list",
+          "path": "derived.listCount",
+          "op": "eq",
+          "value": 2
+        }
+      ]
+    },
+    {
+      "id": "T03_save",
+      "name": "Save the crumble",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "tags": [
+        "favourites"
+      ],
+      "instruction": "Save the apple crumble so it turns up under Saved.",
+      "goal": [
+        {
+          "name": "It is saved",
+          "path": "derived.saved",
+          "op": "contains",
+          "value": "Apple crumble",
+          "weight": 3
+        },
+        {
+          "name": "The dal is still saved",
+          "path": "derived.saved",
+          "op": "set_eq",
+          "value": [
+            "Apple crumble",
+            "Red lentil dal"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "T04_scale",
+      "name": "Ragu for six",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "scaling",
+        "list"
+      ],
+      "instruction": "Add the Sunday ragu to your shopping list, but for six people rather than the four it is written for.",
+      "goal": [
+        {
+          "name": "Set to six servings",
+          "path": "derived.servings.Sunday ragu",
+          "op": "eq",
+          "value": 6,
+          "weight": 2
+        },
+        {
+          "name": "750 g of mince",
+          "path": "derived.listQty.Beef mince",
+          "op": "eq",
+          "value": 750000,
+          "weight": 3,
+          "hint": "500 g written for four"
+        },
+        {
+          "name": "1.2 kg of tomatoes",
+          "path": "derived.listQty.Chopped tomatoes",
+          "op": "eq",
+          "value": 1200000,
+          "weight": 2
+        },
+        {
+          "name": "An onion and a half",
+          "path": "derived.listQty.Onion",
+          "op": "eq",
+          "value": 1500,
+          "weight": 2,
+          "hint": "onions round to halves, not to whole ones"
+        },
+        {
+          "name": "Ten lines on the list",
+          "path": "derived.listCount",
+          "op": "eq",
+          "value": 10
+        }
+      ]
+    },
+    {
+      "id": "T05_merge",
+      "name": "Two recipes, one onion line",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "list",
+        "aggregation"
+      ],
+      "instruction": "Add both the Sunday ragu and the red lentil dal to your shopping list, each as written. They both want onions and garlic — those should end up on one line each.",
+      "goal": [
+        {
+          "name": "Two onions on one line",
+          "path": "derived.listQty.Onion",
+          "op": "eq",
+          "value": 2000,
+          "weight": 3,
+          "hint": "one from each recipe"
+        },
+        {
+          "name": "Six cloves of garlic",
+          "path": "derived.listQty.Garlic",
+          "op": "eq",
+          "value": 6000,
+          "weight": 2
+        },
+        {
+          "name": "The line knows where it came from",
+          "path": "derived.listFrom.Onion",
+          "op": "set_eq",
+          "value": [
+            "Red lentil dal",
+            "Sunday ragu"
+          ],
+          "weight": 2
+        },
+        {
+          "name": "Seventeen lines, not nineteen",
+          "path": "derived.listCount",
+          "op": "eq",
+          "value": 17,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T06_query_scale",
+      "name": "Question: pasta for four",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "answer_expected": true,
+      "tags": [
+        "scaling",
+        "query"
+      ],
+      "instruction": "The summer pesto pasta is written for two. How much pasta do you need to make it for four? Answer in grams.",
+      "goal": [
+        {
+          "name": "400 g",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:400)(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "The recipe really is set to four",
+          "path": "derived.servings.Summer pesto pasta",
+          "op": "eq",
+          "value": 4,
+          "weight": 2
+        },
+        {
+          "name": "Nothing was added to the list",
+          "path": "derived.listCount",
+          "op": "eq",
+          "value": 2
+        }
+      ]
+    },
+    {
+      "id": "T07_staples",
+      "name": "Include the salt and the oil",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "settings",
+        "list",
+        "staples"
+      ],
+      "instruction": "You have run out of everything, cupboard included. Change the setting so staples are not left off, then add the potato tortilla to your list.",
+      "goal": [
+        {
+          "name": "Staples are included",
+          "path": "settings.skipStaples",
+          "op": "eq",
+          "value": false,
+          "weight": 2
+        },
+        {
+          "name": "Olive oil made it onto the list",
+          "path": "derived.listQty.Olive oil",
+          "op": "eq",
+          "value": 6000,
+          "weight": 3,
+          "hint": "it would have been skipped before"
+        },
+        {
+          "name": "So did the salt",
+          "path": "derived.listQty.Salt",
+          "op": "eq",
+          "value": 2000,
+          "weight": 2
+        },
+        {
+          "name": "Seven lines",
+          "path": "derived.listCount",
+          "op": "eq",
+          "value": 7,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T08_one_ingredient",
+      "name": "Just the pine nuts",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "list",
+        "precision"
+      ],
+      "instruction": "You have everything for the pesto except the pine nuts. Put only those on the shopping list, at the quantity the recipe is written for.",
+      "goal": [
+        {
+          "name": "30 g of pine nuts",
+          "path": "derived.listQty.Pine nuts",
+          "op": "eq",
+          "value": 30000,
+          "weight": 3
+        },
+        {
+          "name": "Nothing else was added",
+          "path": "derived.listCount",
+          "op": "eq",
+          "value": 3,
+          "weight": 3,
+          "hint": "the whole recipe would have added eight lines"
+        }
+      ]
+    },
+    {
+      "id": "T09_tick_clear",
+      "name": "Tick it off, then clear it",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "list",
+        "checkbox"
+      ],
+      "instruction": "Tick the pasta off your shopping list, then clear everything that is ticked.",
+      "goal": [
+        {
+          "name": "The list is empty",
+          "path": "derived.listCount",
+          "op": "eq",
+          "value": 0,
+          "weight": 3,
+          "hint": "the lemon was already ticked"
+        },
+        {
+          "name": "The pasta really was ticked",
+          "source": "trajectory",
+          "path": "ids",
+          "op": "contains",
+          "value": "li_i_pasta",
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T10_empty",
+      "name": "Change your mind entirely",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "list",
+        "confirm-dialog"
+      ],
+      "instruction": "Add the chickpea tagine to your list, then think better of the whole thing and empty the list completely.",
+      "goal": [
+        {
+          "name": "Nothing left",
+          "path": "derived.listCount",
+          "op": "eq",
+          "value": 0,
+          "weight": 3
+        },
+        {
+          "name": "The tagine really was added first",
+          "source": "trajectory",
+          "path": "ids",
+          "op": "contains",
+          "value": "add_to_list",
+          "weight": 2
+        },
+        {
+          "name": "The dialog was confirmed",
+          "source": "trajectory",
+          "path": "ids",
+          "op": "contains",
+          "value": "confirm_ok",
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T11_plan_day",
+      "name": "Tagine on Wednesday",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "planner"
+      ],
+      "instruction": "Put the chickpea tagine on Wednesday.",
+      "goal": [
+        {
+          "name": "Wednesday is the tagine",
+          "path": "derived.planned.Wednesday",
+          "op": "eq",
+          "value": "Chickpea tagine x2",
+          "weight": 3
+        },
+        {
+          "name": "Only one day is planned",
+          "path": "derived.plannedCount",
+          "op": "eq",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "T12_plan_servings",
+      "name": "Friday, for four",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "planner",
+        "scaling"
+      ],
+      "instruction": "Put the bibimbap bowls on Friday and set that day to four servings.",
+      "goal": [
+        {
+          "name": "Friday is bibimbap for four",
+          "path": "derived.planned.Friday",
+          "op": "eq",
+          "value": "Bibimbap bowls x4",
+          "weight": 3
+        },
+        {
+          "name": "Nothing else got planned",
+          "path": "derived.plannedCount",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "The list was not touched",
+          "path": "derived.listCount",
+          "op": "eq",
+          "value": 2
+        }
+      ]
+    },
+    {
+      "id": "T13_week_to_list",
+      "name": "Two days into one list",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "planner",
+        "list",
+        "aggregation",
+        "scaling"
+      ],
+      "instruction": "Plan the red lentil dal for Monday and the chickpea tagine for Tuesday, both for four people, then add the week to your shopping list.",
+      "notes": "The tagine is written for six, so at four everything on it comes down.",
+      "goal": [
+        {
+          "name": "Monday is the dal for four",
+          "path": "derived.planned.Monday",
+          "op": "eq",
+          "value": "Red lentil dal x4",
+          "weight": 2
+        },
+        {
+          "name": "Tuesday is the tagine for four",
+          "path": "derived.planned.Tuesday",
+          "op": "eq",
+          "value": "Chickpea tagine x4",
+          "weight": 2
+        },
+        {
+          "name": "Two and a half onions between them",
+          "path": "derived.listQty.Onion",
+          "op": "eq",
+          "value": 2500,
+          "weight": 3,
+          "hint": "one from the dal, one and a half from the tagine scaled down"
+        },
+        {
+          "name": "767 ml of stock",
+          "path": "derived.listQty.Vegetable stock",
+          "op": "eq",
+          "value": 767000,
+          "weight": 3,
+          "hint": "500 plus 267"
+        },
+        {
+          "name": "533 g of chickpeas",
+          "path": "derived.listQty.Chickpeas",
+          "op": "eq",
+          "value": 533000,
+          "weight": 2
+        },
+        {
+          "name": "Sixteen lines",
+          "path": "derived.listCount",
+          "op": "eq",
+          "value": 16,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T14_cook",
+      "name": "Cook the pesto",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "cook-mode"
+      ],
+      "instruction": "Cook the summer pesto pasta: work through every step in cook mode and mark it finished at the end.",
+      "goal": [
+        {
+          "name": "Cooked a fourth time",
+          "path": "derived.cooked.Summer pesto pasta",
+          "op": "eq",
+          "value": 4,
+          "weight": 3,
+          "hint": "it was on three"
+        },
+        {
+          "name": "Cook mode is closed",
+          "path": "derived.cookStep",
+          "op": "eq",
+          "weight": 2,
+          "value": 0
+        },
+        {
+          "name": "Back on the recipe list",
+          "path": "derived.route",
+          "op": "eq",
+          "value": "home"
+        }
+      ]
+    },
+    {
+      "id": "T15_flagship",
+      "name": "A weekend of cooking (flagship)",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 40,
+      "tags": [
+        "planner",
+        "scaling",
+        "list",
+        "aggregation",
+        "long-horizon"
+      ],
+      "instruction": "You are cooking the Sunday ragu for six on Sunday and the red lentil dal for two on Monday. Put both in the week at those servings, add the week to your shopping list, and tick off the pasta because you already have it.",
+      "goal": [
+        {
+          "name": "Sunday is the ragu for six",
+          "path": "derived.planned.Sunday",
+          "op": "eq",
+          "value": "Sunday ragu x6",
+          "weight": 2
+        },
+        {
+          "name": "Monday is the dal for two",
+          "path": "derived.planned.Monday",
+          "op": "eq",
+          "value": "Red lentil dal x2",
+          "weight": 2
+        },
+        {
+          "name": "750 g of mince",
+          "path": "derived.listQty.Beef mince",
+          "op": "eq",
+          "value": 750000,
+          "weight": 2
+        },
+        {
+          "name": "Two onions on one line",
+          "path": "derived.listQty.Onion",
+          "op": "eq",
+          "value": 2000,
+          "weight": 3,
+          "hint": "one and a half from the ragu, half from the dal"
+        },
+        {
+          "name": "Six cloves of garlic",
+          "path": "derived.listQty.Garlic",
+          "op": "eq",
+          "value": 6000,
+          "weight": 2
+        },
+        {
+          "name": "Half the dal's lentils",
+          "path": "derived.listQty.Red lentils",
+          "op": "eq",
+          "value": 150000,
+          "weight": 2,
+          "hint": "written for four, cooking for two"
+        },
+        {
+          "name": "Seventeen lines",
+          "path": "derived.listCount",
+          "op": "eq",
+          "value": 17,
+          "weight": 2
+        },
+        {
+          "name": "Pasta ticked off",
+          "path": "derived.listChecked.Pasta",
+          "op": "eq",
+          "value": true,
+          "weight": 2
+        },
+        {
+          "name": "Efficiency: 12 steps or fewer",
+          "source": "trajectory",
+          "path": "steps",
+          "op": "lte",
+          "value": 12,
+          "critical": false,
+          "weight": 0.5
+        }
+      ]
+    },
+    {
+      "id": "T16_search",
+      "name": "Find it by an ingredient",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "search"
+      ],
+      "instruction": "One recipe uses gochujang. Search for it and open it.",
+      "goal": [
+        {
+          "name": "On a recipe page",
+          "path": "derived.route",
+          "op": "eq",
+          "value": "recipe"
+        },
+        {
+          "name": "It is the bibimbap",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "r_bibimbap",
+          "weight": 3
+        }
+      ]
+    },
+    {
+      "id": "T17_filter",
+      "name": "Question: vegan and gluten free",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "answer_expected": true,
+      "tags": [
+        "search",
+        "filter",
+        "query"
+      ],
+      "instruction": "Using the search filters, how many recipes are both vegan and gluten free? Answer with just the number.",
+      "goal": [
+        {
+          "name": "Two of them",
+          "source": "answer",
+          "op": "eq",
+          "value": 2,
+          "extract": "number",
+          "weight": 3
+        },
+        {
+          "name": "The vegan filter was used",
+          "source": "trajectory",
+          "path": "ids",
+          "op": "contains",
+          "value": "f_vegan",
+          "weight": 2
+        },
+        {
+          "name": "So was the gluten-free one",
+          "source": "trajectory",
+          "path": "ids",
+          "op": "contains",
+          "value": "f_gf",
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T18_sort_collection",
+      "name": "Batch cooks, quickest first",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "settings",
+        "collection"
+      ],
+      "instruction": "Set the recipes to sort by time, then show only the ones that batch cook well.",
+      "goal": [
+        {
+          "name": "Sorted by time",
+          "path": "settings.sort",
+          "op": "eq",
+          "value": "time",
+          "weight": 3
+        },
+        {
+          "name": "Showing the batch collection",
+          "path": "derived.collection",
+          "op": "eq",
+          "value": "batch",
+          "weight": 3
+        },
+        {
+          "name": "Back on the recipe list",
+          "path": "derived.route",
+          "op": "eq",
+          "value": "home"
+        }
+      ]
+    },
+    {
+      "id": "T19_kilo_tomatoes",
+      "name": "Two kilos of tomatoes (many valid answers)",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 24,
+      "unique_solution": false,
+      "tags": [
+        "constraint",
+        "scaling",
+        "multi-solution"
+      ],
+      "instruction": "You are batch cooking for the freezer. Get at least 2 kg of chopped tomatoes onto your shopping list. Which recipes you take them from, and at what servings, is up to you.",
+      "goal": [
+        {
+          "name": "2 kg or more",
+          "path": "derived.listQty.Chopped tomatoes",
+          "op": "gte",
+          "value": 2000000,
+          "weight": 3
+        },
+        {
+          "name": "The pasta is still on the list",
+          "path": "derived.listNames",
+          "op": "contains",
+          "value": "Pasta",
+          "weight": 2,
+          "hint": "do not clear the list to get there"
+        }
+      ]
+    },
+    {
+      "id": "T20_congee",
+      "name": "Congee for six, and cook it",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "scaling",
+        "list",
+        "cook-mode",
+        "long-horizon"
+      ],
+      "instruction": "Scale the ginger congee up to six servings, put its shopping on the list, then cook it right through and mark it done.",
+      "goal": [
+        {
+          "name": "Set to six",
+          "path": "derived.servings.Ginger congee",
+          "op": "eq",
+          "value": 6,
+          "weight": 2
+        },
+        {
+          "name": "360 g of rice",
+          "path": "derived.listQty.Short grain rice",
+          "op": "eq",
+          "value": 360000,
+          "weight": 3,
+          "hint": "180 g written for three"
+        },
+        {
+          "name": "Three litres of stock",
+          "path": "derived.listQty.Vegetable stock",
+          "op": "eq",
+          "value": 3000000,
+          "weight": 2
+        },
+        {
+          "name": "Salt stayed in the cupboard",
+          "path": "derived.listNames",
+          "op": "not_contains",
+          "value": "Salt",
+          "weight": 2
+        },
+        {
+          "name": "Cooked once",
+          "path": "derived.cooked.Ginger congee",
+          "op": "eq",
+          "value": 1,
+          "weight": 3
+        },
+        {
+          "name": "Cook mode is closed",
+          "path": "derived.cookStep",
+          "op": "eq",
+          "value": 0
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,2040 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>松鼠外卖 · Squirrel Eats (mocked GUI env)</title>
+<!--
+  ============================================================================
+  Squirrel Eats — a single-file H5 mobile GUI environment for agent research.
+
+  This file is BOTH the app and the environment:
+
+    script#engine   ...  pure state machine. No DOM access whatsoever.
+                          Exposes globalThis.EATS_ENGINE = {
+                            createInitialState, reduce, screen, a11y, ...
+                          }
+                          It is loaded verbatim by the Node headless runner
+                          (pipeline/runner.mjs) inside a vm sandbox, so
+                          browser-free rollouts run the exact same code paths
+                          as the browser.
+
+    script#ui       ...  renders engine.screen(state) -> DOM, binds taps back
+                          into engine.reduce(). Exposes window.__ENV__, the
+                          control API used by the Playwright runner.
+
+  Determinism contract:
+    * no Date.now(), no Math.random() anywhere in the engine
+    * the in-world clock advances a fixed number of seconds per action
+    * ids are derived from monotonic counters in the state
+  ============================================================================
+-->
+<style>
+:root{
+  --accent:#ff6b35; --accent-d:#e8541f; --accent-s:#fff1ea;
+  --bg:#f4f5f7; --card:#fff; --line:#eceef2;
+  --ink:#16181d; --ink2:#5b616e; --muted:#9aa0ac;
+  --gold:#ff9f1c; --green:#12b76a; --red:#f04438;
+  --r:14px; --shadow:0 1px 2px rgba(16,24,40,.06),0 6px 18px rgba(16,24,40,.05);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;height:100%}
+body{
+  background:#e7e9ee;
+  font:14px/1.45 -apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  color:var(--ink);
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+
+/* ---------- device frame ---------- */
+#device{
+  position:relative;width:390px;height:844px;background:#000;
+  border-radius:46px;padding:5px;box-shadow:0 30px 70px rgba(0,0,0,.35);
+  flex:0 0 auto;
+}
+#screen{
+  position:relative;width:100%;height:100%;background:var(--bg);
+  border-radius:41px;overflow:hidden;display:flex;flex-direction:column;
+}
+#notch{
+  position:absolute;top:5px;left:50%;transform:translateX(-50%);
+  width:118px;height:30px;background:#000;border-radius:0 0 18px 18px;z-index:60;
+}
+/* plain embed mode: no bezel (used for screenshots / iframe embedding) */
+body.bare{background:var(--bg)}
+body.bare #device{width:390px;height:844px;padding:0;border-radius:0;box-shadow:none;background:var(--bg)}
+body.bare #screen{border-radius:0}
+body.bare #notch{display:none}
+body.bare .n-sheet{animation:none}
+
+/* ---------- status bar ---------- */
+.statusbar{
+  height:44px;flex:0 0 44px;display:flex;align-items:flex-end;justify-content:space-between;
+  padding:0 22px 6px;font-size:13px;font-weight:600;letter-spacing:.2px;z-index:50;
+  background:transparent;color:var(--ink);
+}
+.statusbar .sb-r{display:flex;gap:5px;align-items:center}
+.sb-bat{width:22px;height:11px;border:1.3px solid currentColor;border-radius:3px;position:relative;opacity:.9}
+.sb-bat:after{content:"";position:absolute;right:-3px;top:3px;width:2px;height:5px;background:currentColor;border-radius:0 1px 1px 0}
+.sb-bat i{position:absolute;left:1.3px;top:1.3px;bottom:1.3px;width:70%;background:currentColor;border-radius:1px}
+
+/* ---------- app chrome ---------- */
+#app{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;position:relative}
+.n-appbar{
+  flex:0 0 auto;height:46px;display:flex;align-items:center;gap:6px;padding:0 12px;
+  background:var(--card);border-bottom:1px solid var(--line);position:relative;z-index:20;
+}
+.n-appbar .ab-title{
+  flex:1 1 auto;text-align:center;font-size:16px;font-weight:600;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.n-appbar .ab-side{flex:0 0 auto;min-width:52px;display:flex;align-items:center;gap:8px}
+.n-appbar .ab-side.right{justify-content:flex-end}
+.ab-back{
+  width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:19px;color:var(--ink);cursor:pointer;
+}
+.ab-back:active{background:#f0f1f4}
+.n-appbar.accent{background:linear-gradient(135deg,var(--accent),#ff8f5e);border-bottom:none;color:#fff}
+.n-appbar.accent .ab-back{color:#fff}
+
+.n-scroll{
+  flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;padding-bottom:8px;scrollbar-width:thin;
+}
+.n-scroll::-webkit-scrollbar{width:0}
+
+/* ---------- primitives ---------- */
+.n-sec{padding:10px 12px 2px;font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.3px}
+.n-card{
+  background:var(--card);border-radius:var(--r);margin:8px 12px;padding:12px;
+  box-shadow:var(--shadow);
+}
+.n-card.flush{padding:0;overflow:hidden}
+.n-card.tap{cursor:pointer;transition:transform .08s}
+.n-card.tap:active{transform:scale(.985)}
+
+.n-row{
+  display:flex;align-items:center;gap:10px;padding:13px 12px;background:var(--card);
+  border-bottom:1px solid var(--line);min-height:48px;
+}
+.n-row:last-child{border-bottom:none}
+.n-row.tap{cursor:pointer}
+.n-row.tap:active{background:#f7f8fa}
+.n-row .r-lead{flex:0 0 auto;width:24px;height:24px;text-align:center;color:var(--ink2);display:flex;align-items:center;justify-content:center}
+.n-row .r-lead.tile{width:34px;height:34px;border-radius:8px;font-size:15px}
+.n-row .r-main{flex:1 1 auto;min-width:0}
+.n-row .r-label{font-size:14.5px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.n-row .r-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.n-row .r-value{flex:0 0 auto;font-size:13.5px;color:var(--ink2);max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right}
+.n-row .r-value.strong{color:var(--ink);font-weight:600}
+.n-row .r-value.accent{color:var(--accent);font-weight:600}
+.n-row .r-arrow{flex:0 0 auto;color:#c6cad2;font-size:15px;margin-left:2px}
+
+.n-text{padding:0 12px}
+.n-text.h1{font-size:20px;font-weight:700;padding:14px 12px 6px}
+.n-text.h2{font-size:15.5px;font-weight:650;padding:12px 12px 4px}
+.n-text.body{font-size:14px;color:var(--ink2);padding:4px 12px}
+.n-text.muted{font-size:12px;color:var(--muted);padding:4px 12px}
+.n-text.center{text-align:center}
+.n-text.empty{padding:60px 12px;text-align:center;color:var(--muted);font-size:13px}
+
+.n-divider{height:8px;background:transparent}
+.n-space{height:14px}
+
+.n-btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  height:38px;padding:0 16px;border-radius:19px;font-size:14.5px;font-weight:600;
+  background:#f1f2f5;color:var(--ink);border:none;cursor:pointer;user-select:none;
+}
+.n-btn:active{filter:brightness(.95)}
+.n-btn.primary{background:var(--accent);color:#fff}
+.n-btn.primary[disabled],.n-btn.primary.off{background:#d8dae0;color:#fff;cursor:not-allowed}
+.n-btn.ghost{background:transparent;border:1px solid #dcdfe5;color:var(--ink2);height:32px;font-size:13px;padding:0 12px}
+.n-btn.danger{background:#fff;border:1px solid #f5c2bd;color:var(--red);height:32px;font-size:13px;padding:0 12px}
+.n-btn.block{display:flex;width:100%}
+.n-btnrow{display:flex;gap:8px;justify-content:flex-end;padding:10px 12px}
+
+.n-chips{display:flex;gap:8px;padding:10px 12px;overflow-x:auto;background:transparent}
+.n-chips::-webkit-scrollbar{height:0}
+.n-chip{
+  flex:0 0 auto;height:30px;padding:0 13px;border-radius:15px;background:var(--card);
+  display:flex;align-items:center;gap:4px;font-size:13px;color:var(--ink2);
+  border:1px solid var(--line);cursor:pointer;white-space:nowrap;
+}
+.n-chip.on{background:var(--accent-s);color:var(--accent-d);border-color:#ffcdb6;font-weight:600}
+
+.n-search{padding:8px 12px;background:var(--card);display:flex;gap:8px;align-items:center}
+.n-search .sf{
+  flex:1 1 auto;height:36px;border-radius:18px;background:#f2f3f6;display:flex;align-items:center;
+  padding:0 12px;gap:7px;color:var(--muted);font-size:14px;
+}
+.n-search input{
+  flex:1 1 auto;border:none;outline:none;background:transparent;font-size:14px;color:var(--ink);
+  font-family:inherit;min-width:0;
+}
+.n-input{
+  display:flex;align-items:center;gap:10px;padding:12px;background:var(--card);
+  border-bottom:1px solid var(--line);
+}
+.n-input .i-label{flex:0 0 68px;font-size:14px;color:var(--ink2)}
+.n-input input,.n-input textarea{
+  flex:1 1 auto;border:none;outline:none;background:transparent;font-size:14px;color:var(--ink);
+  font-family:inherit;resize:none;min-width:0;
+}
+.n-input textarea{height:52px;line-height:1.4}
+
+.n-switch{
+  flex:0 0 auto;width:44px;height:26px;border-radius:13px;background:#dfe2e8;position:relative;
+  cursor:pointer;transition:background .16s;
+}
+.n-switch.on{background:var(--green)}
+.n-switch i{
+  position:absolute;top:2px;left:2px;width:22px;height:22px;border-radius:50%;background:#fff;
+  transition:transform .16s;box-shadow:0 1px 3px rgba(0,0,0,.2);
+}
+.n-switch.on i{transform:translateX(18px)}
+
+.n-radio{
+  flex:0 0 auto;width:20px;height:20px;border-radius:50%;border:1.6px solid #d3d7de;position:relative;
+}
+.n-radio.on{border-color:var(--accent);background:var(--accent)}
+.n-radio.on:after{content:"";position:absolute;left:6px;top:3px;width:5px;height:9px;border:2px solid #fff;border-top:0;border-left:0;transform:rotate(42deg)}
+
+.n-stepper{display:flex;align-items:center;gap:9px;flex:0 0 auto}
+.n-stepper .st-btn{
+  width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:16px;line-height:1;cursor:pointer;user-select:none;
+}
+.n-stepper .st-minus{border:1.3px solid #d8dbe1;color:var(--ink2);background:#fff}
+.n-stepper .st-plus{background:var(--accent);color:#fff}
+.n-stepper .st-minus.hide{visibility:hidden}
+.n-stepper .st-val{min-width:16px;text-align:center;font-size:14px;font-weight:600}
+
+.n-tag{
+  display:inline-block;padding:1px 6px;border-radius:4px;font-size:11px;line-height:16px;
+  background:#f1f2f5;color:var(--ink2);margin-right:4px;
+}
+.n-tag.hot{background:#fff0ec;color:var(--accent-d)}
+.n-tag.veg{background:#eafaf1;color:#0e9f6e}
+.n-tag.spicy{background:#fff1f0;color:var(--red)}
+.n-tag.sign{background:#fff8e6;color:#b7791f}
+
+.n-badge{
+  position:absolute;top:-5px;right:-8px;min-width:16px;height:16px;border-radius:8px;background:var(--red);
+  color:#fff;font-size:10px;line-height:16px;text-align:center;padding:0 4px;font-weight:600;
+}
+
+/* ---------- composite: shop card ---------- */
+.shop{display:flex;gap:11px}
+.shop .s-logo{flex:0 0 auto;width:66px;height:66px;border-radius:12px;font-size:27px}
+.shop .s-body{flex:1 1 auto;min-width:0}
+.shop .s-name{font-size:15.5px;font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.shop .s-meta{font-size:12px;color:var(--muted);margin-top:4px;display:flex;gap:8px;flex-wrap:wrap}
+.shop .s-meta b{color:var(--gold);font-weight:700}
+.shop .s-promo{margin-top:6px}
+
+/* ---------- composite: dish row ---------- */
+.dish{display:flex;gap:11px;padding:12px;border-bottom:1px solid var(--line);background:var(--card)}
+.dish:last-child{border-bottom:none}
+.dish.tap{cursor:pointer}
+.dish.tap:active{background:#f7f8fa}
+.shopline.tap{cursor:pointer}
+.shopline.tap:active{background:#f7f8fa}
+.dish .d-img{flex:0 0 auto;width:62px;height:62px;border-radius:10px;font-size:25px}
+.dish .d-body{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
+.dish .d-name{font-size:14.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dish .d-desc{font-size:11.5px;color:var(--muted);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dish .d-tags{margin-top:5px}
+.dish .d-bot{display:flex;align-items:flex-end;justify-content:space-between;margin-top:auto;padding-top:6px}
+.price{color:var(--accent);font-weight:700;font-size:16px}
+.price small{font-size:11px;font-weight:600;margin-right:1px}
+.price .was{color:var(--muted);font-weight:400;font-size:11.5px;text-decoration:line-through;margin-left:5px}
+
+/* ---------- shop header ---------- */
+.shophead{
+  background:linear-gradient(160deg,#ff8b52,#ff6b35 62%,#f4572a);color:#fff;padding:12px 14px 16px;
+}
+.shophead .sh-top{display:flex;gap:12px;align-items:center}
+.shophead .sh-logo{flex:0 0 auto;width:56px;height:56px;border-radius:12px;font-size:24px;background:rgba(255,255,255,.9)!important;color:var(--accent-d)!important}
+.shophead .sh-name{font-size:18px;font-weight:700}
+.shophead .sh-meta{font-size:12px;opacity:.92;margin-top:5px}
+.shophead .sh-promos{display:flex;gap:6px;margin-top:11px;flex-wrap:wrap}
+.shophead .sh-promo{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.34);border-radius:4px;padding:2px 7px;font-size:11px}
+
+/* ---------- menu two-pane ---------- */
+.menu{display:flex;flex:1 1 auto;min-height:0}
+.menu .m-rail{
+  flex:0 0 86px;background:#f7f8fa;overflow-y:auto;border-right:1px solid var(--line);
+}
+.menu .m-rail::-webkit-scrollbar{width:0}
+.menu .m-cat{
+  padding:14px 8px;font-size:13px;color:var(--ink2);text-align:center;cursor:pointer;
+  border-left:3px solid transparent;
+}
+.menu .m-cat.on{background:var(--card);color:var(--ink);font-weight:650;border-left-color:var(--accent)}
+.menu .m-list{flex:1 1 auto;overflow-y:auto;background:var(--card)}
+.menu .m-list::-webkit-scrollbar{width:0}
+
+/* ---------- bottom bars ---------- */
+.n-bar{
+  flex:0 0 auto;background:var(--card);border-top:1px solid var(--line);
+  padding:9px 12px calc(9px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:10px;
+  z-index:30;
+}
+.cartbar{display:flex;align-items:center;gap:11px;width:100%}
+.cartbar .cb-ico{
+  position:relative;width:46px;height:46px;border-radius:50%;background:#2b2f36;color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:22px;margin-top:-16px;cursor:pointer;
+  box-shadow:0 4px 12px rgba(0,0,0,.2);
+}
+.cartbar .cb-ico.on{background:var(--accent)}
+.cartbar .cb-txt{flex:1 1 auto;min-width:0}
+.cartbar .cb-total{font-size:17px;font-weight:700}
+.cartbar .cb-sub{font-size:11px;color:var(--muted);margin-top:1px}
+
+.n-tabbar{
+  flex:0 0 auto;height:54px;background:var(--card);border-top:1px solid var(--line);
+  display:flex;z-index:30;
+}
+.n-tabbar .tb{
+  flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  color:var(--muted);font-size:10.5px;cursor:pointer;
+}
+.n-tabbar .tb i{font-style:normal;font-size:20px;line-height:1}
+.n-tabbar .tb.on{color:var(--accent);font-weight:600}
+
+/* ---------- sheet / modal ---------- */
+.n-mask{position:absolute;inset:0;background:rgba(0,0,0,.42);z-index:70;display:flex;align-items:flex-end}
+.n-sheet{
+  width:100%;max-height:76%;background:var(--card);border-radius:18px 18px 0 0;
+  display:flex;flex-direction:column;overflow:hidden;animation:up .18s ease-out;
+}
+@keyframes up{from{transform:translateY(22px)}to{transform:none}}
+.n-sheet .sh-hd{
+  padding:14px 14px 10px;display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--line);
+}
+.n-sheet .sh-hd .t{font-size:16px;font-weight:650}
+.n-sheet .sh-x{flex:0 0 auto;width:26px;height:26px;border-radius:50%;background:#f1f2f5;display:flex;align-items:center;justify-content:center;color:var(--ink2);cursor:pointer;font-size:15px}
+.n-sheet .sh-bd{flex:1 1 auto;overflow-y:auto;min-height:0}
+.n-sheet .sh-bd::-webkit-scrollbar{width:0}
+.n-sheet .sh-ft{flex:0 0 auto;border-top:1px solid var(--line);padding:10px 12px}
+
+.optgrp{padding:12px}
+.optgrp .og-t{font-size:13px;font-weight:650;margin-bottom:9px}
+.optgrp .og-opts{display:flex;gap:8px;flex-wrap:wrap}
+.optgrp .og-o{
+  padding:6px 14px;border-radius:15px;background:#f2f3f6;font-size:13px;color:var(--ink2);cursor:pointer;
+  border:1px solid transparent;
+}
+.optgrp .og-o.on{background:var(--accent-s);color:var(--accent-d);border-color:#ffcdb6;font-weight:600}
+
+.n-toast{
+  position:absolute;left:50%;bottom:110px;transform:translateX(-50%);
+  background:rgba(28,30,35,.9);color:#fff;padding:9px 16px;border-radius:8px;font-size:13px;
+  z-index:90;max-width:80%;text-align:center;
+}
+
+/* ---------- misc ---------- */
+.hr{height:1px;background:var(--line);margin:0 12px}
+.kv{display:flex;justify-content:space-between;padding:6px 12px;font-size:13px;color:var(--ink2)}
+.kv .k{color:var(--ink2)}
+.kv .v{color:var(--ink)}
+.kv.total .v{color:var(--accent);font-weight:700;font-size:15px}
+.stat{display:flex;gap:8px;align-items:center}
+.pill{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+.pill.wait{background:#fff7e6;color:#b7791f}
+.pill.ship{background:#eaf3ff;color:#1d6fd0}
+.pill.done{background:#eafaf1;color:#0e9f6e}
+.pill.cancel{background:#f2f3f5;color:#8a8f99}
+
+/* ---------- font-independent art: line icons + character tiles ---------- */
+.ico{display:inline-block;width:1em;height:1em;vertical-align:-.13em;flex:0 0 auto}
+.ico svg{width:100%;height:100%;display:block}
+.tile{
+  display:flex;align-items:center;justify-content:center;font-weight:700;letter-spacing:-.5px;
+  background:hsl(var(--h) 62% 94%);color:hsl(var(--h) 46% 42%);
+}
+.tile.lg{font-size:26px}
+.tile.md{font-size:23px}
+.tile.sm{font-size:15px}
+.n-tabbar .tb i{display:flex;align-items:center;justify-content:center}
+
+/* ---------- dev HUD (hidden during screenshots) ---------- */
+#hud{
+  position:fixed;top:14px;left:14px;width:300px;max-height:calc(100% - 28px);overflow:auto;
+  background:#12141a;color:#cfd4de;border-radius:12px;padding:12px;font:11.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;
+  z-index:200;box-shadow:0 10px 30px rgba(0,0,0,.4);
+}
+#hud h4{margin:0 0 8px;font-size:12px;color:#fff;letter-spacing:.4px}
+#hud .k{color:#7f8798}
+#hud pre{margin:6px 0 0;white-space:pre-wrap;word-break:break-all;color:#9fe8c0;max-height:230px;overflow:auto}
+#hud button{
+  background:#252a35;border:none;color:#cfd4de;border-radius:6px;padding:5px 9px;margin:2px 4px 2px 0;
+  font:inherit;cursor:pointer;
+}
+#hud button:hover{background:#333a48}
+#hud.off{display:none}
+</style>
+</head>
+<body>
+<div id="device">
+  <div id="notch"></div>
+  <div id="screen">
+    <div class="statusbar">
+      <div class="sb-l" id="sb-clock">12:30</div>
+      <div class="sb-r">
+        <svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="4.6" y="5.5" width="3" height="6.5" rx="1"/><rect x="9.2" y="3" width="3" height="9" rx="1"/><rect x="13.8" y="0" width="3" height="12" rx="1"/></svg>
+        <svg width="15" height="12" viewBox="0 0 15 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 4.2a9 9 0 0 1 13 0"/><path d="M3.4 6.9a5.6 5.6 0 0 1 8.2 0"/><circle cx="7.5" cy="10" r=".9" fill="currentColor" stroke="none"/></svg>
+        <span class="sb-bat"><i></i></span></div>
+    </div>
+    <div id="app"></div>
+  </div>
+</div>
+<div id="hud" class="off"></div>
+
+<script id="engine">
+/* ===========================================================================
+ * ENGINE — pure, deterministic, DOM-free.
+ * Loaded verbatim by pipeline/runner.mjs inside a node:vm sandbox.
+ * Nothing in this block may touch `document`, `window`, Date or Math.random.
+ * ======================================================================== */
+(function (root) {
+'use strict';
+
+var VERSION = '1.0.0';
+var ENV_ID  = 'squirrel_eats';
+
+/* ---------------------------------------------------------------- catalog */
+var SHOPS = [
+  { id:'s_xiedao',  name:'蟹岛麻辣香锅', emoji:'🍲', rating:4.8, sales:3210, fee:0, pack:2, eta:28, dist:1.2,
+    cats:['川菜','香锅'], badges:['准时宝','安心送'], notice:'现炒现做，出餐约15分钟' },
+  { id:'s_qingzhu', name:'青竹轻食',     emoji:'🥗', rating:4.9, sales:1860, fee:3, pack:1, eta:25, dist:0.8,
+    cats:['轻食','素食'], badges:['会员店','安心送'], notice:'低卡低油，营养师配餐' },
+  { id:'s_laowang', name:'老王牛肉面',   emoji:'🍜', rating:4.6, sales:5610, fee:0, pack:1, eta:20, dist:0.5,
+    cats:['面食'],       badges:['准时宝'],           notice:'清汤牛骨每日现熬' },
+  { id:'s_guocha',  name:'果茶站',       emoji:'🧋', rating:4.7, sales:9240, fee:2, pack:1, eta:18, dist:1.0,
+    cats:['饮品','茶饮'], badges:['准时宝','支持自取'], notice:'鲜果现打，不加浓缩汁' },
+  { id:'s_haidao',  name:'海岛炸鸡',     emoji:'🍗', rating:4.4, sales:2130, fee:5, pack:3, eta:35, dist:2.4,
+    cats:['炸鸡','夜宵'], badges:[],                   notice:'22:00 后仍在营业' },
+  { id:'s_xiangzi', name:'巷子口小面',   emoji:'🍝', rating:4.7, sales:4380, fee:0, pack:1, eta:22, dist:0.9,
+    cats:['面食','川菜'], badges:['安心送'],           notice:'重庆师傅掌勺' }
+];
+
+/* spec groups reused by dishes */
+var SPEC_SPICE = { key:'spice', name:'辣度', opts:[
+  {v:'不辣',d:0},{v:'微辣',d:0},{v:'中辣',d:0},{v:'特辣',d:0}], def:'微辣' };
+var SPEC_SIZE  = { key:'size',  name:'份量', opts:[
+  {v:'小份',d:0},{v:'大份',d:6}], def:'小份' };
+var SPEC_ICE   = { key:'ice',   name:'冰量', opts:[
+  {v:'正常冰',d:0},{v:'少冰',d:0},{v:'去冰',d:0},{v:'热饮',d:0}], def:'正常冰' };
+var SPEC_SUGAR = { key:'sugar', name:'甜度', opts:[
+  {v:'标准糖',d:0},{v:'七分糖',d:0},{v:'半糖',d:0},{v:'无糖',d:0}], def:'标准糖' };
+
+var DISHES = [
+  /* --- 蟹岛麻辣香锅 --- */
+  {id:'d_xd_guo',   shop:'s_xiedao', cat:'招牌', name:'招牌麻辣香锅', price:38, emoji:'🍲', sign:true,  spicy:true,
+   desc:'牛肉+虾滑+时蔬，麻辣鲜香', specs:[SPEC_SPICE, SPEC_SIZE]},
+  {id:'d_xd_gan',   shop:'s_xiedao', cat:'招牌', name:'干锅有机花菜', price:28, emoji:'🥦', veg:true,   spicy:true,
+   desc:'手撕花菜，锅气十足',       specs:[SPEC_SPICE]},
+  {id:'d_xd_rice',  shop:'s_xiedao', cat:'主食', name:'东北米饭',     price:2,  emoji:'🍚', veg:true,   desc:'一次一碗，现蒸'},
+  {id:'d_xd_fen',   shop:'s_xiedao', cat:'主食', name:'黑龙江宽粉',   price:6,  emoji:'🍜', veg:true,   desc:'久煮不烂'},
+  {id:'d_xd_cola',  shop:'s_xiedao', cat:'饮品', name:'冰镇可乐',     price:5,  emoji:'🥤', veg:true,   desc:'330ml 罐装'},
+
+  /* --- 青竹轻食 --- */
+  {id:'d_qz_bowl',  shop:'s_qingzhu', cat:'招牌', name:'藜麦鸡胸沙拉', price:32, emoji:'🥗', sign:true,
+   desc:'低温慢煮鸡胸 120g + 藜麦', specs:[SPEC_SIZE]},
+  {id:'d_qz_veg',   shop:'s_qingzhu', cat:'招牌', name:'时蔬能量碗',   price:26, emoji:'🥬', veg:true,
+   desc:'8 种时令蔬菜，全素'},
+  {id:'d_qz_wrap',  shop:'s_qingzhu', cat:'主食', name:'全麦鸡蛋卷饼', price:18, emoji:'🌯', desc:'全麦饼皮，无油煎'},
+  {id:'d_qz_rice',  shop:'s_qingzhu', cat:'主食', name:'糙米饭',       price:5,  emoji:'🍚', veg:true, desc:'粗粮主食'},
+  {id:'d_qz_juice', shop:'s_qingzhu', cat:'饮品', name:'冷压绿蔬汁',   price:14, emoji:'🥤', veg:true, desc:'羽衣甘蓝+青苹果'},
+
+  /* --- 老王牛肉面 --- */
+  {id:'d_lw_beef',  shop:'s_laowang', cat:'招牌', name:'招牌红烧牛肉面', price:22, emoji:'🍜', sign:true,
+   desc:'牛腱肉三块，汤头浓',       specs:[SPEC_SPICE]},
+  {id:'d_lw_pao',   shop:'s_laowang', cat:'面食', name:'泡椒鸡杂面',   price:24, emoji:'🍜', spicy:true, desc:'脆爽泡椒'},
+  {id:'d_lw_plain', shop:'s_laowang', cat:'面食', name:'阳春面',       price:12, emoji:'🍲', veg:true,   desc:'清汤本味'},
+  {id:'d_lw_egg',   shop:'s_laowang', cat:'小食', name:'卤蛋',         price:3,  emoji:'🥚', desc:'卤足 4 小时'},
+  {id:'d_lw_veg',   shop:'s_laowang', cat:'小食', name:'烫时蔬',       price:6,  emoji:'🥬', veg:true, desc:'当日青菜'},
+  {id:'d_lw_tea',   shop:'s_laowang', cat:'饮品', name:'冰镇酸梅汤',   price:7,  emoji:'🥤', veg:true, desc:'自熬无添加'},
+
+  /* --- 果茶站 --- */
+  {id:'d_gc_grape', shop:'s_guocha', cat:'招牌', name:'满杯白葡萄',   price:17, emoji:'🍇', sign:true, veg:true,
+   desc:'整颗白葡萄现剥',           specs:[SPEC_ICE, SPEC_SUGAR]},
+  {id:'d_gc_peach', shop:'s_guocha', cat:'茶饮', name:'蜜桃乌龙',     price:15, emoji:'🍑', veg:true,
+   desc:'黄金桃 + 高山乌龙',        specs:[SPEC_ICE, SPEC_SUGAR]},
+  {id:'d_gc_lemon', shop:'s_guocha', cat:'茶饮', name:'手打柠檬茶',   price:13, emoji:'🍋', veg:true,
+   desc:'香水柠檬，捶打出香',       specs:[SPEC_ICE, SPEC_SUGAR]},
+  {id:'d_gc_latte', shop:'s_guocha', cat:'茶饮', name:'厚乳拿铁',     price:19, emoji:'☕', desc:'双份 espresso',
+   specs:[SPEC_ICE, SPEC_SUGAR]},
+  {id:'d_gc_mochi', shop:'s_guocha', cat:'小食', name:'芋泥麻薯',     price:9,  emoji:'🍡', veg:true, desc:'现做芋泥，软糯'},
+
+  /* --- 海岛炸鸡 --- */
+  {id:'d_hd_bucket',shop:'s_haidao', cat:'招牌', name:'海岛全家桶',   price:69, emoji:'🍗', sign:true, desc:'8 块炸鸡 + 2 份薯条'},
+  {id:'d_hd_wing',  shop:'s_haidao', cat:'招牌', name:'蜜汁烤翅(5只)', price:26, emoji:'🍖', desc:'秘制腌料 24h'},
+  {id:'d_hd_burger',shop:'s_haidao', cat:'主食', name:'香辣鸡腿堡',   price:21, emoji:'🍔', spicy:true, desc:'整块鸡腿肉'},
+  {id:'d_hd_cola',  shop:'s_haidao', cat:'饮品', name:'可乐(大)',     price:6,  emoji:'🥤', veg:true, desc:'500ml'},
+
+  /* --- 巷子口小面 --- */
+  {id:'d_xz_wanza', shop:'s_xiangzi', cat:'招牌', name:'招牌豌杂面',  price:16, emoji:'🍝', sign:true, spicy:true,
+   desc:'豌豆+杂酱双浇头',          specs:[SPEC_SPICE]},
+  {id:'d_xz_su',    shop:'s_xiangzi', cat:'面食', name:'素小面',      price:10, emoji:'🍜', veg:true, desc:'重庆本味，全素',
+   specs:[SPEC_SPICE]},
+  {id:'d_xz_beef',  shop:'s_xiangzi', cat:'面食', name:'牛肉小面',    price:20, emoji:'🍜', desc:'炖牛肉大块'},
+  {id:'d_xz_chao',  shop:'s_xiangzi', cat:'小食', name:'红油抄手',    price:15, emoji:'🥟', spicy:true, desc:'8 只手包'},
+  {id:'d_xz_soy',   shop:'s_xiangzi', cat:'饮品', name:'现磨豆浆',    price:5,  emoji:'🥛', veg:true, desc:'无糖，现磨'}
+];
+
+var COUPONS = [
+  {id:'c_20_3',  title:'满20减3',      threshold:20, amount:3,  scope:'all',       expires:'2026-12-31'},
+  {id:'c_30_8',  title:'满30减8',      threshold:30, amount:8,  scope:'all',       expires:'2026-09-30'},
+  {id:'c_50_15', title:'满50减15',     threshold:50, amount:15, scope:'all',       expires:'2026-11-11'},
+  {id:'c_qz_5',  title:'青竹轻食专享 满25减5', threshold:25, amount:5, scope:'s_qingzhu', expires:'2026-10-01'},
+  {id:'c_old_5', title:'满15减5',      threshold:15, amount:5,  scope:'all',       expires:'2026-08-01'}
+];
+
+var ADDRESSES = [
+  {id:'a_home',    tag:'家',   name:'张小松', phone:'138****0021', detail:'望京SOHO T1 座 1801'},
+  {id:'a_company', tag:'公司', name:'张小松', phone:'138****0021', detail:'中关村科技园 5 号楼 B 座 902'},
+  {id:'a_school',  tag:'学校', name:'张小松', phone:'138****0021', detail:'清华大学紫荆公寓 12 号楼 305'}
+];
+
+var CATALOG = {shops:SHOPS, dishes:DISHES, coupons:COUPONS, addresses:ADDRESSES};
+
+/* ---------------------------------------------------------------- helpers */
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+function byId(list, id){ for (var i=0;i<list.length;i++) if (list[i].id===id) return list[i]; return null; }
+function shop(id){ return byId(SHOPS, id); }
+function dish(id){ return byId(DISHES, id); }
+function coupon(id){ return byId(COUPONS, id); }
+function fmt(n){ return (Math.round(n*100)/100).toFixed(2); }
+function pad(n){ return (n<10?'0':'')+n; }
+
+/* deterministic LCG — the ONLY source of variation, driven by the task seed */
+function lcg(seed){ var s=(seed>>>0)||1; return function(){ s=(s*1664525+1013904223)>>>0; return s/4294967296; }; }
+function shuffled(list, seed){
+  if (!seed) return list.slice();                 // seed 0 == canonical order
+  var r=lcg(seed), a=list.slice();
+  for (var i=a.length-1;i>0;i--){ var j=Math.floor(r()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; }
+  return a;
+}
+
+/* dotted-path get/set, used by task `init.patch` and by the Python verifier's twin */
+function getPath(obj, path){
+  var parts = String(path).replace(/\[(\w+|\*|last|-1)\]/g, '.$1').split('.').filter(Boolean), cur = obj;
+  for (var i=0;i<parts.length;i++){
+    if (cur == null) return undefined;
+    var k = parts[i];
+    if (Array.isArray(cur) && (k==='last'||k==='-1')) cur = cur[cur.length-1];
+    else cur = cur[k];
+  }
+  return cur;
+}
+function setPath(obj, path, value){
+  var parts = String(path).replace(/\[(\w+)\]/g,'.$1').split('.').filter(Boolean), cur = obj;
+  for (var i=0;i<parts.length-1;i++){
+    var k = parts[i];
+    if (cur[k] == null) cur[k] = /^\d+$/.test(parts[i+1]) ? [] : {};
+    cur = cur[k];
+  }
+  cur[parts[parts.length-1]] = value;
+  return obj;
+}
+
+/* ------------------------------------------------------------ world clock */
+/* fixed start: 2026-08-24 12:30:00; every action advances SECONDS_PER_STEP  */
+var CLOCK0 = {y:2026, mo:8, d:24, h:12, mi:30, s:0};
+var SECONDS_PER_STEP = 7;
+function tick(c, n){
+  var t = c.s + n;  c.s = t % 60;  var m = c.mi + Math.floor(t/60);
+  c.mi = m % 60;    var h = c.h + Math.floor(m/60);   c.h = h % 24;
+  c.d += Math.floor(h/24);
+  return c;
+}
+function clockStr(c){ return pad(c.h)+':'+pad(c.mi); }
+function dateStr(c){ return c.y+'-'+pad(c.mo)+'-'+pad(c.d); }
+
+/* -------------------------------------------------------- initial state */
+function createInitialState(seed){
+  seed = seed || 0;
+  return {
+    meta:{ env:ENV_ID, version:VERSION, seed:seed, clock:clone(CLOCK0), steps:0, orderSeq:3, addrSeq:4,
+           answer:null, finished:false },
+    ui:{
+      stack:[{name:'home', params:{}}], tab:'home', sheet:null, toast:null, confirm:null,
+      inputs:{}, query:'', filter:{sort:'default', freeFee:false, minRating:0}, cat:{}
+    },
+    profile:{ name:'张小松', phone:'138****0021', vip:false,
+              settings:{ orderPush:true, promoPush:true, vegFirst:false, autoCoupon:false } },
+    addresses: clone(ADDRESSES),
+    defaultAddressId:'a_home',
+    coupons: COUPONS.map(function(c){ return {id:c.id, used:false}; }),
+    cart:{ shopId:null, lines:[] },
+    checkout:{ addressId:null, couponId:null, remark:'', pay:'微信支付', utensils:1, deliveryTime:'asap' },
+    orders:[
+      { id:'o_1001', shopId:'s_laowang', shopName:'老王牛肉面', status:'done',
+        lines:[{dishId:'d_lw_beef', name:'招牌红烧牛肉面', qty:1, price:22, specs:{spice:'微辣'}},
+               {dishId:'d_lw_egg',  name:'卤蛋',           qty:1, price:3,  specs:{}}],
+        subtotal:25, pack:1, fee:0, discount:3, couponId:'c_20_3', total:23,
+        address:{id:'a_home', tag:'家', detail:'望京SOHO T1 座 1801'},
+        remark:'', utensils:1, pay:'微信支付', createdAt:'2026-08-23 12:41' },
+      { id:'o_1002', shopId:'s_guocha', shopName:'果茶站', status:'pending',
+        lines:[{dishId:'d_gc_lemon', name:'手打柠檬茶', qty:1, price:13, specs:{ice:'正常冰', sugar:'七分糖'}}],
+        subtotal:13, pack:1, fee:2, discount:0, couponId:null, total:16,
+        address:{id:'a_home', tag:'家', detail:'望京SOHO T1 座 1801'},
+        remark:'', utensils:1, pay:'微信支付', createdAt:'2026-08-24 12:05' }
+    ]
+  };
+}
+
+/* --------------------------------------------------------- selectors/pricing */
+function cartSubtotal(st){
+  var s=0; st.cart.lines.forEach(function(l){ s += l.unit * l.qty; }); return s;
+}
+function cartCount(st){ var n=0; st.cart.lines.forEach(function(l){ n+=l.qty; }); return n; }
+function packFee(st){
+  if (!st.cart.shopId) return 0;
+  return shop(st.cart.shopId).pack;
+}
+function deliveryFee(st){ return st.cart.shopId ? shop(st.cart.shopId).fee : 0; }
+function couponUsable(st, cid){
+  var c = coupon(cid); if (!c) return false;
+  var owned = byId(st.coupons, cid); if (!owned || owned.used) return false;
+  if (c.expires < dateStr(st.meta.clock)) return false;
+  if (c.scope !== 'all' && c.scope !== st.cart.shopId) return false;
+  return cartSubtotal(st) >= c.threshold;
+}
+function usableCoupons(st){
+  return st.coupons.filter(function(o){ return couponUsable(st, o.id); })
+                   .map(function(o){ return coupon(o.id); })
+                   .sort(function(a,b){ return b.amount - a.amount; });
+}
+function discountOf(st){
+  if (!st.checkout.couponId) return 0;
+  if (!couponUsable(st, st.checkout.couponId)) return 0;
+  return coupon(st.checkout.couponId).amount;
+}
+function orderTotal(st){
+  return cartSubtotal(st) + packFee(st) + deliveryFee(st) - discountOf(st);
+}
+function lineKey(dishId, specs){
+  var ks = Object.keys(specs||{}).sort(), s='';
+  for (var i=0;i<ks.length;i++) s += ks[i]+'='+specs[ks[i]]+';';
+  return dishId+'|'+s;
+}
+function unitPrice(d, specs){
+  var p = d.price;
+  (d.specs||[]).forEach(function(g){
+    var v = (specs||{})[g.key];
+    g.opts.forEach(function(o){ if (o.v===v) p += o.d; });
+  });
+  return p;
+}
+function defaultSpecs(d){
+  var out={}; (d.specs||[]).forEach(function(g){ out[g.key]=g.def; }); return out;
+}
+function visibleShops(st){
+  var list = shuffled(SHOPS, st.meta.seed);
+  var f = st.ui.filter;
+  if (st.ui.query) {
+    var q = st.ui.query;
+    list = list.filter(function(s){
+      if (s.name.indexOf(q) >= 0) return true;
+      if (s.cats.join(',').indexOf(q) >= 0) return true;
+      return DISHES.some(function(d){ return d.shop===s.id && d.name.indexOf(q)>=0; });
+    });
+  }
+  if (f.freeFee)  list = list.filter(function(s){ return s.fee === 0; });
+  if (f.minRating) list = list.filter(function(s){ return s.rating >= f.minRating; });
+  if (f.sort==='rating')   list = list.slice().sort(function(a,b){ return b.rating-a.rating; });
+  if (f.sort==='fee')      list = list.slice().sort(function(a,b){ return a.fee-b.fee || a.eta-b.eta; });
+  if (f.sort==='eta')      list = list.slice().sort(function(a,b){ return a.eta-b.eta; });
+  if (f.sort==='sales')    list = list.slice().sort(function(a,b){ return b.sales-a.sales; });
+  return list;
+}
+function route(st){ return st.ui.stack[st.ui.stack.length-1]; }
+
+var SELECT = { cartSubtotal:cartSubtotal, cartCount:cartCount, orderTotal:orderTotal, discountOf:discountOf,
+               usableCoupons:usableCoupons, visibleShops:visibleShops, route:route, deliveryFee:deliveryFee,
+               packFee:packFee, unitPrice:unitPrice, clockStr:clockStr, dateStr:dateStr };
+
+/* 起送价 — attached to the shop records above (kept separate for readability) */
+var MIN_ORDER = { s_xiedao:20, s_qingzhu:15, s_laowang:10, s_guocha:10, s_haidao:25, s_xiangzi:0 };
+SHOPS.forEach(function(s){ s.min = MIN_ORDER[s.id]; });
+function shortOf(st){ var m = st.cart.shopId ? shop(st.cart.shopId).min : 0; return Math.max(0, m - cartSubtotal(st)); }
+SELECT.shortOf = shortOf;
+
+/* ------------------------------------------------------------- reducer */
+function push(st, name, params){ st.ui.stack.push({name:name, params:params||{}}); st.ui.sheet=null; }
+function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
+function toast(st, t){ st.ui.toast = t; }
+
+function addToCart(st, dishId, specs, qty){
+  var d = dish(dishId); if (!d) return;
+  if (st.cart.shopId && st.cart.shopId !== d.shop && st.cart.lines.length){
+    st.ui.confirm = { text:'购物车中已有「'+shop(st.cart.shopId).name+'」的商品，是否清空并添加？',
+                      okText:'清空并添加',
+                      yes:{ type:'CART_REPLACE', dishId:dishId, specs:specs, qty:qty } };
+    return;
+  }
+  st.cart.shopId = d.shop;
+  var key = lineKey(dishId, specs), hit = null;
+  st.cart.lines.forEach(function(l){ if (l.key === key) hit = l; });
+  if (hit) { hit.qty += qty; }
+  else {
+    st.cart.lines.push({ key:key, dishId:dishId, name:d.name, emoji:d.emoji,
+                         specs:clone(specs||{}), unit:unitPrice(d, specs), qty:qty });
+  }
+  toast(st, '已加入购物车');
+}
+
+function reduce(prev, action){
+  var st = clone(prev), A = action || {};
+  st.ui.toast = null;                       /* a toast lives exactly one step */
+  st.meta.steps += 1;
+  tick(st.meta.clock, SECONDS_PER_STEP);
+
+  switch (A.type) {
+
+  /* ---- navigation ---- */
+  case 'NAV':   push(st, A.to, A.params); break;
+  case 'BACK':
+    if (st.ui.confirm) st.ui.confirm = null;
+    else if (st.ui.sheet) st.ui.sheet = null;
+    else pop(st);
+    break;
+  case 'TAB':
+    st.ui.tab = A.tab; st.ui.stack = [{name:A.tab, params:{}}]; st.ui.sheet = null; st.ui.confirm = null;
+    break;
+  case 'HOME':
+    st.ui.tab = 'home'; st.ui.stack = [{name:'home', params:{}}]; st.ui.sheet = null; st.ui.confirm = null;
+    break;
+
+  /* ---- text input & search ---- */
+  case 'SET_INPUT': st.ui.inputs[A.field] = A.value; break;
+  case 'SUBMIT_SEARCH':
+    st.ui.query = String(st.ui.inputs.search || '').trim();
+    if (route(st).name !== 'search') push(st, 'search', {});
+    break;
+  case 'CLEAR_SEARCH': st.ui.query = ''; st.ui.inputs.search = ''; break;
+  case 'SET_FILTER':  st.ui.filter[A.key] = A.value; break;
+  case 'SET_CAT':     st.ui.cat[A.shopId] = A.idx; break;
+
+  /* ---- dish options sheet ---- */
+  case 'OPEN_SPEC': {
+    var d0 = dish(A.dishId); if (!d0) break;
+    st.ui.sheet = { type:'spec', dishId:A.dishId, specs:defaultSpecs(d0), qty:1 };
+    break;
+  }
+  case 'SPEC_SET':  if (st.ui.sheet && st.ui.sheet.type==='spec') st.ui.sheet.specs[A.key] = A.value; break;
+  case 'SPEC_QTY':  if (st.ui.sheet && st.ui.sheet.type==='spec')
+                      st.ui.sheet.qty = Math.max(1, Math.min(20, st.ui.sheet.qty + A.delta)); break;
+  case 'SPEC_CONFIRM': {
+    var sh = st.ui.sheet; if (!sh || sh.type!=='spec') break;
+    st.ui.sheet = null;
+    addToCart(st, sh.dishId, sh.specs, sh.qty);
+    break;
+  }
+  case 'QUICK_ADD': {
+    var d1 = dish(A.dishId); if (!d1) break;
+    if (d1.specs && d1.specs.length) { st.ui.sheet = {type:'spec', dishId:A.dishId, specs:defaultSpecs(d1), qty:1}; }
+    else addToCart(st, A.dishId, {}, 1);
+    break;
+  }
+
+  /* ---- cart ---- */
+  case 'OPEN_CART':
+    if (!st.cart.lines.length) { toast(st, '购物车是空的'); break; }
+    st.ui.sheet = {type:'cart'}; break;
+  case 'CLOSE_SHEET': st.ui.sheet = null; break;
+  case 'CONFIRM_NO':  st.ui.confirm = null; break;
+  case 'CONFIRM_YES': {
+    var yes = st.ui.confirm && st.ui.confirm.yes; st.ui.confirm = null;
+    if (yes) return reduceInner(st, yes);
+    break;
+  }
+  case 'CART_REPLACE':
+    st.cart = {shopId:null, lines:[]};
+    addToCart(st, A.dishId, A.specs, A.qty);
+    break;
+  case 'CART_QTY': {
+    var idx = -1;
+    st.cart.lines.forEach(function(l,i){ if (l.key === A.key) idx = i; });
+    if (idx < 0) break;
+    st.cart.lines[idx].qty += A.delta;
+    if (st.cart.lines[idx].qty <= 0) st.cart.lines.splice(idx, 1);
+    if (!st.cart.lines.length) { st.cart.shopId = null; st.ui.sheet = null; }
+    break;
+  }
+  case 'CART_CLEAR': st.cart = {shopId:null, lines:[]}; st.ui.sheet = null; st.ui.confirm = null; break;
+
+  /* ---- checkout ---- */
+  case 'GOTO_CHECKOUT': {
+    if (!st.cart.lines.length) { toast(st, '购物车是空的'); break; }
+    if (shortOf(st) > 0) { toast(st, '还差 ¥'+fmt(shortOf(st))+' 起送'); break; }
+    if (!st.checkout.addressId) st.checkout.addressId = st.defaultAddressId;
+    if (st.checkout.couponId && !couponUsable(st, st.checkout.couponId)) st.checkout.couponId = null;
+    /* 「自动选择最优券」开着就照做——开关上写的字必须算数 */
+    if (!st.checkout.couponId && st.profile.settings.autoCoupon) {
+      var best = usableCoupons(st)[0];
+      if (best) st.checkout.couponId = best.id;
+    }
+    st.ui.inputs.remark = st.checkout.remark || '';
+    push(st, 'checkout', {});
+    break;
+  }
+  case 'SET_CHECKOUT':
+    st.checkout[A.key] = A.value;
+    if (A.key === 'remark') st.ui.inputs.remark = A.value;
+    break;
+  case 'SAVE_REMARK':
+    st.checkout.remark = String(st.ui.inputs.remark || '');
+    pop(st); toast(st, '备注已保存');
+    break;
+  case 'PICK_COUPON':
+    if (A.couponId && !couponUsable(st, A.couponId)) { toast(st, '该优惠券不可用'); break; }
+    st.checkout.couponId = A.couponId || null;
+    pop(st);
+    break;
+  case 'PICK_ADDRESS':
+    st.checkout.addressId = A.id; pop(st); break;
+  case 'PLACE_ORDER':
+    if (!st.cart.lines.length) { toast(st, '购物车是空的'); break; }
+    if (!st.checkout.addressId) { toast(st, '请先选择收货地址'); break; }
+    st.ui.sheet = {type:'pay'};
+    break;
+  case 'CONFIRM_PAY': {
+    if (!st.cart.lines.length) { toast(st, '购物车是空的'); break; }
+    var sp = shop(st.cart.shopId), addr = byId(st.addresses, st.checkout.addressId);
+    var disc = discountOf(st), sub = cartSubtotal(st);
+    var oid = 'o_' + (1000 + st.meta.orderSeq); st.meta.orderSeq += 1;
+    var order = {
+      id: oid, shopId: sp.id, shopName: sp.name, status:'pending',
+      lines: st.cart.lines.map(function(l){
+        return {dishId:l.dishId, name:l.name, qty:l.qty, price:l.unit, specs:clone(l.specs)};
+      }),
+      subtotal: sub, pack: sp.pack, fee: sp.fee, discount: disc,
+      couponId: st.checkout.couponId || null,
+      total: sub + sp.pack + sp.fee - disc,
+      address: {id:addr.id, tag:addr.tag, name:addr.name, phone:addr.phone, detail:addr.detail},
+      remark: st.checkout.remark || '', utensils: st.checkout.utensils, pay: st.checkout.pay,
+      deliveryTime: st.checkout.deliveryTime,
+      createdAt: dateStr(st.meta.clock)+' '+clockStr(st.meta.clock)
+    };
+    st.orders.push(order);
+    if (order.couponId) st.coupons.forEach(function(c){ if (c.id===order.couponId) c.used = true; });
+    st.cart = {shopId:null, lines:[]};
+    st.checkout = {addressId:null, couponId:null, remark:'', pay:'微信支付', utensils:1, deliveryTime:'asap'};
+    st.ui.sheet = null;
+    st.ui.tab = 'orders';
+    st.ui.stack = [{name:'orders', params:{}}, {name:'orderDetail', params:{id:oid}}];
+    toast(st, '下单成功');
+    break;
+  }
+
+  /* ---- addresses ---- */
+  case 'SET_DEFAULT_ADDRESS':
+    if (byId(st.addresses, A.id)) { st.defaultAddressId = A.id; toast(st, '已设为默认地址'); }
+    break;
+  case 'ADDR_NEW':
+    st.ui.inputs.addr_tag=''; st.ui.inputs.addr_name=st.profile.name;
+    st.ui.inputs.addr_phone=st.profile.phone; st.ui.inputs.addr_detail='';
+    push(st, 'addressEdit', {id:null});
+    break;
+  case 'ADDR_EDIT': {
+    var a = byId(st.addresses, A.id); if (!a) break;
+    st.ui.inputs.addr_tag=a.tag; st.ui.inputs.addr_name=a.name;
+    st.ui.inputs.addr_phone=a.phone; st.ui.inputs.addr_detail=a.detail;
+    push(st, 'addressEdit', {id:A.id});
+    break;
+  }
+  case 'ADDR_SAVE': {
+    var i = st.ui.inputs;
+    if (!String(i.addr_tag||'').trim())    { toast(st, '请填写地址标签'); break; }
+    if (!String(i.addr_detail||'').trim()) { toast(st, '请填写详细地址'); break; }
+    if (!String(i.addr_name||'').trim())   { toast(st, '请填写联系人'); break; }
+    var cur = route(st).params.id;
+    if (cur) {
+      var ea = byId(st.addresses, cur);
+      ea.tag=i.addr_tag.trim(); ea.name=i.addr_name.trim();
+      ea.phone=String(i.addr_phone||'').trim(); ea.detail=i.addr_detail.trim();
+    } else {
+      var nid = 'a_new' + st.meta.addrSeq; st.meta.addrSeq += 1;
+      st.addresses.push({id:nid, tag:i.addr_tag.trim(), name:i.addr_name.trim(),
+                         phone:String(i.addr_phone||'').trim(), detail:i.addr_detail.trim()});
+    }
+    pop(st); toast(st, '地址已保存');
+    break;
+  }
+  case 'ADDR_DELETE': {
+    if (st.addresses.length <= 1) { toast(st, '至少保留一个地址'); break; }
+    st.addresses = st.addresses.filter(function(a){ return a.id !== A.id; });
+    if (st.defaultAddressId === A.id) st.defaultAddressId = st.addresses[0].id;
+    toast(st, '已删除');
+    break;
+  }
+
+  /* ---- orders ---- */
+  case 'ORDER_CANCEL': {
+    var o = byId(st.orders, A.id); if (!o) break;
+    if (o.status !== 'pending') { toast(st, '该订单当前状态不可取消'); break; }
+    st.ui.confirm = { text:'确定要取消这笔订单吗？', okText:'确定取消',
+                      yes:{type:'ORDER_CANCEL_OK', id:A.id} };
+    break;
+  }
+  case 'ORDER_CANCEL_OK': {
+    var o2 = byId(st.orders, A.id); if (!o2 || o2.status!=='pending') break;
+    o2.status = 'canceled';
+    if (o2.couponId) st.coupons.forEach(function(c){ if (c.id===o2.couponId) c.used = false; });
+    toast(st, '订单已取消');
+    break;
+  }
+  case 'ORDER_REORDER': {
+    var o3 = byId(st.orders, A.id); if (!o3) break;
+    st.cart = {shopId:o3.shopId, lines:o3.lines.map(function(l){
+      var d2 = dish(l.dishId);
+      return {key:lineKey(l.dishId, l.specs), dishId:l.dishId, name:l.name,
+              emoji:d2?d2.emoji:'🍽', specs:clone(l.specs||{}), unit:l.price, qty:l.qty};
+    })};
+    st.ui.tab='home'; st.ui.stack=[{name:'home',params:{}},{name:'shop',params:{id:o3.shopId}}];
+    toast(st, '已加入购物车');
+    break;
+  }
+
+  /* ---- settings / misc ---- */
+  case 'TOGGLE':
+    st.profile.settings[A.key] = !st.profile.settings[A.key];
+    break;
+  case 'FINISH':
+    st.meta.answer = (A.answer === undefined ? null : A.answer);
+    st.meta.finished = true;
+    break;
+  case 'EXPLAIN': toast(st, A.text || ''); break;
+  case 'NOOP': default: break;
+  }
+  return st;
+}
+
+/* CONFIRM_YES re-enters the switch without re-cloning / re-ticking */
+function reduceInner(st, action){
+  var saved = st.meta.steps, savedClock = clone(st.meta.clock);
+  var out = reduce(st, action);
+  out.meta.steps = saved; out.meta.clock = savedClock;
+  return out;
+}
+
+/* =======================================================================
+ * SCREEN TREE
+ * screen(state) -> a declarative node tree. It is consumed by
+ *   (a) the DOM renderer  (script#ui)             -> pixels
+ *   (b) the headless hit-tester (engine.hit)  -> browser-free rollouts
+ *   (c) a11y(tree)                            -> text observation for LLMs
+ * Every interactive node carries a stable `id` (the test-id) and an `act`
+ * (an action object fed straight back into reduce()).
+ * ==================================================================== */
+function N(t, o){ o = o || {}; o.t = t; return o; }
+
+function appbar(title, opts){
+  opts = opts || {};
+  return N('appbar', {id:'appbar', title:title, back:!!opts.back, cls:opts.cls||'', right:opts.right||[]});
+}
+function row(id, label, o){
+  o = o || {};
+  return N('row', {id:id, text:label, sub:o.sub, val:o.val, valCls:o.valCls, lead:o.lead,
+                   arrow:o.arrow !== false, act:o.act, cls:o.cls, c:o.c});
+}
+function btn(id, text, act, cls, disabled){
+  return N('btn', {id:id, text:text, act:act, cls:cls||'', disabled:!!disabled});
+}
+function txt(text, cls){ return N('text', {text:text, cls:cls||'body'}); }
+function money(n){ return '¥' + fmt(n); }
+
+function tabbar(st){
+  var items = [
+    {id:'tab_home',   text:'点餐', icon:'bowl',    tab:'home'},
+    {id:'tab_orders', text:'订单', icon:'receipt', tab:'orders'},
+    {id:'tab_me',     text:'我的', icon:'user',    tab:'me'}
+  ].map(function(it){
+    return {id:it.id, text:it.text, icon:it.icon, on:(st.ui.tab===it.tab), act:{type:'TAB', tab:it.tab}};
+  });
+  return N('tabbar', {id:'tabbar', items:items});
+}
+
+function shopCard(st, s, prefix){
+  return N('card', {
+    id: prefix + s.id, cls:'tap', act:{type:'NAV', to:'shop', params:{id:s.id}},
+    c:[ N('shopcard', {tapId: prefix + s.id, shop:{
+          name:s.name, emoji:s.emoji, rating:s.rating, sales:s.sales, fee:s.fee,
+          eta:s.eta, dist:s.dist, min:s.min, badges:s.badges}}) ]
+  });
+}
+
+function dishNode(st, d){
+  var inCart = 0, key = null;
+  st.cart.lines.forEach(function(l){ if (l.dishId===d.dishId||l.dishId===d.id) { inCart += l.qty; key = l.key; } });
+  var hasSpec = !!(d.specs && d.specs.length);
+  var ctl;
+  if (hasSpec) ctl = btn('add_'+d.id, '选规格', {type:'OPEN_SPEC', dishId:d.id}, 'primary ghostless');
+  else if (inCart > 0) ctl = N('stepper', {id:'step_'+d.id, value:inCart,
+        minusId:'minus_'+d.id, plusId:'plus_'+d.id,
+        minus:{type:'CART_QTY', key:key, delta:-1}, plus:{type:'CART_QTY', key:key, delta:1}});
+  else ctl = N('stepper', {id:'step_'+d.id, value:0, plusOnly:true,
+        plusId:'plus_'+d.id, plus:{type:'QUICK_ADD', dishId:d.id}});
+  var tags = [];
+  if (d.sign)  tags.push({text:'招牌', cls:'sign'});
+  if (d.veg)   tags.push({text:'素食', cls:'veg'});
+  if (d.spicy) tags.push({text:'辣', cls:'spicy'});
+  return N('dish', {id:'dish_'+d.id, name:d.name, desc:d.desc, price:d.price, emoji:d.emoji,
+                    tags:tags, ctl:ctl,
+                    act: hasSpec ? {type:'OPEN_SPEC', dishId:d.id} : {type:'QUICK_ADD', dishId:d.id}});
+}
+
+function cartBar(st, sid){
+  var n = cartCount(st), sub = cartSubtotal(st), short = shortOf(st);
+  var mine = st.cart.shopId === sid;
+  var can = mine && n > 0 && short <= 0;
+  return N('bar', {id:'cartbar', c:[ N('cartbar', {
+    id:'cartbar_inner', count: mine?n:0, subtotal: mine?sub:0,
+    fee: shop(sid).fee, min: shop(sid).min,
+    iconId:'cart_icon', iconAct:{type:'OPEN_CART'},
+    btn: btn('to_checkout', can ? '去结算' : (mine && n>0 ? '差'+money(short)+'起送' : money(shop(sid).min)+'起送'),
+             {type:'GOTO_CHECKOUT'}, 'primary', !can)
+  })]});
+}
+
+/* ------------------------------------------------------------- screens */
+function scrHome(st){
+  var addr = byId(st.addresses, st.defaultAddressId) || st.addresses[0];
+  var f = st.ui.filter;
+  var chips = N('chips', {id:'home_filters', c:[
+    N('chip', {id:'filter_sort_default', text:'综合排序', on:f.sort==='default', act:{type:'SET_FILTER',key:'sort',value:'default'}}),
+    N('chip', {id:'filter_sort_rating',  text:'评分最高', on:f.sort==='rating',  act:{type:'SET_FILTER',key:'sort',value:'rating'}}),
+    N('chip', {id:'filter_sort_eta',     text:'配送最快', on:f.sort==='eta',     act:{type:'SET_FILTER',key:'sort',value:'eta'}}),
+    N('chip', {id:'filter_sort_sales',   text:'销量优先', on:f.sort==='sales',   act:{type:'SET_FILTER',key:'sort',value:'sales'}}),
+    N('chip', {id:'filter_freefee',      text:'免配送费', on:!!f.freeFee,        act:{type:'SET_FILTER',key:'freeFee',value:!f.freeFee}}),
+    N('chip', {id:'filter_rating47',     text:'评分4.7+', on:f.minRating>=4.7,   act:{type:'SET_FILTER',key:'minRating',value:f.minRating>=4.7?0:4.7}})
+  ]});
+  var list = visibleShops(st).map(function(s){ return shopCard(st, s, 'shop_'); });
+  return N('screen', {id:'scr_home', name:'home', c:[
+    N('appbar', {id:'appbar', cls:'accent', title:'松鼠外卖',
+      left:[N('addrchip', {id:'home_address', text:addr.tag, icon:'pin', act:{type:'NAV', to:'addresses', params:{}}})]}),
+    N('search', {id:'home_search', field:'search', value:st.ui.inputs.search||'', placeholder:'搜索商家 / 菜品',
+                 act:{type:'SET_INPUT', field:'search', value:'$VALUE'},
+                 goId:'home_search_go', go:{type:'SUBMIT_SEARCH'}}),
+    N('scroll', {id:'home_list', c:[chips].concat(list.length?list:[txt('没有符合条件的商家','empty')])}),
+    tabbar(st)
+  ]});
+}
+
+function scrSearch(st){
+  var list = visibleShops(st).map(function(s){ return shopCard(st, s, 'result_'); });
+  return N('screen', {id:'scr_search', name:'search', c:[
+    N('appbar', {id:'appbar', back:true, title:'搜索'}),
+    N('search', {id:'search_input', field:'search', value:st.ui.inputs.search||'', placeholder:'搜索商家 / 菜品',
+                 act:{type:'SET_INPUT', field:'search', value:'$VALUE'},
+                 goId:'search_go', go:{type:'SUBMIT_SEARCH'}}),
+    N('scroll', {id:'search_list', c:[txt('“'+(st.ui.query||'')+'” 共 '+list.length+' 个结果','muted')]
+        .concat(list.length?list:[txt('没有找到相关商家','empty')])})
+  ]});
+}
+
+function scrShop(st, params){
+  var s = shop(params.id); if (!s) return scrHome(st);
+  var cats = []; DISHES.forEach(function(d){ if (d.shop===s.id && cats.indexOf(d.cat)<0) cats.push(d.cat); });
+  var ci = Math.min(st.ui.cat[s.id]||0, cats.length-1);
+  var cur = cats[ci];
+  var dishes = DISHES.filter(function(d){ return d.shop===s.id && d.cat===cur; });
+  return N('screen', {id:'scr_shop', name:'shop', params:{id:s.id}, c:[
+    N('appbar', {id:'appbar', back:true, title:s.name}),
+    N('shophead', {id:'shophead', shop:{name:s.name, emoji:s.emoji, rating:s.rating, sales:s.sales,
+      fee:s.fee, eta:s.eta, dist:s.dist, min:s.min, pack:s.pack, badges:s.badges, notice:s.notice}}),
+    N('menu', {id:'menu',
+      rail: cats.map(function(c, i){
+        return {id:'cat_'+s.id+'_'+i, text:c, on:i===ci, act:{type:'SET_CAT', shopId:s.id, idx:i}};
+      }),
+      list: dishes.map(function(d){ return dishNode(st, d); })
+    }),
+    cartBar(st, s.id)
+  ]});
+}
+
+function scrCheckout(st){
+  var sid = st.cart.shopId; if (!sid) return scrHome(st);
+  var s = shop(sid), addr = byId(st.addresses, st.checkout.addressId);
+  var sub = cartSubtotal(st), disc = discountOf(st), usable = usableCoupons(st);
+  var cpn = st.checkout.couponId ? coupon(st.checkout.couponId) : null;
+  var lines = st.cart.lines.map(function(l){
+    return N('orderline', {id:'chkline_'+l.dishId, name:l.name, emoji:l.emoji, qty:l.qty,
+                           specs:specText(l.specs), amount:l.unit*l.qty});
+  });
+  var body = [
+    N('card', {id:'chk_addr_card', cls:'flush', c:[
+      row('chk_address', addr ? (addr.tag+' · '+addr.detail) : '请选择收货地址',
+          {sub: addr ? (addr.name+' '+addr.phone) : '', lead:'pin',
+           act:{type:'NAV', to:'addresses', params:{pick:true}}})
+    ]}),
+    N('card', {id:'chk_time_card', cls:'flush', c:[
+      row('chk_time', '送达时间', {arrow:false,
+        c:[N('chips',{id:'time_chips', cls:'inline', c:[
+            N('chip',{id:'time_asap',    text:'尽快送达', on:st.checkout.deliveryTime==='asap',
+                      act:{type:'SET_CHECKOUT', key:'deliveryTime', value:'asap'}}),
+            N('chip',{id:'time_reserve', text:'预约 19:00', on:st.checkout.deliveryTime==='reserve',
+                      act:{type:'SET_CHECKOUT', key:'deliveryTime', value:'reserve'}})
+        ]})]})
+    ]}),
+    N('card', {id:'chk_items', cls:'flush', c:[
+      N('shopline', {id:'chk_shop', text:s.name, arrow:true,
+                     act:{type:'NAV', to:'shop', params:{id:s.id}}})
+    ].concat(lines).concat([
+      N('kv', {k:'商品小计', v:money(sub)}),
+      N('kv', {k:'打包费',   v:money(s.pack)}),
+      N('kv', {k:'配送费',   v:money(s.fee)}),
+      N('kv', {k:'优惠券',   v: disc? ('-'+money(disc)) : '未使用'}),
+      N('kv', {k:'实付', v:money(sub + s.pack + s.fee - disc), cls:'total'})
+    ])}),
+    N('card', {id:'chk_opts', cls:'flush', c:[
+      row('chk_coupon', '优惠券', {lead:'ticket',
+        val: cpn ? cpn.title : (usable.length ? usable.length+' 张可用' : '无可用优惠券'),
+        valCls: cpn ? 'accent' : '', act:{type:'NAV', to:'coupons', params:{}}}),
+      N('inputrow', {id:'chk_remark', label:'订单备注', field:'remark',
+        value: st.ui.inputs.remark !== undefined ? st.ui.inputs.remark : st.checkout.remark,
+        placeholder:'口味偏好、送达要求…',
+        act:{type:'SET_CHECKOUT', key:'remark', value:'$VALUE'}}),
+      row('chk_utensils', '餐具份数', {lead:'utensils', arrow:false,
+        c:[N('stepper', {id:'utensils_stepper', value:st.checkout.utensils,
+             minusId:'utensils_minus', plusId:'utensils_plus',
+             minus:{type:'SET_CHECKOUT', key:'utensils', value:Math.max(0, st.checkout.utensils-1)},
+             plus:{type:'SET_CHECKOUT', key:'utensils', value:Math.min(10, st.checkout.utensils+1)}})]})
+    ]}),
+    N('card', {id:'chk_pay', cls:'flush', c:[
+      N('sec', {text:'支付方式'}),
+      payRow('pay_wechat', '微信支付', 'chat', st),
+      payRow('pay_alipay', '支付宝',   'card', st),
+      payRow('pay_balance','余额支付', 'wallet', st)
+    ]}),
+    N('space', {})
+  ];
+  return N('screen', {id:'scr_checkout', name:'checkout', c:[
+    appbar('确认订单', {back:true}),
+    N('scroll', {id:'chk_scroll', c:body}),
+    N('bar', {id:'chk_bar', c:[
+      N('paybar', {id:'chk_paybar', total:money(sub + s.pack + s.fee - disc), saved: disc?('已优惠 '+money(disc)):'',
+                   btn: btn('chk_submit', '提交订单', {type:'PLACE_ORDER'}, 'primary')})
+    ]})
+  ]});
+}
+function payRow(id, name, ico, st){
+  return row(id, name, {lead:ico, arrow:false, act:{type:'SET_CHECKOUT', key:'pay', value:name},
+    c:[N('radio', {id:id+'_radio', on: st.checkout.pay===name,
+                   act:{type:'SET_CHECKOUT', key:'pay', value:name}})]});
+}
+function specText(specs){
+  var ks = Object.keys(specs||{}); if (!ks.length) return '';
+  return ks.map(function(k){ return specs[k]; }).join(' / ');
+}
+
+function scrCoupons(st){
+  var rows = [];
+  st.coupons.forEach(function(o){
+    var c = coupon(o.id), ok = couponUsable(st, o.id), why = '';
+    if (o.used) why = '已使用';
+    else if (c.expires < dateStr(st.meta.clock)) why = '已过期 '+c.expires;
+    else if (c.scope !== 'all' && c.scope !== st.cart.shopId) why = '仅限「'+shop(c.scope).name+'」';
+    else if (cartSubtotal(st) < c.threshold) why = '还差 '+money(c.threshold-cartSubtotal(st))+' 可用';
+    rows.push(N('coupon', {id:'coupon_'+c.id, title:c.title, amount:c.amount, threshold:c.threshold,
+      expires:c.expires, usable:ok, why: ok ? ('有效期至 '+c.expires) : why,
+      on: st.checkout.couponId===c.id,
+      act: ok ? {type:'PICK_COUPON', couponId:c.id}
+              : {type:'EXPLAIN', text:c.title + '：' + why}}));
+  });
+  return N('screen', {id:'scr_coupons', name:'coupons', c:[
+    appbar('选择优惠券', {back:true}),
+    N('scroll', {id:'coupon_list', c:[
+      txt('当前订单商品小计 '+money(cartSubtotal(st)), 'muted')
+    ].concat(rows).concat([
+      N('card', {id:'coupon_none_card', cls:'flush', c:[
+        row('coupon_none', '不使用优惠券', {arrow:false, act:{type:'PICK_COUPON', couponId:null},
+            c:[N('radio', {id:'coupon_none_radio', on:!st.checkout.couponId,
+                           act:{type:'PICK_COUPON', couponId:null}})]})
+      ]})
+    ])})
+  ]});
+}
+
+function scrAddresses(st, params){
+  var pick = !!params.pick;
+  var cards = st.addresses.map(function(a){
+    return N('card', {id:'addrcard_'+a.id, cls:'flush', c:[
+      row('addr_'+a.id, a.tag+' · '+a.detail, {
+        sub:a.name+' '+a.phone, arrow:pick,
+        act: pick ? {type:'PICK_ADDRESS', id:a.id} : {type:'ADDR_EDIT', id:a.id},
+        c: pick ? [] : [N('radio', {id:'addr_default_'+a.id, on: st.defaultAddressId===a.id,
+                                    act:{type:'SET_DEFAULT_ADDRESS', id:a.id}})]
+      }),
+      N('btnrow', {id:'addrops_'+a.id, c:[
+        N('label', {text: st.defaultAddressId===a.id ? '默认地址' : ''}),
+        btn('addr_edit_'+a.id, '编辑', {type:'ADDR_EDIT', id:a.id}, 'ghost'),
+        btn('addr_del_'+a.id,  '删除', {type:'ADDR_DELETE', id:a.id}, 'danger')
+      ]})
+    ]});
+  });
+  return N('screen', {id:'scr_addresses', name:'addresses', c:[
+    appbar(pick ? '选择收货地址' : '收货地址', {back:true,
+      right:[btn('addr_add', '新增', {type:'ADDR_NEW'}, 'ghost')]}),
+    N('scroll', {id:'addr_list', c: cards.concat([
+      N('card', {id:'addr_add_card', cls:'flush', c:[
+        row('addr_add_row', '＋ 新增收货地址', {arrow:false, act:{type:'ADDR_NEW'}})
+      ]})
+    ])})
+  ]});
+}
+
+function scrAddressEdit(st, params){
+  var editing = !!params.id, i = st.ui.inputs;
+  return N('screen', {id:'scr_addressEdit', name:'addressEdit', c:[
+    appbar(editing ? '编辑地址' : '新增地址', {back:true}),
+    N('scroll', {id:'addr_form', c:[
+      N('card', {id:'addr_card', cls:'flush', c:[
+        N('inputrow', {id:'addr_tag', label:'标签', field:'addr_tag', value:i.addr_tag||'',
+          placeholder:'如：家 / 公司 / 学校', act:{type:'SET_INPUT', field:'addr_tag', value:'$VALUE'}}),
+        N('inputrow', {id:'addr_name', label:'联系人', field:'addr_name', value:i.addr_name||'',
+          placeholder:'收货人姓名', act:{type:'SET_INPUT', field:'addr_name', value:'$VALUE'}}),
+        N('inputrow', {id:'addr_phone', label:'手机号', field:'addr_phone', value:i.addr_phone||'',
+          placeholder:'11 位手机号', act:{type:'SET_INPUT', field:'addr_phone', value:'$VALUE'}}),
+        N('inputrow', {id:'addr_detail', label:'详细地址', field:'addr_detail', value:i.addr_detail||'',
+          placeholder:'楼栋 / 门牌号', multiline:true, act:{type:'SET_INPUT', field:'addr_detail', value:'$VALUE'}})
+      ]}),
+      N('chips', {id:'addr_tag_chips', c:['家','公司','学校','健身房'].map(function(t){
+        return N('chip', {id:'tagchip_'+t, text:t, on:(i.addr_tag===t),
+                          act:{type:'SET_INPUT', field:'addr_tag', value:t}});
+      })}),
+      N('space', {}),
+      N('padded', {c:[btn('addr_save', '保存地址', {type:'ADDR_SAVE'}, 'primary block')]})
+    ]})
+  ]});
+}
+
+var STATUS_TEXT = {pending:'待接单', shipping:'配送中', done:'已完成', canceled:'已取消'};
+var STATUS_CLS  = {pending:'wait',  shipping:'ship',  done:'done',  canceled:'cancel'};
+
+function scrOrders(st){
+  var cards = st.orders.slice().reverse().map(function(o){
+    var ops = [];
+    if (o.status === 'pending') ops.push(btn('order_cancel_'+o.id, '取消订单', {type:'ORDER_CANCEL', id:o.id}, 'danger'));
+    ops.push(btn('order_again_'+o.id, '再来一单', {type:'ORDER_REORDER', id:o.id}, 'ghost'));
+    return N('card', {id:'order_'+o.id, cls:'flush tap', act:{type:'NAV', to:'orderDetail', params:{id:o.id}}, c:[
+      N('orderhead', {id:'orderhead_'+o.id, shop:o.shopName, status:STATUS_TEXT[o.status], statusCls:STATUS_CLS[o.status],
+                      act:{type:'NAV', to:'orderDetail', params:{id:o.id}}}),
+      N('ordersum', {id:'ordersum_'+o.id, text:o.lines.map(function(l){return l.name+' x'+l.qty;}).join('，'),
+                     total:money(o.total), time:o.createdAt}),
+      N('btnrow', {id:'orderops_'+o.id, c:ops})
+    ]});
+  });
+  return N('screen', {id:'scr_orders', name:'orders', c:[
+    N('appbar', {id:'appbar', title:'我的订单'}),
+    N('scroll', {id:'order_list', c: cards.length ? cards : [txt('还没有订单','empty')]}),
+    tabbar(st)
+  ]});
+}
+
+function scrOrderDetail(st, params){
+  var o = byId(st.orders, params.id); if (!o) return scrOrders(st);
+  var lines = o.lines.map(function(l){
+    return N('orderline', {id:'oline_'+l.dishId, name:l.name, qty:l.qty, specs:specText(l.specs),
+                           amount:l.price*l.qty, emoji:(dish(l.dishId)||{}).emoji||'🍽'});
+  });
+  var ops = [];
+  if (o.status === 'pending') ops.push(btn('od_cancel', '取消订单', {type:'ORDER_CANCEL', id:o.id}, 'danger'));
+  ops.push(btn('od_again', '再来一单', {type:'ORDER_REORDER', id:o.id}, 'ghost'));
+  return N('screen', {id:'scr_orderDetail', name:'orderDetail', params:{id:o.id}, c:[
+    appbar('订单详情', {back:true}),
+    N('scroll', {id:'od_scroll', c:[
+      N('odhead', {id:'od_head', status:STATUS_TEXT[o.status], statusCls:STATUS_CLS[o.status],
+                   shop:o.shopName, total:money(o.total)}),
+      N('card', {id:'od_items', cls:'flush', c:[N('shopline', {id:'od_shop', text:o.shopName, arrow:true,
+        act:{type:'NAV', to:'shop', params:{id:o.shopId}}})].concat(lines).concat([
+        N('kv', {k:'商品小计', v:money(o.subtotal)}),
+        N('kv', {k:'打包费',   v:money(o.pack)}),
+        N('kv', {k:'配送费',   v:money(o.fee)}),
+        N('kv', {k:'优惠券',   v:o.discount ? ('-'+money(o.discount)+(o.couponId?('（'+coupon(o.couponId).title+'）'):'')) : '未使用'}),
+        N('kv', {k:'实付',     v:money(o.total), cls:'total'})
+      ])}),
+      N('card', {id:'od_info', cls:'flush', c:[
+        row('od_addr',     '收货地址', {val:o.address.tag+' · '+o.address.detail, arrow:false}),
+        row('od_remark',   '订单备注', {val:o.remark || '无', arrow:false}),
+        row('od_utensils', '餐具份数', {val:String(o.utensils)+' 份', arrow:false}),
+        row('od_pay',      '支付方式', {val:o.pay, arrow:false}),
+        row('od_no',       '订单编号', {val:o.id, arrow:false}),
+        row('od_time',     '下单时间', {val:o.createdAt, arrow:false})
+      ]}),
+      N('btnrow', {id:'od_ops', c:ops}),
+      N('space', {})
+    ]})
+  ]});
+}
+
+function scrMe(st){
+  var used = st.coupons.filter(function(c){ return !c.used; }).length;
+  return N('screen', {id:'scr_me', name:'me', c:[
+    N('appbar', {id:'appbar', cls:'accent', title:'我的'}),
+    N('scroll', {id:'me_scroll', c:[
+      N('profile', {id:'me_profile', name:st.profile.name, phone:st.profile.phone,
+                    vip:st.profile.vip, coupons:used, orders:st.orders.length,
+                    act:{type:'NAV', to:'settings', params:{}}}),
+      N('card', {id:'me_menu', cls:'flush', c:[
+        row('me_addresses', '收货地址', {lead:'pin', val:st.addresses.length+' 个', act:{type:'NAV', to:'addresses', params:{}}}),
+        row('me_coupons',   '我的优惠券', {lead:'ticket', val:used+' 张可用', act:{type:'NAV', to:'myCoupons', params:{}}}),
+        row('me_settings',  '设置',      {lead:'gear', act:{type:'NAV', to:'settings', params:{}}})
+      ]}),
+      N('space', {})
+    ]}),
+    tabbar(st)
+  ]});
+}
+
+function scrMyCoupons(st){
+  var rows = st.coupons.map(function(o){
+    var c = coupon(o.id), expired = c.expires < dateStr(st.meta.clock);
+    var why2 = o.used ? '已使用' : (expired ? '已过期 '+c.expires : ('有效期至 '+c.expires +
+               (c.scope!=='all' ? ' · 限「'+shop(c.scope).name+'」' : ' · 全平台通用')));
+    return N('coupon', {id:'mycoupon_'+c.id, title:c.title, amount:c.amount, threshold:c.threshold,
+      expires:c.expires, usable: !o.used && !expired, why: why2,
+      act:{type:'EXPLAIN', text:c.title + '：满 '+c.threshold+' 减 '+c.amount+' · ' + why2}});
+  });
+  return N('screen', {id:'scr_myCoupons', name:'myCoupons', c:[
+    appbar('我的优惠券', {back:true}),
+    N('scroll', {id:'mycoupon_list', c:rows})
+  ]});
+}
+
+function scrSettings(st){
+  var s = st.profile.settings;
+  function sw(id, label, key, sub){
+    return row(id, label, {sub:sub, arrow:false, act:{type:'TOGGLE', key:key},
+      c:[N('switch', {id:id+'_switch', on:!!s[key], act:{type:'TOGGLE', key:key}})]});
+  }
+  return N('screen', {id:'scr_settings', name:'settings', c:[
+    appbar('设置', {back:true}),
+    N('scroll', {id:'settings_list', c:[
+      N('sec', {text:'消息通知'}),
+      N('card', {id:'set_notify', cls:'flush', c:[
+        sw('set_orderPush', '订单通知', 'orderPush', '订单状态变化时提醒我'),
+        sw('set_promoPush', '优惠推送', 'promoPush', '接收商家红包和活动消息')
+      ]}),
+      N('sec', {text:'点餐偏好'}),
+      N('card', {id:'set_pref', cls:'flush', c:[
+        sw('set_vegFirst',   '素食优先',     'vegFirst',   '优先展示素食菜品'),
+        sw('set_autoCoupon', '自动选择最优券', 'autoCoupon', '结算时自动勾选最省钱的券')
+      ]}),
+      N('space', {})
+    ]})
+  ]});
+}
+
+/* ------------------------------------------------------------- overlays */
+function sheetSpec(st){
+  var sh = st.ui.sheet, d = dish(sh.dishId);
+  var groups = (d.specs||[]).map(function(g){
+    return N('optgrp', {id:'specgrp_'+g.key, title:g.name, opts:g.opts.map(function(o){
+      return {id:'spec_'+g.key+'_'+o.v, text:o.v + (o.d ? ' +'+money(o.d) : ''), on: sh.specs[g.key]===o.v,
+              act:{type:'SPEC_SET', key:g.key, value:o.v}};
+    })});
+  });
+  var unit = unitPrice(d, sh.specs);
+  return N('sheet', {id:'sheet_spec', title:d.name, closeId:'sheet_close', close:{type:'CLOSE_SHEET'},
+    c: groups.concat([
+      row('spec_qty_row', '数量', {arrow:false, c:[N('stepper', {id:'spec_stepper', value:sh.qty,
+        minusId:'spec_minus', plusId:'spec_plus',
+        minus:{type:'SPEC_QTY', delta:-1}, plus:{type:'SPEC_QTY', delta:1}})]})
+    ]),
+    footer: N('sheetfoot', {id:'spec_foot', total:money(unit*sh.qty),
+      btn: btn('spec_confirm', '加入购物车', {type:'SPEC_CONFIRM'}, 'primary')})
+  });
+}
+function sheetCart(st){
+  var lines = st.cart.lines.map(function(l){
+    return N('cartline', {id:'cartline_'+l.key, name:l.name, emoji:l.emoji, specs:specText(l.specs),
+      amount:money(l.unit*l.qty),
+      stepper:N('stepper', {id:'cstep_'+l.key, value:l.qty, minusId:'cminus_'+l.key, plusId:'cplus_'+l.key,
+        minus:{type:'CART_QTY', key:l.key, delta:-1}, plus:{type:'CART_QTY', key:l.key, delta:1}})});
+  });
+  var can = shortOf(st) <= 0;
+  return N('sheet', {id:'sheet_cart', title:'购物车', closeId:'sheet_close', close:{type:'CLOSE_SHEET'},
+    right: btn('cart_clear', '清空', {type:'CART_CLEAR'}, 'ghost'),
+    c: lines,
+    footer: N('sheetfoot', {id:'cart_foot', total:money(cartSubtotal(st)),
+      btn: btn('cart_checkout', can?'去结算':('差'+money(shortOf(st))+'起送'), can?{type:'GOTO_CHECKOUT'}:null, 'primary', !can)})
+  });
+}
+function sheetPay(st){
+  var s = shop(st.cart.shopId);
+  var total = cartSubtotal(st) + s.pack + s.fee - discountOf(st);
+  return N('sheet', {id:'sheet_pay', title:'确认支付', closeId:'sheet_close', close:{type:'CLOSE_SHEET'},
+    c:[ N('payamount', {id:'pay_amount', total:money(total), method:st.checkout.pay}) ],
+    footer: N('sheetfoot', {id:'pay_foot', total:money(total),
+      btn: btn('pay_confirm', '确认支付 '+money(total), {type:'CONFIRM_PAY'}, 'primary')})
+  });
+}
+
+var ROUTES = {
+  home:scrHome, search:scrSearch, shop:scrShop, checkout:scrCheckout, coupons:scrCoupons,
+  addresses:scrAddresses, addressEdit:scrAddressEdit, orders:scrOrders, orderDetail:scrOrderDetail,
+  me:scrMe, myCoupons:scrMyCoupons, settings:scrSettings
+};
+
+function screen(st){
+  var r = route(st), fn = ROUTES[r.name] || scrHome;
+  var root = fn(st, r.params || {});
+  root.route = r.name;
+  var extra = [];
+  if (st.ui.sheet) {
+    var sh = st.ui.sheet.type === 'spec' ? sheetSpec(st)
+           : st.ui.sheet.type === 'cart' ? sheetCart(st)
+           : st.ui.sheet.type === 'pay'  ? sheetPay(st) : null;
+    if (sh) extra.push(N('mask', {id:'mask', close:{type:'CLOSE_SHEET'}, c:[sh]}));
+  }
+  if (st.ui.confirm) {
+    extra.push(N('mask', {id:'confirm_mask', c:[N('dialog', {id:'confirm_dialog', text:st.ui.confirm.text,
+      ok: btn('confirm_ok', st.ui.confirm.okText||'确定', {type:'CONFIRM_YES'}, 'primary'),
+      cancel: btn('confirm_cancel', '取消', {type:'CONFIRM_NO'}, '')})]}));
+  }
+  if (st.ui.toast) extra.push(N('toast', {id:'toast', text:st.ui.toast}));
+  root.c = root.c.concat(extra);
+  return root;
+}
+
+/* =======================================================================
+ * TRAVERSAL — element index, GUI action interface, text observation
+ * ==================================================================== */
+var SKIP_KEYS = {act:1, minus:1, plus:1, go:1, close:1, iconAct:1, specs:1, params:1,
+                 shop:1, tags:1, yes:1, meta:1};
+
+function labelOf(n){ return n.text || n.title || n.name || n.label || ''; }
+
+function collect(n, out){
+  if (!n || typeof n !== 'object') return;
+  if (Array.isArray(n)) { for (var i=0;i<n.length;i++) collect(n[i], out); return; }
+  if (n.t === 'appbar' && n.back) out.push({id:'nav_back', act:{type:'BACK'}, text:'返回', t:'back'});
+  if (n.id && n.act)              out.push({id:n.id, act:n.act, text:labelOf(n), t:n.t||'el', disabled:!!n.disabled,
+                                            input:(n.t==='search'||n.t==='inputrow')});
+  if (n.t === 'mask' && n.close)  out.push({id:n.id, act:n.close, text:'关闭浮层', t:'mask'});
+  if (n.minusId && n.minus)       out.push({id:n.minusId, act:n.minus, text:'−', t:'stepper'});
+  if (n.plusId  && n.plus)        out.push({id:n.plusId,  act:n.plus,  text:'＋', t:'stepper'});
+  if (n.goId    && n.go)          out.push({id:n.goId,    act:n.go,    text:'搜索', t:'btn'});
+  if (n.closeId && n.close)       out.push({id:n.closeId, act:n.close, text:'关闭', t:'btn'});
+  if (n.iconId  && n.iconAct)     out.push({id:n.iconId,  act:n.iconAct, text:'购物车', t:'btn'});
+  for (var k in n){
+    if (SKIP_KEYS[k]) continue;
+    var v = n[k];
+    if (v && typeof v === 'object') collect(v, out);
+  }
+}
+
+/* modal semantics: when an overlay is up, only the overlay is reachable —
+   this keeps the headless hit-tester consistent with real DOM z-order. */
+function elements(st){
+  var root = (st && st.t === 'screen') ? st : screen(st);
+  var masks = (root.c||[]).filter(function(n){ return n.t === 'mask'; });
+  var out = [];
+  collect(masks.length ? masks[masks.length-1] : root, out);
+  return out;
+}
+function findEl(st, id){
+  var els = elements(st);
+  for (var i=0;i<els.length;i++) if (els[i].id === id) return els[i];
+  return null;
+}
+function substitute(act, text){
+  var a = clone(act);
+  for (var k in a) if (a[k] === '$VALUE') a[k] = text;
+  return a;
+}
+
+/* ---- GUI-level action interface (identical in browser and headless) ---- */
+function step(st, a){
+  a = a || {};
+  var kind = a.action || a.type;
+  switch (kind) {
+  case 'tap': {
+    var el = findEl(st, a.id);
+    if (!el) return {state:st, ok:false, error:'ELEMENT_NOT_FOUND: '+a.id};
+    if (el.disabled) return {state:st, ok:false, error:'ELEMENT_DISABLED: '+a.id};
+    return {state:reduce(st, el.act), ok:true};
+  }
+  case 'type': {
+    var e2 = findEl(st, a.id);
+    if (!e2) return {state:st, ok:false, error:'ELEMENT_NOT_FOUND: '+a.id};
+    if (!e2.input) return {state:st, ok:false, error:'NOT_A_TEXT_FIELD: '+a.id};
+    return {state:reduce(st, substitute(e2.act, a.text == null ? '' : String(a.text))), ok:true};
+  }
+  case 'back':   return {state:reduce(st, {type:'BACK'}), ok:true};
+  case 'home':   return {state:reduce(st, {type:'HOME'}), ok:true};
+  case 'wait':   return {state:reduce(st, {type:'NOOP'}), ok:true};
+  case 'finish': return {state:reduce(st, {type:'FINISH', answer:a.answer}), ok:true};
+  case 'raw':    return {state:reduce(st, a.act || {}), ok:true};
+  default:       return {state:st, ok:false, error:'UNKNOWN_ACTION: '+kind};
+  }
+}
+
+/* ------------------------------------------------- text observation (a11y) */
+function a11y(st){
+  var root = screen(st), lines = [];
+  var r = route(st);
+  lines.push('# 屏幕 route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
+             '  时间 ' + clockStr(st.meta.clock) + '  第 ' + st.meta.steps + ' 步');
+  var masks = (root.c||[]).filter(function(n){ return n.t==='mask'; });
+  if (masks.length) lines.push('# 当前有浮层，浮层之外的元素不可点击');
+  walkText(masks.length ? masks[masks.length-1] : root, 0, lines, st);
+  var toasts = (root.c||[]).filter(function(n){ return n.t==='toast'; });
+  toasts.forEach(function(t){ lines.push('[Toast] ' + t.text); });
+  return lines.join('\n');
+}
+function tid(n){ return (n && n.id && n.act) ? ' #'+n.id : ''; }
+function ind(d){ return new Array(d+1).join('  '); }
+
+function walkText(n, d, out, st){
+  if (!n || typeof n !== 'object') return;
+  if (Array.isArray(n)) { n.forEach(function(x){ walkText(x, d, out, st); }); return; }
+  var line = null, deeper = true;
+  switch (n.t) {
+  case 'screen': line = null; break;
+  case 'appbar':
+    line = '[AppBar] ' + (n.title||'') + (n.back ? '  返回 #nav_back' : '');
+    break;
+  case 'search':
+    line = '[输入框]' + tid(n) + ' 占位="' + (n.placeholder||'') + '" 当前值="' + (n.value||'') +
+           '"  搜索按钮 #' + n.goId; break;
+  case 'inputrow':
+    line = '[输入框]' + tid(n) + ' ' + (n.label||'') + ' 当前值="' + (n.value||'') + '" 占位="'+(n.placeholder||'')+'"'; break;
+  case 'chip':
+    line = '[标签]' + tid(n) + ' ' + n.text + (n.on ? ' ✔已选' : ''); break;
+  case 'btn':
+    line = '[按钮]' + (n.id ? ' #'+n.id : '') + ' ' + n.text + (n.disabled ? ' (不可点击)' : ''); break;
+  case 'row': {
+    var s = '[行]' + tid(n) + ' ' + (n.text||'');
+    if (n.val)  s += ' = ' + n.val;
+    if (n.sub)  s += '  (' + n.sub + ')';
+    line = s; break;
+  }
+  case 'switch':  line = '[开关]' + tid(n) + ' ' + (n.on ? 'ON' : 'OFF'); break;
+  case 'radio':   line = '[单选]' + tid(n) + ' ' + (n.on ? '已选中' : '未选中'); break;
+  case 'stepper':
+    line = '[数量] ' + n.value + (n.minusId ? '  减 #'+n.minusId : '') + (n.plusId ? '  加 #'+n.plusId : '');
+    break;
+  case 'shopcard': {
+    var s2 = n.shop;
+    line = '[商家] #' + n.tapId + ' ' + s2.name + ' | 评分 ' + s2.rating + ' | 月售 ' + s2.sales +
+           ' | 配送费 ' + money(s2.fee) + ' | ' + s2.eta + '分钟 | ' + s2.dist + 'km | ' + money(s2.min) + '起送';
+    break;
+  }
+  case 'shophead': {
+    var s3 = n.shop;
+    line = '[店铺信息] ' + s3.name + ' 评分 ' + s3.rating + ' 月售 ' + s3.sales + ' 配送费 ' + money(s3.fee) +
+           ' 打包费 ' + money(s3.pack) + ' ' + money(s3.min) + '起送 · ' + (s3.notice||'');
+    break;
+  }
+  case 'dish': {
+    var tg = (n.tags||[]).map(function(t){ return '['+t.text+']'; }).join('');
+    line = '[菜品]' + tid(n) + ' ' + n.name + ' ' + money(n.price) + ' ' + tg + ' ' + (n.desc||'');
+    break;
+  }
+  case 'menu':
+    out.push(ind(d) + '[分类栏] ' + n.rail.map(function(c){ return c.text + '#' + c.id + (c.on?'✔':''); }).join('  '));
+    walkText(n.list, d, out, st);
+    return;
+  case 'cartbar':
+    line = '[购物车栏] 共 ' + n.count + ' 件 小计 ' + money(n.subtotal) + ' 购物车图标 #' + n.iconId;
+    break;
+  case 'paybar':
+    line = '[结算栏] 实付 ' + n.total + (n.saved ? ' (' + n.saved + ')' : '');
+    break;
+  case 'kv':      line = '  ' + n.k + ': ' + n.v; break;
+  case 'sec':     line = '— ' + n.text + ' —'; break;
+  case 'text':    line = (n.text ? n.text : null); break;
+  case 'coupon':
+    line = '[优惠券]' + tid(n) + ' ' + n.title + ' ' + (n.usable ? '可用' : '不可用（点击看原因）') +
+           ' · ' + (n.why||'') + (n.on ? ' ✔已选' : ''); break;
+  case 'orderhead':
+    line = '[订单]' + tid(n) + ' ' + n.shop + ' — ' + n.status; break;
+  case 'ordersum':
+    line = '  ' + n.text + ' | 实付 ' + n.total + ' | ' + n.time; break;
+  case 'odhead':
+    line = '[订单状态] ' + n.status + ' · ' + n.shop + ' 实付 ' + n.total; break;
+  case 'orderline':
+    line = '  · ' + n.name + (n.specs ? '(' + n.specs + ')' : '') + ' x' + n.qty + '  ' + money(n.amount); break;
+  case 'cartline':
+    line = '[购物车项]' + tid(n) + ' ' + n.name + (n.specs ? '(' + n.specs + ')' : '') + ' ' + n.amount; break;
+  case 'shopline':  line = '· ' + n.text + tid(n); break;
+  case 'profile':   line = '[个人]' + tid(n) + ' ' + n.name + ' ' + n.phone +
+                           ' | 优惠券 ' + n.coupons + ' 张 | 订单 ' + n.orders + ' 笔'; break;
+  case 'optgrp':
+    out.push(ind(d) + '[规格] ' + n.title + ': ' + n.opts.map(function(o){
+      return o.text + '#' + o.id + (o.on ? '✔' : ''); }).join('  '));
+    return;
+  case 'tabbar':
+    out.push(ind(d) + '[底部标签] ' + n.items.map(function(i){
+      return i.text + '#' + i.id + (i.on ? '✔' : ''); }).join('  '));
+    return;
+  case 'sheet':    line = '[浮层] ' + n.title + '  关闭 #' + n.closeId; break;
+  case 'dialog':   line = '[对话框] ' + n.text; break;
+  case 'mask':     line = null; break;
+  case 'toast':    line = null; break;
+  case 'sheetfoot':line = '[浮层底栏] 合计 ' + n.total; break;
+  case 'addrchip': line = '[地址入口]' + tid(n) + ' ' + n.text; break;
+  case 'payamount':line = '[支付] 金额 ' + n.total + ' 方式 ' + n.method; break;
+  default:         line = null;
+  }
+  if (line !== null) out.push(ind(d) + line);
+  if (!deeper) return;
+  for (var k in n){
+    if (SKIP_KEYS[k]) continue;
+    var v = n[k];
+    if (v && typeof v === 'object') walkText(v, line !== null ? d+1 : d, out, st);
+  }
+}
+
+/* --------------------------------------------------------- task init patch */
+function applyPatch(st, patch){
+  (patch || []).forEach(function(p){ setPath(st, p.path, clone(p.value)); });
+  return st;
+}
+
+
+/* ------------------------------------------------------- derived view
+ * Convenience projections recomputed from the canonical state. They exist so
+ * task goals can say `derived.defaultAddress.tag` instead of hardcoding an id
+ * that the agent itself generated. Never write to `derived`.                */
+function derive(st){
+  var last = st.orders.length ? st.orders[st.orders.length-1] : null;
+  var usable = usableCoupons(st);
+  return {
+    route: route(st).name,
+    routeId: (route(st).params || {}).id || null,
+    defaultAddress: byId(st.addresses, st.defaultAddressId) || null,
+    addressTags: st.addresses.map(function(a){ return a.tag; }),
+    orderCount: st.orders.length,
+    lastOrder: last,
+    cartCount: cartCount(st),
+    cartSubtotal: cartSubtotal(st),
+    cartTotal: st.cart.shopId ? orderTotal(st) : 0,
+    usableCouponIds: usable.map(function(c){ return c.id; }),
+    bestCouponId: usable.length ? usable[0].id : null,
+    unusedCouponIds: st.coupons.filter(function(c){ return !c.used; }).map(function(c){ return c.id; }),
+    finished: !!st.meta.finished,
+    answer: st.meta.answer
+  };
+}
+function snapshot(st){ var o = clone(st); o.derived = derive(st); return o; }
+
+/* ------------------------------------------------------------------ export */
+var ENGINE = {
+  ENV_ID: ENV_ID, VERSION: VERSION, CATALOG: CATALOG,
+  createInitialState: createInitialState,
+  reduce: reduce, step: step, screen: screen, a11y: a11y,
+  elements: elements, findEl: findEl, applyPatch: applyPatch,
+  getPath: getPath, setPath: setPath, clone: clone, fmt: fmt,
+  derive: derive, snapshot: snapshot,
+  select: SELECT
+};
+root.EATS_ENGINE = ENGINE;
+root.GUI_ENGINE  = ENGINE;      /* generic alias the harness looks for first */
+
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+</script>
+
+<script id="ui">
+/* ===========================================================================
+ * UI — renders EATS_ENGINE.screen(state) into DOM and exposes window.__ENV__.
+ * The renderer is a pure function of the screen tree: no app logic lives here.
+ * ======================================================================== */
+(function(){
+'use strict';
+var E = window.EATS_ENGINE;
+var app = document.getElementById('app');
+var hud = document.getElementById('hud');
+
+var STATE = null;
+var ACTS  = [];        /* per-render action table; data-act holds the index */
+var TRAJ  = [];        /* GUI-level action log, for the Playwright runner    */
+
+function esc(s){
+  return String(s === undefined || s === null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function bind(act){ if (!act) return ''; ACTS.push(act); return ' data-act="'+(ACTS.length-1)+'"'; }
+function bindT(act){ if (!act) return ''; ACTS.push(act); return ' data-actt="'+(ACTS.length-1)+'"'; }
+function tid(id){ return id ? ' data-testid="'+esc(id)+'"' : ''; }
+function money(n){ return '¥' + E.fmt(n); }
+function R(list){ return (list||[]).map(render).join(''); }
+
+/* ------------------------------------------------- font-independent icons */
+var SVG = {
+  back:    '<path d="M15 4.5 8 12l7 7.5"/>',
+  arrow:   '<path d="M9 4.5 16 12l-7 7.5"/>',
+  search:  '<circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.4 15.4 21 21"/>',
+  cart:    '<path d="M6.2 7.5h11.6l-1 12.3H7.2z"/><path d="M9.3 7.5a2.7 2.7 0 0 1 5.4 0"/>',
+  pin:     '<path d="M12 21.2c4-4.3 6.4-7.6 6.4-10.6a6.4 6.4 0 1 0-12.8 0c0 3 2.4 6.3 6.4 10.6z"/><circle cx="12" cy="10.4" r="2.4"/>',
+  ticket:  '<path d="M4 8.4A1.8 1.8 0 0 1 5.8 6.6h12.4A1.8 1.8 0 0 1 20 8.4v1.9a1.9 1.9 0 0 0 0 3.4v1.9a1.8 1.8 0 0 1-1.8 1.8H5.8A1.8 1.8 0 0 1 4 15.6v-1.9a1.9 1.9 0 0 0 0-3.4z"/><path d="M14.4 7v10" stroke-dasharray="2 2"/>',
+  utensils:'<path d="M7 3v6M9.8 3v6M8.4 9v12"/><path d="M16.6 3c2.2 2.2 2.2 6.4 0 8.6V21"/>',
+  gear:    '<circle cx="12" cy="12" r="3.1"/><path d="M12 2.6v2.2M12 19.2v2.2M4.3 4.3l1.6 1.6M18.1 18.1l1.6 1.6M2.6 12h2.2M19.2 12h2.2M4.3 19.7l1.6-1.6M18.1 5.9l1.6-1.6"/>',
+  user:    '<circle cx="12" cy="8" r="3.8"/><path d="M4.6 20.6c0-4 3.3-6.6 7.4-6.6s7.4 2.6 7.4 6.6"/>',
+  receipt: '<path d="M6.4 3.2h11.2v17.6l-2.8-1.8-2.8 1.8-2.8-1.8-2.8 1.8z"/><path d="M9.2 8.4h5.6M9.2 12.4h5.6"/>',
+  bowl:    '<path d="M3.2 10.8h17.6a8.8 8.8 0 0 1-17.6 0z"/><path d="M2 20.4h20"/><path d="M9 7.4c0-1.6 1.4-1.8 1.4-3.2M13.4 7.4c0-1.6 1.4-1.8 1.4-3.2"/>',
+  wallet:  '<path d="M3.4 7.6A2 2 0 0 1 5.4 5.6h12.2a2 2 0 0 1 2 2v8.8a2 2 0 0 1-2 2H5.4a2 2 0 0 1-2-2z"/><circle cx="16.2" cy="12" r="1.3"/>',
+  card:    '<rect x="3" y="5.6" width="18" height="12.8" rx="2.2"/><path d="M3 10h18"/>',
+  chat:    '<path d="M4 6.6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v7.6a2 2 0 0 1-2 2h-7.6L6 19.4v-3.2a2 2 0 0 1-2-2z"/>',
+  close:   '<path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5"/>',
+  plus:    '<path d="M12 5.6v12.8M5.6 12h12.8"/>',
+  minus:   '<path d="M5.6 12h12.8"/>'
+};
+function icon(name, size, cls){
+  var d = SVG[name]; if (!d) return '';
+  return '<span class="ico '+(cls||'')+'" style="font-size:'+(size||18)+'px">'+
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" '+
+    'stroke-linecap="round" stroke-linejoin="round">'+d+'</svg></span>';
+}
+/* deterministic character tile — replaces food photography, renders anywhere */
+function hashHue(s){
+  var h = 0; s = String(s);
+  for (var i=0;i<s.length;i++) h = (h*31 + s.charCodeAt(i)) >>> 0;
+  return h % 360;
+}
+function tile(name, key, cls){
+  var ch = String(name || '?').replace(/^[^一-龥A-Za-z0-9]+/, '').slice(0, 1) || '?';
+  return '<div class="tile '+(cls||'')+'" style="--h:'+hashHue(key || name)+'">'+esc(ch)+'</div>';
+}
+
+
+function render(n){
+  if (!n || typeof n !== 'object') return '';
+  if (Array.isArray(n)) return R(n);
+  switch (n.t) {
+
+  case 'screen':
+    return R(n.c);
+
+  case 'appbar': {
+    var left = (n.back ? '<div class="ab-back" data-testid="nav_back"'+bind({type:'BACK'})+'>'+icon('back',20)+'</div>' : '') + R(n.left);
+    return '<div class="n-appbar '+esc(n.cls||'')+'"'+tid(n.id)+'>'+
+             '<div class="ab-side">'+left+'</div>'+
+             '<div class="ab-title">'+esc(n.title)+'</div>'+
+             '<div class="ab-side right">'+R(n.right)+'</div>'+
+           '</div>';
+  }
+
+  case 'addrchip':
+    return '<div class="n-chip on"'+tid(n.id)+bind(n.act)+' style="background:rgba(255,255,255,.22);'+
+           'color:#fff;border-color:rgba(255,255,255,.4)">'+icon('pin',13)+esc(n.text)+'</div>';
+
+  case 'search':
+    return '<div class="n-search">'+
+             '<div class="sf">'+icon('search',15)+'<input'+tid(n.id)+bindT(n.act)+' value="'+esc(n.value)+'" placeholder="'+esc(n.placeholder)+'"></div>'+
+             '<div class="n-btn primary" style="height:32px;padding:0 14px"'+tid(n.goId)+bind(n.go)+'>搜索</div>'+
+           '</div>';
+
+  case 'inputrow':
+    return '<div class="n-input">'+
+             '<div class="i-label">'+esc(n.label)+'</div>'+
+             (n.multiline
+               ? '<textarea'+tid(n.id)+bindT(n.act)+' placeholder="'+esc(n.placeholder)+'">'+esc(n.value)+'</textarea>'
+               : '<input'+tid(n.id)+bindT(n.act)+' value="'+esc(n.value)+'" placeholder="'+esc(n.placeholder)+'">')+
+           '</div>';
+
+  case 'scroll':  return '<div class="n-scroll"'+tid(n.id)+'>'+R(n.c)+'</div>';
+  case 'chips':   return '<div class="n-chips '+esc(n.cls||'')+'"'+tid(n.id)+'>'+R(n.c)+'</div>';
+  case 'chip':    return '<div class="n-chip'+(n.on?' on':'')+'"'+tid(n.id)+bind(n.act)+'>'+esc(n.text)+'</div>';
+  case 'card':    return '<div class="n-card '+esc(n.cls||'')+(n.act?' tap':'')+'"'+tid(n.id)+bind(n.act)+'>'+R(n.c)+'</div>';
+  case 'padded':  return '<div style="padding:0 12px">'+R(n.c)+'</div>';
+  case 'sec':     return '<div class="n-sec">'+esc(n.text)+'</div>';
+  case 'text':    return '<div class="n-text '+esc(n.cls||'')+'">'+esc(n.text)+'</div>';
+  case 'space':   return '<div class="n-space"></div>';
+  case 'divider': return '<div class="n-divider"></div>';
+  case 'label':   return n.text ? '<span style="font-size:12px;color:var(--muted);margin-right:auto">'+esc(n.text)+'</span>' : '<span style="margin-right:auto"></span>';
+
+  case 'row': {
+    var inline = [], below = [];
+    (n.c||[]).forEach(function(ch){
+      (ch.t==='switch'||ch.t==='radio'||ch.t==='stepper') ? inline.push(ch) : below.push(ch);
+    });
+    var h = '<div class="n-row'+(n.act?' tap':'')+'"'+tid(n.id)+bind(n.act)+'>'+
+      (n.lead ? '<div class="r-lead">'+icon(n.lead,18)+'</div>' : '')+
+      '<div class="r-main"><div class="r-label">'+esc(n.text)+'</div>'+
+      (n.sub ? '<div class="r-sub">'+esc(n.sub)+'</div>' : '')+'</div>'+
+      (n.val ? '<div class="r-value '+esc(n.valCls||'')+'">'+esc(n.val)+'</div>' : '')+
+      R(inline)+
+      (n.arrow && !inline.length ? '<div class="r-arrow">'+icon('arrow',14)+'</div>' : '')+
+      '</div>';
+    return h + (below.length ? '<div class="hr"></div>'+R(below) : '');
+  }
+
+  case 'btn':
+    return '<div class="n-btn '+esc(n.cls||'')+(n.disabled?' off':'')+'"'+tid(n.id)+
+           (n.disabled?'':bind(n.act))+'>'+esc(n.text)+'</div>';
+  case 'btnrow': return '<div class="n-btnrow"'+tid(n.id)+'>'+R(n.c)+'</div>';
+
+  case 'stepper': {
+    var minus = n.plusOnly || !n.minusId ? '' :
+      '<div class="st-btn st-minus"'+tid(n.minusId)+bind(n.minus)+'>'+icon('minus',14)+'</div>';
+    var val = n.plusOnly && !n.value ? '' : '<div class="st-val">'+n.value+'</div>';
+    return '<div class="n-stepper"'+tid(n.id)+'>'+minus+val+
+           '<div class="st-btn st-plus"'+tid(n.plusId)+bind(n.plus)+'>'+icon('plus',14)+'</div></div>';
+  }
+  case 'switch': return '<div class="n-switch'+(n.on?' on':'')+'"'+tid(n.id)+bind(n.act)+'><i></i></div>';
+  case 'radio':  return '<div class="n-radio'+(n.on?' on':'')+'"'+tid(n.id)+bind(n.act)+'></div>';
+
+  case 'tabbar':
+    return '<div class="n-tabbar"'+tid(n.id)+'>'+n.items.map(function(i){
+      return '<div class="tb'+(i.on?' on':'')+'"'+tid(i.id)+bind(i.act)+'><i>'+icon(i.icon,20)+'</i>'+esc(i.text)+'</div>';
+    }).join('')+'</div>';
+
+  case 'bar': return '<div class="n-bar"'+tid(n.id)+'>'+R(n.c)+'</div>';
+
+  case 'cartbar': {
+    var b = n.count>0;
+    return '<div class="cartbar"'+tid(n.id)+'>'+
+      '<div class="cb-ico'+(b?' on':'')+'"'+tid(n.iconId)+bind(n.iconAct)+'>'+icon('cart',22)+
+        (b?'<span class="n-badge">'+n.count+'</span>':'')+'</div>'+
+      '<div class="cb-txt"><div class="cb-total">'+money(n.subtotal)+'</div>'+
+        '<div class="cb-sub">另需配送费 '+money(n.fee)+'</div></div>'+
+      render(n.btn)+'</div>';
+  }
+  case 'paybar':
+    return '<div class="cartbar"'+tid(n.id)+'><div class="cb-txt">'+
+      '<div class="cb-total" style="color:var(--accent)">'+n.total+'</div>'+
+      '<div class="cb-sub">'+esc(n.saved||'')+'</div></div>'+render(n.btn)+'</div>';
+
+  case 'shopcard': {
+    var s = n.shop;
+    return '<div class="shop">'+
+      tile(s.name, s.name, 'md s-logo')+
+      '<div class="s-body"><div class="s-name">'+esc(s.name)+'</div>'+
+      '<div class="s-meta"><span><b>'+s.rating+'</b> 分</span><span>月售 '+s.sales+'</span><span>'+s.dist+'km</span></div>'+
+      '<div class="s-meta"><span>'+(s.fee?('配送 '+money(s.fee)):'免配送费')+'</span><span>'+s.eta+' 分钟</span><span>'+money(s.min)+' 起送</span></div>'+
+      '<div class="s-promo">'+(s.badges||[]).map(function(b){return '<span class="n-tag hot">'+esc(b)+'</span>';}).join('')+'</div>'+
+      '</div></div>';
+  }
+  case 'shophead': {
+    var s2 = n.shop;
+    return '<div class="shophead"'+tid(n.id)+'>'+
+      '<div class="sh-top">'+tile(s2.name, s2.name, 'md sh-logo')+'<div>'+
+      '<div class="sh-name">'+esc(s2.name)+'</div>'+
+      '<div class="sh-meta">'+s2.rating+' 分 · 月售 '+s2.sales+' · '+s2.dist+'km · '+s2.eta+' 分钟送达</div>'+
+      '<div class="sh-meta">'+(s2.fee?('配送费 '+money(s2.fee)):'免配送费')+' · 打包费 '+money(s2.pack)+' · '+money(s2.min)+' 起送</div>'+
+      '</div></div>'+
+      '<div class="sh-promos">'+(s2.badges||[]).map(function(b){return '<span class="sh-promo">'+esc(b)+'</span>';}).join('')+
+      (s2.notice?'<span class="sh-promo">'+esc(s2.notice)+'</span>':'')+'</div></div>';
+  }
+  case 'menu':
+    return '<div class="menu"'+tid(n.id)+'>'+
+      '<div class="m-rail">'+n.rail.map(function(c){
+        return '<div class="m-cat'+(c.on?' on':'')+'"'+tid(c.id)+bind(c.act)+'>'+esc(c.text)+'</div>';
+      }).join('')+'</div>'+
+      '<div class="m-list">'+R(n.list)+'</div></div>';
+
+  case 'dish':
+    return '<div class="dish'+(n.act?' tap':'')+'"'+tid(n.id)+bind(n.act)+'>'+
+      tile(n.name, n.id, 'md d-img')+
+      '<div class="d-body"><div class="d-name">'+esc(n.name)+'</div>'+
+      '<div class="d-desc">'+esc(n.desc||'')+'</div>'+
+      '<div class="d-tags">'+(n.tags||[]).map(function(t){return '<span class="n-tag '+t.cls+'">'+t.text+'</span>';}).join('')+'</div>'+
+      '<div class="d-bot"><div class="price"><small>¥</small>'+n.price+'</div>'+render(n.ctl)+'</div>'+
+      '</div></div>';
+
+  case 'shopline':  return '<div class="shopline'+(n.act?' tap':'')+'" style="padding:10px 12px;font-weight:650;'+
+      'border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px"'+tid(n.id)+bind(n.act)+'>'+
+      tile(n.text, n.text, 'sm')+'<span style="flex:1 1 auto">'+esc(n.text)+'</span>'+
+      (n.arrow?'<span style="color:#c6cad2;display:flex">'+icon('arrow',14)+'</span>':'')+'</div>';
+  case 'orderline':
+    return '<div class="n-row" style="padding:9px 12px;min-height:0">'+
+      tile(n.name, n.name, 'sm r-lead')+
+      '<div class="r-main"><div class="r-label">'+esc(n.name)+'</div>'+
+      (n.specs?'<div class="r-sub">'+esc(n.specs)+'</div>':'')+'</div>'+
+      '<div class="r-value">x'+n.qty+'</div>'+
+      '<div class="r-value strong" style="width:62px">'+money(n.amount)+'</div></div>';
+  case 'cartline':
+    return '<div class="n-row"'+tid(n.id)+'>'+
+      tile(n.name, n.name, 'sm r-lead')+
+      '<div class="r-main"><div class="r-label">'+esc(n.name)+'</div>'+
+      (n.specs?'<div class="r-sub">'+esc(n.specs)+'</div>':'')+'</div>'+
+      '<div class="r-value strong">'+n.amount+'</div>'+render(n.stepper)+'</div>';
+  case 'kv':
+    return '<div class="kv '+esc(n.cls||'')+'"><span class="k">'+esc(n.k)+'</span><span class="v">'+esc(n.v)+'</span></div>';
+
+  case 'orderhead':
+    return '<div class="n-row tap"'+tid(n.id)+bind(n.act)+'>'+
+      '<div class="r-main"><div class="r-label" style="font-weight:650">'+esc(n.shop)+'</div></div>'+
+      '<span class="pill '+n.statusCls+'">'+esc(n.status)+'</span>'+
+      '<div class="r-arrow">'+icon('arrow',14)+'</div></div>';
+  case 'ordersum':
+    return '<div style="padding:9px 12px;color:var(--ink2);font-size:13px">'+esc(n.text)+
+      '<div style="display:flex;justify-content:space-between;margin-top:6px;color:var(--muted);font-size:12px">'+
+      '<span>'+esc(n.time)+'</span><span>实付 <b style="color:var(--accent)">'+n.total+'</b></span></div></div>';
+  case 'odhead':
+    return '<div class="n-card" style="background:linear-gradient(135deg,var(--accent),#ff8f5e);color:#fff"'+tid(n.id)+'>'+
+      '<div style="font-size:19px;font-weight:700">'+esc(n.status)+'</div>'+
+      '<div style="opacity:.9;margin-top:5px;font-size:13px">'+esc(n.shop)+' · 实付 '+n.total+'</div></div>';
+
+  case 'profile':
+    return '<div class="n-card'+(n.act?' tap':'')+'" style="display:flex;gap:12px;align-items:center"'+
+      tid(n.id)+bind(n.act)+'>'+
+      '<div class="tile lg" style="--h:22;width:52px;height:52px;border-radius:50%">松</div>'+
+      '<div><div style="font-size:17px;font-weight:700">'+esc(n.name)+'</div>'+
+      '<div style="color:var(--muted);font-size:12px;margin-top:3px">'+esc(n.phone)+' · '+n.coupons+' 张券 · '+n.orders+' 笔订单</div></div></div>';
+
+  case 'coupon':
+    return '<div class="n-card" style="display:flex;gap:12px;align-items:center;'+(n.usable?'':'opacity:.5')+'"'+
+      tid(n.id)+bind(n.act)+'>'+
+      '<div style="flex:0 0 76px;text-align:center;border-right:1px dashed var(--line)">'+
+      '<div class="price"><small>¥</small>'+n.amount+'</div>'+
+      '<div style="font-size:11px;color:var(--muted)">满'+n.threshold+'可用</div></div>'+
+      '<div style="flex:1 1 auto;min-width:0"><div style="font-weight:650">'+esc(n.title)+'</div>'+
+      '<div style="font-size:11.5px;color:var(--muted);margin-top:3px">'+esc(n.why||'')+'</div></div>'+
+      (n.on?'<div class="n-radio on"></div>':'')+'</div>';
+
+  case 'optgrp':
+    return '<div class="optgrp"'+tid(n.id)+'><div class="og-t">'+esc(n.title)+'</div><div class="og-opts">'+
+      n.opts.map(function(o){
+        return '<div class="og-o'+(o.on?' on':'')+'"'+tid(o.id)+bind(o.act)+'>'+esc(o.text)+'</div>';
+      }).join('')+'</div></div>';
+
+  case 'mask':
+    return '<div class="n-mask"'+tid(n.id)+bind(n.close)+'>'+R(n.c)+'</div>';
+  case 'sheet':
+    return '<div class="n-sheet"'+tid(n.id)+' data-stop="1">'+
+      '<div class="sh-hd"><div class="t">'+esc(n.title)+'</div><div style="display:flex;gap:8px;align-items:center">'+
+      render(n.right)+'<div class="sh-x"'+tid(n.closeId)+bind(n.close)+'>'+icon('close',13)+'</div></div></div>'+
+      '<div class="sh-bd">'+R(n.c)+'</div>'+
+      (n.footer?'<div class="sh-ft">'+render(n.footer)+'</div>':'')+'</div>';
+  case 'sheetfoot':
+    return '<div style="display:flex;align-items:center;gap:12px"'+tid(n.id)+'>'+
+      '<div style="flex:1 1 auto"><div style="font-size:11px;color:var(--muted)">合计</div>'+
+      '<div class="price">'+n.total+'</div></div>'+render(n.btn)+'</div>';
+  case 'payamount':
+    return '<div style="padding:26px 12px;text-align:center"'+tid(n.id)+'>'+
+      '<div style="font-size:12px;color:var(--muted)">支付金额</div>'+
+      '<div style="font-size:33px;font-weight:800;color:var(--ink);margin-top:6px">'+n.total+'</div>'+
+      '<div style="margin-top:8px;color:var(--ink2);font-size:13px">'+esc(n.method)+'</div></div>';
+  case 'dialog':
+    return '<div style="margin:auto;width:78%;background:#fff;border-radius:14px;overflow:hidden"'+tid(n.id)+' data-stop="1">'+
+      '<div style="padding:22px 18px;text-align:center;font-size:15px;line-height:1.5">'+esc(n.text)+'</div>'+
+      '<div style="display:flex;border-top:1px solid var(--line)">'+
+      '<div style="flex:1;padding:13px;text-align:center;color:var(--ink2);border-right:1px solid var(--line)"'+
+        tid(n.cancel.id)+bind(n.cancel.act)+'>'+esc(n.cancel.text)+'</div>'+
+      '<div style="flex:1;padding:13px;text-align:center;color:var(--accent);font-weight:650"'+
+        tid(n.ok.id)+bind(n.ok.act)+'>'+esc(n.ok.text)+'</div></div></div>';
+
+  case 'toast': return '<div class="n-toast"'+tid(n.id)+'>'+esc(n.text)+'</div>';
+  default: return '';
+  }
+}
+
+/* ------------------------------------------------------------------ paint */
+function paint(){
+  ACTS = [];
+  var tree = E.screen(STATE);
+  app.innerHTML = render(tree);
+  document.getElementById('sb-clock').textContent = E.select.clockStr(STATE.meta.clock);
+  if (!hud.classList.contains('off')) paintHud();
+}
+
+app.addEventListener('click', function(ev){
+  var el = ev.target.closest('[data-act]');
+  if (!el) return;
+  var mask = ev.target.closest('[data-stop]');
+  if (mask && el.classList.contains('n-mask')) return;   /* tap inside sheet != tap on mask */
+  var act = ACTS[+el.getAttribute('data-act')];
+  if (!act) return;
+  TRAJ.push({action:'tap', id: el.getAttribute('data-testid') || null, act: act});
+  STATE = E.reduce(STATE, act);
+  paint();
+});
+app.addEventListener('input', function(ev){
+  var el = ev.target.closest('[data-actt]');
+  if (!el) return;
+  var tpl = ACTS[+el.getAttribute('data-actt')];
+  var act = JSON.parse(JSON.stringify(tpl));
+  for (var k in act) if (act[k] === '$VALUE') act[k] = el.value;
+  TRAJ.push({action:'type', id: el.getAttribute('data-testid') || null, text: el.value});
+  var sel = el.selectionStart, id = el.getAttribute('data-testid');
+  STATE = E.reduce(STATE, act);
+  paint();
+  var again = id && app.querySelector('[data-testid="'+id+'"]');
+  if (again && again.focus) { again.focus(); try { again.setSelectionRange(sel, sel); } catch(e){} }
+});
+
+/* --------------------------------------------------------------- dev HUD */
+function paintHud(){
+  var r = E.select.route(STATE);
+  hud.innerHTML = '<h4>__ENV__ · '+E.ENV_ID+' v'+E.VERSION+'</h4>'+
+    '<div><span class="k">route</span> '+r.name+'  <span class="k">step</span> '+STATE.meta.steps+
+    '  <span class="k">seed</span> '+STATE.meta.seed+'</div>'+
+    '<div><span class="k">cart</span> '+E.select.cartCount(STATE)+' 件 / ¥'+E.fmt(E.select.cartSubtotal(STATE))+
+    '  <span class="k">orders</span> '+STATE.orders.length+'</div>'+
+    '<div style="margin-top:8px">'+
+      '<button id="hud-reset">reset</button>'+
+      '<button id="hud-a11y">copy a11y</button>'+
+      '<button id="hud-state">copy state</button>'+
+      '<button id="hud-traj">copy traj</button>'+
+      '<button id="hud-hide">hide (h)</button></div>'+
+    '<pre>'+esc(E.a11y(STATE))+'</pre>';
+  hud.querySelector('#hud-reset').onclick = function(){ ENVAPI.reset({seed:STATE.meta.seed}); };
+  hud.querySelector('#hud-a11y').onclick  = function(){ copy(E.a11y(STATE)); };
+  hud.querySelector('#hud-state').onclick = function(){ copy(JSON.stringify(STATE, null, 2)); };
+  hud.querySelector('#hud-traj').onclick  = function(){ copy(JSON.stringify(TRAJ, null, 2)); };
+  hud.querySelector('#hud-hide').onclick  = function(){ hud.classList.add('off'); };
+}
+function copy(t){ try { navigator.clipboard.writeText(t); } catch(e){} }
+document.addEventListener('keydown', function(e){
+  if (e.key === 'h') { hud.classList.toggle('off'); if (!hud.classList.contains('off')) paintHud(); }
+});
+
+/* --------------------------------------------------- window.__ENV__ (API) */
+var ENVAPI = {
+  ENV_ID: E.ENV_ID, VERSION: E.VERSION,
+  reset: function(opts){
+    opts = opts || {};
+    STATE = E.createInitialState(opts.seed || 0);
+    if (opts.patch) E.applyPatch(STATE, opts.patch);
+    TRAJ = [];
+    paint();
+    return STATE;
+  },
+  getState:  function(){ return E.snapshot(STATE); },
+  setState:  function(s){ STATE = JSON.parse(JSON.stringify(s)); paint(); return true; },
+  step:      function(a){ var r = E.step(STATE, a); STATE = r.state; TRAJ.push(a); paint();
+                          return {ok:r.ok, error:r.error || null}; },
+  dispatch:  function(act){ STATE = E.reduce(STATE, act); paint(); return true; },
+  a11y:      function(){ return E.a11y(STATE); },
+  elements:  function(){ return E.elements(STATE); },
+  route:     function(){ return E.select.route(STATE); },
+  trajectory:function(){ return JSON.parse(JSON.stringify(TRAJ)); },
+  /* pixel boxes for every test-id currently on screen — for coordinate agents
+     and for annotating screenshots. Coordinates are relative to the phone screen. */
+  bounds: function(){
+    var base = document.getElementById('screen').getBoundingClientRect(), out = {};
+    app.querySelectorAll('[data-testid]').forEach(function(el){
+      var r = el.getBoundingClientRect();
+      out[el.getAttribute('data-testid')] = {
+        x: Math.round(r.left - base.left), y: Math.round(r.top - base.top),
+        w: Math.round(r.width), h: Math.round(r.height),
+        cx: Math.round(r.left - base.left + r.width/2), cy: Math.round(r.top - base.top + r.height/2)
+      };
+    });
+    return out;
+  }
+};
+window.__ENV__ = ENVAPI;
+
+/* ---------------------------------------------------------------- boot */
+var qs = new URLSearchParams(location.search);
+if (qs.get('bare') === '1') document.body.classList.add('bare');
+if (qs.get('hud')  === '1') hud.classList.remove('off');
+ENVAPI.reset({seed: parseInt(qs.get('seed') || '0', 10) || 0});
+window.__ENV_READY__ = true;
+})();
+</script>
+</body>
+</html>

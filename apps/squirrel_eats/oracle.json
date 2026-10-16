@@ -1,0 +1,731 @@
+{
+  "env": "squirrel_eats",
+  "note": "每个任务的黄金动作序列。CI 会回放它们并跑验证器——如果哪条不再通过，说明环境或任务被改坏了。",
+  "solutions": {
+    "T01_set_default_address": [
+      {
+        "action": "tap",
+        "id": "tab_me"
+      },
+      {
+        "action": "tap",
+        "id": "me_addresses"
+      },
+      {
+        "action": "tap",
+        "id": "addr_default_a_company"
+      }
+    ],
+    "T02_toggle_settings": [
+      {
+        "action": "tap",
+        "id": "tab_me"
+      },
+      {
+        "action": "tap",
+        "id": "me_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_promoPush"
+      },
+      {
+        "action": "tap",
+        "id": "set_vegFirst"
+      }
+    ],
+    "T03_simple_order": [
+      {
+        "action": "tap",
+        "id": "shop_s_laowang"
+      },
+      {
+        "action": "tap",
+        "id": "add_d_lw_beef"
+      },
+      {
+        "action": "tap",
+        "id": "spec_spice_中辣"
+      },
+      {
+        "action": "tap",
+        "id": "spec_confirm"
+      },
+      {
+        "action": "tap",
+        "id": "cat_s_laowang_2"
+      },
+      {
+        "action": "tap",
+        "id": "plus_d_lw_egg"
+      },
+      {
+        "action": "tap",
+        "id": "to_checkout"
+      },
+      {
+        "action": "tap",
+        "id": "chk_submit"
+      },
+      {
+        "action": "tap",
+        "id": "pay_confirm"
+      }
+    ],
+    "T04_query_cheapest_signature": [
+      {
+        "action": "tap",
+        "id": "filter_rating47"
+      },
+      {
+        "action": "tap",
+        "id": "filter_freefee"
+      },
+      {
+        "action": "tap",
+        "id": "shop_s_xiedao"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "shop_s_xiangzi"
+      },
+      {
+        "action": "finish",
+        "answer": "16"
+      }
+    ],
+    "T05_custom_order_flagship": [
+      {
+        "action": "tap",
+        "id": "shop_s_guocha"
+      },
+      {
+        "action": "tap",
+        "id": "cat_s_guocha_1"
+      },
+      {
+        "action": "tap",
+        "id": "add_d_gc_peach"
+      },
+      {
+        "action": "tap",
+        "id": "spec_ice_少冰"
+      },
+      {
+        "action": "tap",
+        "id": "spec_sugar_半糖"
+      },
+      {
+        "action": "tap",
+        "id": "spec_confirm"
+      },
+      {
+        "action": "tap",
+        "id": "add_d_gc_peach"
+      },
+      {
+        "action": "tap",
+        "id": "spec_confirm"
+      },
+      {
+        "action": "tap",
+        "id": "cat_s_guocha_2"
+      },
+      {
+        "action": "tap",
+        "id": "plus_d_gc_mochi"
+      },
+      {
+        "action": "tap",
+        "id": "to_checkout"
+      },
+      {
+        "action": "tap",
+        "id": "chk_address"
+      },
+      {
+        "action": "tap",
+        "id": "addr_a_school"
+      },
+      {
+        "action": "tap",
+        "id": "chk_coupon"
+      },
+      {
+        "action": "tap",
+        "id": "coupon_c_30_8"
+      },
+      {
+        "action": "type",
+        "id": "chk_remark",
+        "text": "放在门卫处"
+      },
+      {
+        "action": "tap",
+        "id": "utensils_minus"
+      },
+      {
+        "action": "tap",
+        "id": "chk_submit"
+      },
+      {
+        "action": "tap",
+        "id": "pay_confirm"
+      }
+    ],
+    "T06_cancel_order": [
+      {
+        "action": "tap",
+        "id": "tab_orders"
+      },
+      {
+        "action": "tap",
+        "id": "order_cancel_o_1002"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      }
+    ],
+    "T07_add_address_and_default": [
+      {
+        "action": "tap",
+        "id": "tab_me"
+      },
+      {
+        "action": "tap",
+        "id": "me_addresses"
+      },
+      {
+        "action": "tap",
+        "id": "addr_add"
+      },
+      {
+        "action": "tap",
+        "id": "tagchip_健身房"
+      },
+      {
+        "action": "type",
+        "id": "addr_phone",
+        "text": "13800000021"
+      },
+      {
+        "action": "type",
+        "id": "addr_detail",
+        "text": "望京体育公园西门 A 区"
+      },
+      {
+        "action": "tap",
+        "id": "addr_save"
+      },
+      {
+        "action": "tap",
+        "id": "addr_default_a_new4"
+      }
+    ],
+    "T08_budget_constraint_order": [
+      {
+        "action": "tap",
+        "id": "shop_s_qingzhu"
+      },
+      {
+        "action": "tap",
+        "id": "add_d_qz_bowl"
+      },
+      {
+        "action": "tap",
+        "id": "spec_confirm"
+      },
+      {
+        "action": "tap",
+        "id": "to_checkout"
+      },
+      {
+        "action": "tap",
+        "id": "chk_coupon"
+      },
+      {
+        "action": "tap",
+        "id": "coupon_c_30_8"
+      },
+      {
+        "action": "tap",
+        "id": "chk_submit"
+      },
+      {
+        "action": "tap",
+        "id": "pay_confirm"
+      }
+    ],
+    "T09_search_shop": [
+      {
+        "action": "type",
+        "id": "home_search",
+        "text": "抄手"
+      },
+      {
+        "action": "tap",
+        "id": "home_search_go"
+      },
+      {
+        "action": "tap",
+        "id": "result_s_xiangzi"
+      }
+    ],
+    "T10_query_expired_coupon": [
+      {
+        "action": "tap",
+        "id": "tab_me"
+      },
+      {
+        "action": "tap",
+        "id": "me_coupons"
+      },
+      {
+        "action": "finish",
+        "answer": "「满15减5」已经过期了（有效期到 2026-08-01）"
+      }
+    ],
+    "T11_reorder": [
+      {
+        "action": "tap",
+        "id": "tab_orders"
+      },
+      {
+        "action": "tap",
+        "id": "order_again_o_1001"
+      },
+      {
+        "action": "tap",
+        "id": "to_checkout"
+      },
+      {
+        "action": "tap",
+        "id": "chk_submit"
+      },
+      {
+        "action": "tap",
+        "id": "pay_confirm"
+      }
+    ],
+    "T12_min_order_constraint": [
+      {
+        "action": "tap",
+        "id": "shop_s_haidao"
+      },
+      {
+        "action": "tap",
+        "id": "cat_s_haidao_2"
+      },
+      {
+        "action": "tap",
+        "id": "plus_d_hd_cola"
+      },
+      {
+        "action": "tap",
+        "id": "cat_s_haidao_1"
+      },
+      {
+        "action": "tap",
+        "id": "plus_d_hd_burger"
+      },
+      {
+        "action": "tap",
+        "id": "to_checkout"
+      },
+      {
+        "action": "tap",
+        "id": "chk_submit"
+      },
+      {
+        "action": "tap",
+        "id": "pay_confirm"
+      }
+    ],
+    "T13_query_fastest_eta": [
+      {
+        "action": "tap",
+        "id": "filter_sort_eta"
+      },
+      {
+        "action": "finish",
+        "answer": "18"
+      }
+    ],
+    "T14_edit_and_delete_address": [
+      {
+        "action": "tap",
+        "id": "tab_me"
+      },
+      {
+        "action": "tap",
+        "id": "me_addresses"
+      },
+      {
+        "action": "tap",
+        "id": "addr_edit_a_company"
+      },
+      {
+        "action": "type",
+        "id": "addr_detail",
+        "text": "望京SOHO T3 座 2205"
+      },
+      {
+        "action": "tap",
+        "id": "addr_save"
+      },
+      {
+        "action": "tap",
+        "id": "addr_del_a_school"
+      }
+    ],
+    "T15_switch_shop_cart": [
+      {
+        "action": "tap",
+        "id": "shop_s_laowang"
+      },
+      {
+        "action": "tap",
+        "id": "add_d_lw_beef"
+      },
+      {
+        "action": "tap",
+        "id": "spec_confirm"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "shop_s_guocha"
+      },
+      {
+        "action": "tap",
+        "id": "cat_s_guocha_1"
+      },
+      {
+        "action": "tap",
+        "id": "add_d_gc_lemon"
+      },
+      {
+        "action": "tap",
+        "id": "spec_confirm"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "tap",
+        "id": "to_checkout"
+      },
+      {
+        "action": "tap",
+        "id": "chk_submit"
+      },
+      {
+        "action": "tap",
+        "id": "pay_confirm"
+      }
+    ],
+    "T16_quantity_edit": [
+      {
+        "action": "tap",
+        "id": "shop_s_xiangzi"
+      },
+      {
+        "action": "tap",
+        "id": "cat_s_xiangzi_2"
+      },
+      {
+        "action": "tap",
+        "id": "plus_d_xz_chao"
+      },
+      {
+        "action": "tap",
+        "id": "plus_d_xz_chao"
+      },
+      {
+        "action": "tap",
+        "id": "plus_d_xz_chao"
+      },
+      {
+        "action": "tap",
+        "id": "minus_d_xz_chao"
+      },
+      {
+        "action": "tap",
+        "id": "cat_s_xiangzi_3"
+      },
+      {
+        "action": "tap",
+        "id": "plus_d_xz_soy"
+      },
+      {
+        "action": "tap",
+        "id": "to_checkout"
+      },
+      {
+        "action": "tap",
+        "id": "chk_submit"
+      },
+      {
+        "action": "tap",
+        "id": "pay_confirm"
+      }
+    ],
+    "T17_alipay_remark": [
+      {
+        "action": "tap",
+        "id": "shop_s_qingzhu"
+      },
+      {
+        "action": "tap",
+        "id": "plus_d_qz_veg"
+      },
+      {
+        "action": "tap",
+        "id": "to_checkout"
+      },
+      {
+        "action": "tap",
+        "id": "chk_coupon"
+      },
+      {
+        "action": "tap",
+        "id": "coupon_c_qz_5"
+      },
+      {
+        "action": "type",
+        "id": "chk_remark",
+        "text": "不要餐具，谢谢"
+      },
+      {
+        "action": "tap",
+        "id": "utensils_minus"
+      },
+      {
+        "action": "tap",
+        "id": "pay_alipay"
+      },
+      {
+        "action": "tap",
+        "id": "chk_submit"
+      },
+      {
+        "action": "tap",
+        "id": "pay_confirm"
+      }
+    ],
+    "T18_spec_coupon_address": [
+      {
+        "action": "tap",
+        "id": "shop_s_xiedao"
+      },
+      {
+        "action": "tap",
+        "id": "add_d_xd_guo"
+      },
+      {
+        "action": "tap",
+        "id": "spec_size_大份"
+      },
+      {
+        "action": "tap",
+        "id": "spec_spice_特辣"
+      },
+      {
+        "action": "tap",
+        "id": "spec_confirm"
+      },
+      {
+        "action": "tap",
+        "id": "cat_s_xiedao_1"
+      },
+      {
+        "action": "tap",
+        "id": "plus_d_xd_rice"
+      },
+      {
+        "action": "tap",
+        "id": "to_checkout"
+      },
+      {
+        "action": "tap",
+        "id": "chk_coupon"
+      },
+      {
+        "action": "tap",
+        "id": "coupon_c_30_8"
+      },
+      {
+        "action": "tap",
+        "id": "chk_address"
+      },
+      {
+        "action": "tap",
+        "id": "addr_a_company"
+      },
+      {
+        "action": "tap",
+        "id": "chk_submit"
+      },
+      {
+        "action": "tap",
+        "id": "pay_confirm"
+      },
+      {
+        "action": "finish",
+        "answer": "40 元"
+      }
+    ],
+    "T19_auto_coupon": [
+      {
+        "action": "tap",
+        "id": "tab_me"
+      },
+      {
+        "action": "tap",
+        "id": "me_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_autoCoupon"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "tab_home"
+      },
+      {
+        "action": "tap",
+        "id": "shop_s_xiangzi"
+      },
+      {
+        "action": "tap",
+        "id": "add_d_xz_wanza"
+      },
+      {
+        "action": "tap",
+        "id": "spec_confirm"
+      },
+      {
+        "action": "tap",
+        "id": "add_d_xz_wanza"
+      },
+      {
+        "action": "tap",
+        "id": "spec_confirm"
+      },
+      {
+        "action": "tap",
+        "id": "cat_s_xiangzi_2"
+      },
+      {
+        "action": "tap",
+        "id": "plus_d_xz_chao"
+      },
+      {
+        "action": "tap",
+        "id": "to_checkout"
+      },
+      {
+        "action": "tap",
+        "id": "chk_submit"
+      },
+      {
+        "action": "tap",
+        "id": "pay_confirm"
+      }
+    ],
+    "T20_clear_reserve_balance": [
+      {
+        "action": "tap",
+        "id": "shop_s_guocha"
+      },
+      {
+        "action": "tap",
+        "id": "cat_s_guocha_1"
+      },
+      {
+        "action": "tap",
+        "id": "add_d_gc_latte"
+      },
+      {
+        "action": "tap",
+        "id": "spec_confirm"
+      },
+      {
+        "action": "tap",
+        "id": "cat_s_guocha_2"
+      },
+      {
+        "action": "tap",
+        "id": "plus_d_gc_mochi"
+      },
+      {
+        "action": "tap",
+        "id": "cart_icon"
+      },
+      {
+        "action": "tap",
+        "id": "cart_clear"
+      },
+      {
+        "action": "tap",
+        "id": "cat_s_guocha_0"
+      },
+      {
+        "action": "tap",
+        "id": "add_d_gc_grape"
+      },
+      {
+        "action": "tap",
+        "id": "spec_ice_去冰"
+      },
+      {
+        "action": "tap",
+        "id": "spec_sugar_无糖"
+      },
+      {
+        "action": "tap",
+        "id": "spec_confirm"
+      },
+      {
+        "action": "tap",
+        "id": "to_checkout"
+      },
+      {
+        "action": "tap",
+        "id": "time_reserve"
+      },
+      {
+        "action": "tap",
+        "id": "pay_balance"
+      },
+      {
+        "action": "tap",
+        "id": "chk_address"
+      },
+      {
+        "action": "tap",
+        "id": "addr_a_company"
+      },
+      {
+        "action": "tap",
+        "id": "chk_submit"
+      },
+      {
+        "action": "tap",
+        "id": "pay_confirm"
+      }
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "id": "saffron_recipes",
+  "name": "Saffron",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "viewport": {"width": 390, "height": 844},
+  "description": "A single-file H5 recipe, meal-plan and shopping app. Every recipe is written for a base number of servings, and changing the servings rescales every quantity, rounding to something you can actually measure: whole grams, quarter spoons, half onions. The shopping list is where that arithmetic shows — add two recipes that both want onions and one line carries the total, with both recipes named against it. Cupboard staples can be left off entirely. 8 screens, 8 recipes, 39 ingredients across 6 aisles, a seven-day planner and a step-by-step cook mode. Every illustration is generated from the recipe's own palette; there is not one image file in the environment.",
+  "tasks_file": "tasks.json",
+  "oracle_file": "oracle.json",
+  "action_space": {
+    "tap":    {"id": "test-id of the element"},
+    "type":   {"id": "test-id of a text field", "text": "replaces the whole value"},
+    "back":   {}, "home": {}, "wait": {},
+    "finish": {"answer": "final answer for question tasks; optional for action tasks"},
+    "tap_xy": {"x": "screen pixel x", "y": "screen pixel y", "note": "browser backend only"}
+  },
+  "observation": {
+    "text": "engine.a11y(state) — scaled quantities, the shopping list and the cooking step all serialise, so a text-only agent can scale a recipe and read the result back.",
+    "pixels": "390x844 screenshot (browser backend); __ENV__.bounds() maps every test-id to a pixel box",
+    "state": "engine.snapshot(state) — canonical state plus a derived view with quantities in thousandths of the display unit. For the verifier only."
+  },
+  "world": {
+    "clock": "17:05, frozen",
+    "quantities": "integers in thousandths of the display unit; 1.5 tbsp is 1500 and two lots of it are exactly 3000",
+    "scaling": "quantity x servings / base, snapped to the unit's step — 1 g, 0.25 tsp, 0.5 of an onion or a clove — and never below one step",
+    "aggregation": "the shopping list holds one line per ingredient; adding a second recipe that wants it adds to the line and records which recipes asked for it",
+    "staples": "salt, black pepper and olive oil are cupboard staples and are left off the list unless the setting says otherwise"
+  }
+}

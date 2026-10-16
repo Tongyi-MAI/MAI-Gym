@@ -1,0 +1,771 @@
+{
+  "env": "trellis_build",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_settings",
+      "name": "Two switches",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "settings"
+      ],
+      "instruction": "On the Site tab, put the crew on seven-day weeks and stop the app drawing float on the bars. Leave the third switch alone.",
+      "goal": [
+        {
+          "name": "Weekends are worked",
+          "path": "derived.settings.workWeekends",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Float is no longer drawn",
+          "path": "derived.settings.showFloat",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "The third switch is untouched",
+          "path": "derived.settings.warnSlip",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Nothing was bought",
+          "path": "derived.crashSpend",
+          "op": "eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T02_finish",
+      "name": "Question: when does it finish?",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "How many working days is the build, and what date does it finish on as the plan stands?",
+      "goal": [
+        {
+          "name": "23 working days",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)23(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "Wednesday 6 May",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)6(?!\\d) May",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.projectDays",
+          "op": "eq",
+          "value": 23
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T03_critical",
+      "name": "Question: how much of it is critical?",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "How many of the twelve jobs have no float at all?",
+      "goal": [
+        {
+          "name": "six",
+          "source": "answer",
+          "op": "regex",
+          "value": "((?<!\\d)6(?!\\d)|[Ss]ix)",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.criticalCount",
+          "op": "eq",
+          "value": 6
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T04_tiling_float",
+      "name": "Open the tiling and read its float",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "query",
+        "navigate"
+      ],
+      "instruction": "Open the tiling job and tell me how many days of float it has.",
+      "goal": [
+        {
+          "name": "four days",
+          "source": "answer",
+          "op": "regex",
+          "value": "((?<!\\d)4(?!\\d)|[Ff]our)",
+          "weight": 3
+        },
+        {
+          "name": "You are on the tiling job",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "t_tile"
+        },
+        {
+          "name": "Nothing was bought",
+          "path": "derived.crashSpend",
+          "op": "eq",
+          "value": 0
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T05_holds_up",
+      "name": "Question: what is the plastering holding up?",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "query",
+        "graph"
+      ],
+      "instruction": "Which jobs are waiting on the plastering to finish? Name them.",
+      "goal": [
+        {
+          "name": "the kitchen units",
+          "source": "answer",
+          "op": "contains",
+          "value": "itchen",
+          "weight": 3
+        },
+        {
+          "name": "the tiling",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Tt]iling",
+          "weight": 3
+        },
+        {
+          "name": "the painting",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Pp]aint",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.projectDays",
+          "op": "eq",
+          "value": 23
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T06_cannot_buy",
+      "name": "The one job you cannot buy",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "query",
+        "refusal"
+      ],
+      "instruction": "Screed drying is five days and it is holding other work up. Open it and tell me what the app offers you to shorten it.",
+      "goal": [
+        {
+          "name": "nothing to buy",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![A-Za-z])(?:(nothing|no|cannot|can't|can not))",
+          "weight": 3
+        },
+        {
+          "name": "You are on the drying job",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "t_dry"
+        },
+        {
+          "name": "It is still five days",
+          "path": "derived.jobDays.Screed drying",
+          "op": "eq",
+          "value": 5
+        },
+        {
+          "name": "Nothing was bought",
+          "path": "derived.crashSpend",
+          "op": "eq",
+          "value": 0
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T07_float_trap",
+      "name": "The cheapest day on the board",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "trap",
+        "multi-step"
+      ],
+      "instruction": "Painting is the cheapest job to speed up at £110 a day. Buy exactly one day off it, then tell me what it did to the finish date.",
+      "goal": [
+        {
+          "name": "Painting is down to three days",
+          "path": "derived.jobDays.Painting",
+          "op": "eq",
+          "value": 3
+        },
+        {
+          "name": "£110 was spent",
+          "path": "derived.crashSpend",
+          "op": "eq",
+          "value": 11000
+        },
+        {
+          "name": "The build is still 23 days",
+          "path": "derived.projectDays",
+          "op": "eq",
+          "value": 23
+        },
+        {
+          "name": "nothing — it has float",
+          "source": "answer",
+          "op": "regex",
+          "value": "(nothing|no change|did not|didn't|same|float)",
+          "weight": 3,
+          "hint": "look at the float on the bar before you decide it was money well spent"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T08_one_day",
+      "name": "One day, as cheap as possible",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "optimise"
+      ],
+      "instruction": "Bring the finish in by exactly one working day, for the least money you can. Do not drop any of the preferences.",
+      "goal": [
+        {
+          "name": "22 working days",
+          "path": "derived.projectDays",
+          "op": "eq",
+          "value": 22
+        },
+        {
+          "name": "No more than £150 spent",
+          "path": "derived.crashSpend",
+          "op": "lte",
+          "value": 15000
+        },
+        {
+          "name": "Only the strip out was bought",
+          "path": "derived.crashedJobs",
+          "op": "set_eq",
+          "value": [
+            "Strip out"
+          ]
+        },
+        {
+          "name": "No preference was dropped",
+          "path": "derived.droppedCount",
+          "op": "eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T09_two_days",
+      "name": "Two days, as cheap as possible",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 24,
+      "tags": [
+        "optimise"
+      ],
+      "instruction": "Now get it to 21 working days, still without dropping any preference, and still for the least money.",
+      "goal": [
+        {
+          "name": "21 working days or fewer",
+          "path": "derived.projectDays",
+          "op": "lte",
+          "value": 21
+        },
+        {
+          "name": "No more than £330 spent",
+          "path": "derived.crashSpend",
+          "op": "lte",
+          "value": 33000
+        },
+        {
+          "name": "No preference was dropped",
+          "path": "derived.droppedCount",
+          "op": "eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T10_undo",
+      "name": "Stop spending",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 24,
+      "tags": [
+        "multi-step",
+        "reset"
+      ],
+      "instruction": "Money has been pulled. Whatever has been bought, put every job back to its full length, then tell me the finish date you are back to.",
+      "goal": [
+        {
+          "name": "Nothing is bought",
+          "path": "derived.crashSpend",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Back to 23 days",
+          "path": "derived.projectDays",
+          "op": "eq",
+          "value": 23
+        },
+        {
+          "name": "Wed 6 May",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)6(?!\\d) May",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T11_weekend_date",
+      "name": "A date, not a day number",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "multi-step",
+        "calendar"
+      ],
+      "instruction": "The client wants a calendar date. Put the crew on seven-day weeks and tell me what date the build then finishes. Do not buy anything.",
+      "goal": [
+        {
+          "name": "Weekends are worked",
+          "path": "derived.settings.workWeekends",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Still 23 working days",
+          "path": "derived.projectDays",
+          "op": "eq",
+          "value": 23
+        },
+        {
+          "name": "Nothing was bought",
+          "path": "derived.crashSpend",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Tue 28 April",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)28(?!\\d) Apr",
+          "weight": 3,
+          "hint": "the number of working days does not change, only how they land on a calendar"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T12_drop_alone",
+      "name": "Dropping a preference on its own",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "trap",
+        "graph"
+      ],
+      "instruction": "On the Chain screen, drop the preference that painting waits for the screed to dry — and only that one. Then say whether it pulled the finish in by itself.",
+      "goal": [
+        {
+          "name": "Exactly one preference dropped",
+          "path": "derived.droppedCount",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "It is the painting one",
+          "path": "derived.droppedDeps",
+          "op": "contains",
+          "value": "t_paint>t_dry"
+        },
+        {
+          "name": "Still 23 working days",
+          "path": "derived.projectDays",
+          "op": "eq",
+          "value": 23
+        },
+        {
+          "name": "no, not on its own",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![A-Za-z])(?:(no|not|didn|did not|nothing|same|still (?<!\\d)23(?!\\d)))",
+          "weight": 3,
+          "hint": "painting was not what the finish date was waiting on"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T13_trade_days",
+      "name": "The electrician's week",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "navigate",
+        "query"
+      ],
+      "instruction": "Use the Trades screen to pull the plan down to the electrician's jobs, and tell me how many days the electrician is on site in total.",
+      "goal": [
+        {
+          "name": "The plan is filtered to Electrics",
+          "path": "derived.filter",
+          "op": "eq",
+          "value": "Electrics"
+        },
+        {
+          "name": "seven days",
+          "source": "answer",
+          "op": "regex",
+          "value": "((?<!\\d)7(?!\\d)|[Ss]even)",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was bought",
+          "path": "derived.crashSpend",
+          "op": "eq",
+          "value": 0
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T14_worst_value",
+      "name": "Cheap per day, worthless per day",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "query",
+        "reasoning"
+      ],
+      "instruction": "Look at what a day costs on each job. Which job is the cheapest per day to speed up, and why would paying for it be a waste? Do not actually buy anything.",
+      "goal": [
+        {
+          "name": "the painting",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Pp]aint",
+          "weight": 3
+        },
+        {
+          "name": "because it has float",
+          "source": "answer",
+          "op": "regex",
+          "value": "(float|slack|not.*critical|critical path)",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was bought",
+          "path": "derived.crashSpend",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Still 23 working days",
+          "path": "derived.projectDays",
+          "op": "eq",
+          "value": 23
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T15_twenty_cheap",
+      "name": "Twenty days, any lever",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 34,
+      "tags": [
+        "optimise",
+        "graph"
+      ],
+      "instruction": "Get the build down to 20 working days for as little money as possible. You may drop a preference if it earns its place. Tell me what you spent.",
+      "goal": [
+        {
+          "name": "20 working days or fewer",
+          "path": "derived.projectDays",
+          "op": "lte",
+          "value": 20
+        },
+        {
+          "name": "No more than £510 spent",
+          "path": "derived.crashSpend",
+          "op": "lte",
+          "value": 51000,
+          "hint": "one of the three days is free if you drop the right preference"
+        },
+        {
+          "name": "£510",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)510(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T16_twenty_strict",
+      "name": "Twenty days, every preference kept",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 34,
+      "tags": [
+        "optimise",
+        "constraint"
+      ],
+      "instruction": "Same target — 20 working days — but the site manager will not let you drop any of the preferences. Do it for the least money and tell me the total.",
+      "goal": [
+        {
+          "name": "20 working days or fewer",
+          "path": "derived.projectDays",
+          "op": "lte",
+          "value": 20
+        },
+        {
+          "name": "No preference was dropped",
+          "path": "derived.droppedCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "No more than £620 spent",
+          "path": "derived.crashSpend",
+          "op": "lte",
+          "value": 62000
+        },
+        {
+          "name": "£620",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)620(?!\\d)",
+          "weight": 3,
+          "hint": "two chains reach the end at the same time, so both have to come in"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T17_deadline",
+      "name": "Keys by the thirtieth",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 34,
+      "tags": [
+        "optimise",
+        "calendar"
+      ],
+      "instruction": "The client needs the keys on or before Thursday 30 April and the crew will not work weekends. Do it for the least money you can and tell me what it costs.",
+      "goal": [
+        {
+          "name": "Five-day weeks kept",
+          "path": "derived.settings.workWeekends",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Finishing on or before 30 April",
+          "path": "derived.calendarDays",
+          "op": "lte",
+          "value": 25
+        },
+        {
+          "name": "No more than £730 spent",
+          "path": "derived.crashSpend",
+          "op": "lte",
+          "value": 73000
+        },
+        {
+          "name": "£730",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)730(?!\\d)",
+          "weight": 3,
+          "hint": "work out which working-day count lands on or before the 30th first"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T18_impossible",
+      "name": "A date that cannot be bought",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "reasoning",
+        "impossible"
+      ],
+      "instruction": "The client asks for the handover on Friday 17 April with the crew working weekends. Work out whether any amount of money gets you there. If it does not, leave the plan exactly as it is and tell me the earliest date that is actually reachable.",
+      "goal": [
+        {
+          "name": "Nothing was bought",
+          "path": "derived.crashSpend",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "No preference was dropped",
+          "path": "derived.droppedCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "The plan is untouched",
+          "path": "derived.projectDays",
+          "op": "eq",
+          "value": 23
+        },
+        {
+          "name": "it cannot be done",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![A-Za-z])(?:(no|not|cannot|can't|impossible|can not))",
+          "weight": 3
+        },
+        {
+          "name": "15 working days is the floor",
+          "source": "answer",
+          "op": "regex",
+          "value": "((?<!\\d)15(?!\\d)|(?<!\\d)20(?!\\d) Apr)",
+          "weight": 3,
+          "hint": "find the shortest the graph can be made, then map it onto the calendar"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T19_budget",
+      "name": "Five hundred pounds",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "optimise",
+        "budget"
+      ],
+      "instruction": "You have £500 and you may not drop any preference. Get the finish as early as that money allows, then tell me the working-day count you land on.",
+      "goal": [
+        {
+          "name": "21 working days",
+          "path": "derived.projectDays",
+          "op": "eq",
+          "value": 21
+        },
+        {
+          "name": "Inside the budget",
+          "path": "derived.crashSpend",
+          "op": "lte",
+          "value": 50000
+        },
+        {
+          "name": "No preference was dropped",
+          "path": "derived.droppedCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "21 days",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)21(?!\\d)",
+          "weight": 3,
+          "hint": "the next day after that costs £290 on its own"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T20_eighteen",
+      "name": "Eighteen days, and a date for the client",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 38,
+      "tags": [
+        "optimise",
+        "calendar"
+      ],
+      "instruction": "Get the build to 18 working days as cheaply as you can, any lever allowed, and then tell me the calendar date it finishes on with the crew still on five-day weeks.",
+      "goal": [
+        {
+          "name": "18 working days or fewer",
+          "path": "derived.projectDays",
+          "op": "lte",
+          "value": 18
+        },
+        {
+          "name": "No more than £1,030 spent",
+          "path": "derived.crashSpend",
+          "op": "lte",
+          "value": 103000
+        },
+        {
+          "name": "Five-day weeks kept",
+          "path": "derived.settings.workWeekends",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Wed 29 April",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)29(?!\\d) Apr",
+          "weight": 3,
+          "hint": "18 working days on a five-day week is 24 calendar days from Monday the 6th"
+        }
+      ],
+      "answer_expected": true
+    }
+  ]
+}

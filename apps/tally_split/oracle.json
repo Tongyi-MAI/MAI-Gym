@@ -1,0 +1,727 @@
+{
+  "env": "tally_split",
+  "note": "Golden action sequences replayed by CI.",
+  "solutions": {
+    "T01_settings": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_simplifyDebts"
+      },
+      {
+        "action": "tap",
+        "id": "set_roundUp"
+      }
+    ],
+    "T02_query_net": [
+      {
+        "action": "finish",
+        "answer": "£249.78"
+      }
+    ],
+    "T03_query_suri": [
+      {
+        "action": "tap",
+        "id": "group_g_lisbon"
+      },
+      {
+        "action": "finish",
+        "answer": "£212.37"
+      }
+    ],
+    "T04_add_equal": [
+      {
+        "action": "tap",
+        "id": "group_g_lisbon"
+      },
+      {
+        "action": "tap",
+        "id": "add_expense"
+      },
+      {
+        "action": "tap",
+        "id": "key_3"
+      },
+      {
+        "action": "tap",
+        "id": "key_6"
+      },
+      {
+        "action": "tap",
+        "id": "key_0"
+      },
+      {
+        "action": "tap",
+        "id": "key_0"
+      },
+      {
+        "action": "tap",
+        "id": "amount_next"
+      },
+      {
+        "action": "type",
+        "id": "exp_title",
+        "text": "Museum tickets"
+      },
+      {
+        "action": "tap",
+        "id": "exp_payer"
+      },
+      {
+        "action": "tap",
+        "id": "payer_p_ivo"
+      },
+      {
+        "action": "tap",
+        "id": "expense_save"
+      }
+    ],
+    "T05_add_subset": [
+      {
+        "action": "tap",
+        "id": "group_g_lisbon"
+      },
+      {
+        "action": "tap",
+        "id": "add_expense"
+      },
+      {
+        "action": "tap",
+        "id": "key_2"
+      },
+      {
+        "action": "tap",
+        "id": "key_4"
+      },
+      {
+        "action": "tap",
+        "id": "key_0"
+      },
+      {
+        "action": "tap",
+        "id": "key_0"
+      },
+      {
+        "action": "tap",
+        "id": "amount_next"
+      },
+      {
+        "action": "type",
+        "id": "exp_title",
+        "text": "Coffee"
+      },
+      {
+        "action": "tap",
+        "id": "in_p_ivo"
+      },
+      {
+        "action": "tap",
+        "id": "in_p_mo"
+      },
+      {
+        "action": "tap",
+        "id": "expense_save"
+      }
+    ],
+    "T06_exact_split": [
+      {
+        "action": "tap",
+        "id": "group_g_lisbon"
+      },
+      {
+        "action": "tap",
+        "id": "add_expense"
+      },
+      {
+        "action": "tap",
+        "id": "key_4"
+      },
+      {
+        "action": "tap",
+        "id": "key_0"
+      },
+      {
+        "action": "tap",
+        "id": "key_0"
+      },
+      {
+        "action": "tap",
+        "id": "key_0"
+      },
+      {
+        "action": "tap",
+        "id": "amount_next"
+      },
+      {
+        "action": "type",
+        "id": "exp_title",
+        "text": "Wine"
+      },
+      {
+        "action": "tap",
+        "id": "exp_payer"
+      },
+      {
+        "action": "tap",
+        "id": "payer_p_mo"
+      },
+      {
+        "action": "tap",
+        "id": "mode_exact"
+      },
+      {
+        "action": "tap",
+        "id": "ex_p_ren_inc"
+      },
+      {
+        "action": "tap",
+        "id": "ex_p_ren_inc"
+      },
+      {
+        "action": "tap",
+        "id": "ex_p_ren_inc"
+      },
+      {
+        "action": "tap",
+        "id": "ex_p_ren_inc"
+      },
+      {
+        "action": "tap",
+        "id": "ex_p_ren_inc"
+      },
+      {
+        "action": "tap",
+        "id": "ex_p_ren_inc"
+      },
+      {
+        "action": "tap",
+        "id": "ex_p_suri_dec"
+      },
+      {
+        "action": "tap",
+        "id": "ex_p_suri_dec"
+      },
+      {
+        "action": "tap",
+        "id": "ex_p_mo_dec"
+      },
+      {
+        "action": "tap",
+        "id": "ex_p_mo_dec"
+      },
+      {
+        "action": "tap",
+        "id": "ex_p_mo_dec"
+      },
+      {
+        "action": "tap",
+        "id": "ex_p_mo_dec"
+      },
+      {
+        "action": "tap",
+        "id": "expense_save"
+      }
+    ],
+    "T07_shares_split": [
+      {
+        "action": "tap",
+        "id": "group_g_lisbon"
+      },
+      {
+        "action": "tap",
+        "id": "add_expense"
+      },
+      {
+        "action": "tap",
+        "id": "key_6"
+      },
+      {
+        "action": "tap",
+        "id": "key_0"
+      },
+      {
+        "action": "tap",
+        "id": "key_0"
+      },
+      {
+        "action": "tap",
+        "id": "key_0"
+      },
+      {
+        "action": "tap",
+        "id": "amount_next"
+      },
+      {
+        "action": "type",
+        "id": "exp_title",
+        "text": "Car hire"
+      },
+      {
+        "action": "tap",
+        "id": "exp_payer"
+      },
+      {
+        "action": "tap",
+        "id": "payer_p_suri"
+      },
+      {
+        "action": "tap",
+        "id": "mode_shares"
+      },
+      {
+        "action": "tap",
+        "id": "sh_p_ren_inc"
+      },
+      {
+        "action": "tap",
+        "id": "expense_save"
+      }
+    ],
+    "T08_delete_expense": [
+      {
+        "action": "tap",
+        "id": "group_g_lisbon"
+      },
+      {
+        "action": "tap",
+        "id": "expense_e_3"
+      },
+      {
+        "action": "tap",
+        "id": "exp_delete"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      }
+    ],
+    "T09_settle_suri": [
+      {
+        "action": "tap",
+        "id": "group_g_lisbon"
+      },
+      {
+        "action": "tap",
+        "id": "group_balances"
+      },
+      {
+        "action": "tap",
+        "id": "settle_0"
+      },
+      {
+        "action": "tap",
+        "id": "settle_confirm"
+      }
+    ],
+    "T10_query_payments": [
+      {
+        "action": "tap",
+        "id": "group_g_lisbon"
+      },
+      {
+        "action": "tap",
+        "id": "group_balances"
+      },
+      {
+        "action": "finish",
+        "answer": "3"
+      }
+    ],
+    "T11_query_share": [
+      {
+        "action": "tap",
+        "id": "group_g_lisbon"
+      },
+      {
+        "action": "tap",
+        "id": "expense_e_5"
+      },
+      {
+        "action": "finish",
+        "answer": "£65.00"
+      }
+    ],
+    "T12_query_rounding": [
+      {
+        "action": "tap",
+        "id": "group_g_lisbon"
+      },
+      {
+        "action": "tap",
+        "id": "expense_e_3"
+      },
+      {
+        "action": "finish",
+        "answer": "£11.88"
+      }
+    ],
+    "T13_new_group": [
+      {
+        "action": "tap",
+        "id": "group_add"
+      },
+      {
+        "action": "type",
+        "id": "group_name",
+        "text": "Ski week"
+      },
+      {
+        "action": "tap",
+        "id": "mem_p_jules"
+      },
+      {
+        "action": "tap",
+        "id": "mem_p_mo"
+      },
+      {
+        "action": "tap",
+        "id": "group_create"
+      }
+    ],
+    "T14_flat_expense": [
+      {
+        "action": "tap",
+        "id": "group_g_flat"
+      },
+      {
+        "action": "tap",
+        "id": "add_expense"
+      },
+      {
+        "action": "tap",
+        "id": "key_9"
+      },
+      {
+        "action": "tap",
+        "id": "key_0"
+      },
+      {
+        "action": "tap",
+        "id": "key_0"
+      },
+      {
+        "action": "tap",
+        "id": "key_0"
+      },
+      {
+        "action": "tap",
+        "id": "amount_next"
+      },
+      {
+        "action": "type",
+        "id": "exp_title",
+        "text": "Boiler service"
+      },
+      {
+        "action": "tap",
+        "id": "exp_payer"
+      },
+      {
+        "action": "tap",
+        "id": "payer_p_ada"
+      },
+      {
+        "action": "tap",
+        "id": "expense_save"
+      }
+    ],
+    "T15_flagship": [
+      {
+        "action": "tap",
+        "id": "group_g_lisbon"
+      },
+      {
+        "action": "tap",
+        "id": "add_expense"
+      },
+      {
+        "action": "tap",
+        "id": "key_1"
+      },
+      {
+        "action": "tap",
+        "id": "key_2"
+      },
+      {
+        "action": "tap",
+        "id": "key_8"
+      },
+      {
+        "action": "tap",
+        "id": "key_0"
+      },
+      {
+        "action": "tap",
+        "id": "key_0"
+      },
+      {
+        "action": "tap",
+        "id": "amount_next"
+      },
+      {
+        "action": "type",
+        "id": "exp_title",
+        "text": "Boat trip"
+      },
+      {
+        "action": "tap",
+        "id": "exp_payer"
+      },
+      {
+        "action": "tap",
+        "id": "payer_p_ivo"
+      },
+      {
+        "action": "tap",
+        "id": "exp_category"
+      },
+      {
+        "action": "tap",
+        "id": "cat_travel"
+      },
+      {
+        "action": "tap",
+        "id": "mode_exact"
+      },
+      {
+        "action": "tap",
+        "id": "ex_p_ren_inc"
+      },
+      {
+        "action": "tap",
+        "id": "ex_p_ren_inc"
+      },
+      {
+        "action": "tap",
+        "id": "ex_p_ren_inc"
+      },
+      {
+        "action": "tap",
+        "id": "ex_p_ren_inc"
+      },
+      {
+        "action": "tap",
+        "id": "ex_p_ren_inc"
+      },
+      {
+        "action": "tap",
+        "id": "ex_p_ren_inc"
+      },
+      {
+        "action": "tap",
+        "id": "ex_p_ren_inc"
+      },
+      {
+        "action": "tap",
+        "id": "ex_p_ren_inc"
+      },
+      {
+        "action": "tap",
+        "id": "ex_p_mo_dec"
+      },
+      {
+        "action": "tap",
+        "id": "ex_p_mo_dec"
+      },
+      {
+        "action": "tap",
+        "id": "ex_p_mo_dec"
+      },
+      {
+        "action": "tap",
+        "id": "ex_p_mo_dec"
+      },
+      {
+        "action": "tap",
+        "id": "ex_p_mo_dec"
+      },
+      {
+        "action": "tap",
+        "id": "ex_p_mo_dec"
+      },
+      {
+        "action": "tap",
+        "id": "ex_p_mo_dec"
+      },
+      {
+        "action": "tap",
+        "id": "ex_p_mo_dec"
+      },
+      {
+        "action": "tap",
+        "id": "expense_save"
+      }
+    ],
+    "T16_mode_roundtrip": [
+      {
+        "action": "tap",
+        "id": "group_g_lisbon"
+      },
+      {
+        "action": "tap",
+        "id": "add_expense"
+      },
+      {
+        "action": "tap",
+        "id": "key_3"
+      },
+      {
+        "action": "tap",
+        "id": "key_0"
+      },
+      {
+        "action": "tap",
+        "id": "key_0"
+      },
+      {
+        "action": "tap",
+        "id": "key_0"
+      },
+      {
+        "action": "tap",
+        "id": "amount_next"
+      },
+      {
+        "action": "type",
+        "id": "exp_title",
+        "text": "Snacks"
+      },
+      {
+        "action": "tap",
+        "id": "exp_payer"
+      },
+      {
+        "action": "tap",
+        "id": "payer_p_mo"
+      },
+      {
+        "action": "tap",
+        "id": "mode_shares"
+      },
+      {
+        "action": "tap",
+        "id": "mode_equal"
+      },
+      {
+        "action": "tap",
+        "id": "expense_save"
+      }
+    ],
+    "T17_reduce_suri": [
+      {
+        "action": "tap",
+        "id": "group_g_lisbon"
+      },
+      {
+        "action": "tap",
+        "id": "add_expense"
+      },
+      {
+        "action": "tap",
+        "id": "key_6"
+      },
+      {
+        "action": "tap",
+        "id": "key_0"
+      },
+      {
+        "action": "tap",
+        "id": "key_0"
+      },
+      {
+        "action": "tap",
+        "id": "key_0"
+      },
+      {
+        "action": "tap",
+        "id": "amount_next"
+      },
+      {
+        "action": "type",
+        "id": "exp_title",
+        "text": "Museum"
+      },
+      {
+        "action": "tap",
+        "id": "exp_payer"
+      },
+      {
+        "action": "tap",
+        "id": "payer_p_suri"
+      },
+      {
+        "action": "tap",
+        "id": "expense_save"
+      }
+    ],
+    "T18_settle_flat": [
+      {
+        "action": "tap",
+        "id": "group_g_flat"
+      },
+      {
+        "action": "tap",
+        "id": "group_balances"
+      },
+      {
+        "action": "tap",
+        "id": "settle_0"
+      },
+      {
+        "action": "tap",
+        "id": "settle_confirm"
+      }
+    ],
+    "T19_delete_and_report": [
+      {
+        "action": "tap",
+        "id": "group_g_lisbon"
+      },
+      {
+        "action": "tap",
+        "id": "expense_e_4"
+      },
+      {
+        "action": "tap",
+        "id": "exp_delete"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "finish",
+        "answer": "£44.87"
+      }
+    ],
+    "T20_zero_out": [
+      {
+        "action": "tap",
+        "id": "group_g_flat"
+      },
+      {
+        "action": "tap",
+        "id": "group_balances"
+      },
+      {
+        "action": "tap",
+        "id": "settle_0"
+      },
+      {
+        "action": "tap",
+        "id": "settle_confirm"
+      },
+      {
+        "action": "tap",
+        "id": "settle_0"
+      },
+      {
+        "action": "tap",
+        "id": "settle_confirm"
+      }
+    ]
+  }
+}

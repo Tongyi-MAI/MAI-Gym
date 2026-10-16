@@ -1,0 +1,734 @@
+{
+  "env": "pipit_lessons",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_settings",
+      "name": "Goal and sound",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "settings"
+      ],
+      "instruction": "Set the daily goal to 30 XP and turn the sound effects off.",
+      "goal": [
+        {
+          "name": "Goal is 30",
+          "path": "derived.settings.dailyGoal",
+          "op": "eq",
+          "value": 30,
+          "weight": 2
+        },
+        {
+          "name": "Sound off",
+          "path": "derived.settings.sound",
+          "op": "eq",
+          "value": false,
+          "weight": 2
+        },
+        {
+          "name": "The reminder is untouched",
+          "path": "derived.settings.reminder",
+          "op": "eq",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "T02_query_word",
+      "name": "Question: what does o queijo mean",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "answer_expected": true,
+      "tags": [
+        "glossary",
+        "query",
+        "read-only"
+      ],
+      "instruction": "What does \"o queijo\" mean in English?",
+      "goal": [
+        {
+          "name": "The cheese",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Cc]heese",
+          "weight": 3
+        },
+        {
+          "name": "No lesson was started",
+          "path": "derived.inLesson",
+          "op": "eq",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "T03_clear_practice",
+      "name": "Clear the practice list",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "tags": [
+        "practice"
+      ],
+      "instruction": "Empty your practice list — you would rather start it fresh.",
+      "goal": [
+        {
+          "name": "Nothing left on it",
+          "path": "derived.practiceCount",
+          "op": "eq",
+          "value": 0,
+          "weight": 3
+        },
+        {
+          "name": "Your XP did not change",
+          "path": "derived.xp",
+          "op": "eq",
+          "value": 120
+        }
+      ]
+    },
+    {
+      "id": "T04_one_then_quit",
+      "name": "One question, then out",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "lesson",
+        "quit"
+      ],
+      "instruction": "Start unit 1, answer the first question correctly, then leave the lesson without finishing it.",
+      "goal": [
+        {
+          "name": "No lesson running",
+          "path": "derived.inLesson",
+          "op": "eq",
+          "value": false,
+          "weight": 2
+        },
+        {
+          "name": "Nothing was credited",
+          "path": "derived.lessonsDoneCount",
+          "op": "eq",
+          "value": 0,
+          "weight": 2
+        },
+        {
+          "name": "You got the water one right",
+          "path": "derived.seenWords.the water",
+          "op": "eq",
+          "value": 1,
+          "weight": 3,
+          "hint": "a word only counts as seen when you answer it correctly"
+        },
+        {
+          "name": "You did leave deliberately",
+          "source": "trajectory",
+          "path": "ids",
+          "op": "contains",
+          "value": "quit_lesson",
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T05_three_right",
+      "name": "Three in a row",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 22,
+      "tags": [
+        "lesson",
+        "streak"
+      ],
+      "instruction": "Start unit 1 and get the first three questions right, one after another. Stay in the lesson.",
+      "goal": [
+        {
+          "name": "Still in the lesson",
+          "path": "derived.inLesson",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Streak of three",
+          "path": "derived.session.streak",
+          "op": "eq",
+          "value": 3,
+          "weight": 3
+        },
+        {
+          "name": "All three hearts",
+          "path": "derived.session.hearts",
+          "op": "eq",
+          "value": 3,
+          "weight": 3,
+          "hint": "a wrong answer would break the streak and cost a heart"
+        },
+        {
+          "name": "Three right, none wrong",
+          "path": "derived.session.wrong",
+          "op": "eq",
+          "value": 0,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T06_query_example",
+      "name": "Question: the example sentence",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "answer_expected": true,
+      "tags": [
+        "glossary",
+        "query",
+        "read-only"
+      ],
+      "instruction": "Look up \"amanhã\" and tell me what its example sentence means in English.",
+      "goal": [
+        {
+          "name": "Tomorrow I go to work",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Tt]omorrow.*work",
+          "weight": 3
+        },
+        {
+          "name": "No lesson was started",
+          "path": "derived.inLesson",
+          "op": "eq",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "T07_wrong_on_purpose",
+      "name": "Get one wrong",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "lesson",
+        "marking"
+      ],
+      "instruction": "Start unit 2 and answer the first question wrongly on purpose, to see what happens. Stay in the lesson.",
+      "goal": [
+        {
+          "name": "Down to two hearts",
+          "path": "derived.session.hearts",
+          "op": "eq",
+          "value": 2,
+          "weight": 3
+        },
+        {
+          "name": "One wrong on the board",
+          "path": "derived.session.wrong",
+          "op": "eq",
+          "value": 1,
+          "weight": 2
+        },
+        {
+          "name": "The word went onto your practice list",
+          "path": "derived.practiceCount",
+          "op": "eq",
+          "value": 3,
+          "weight": 2,
+          "hint": "it had two on it already"
+        }
+      ]
+    },
+    {
+      "id": "T08_flagship",
+      "name": "Unit 1, all three hearts (flagship)",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 40,
+      "tags": [
+        "lesson",
+        "glossary",
+        "long-horizon",
+        "accuracy"
+      ],
+      "instruction": "Finish unit 1 without losing a single heart. Every answer is in the app if you are not sure — the Words tab has the whole glossary.",
+      "goal": [
+        {
+          "name": "Unit 1 is finished",
+          "path": "derived.lessonsDone",
+          "op": "contains",
+          "value": "Bread and water",
+          "weight": 3
+        },
+        {
+          "name": "All three hearts still there",
+          "path": "derived.session.hearts",
+          "op": "eq",
+          "value": 3,
+          "weight": 3
+        },
+        {
+          "name": "Six right, none wrong",
+          "path": "derived.session.wrong",
+          "op": "eq",
+          "value": 0,
+          "weight": 3
+        },
+        {
+          "name": "200 XP",
+          "path": "derived.xp",
+          "op": "eq",
+          "value": 200,
+          "weight": 2,
+          "hint": "six correct at ten each, plus twenty for a clean run"
+        },
+        {
+          "name": "Efficiency: 22 steps or fewer",
+          "source": "trajectory",
+          "path": "steps",
+          "op": "lte",
+          "value": 22,
+          "critical": false,
+          "weight": 0.5
+        }
+      ]
+    },
+    {
+      "id": "T09_unit_two",
+      "name": "Finish unit 2",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 40,
+      "tags": [
+        "lesson",
+        "long-horizon"
+      ],
+      "instruction": "Work through unit 2 to the end. Losing a heart on the way is allowed, as long as you finish it.",
+      "goal": [
+        {
+          "name": "Unit 2 is finished",
+          "path": "derived.lessonsDone",
+          "op": "contains",
+          "value": "The house and the cat",
+          "weight": 3
+        },
+        {
+          "name": "You did not run out of hearts",
+          "path": "derived.session.failed",
+          "op": "eq",
+          "value": false,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T10_word_bank",
+      "name": "Build the sentence",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 34,
+      "tags": [
+        "lesson",
+        "word-bank"
+      ],
+      "instruction": "In unit 2, get as far as the sentence-building question and put \"The door is open\" together correctly in Portuguese.",
+      "goal": [
+        {
+          "name": "You built it right",
+          "path": "derived.seenWords.the door",
+          "op": "gte",
+          "value": 1,
+          "weight": 3,
+          "hint": "a word only counts as seen when the answer was right"
+        },
+        {
+          "name": "Still in the lesson or finished it",
+          "path": "derived.session.correct",
+          "op": "gte",
+          "value": 4,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T11_fail",
+      "name": "Run out of hearts",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 22,
+      "tags": [
+        "lesson",
+        "marking"
+      ],
+      "instruction": "See what failing looks like: answer unit 1 wrongly three times so the lesson ends.",
+      "goal": [
+        {
+          "name": "The lesson failed",
+          "path": "derived.session.failed",
+          "op": "eq",
+          "value": true,
+          "weight": 3
+        },
+        {
+          "name": "No hearts left",
+          "path": "derived.session.hearts",
+          "op": "eq",
+          "value": 0,
+          "weight": 2
+        },
+        {
+          "name": "Nothing was credited",
+          "path": "derived.lessonsDoneCount",
+          "op": "eq",
+          "value": 0,
+          "weight": 2
+        },
+        {
+          "name": "And no XP",
+          "path": "derived.xp",
+          "op": "eq",
+          "value": 120,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T12_retry",
+      "name": "Fail it, then start again",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "lesson",
+        "retry"
+      ],
+      "instruction": "Fail unit 1 by answering three questions wrongly, then use the retry button to start it over. Do not answer anything in the new attempt.",
+      "goal": [
+        {
+          "name": "A fresh lesson is running",
+          "path": "derived.inLesson",
+          "op": "eq",
+          "value": true,
+          "weight": 2
+        },
+        {
+          "name": "Three hearts again",
+          "path": "derived.session.hearts",
+          "op": "eq",
+          "value": 3,
+          "weight": 3
+        },
+        {
+          "name": "Nothing answered yet in this one",
+          "path": "derived.session.asked",
+          "op": "eq",
+          "value": 0,
+          "weight": 2
+        },
+        {
+          "name": "You did fail it first",
+          "source": "trajectory",
+          "path": "ids",
+          "op": "contains",
+          "value": "retry",
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T13_query_count",
+      "name": "Question: how big is unit 3",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "answer_expected": true,
+      "tags": [
+        "glossary",
+        "query",
+        "read-only"
+      ],
+      "instruction": "How many words are there in unit 3? Answer with just the number.",
+      "goal": [
+        {
+          "name": "Six",
+          "source": "answer",
+          "op": "eq",
+          "value": 6,
+          "extract": "number",
+          "weight": 3
+        },
+        {
+          "name": "No lesson was started",
+          "path": "derived.inLesson",
+          "op": "eq",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "T14_practice_run",
+      "name": "A practice run",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 22,
+      "tags": [
+        "practice",
+        "lesson"
+      ],
+      "instruction": "Start a practice run over unit 1 and get the first two questions right. Stay in it.",
+      "goal": [
+        {
+          "name": "It is a practice run",
+          "path": "derived.session.practice",
+          "op": "eq",
+          "value": true,
+          "weight": 3
+        },
+        {
+          "name": "Two right",
+          "path": "derived.session.correct",
+          "op": "eq",
+          "value": 2,
+          "weight": 2
+        },
+        {
+          "name": "Practice does not count towards the course",
+          "path": "derived.lessonsDoneCount",
+          "op": "eq",
+          "value": 0,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T15_two_units",
+      "name": "Both of the first two units",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 60,
+      "tags": [
+        "lesson",
+        "long-horizon"
+      ],
+      "instruction": "Finish unit 1 and unit 2, both of them, in one sitting.",
+      "goal": [
+        {
+          "name": "Two units finished",
+          "path": "derived.lessonsDoneCount",
+          "op": "eq",
+          "value": 2,
+          "weight": 3
+        },
+        {
+          "name": "Unit 1 among them",
+          "path": "derived.lessonsDone",
+          "op": "contains",
+          "value": "Bread and water",
+          "weight": 2
+        },
+        {
+          "name": "Unit 2 among them",
+          "path": "derived.lessonsDone",
+          "op": "contains",
+          "value": "The house and the cat",
+          "weight": 2
+        },
+        {
+          "name": "At least 280 XP",
+          "path": "derived.xp",
+          "op": "gte",
+          "value": 280,
+          "weight": 2,
+          "hint": "two clean runs are eighty each"
+        }
+      ]
+    },
+    {
+      "id": "T16_words_unit",
+      "name": "Look inside unit 2",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "glossary",
+        "filter"
+      ],
+      "instruction": "Show the unit 2 words and open \"a janela\".",
+      "goal": [
+        {
+          "name": "On a word page",
+          "path": "derived.route",
+          "op": "eq",
+          "value": "word"
+        },
+        {
+          "name": "It is the window",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "w_janela",
+          "weight": 3
+        },
+        {
+          "name": "Unit 2 was the one shown",
+          "path": "derived.unitShown",
+          "op": "eq",
+          "value": 2,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T17_streak_four",
+      "name": "A run of four (many valid answers)",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "unique_solution": false,
+      "tags": [
+        "lesson",
+        "streak",
+        "multi-solution"
+      ],
+      "instruction": "Get four correct answers in a row in any lesson you like. Stay in the lesson once you have them.",
+      "goal": [
+        {
+          "name": "A run of four or better",
+          "path": "derived.session.best",
+          "op": "gte",
+          "value": 4,
+          "weight": 3
+        },
+        {
+          "name": "Still in the lesson",
+          "path": "derived.inLesson",
+          "op": "eq",
+          "value": true,
+          "weight": 2
+        },
+        {
+          "name": "You never lost a heart getting there",
+          "path": "derived.session.hearts",
+          "op": "eq",
+          "value": 3,
+          "weight": 2,
+          "hint": "a wrong answer resets the run to zero"
+        }
+      ]
+    },
+    {
+      "id": "T18_search",
+      "name": "Find the word for never",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "glossary",
+        "search"
+      ],
+      "instruction": "Search the glossary for the Portuguese word meaning \"never\" and open it.",
+      "goal": [
+        {
+          "name": "On a word page",
+          "path": "derived.route",
+          "op": "eq",
+          "value": "word"
+        },
+        {
+          "name": "It is nunca",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "w_nunca",
+          "weight": 3
+        },
+        {
+          "name": "You used the search box",
+          "source": "trajectory",
+          "path": "ids",
+          "op": "contains",
+          "value": "q_word",
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T19_fail_then_perfect",
+      "name": "Fail it, then do it properly",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 60,
+      "tags": [
+        "lesson",
+        "retry",
+        "long-horizon",
+        "accuracy"
+      ],
+      "instruction": "Answer unit 1 wrongly three times so it fails, then try it again and finish it without losing a heart.",
+      "goal": [
+        {
+          "name": "Unit 1 is finished in the end",
+          "path": "derived.lessonsDone",
+          "op": "contains",
+          "value": "Bread and water",
+          "weight": 3
+        },
+        {
+          "name": "The second run was clean",
+          "path": "derived.session.wrong",
+          "op": "eq",
+          "value": 0,
+          "weight": 3
+        },
+        {
+          "name": "With all three hearts",
+          "path": "derived.session.hearts",
+          "op": "eq",
+          "value": 3,
+          "weight": 2
+        },
+        {
+          "name": "The failed words are still on the practice list",
+          "path": "derived.practiceCount",
+          "op": "gte",
+          "value": 5,
+          "weight": 2,
+          "hint": "getting them right later does not take them off"
+        }
+      ]
+    },
+    {
+      "id": "T20_hard_mode",
+      "name": "Hard mode and a bigger goal",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "settings"
+      ],
+      "instruction": "Turn hard mode on and push the daily goal up to 50 XP.",
+      "goal": [
+        {
+          "name": "Hard mode on",
+          "path": "derived.settings.hardMode",
+          "op": "eq",
+          "value": true,
+          "weight": 3
+        },
+        {
+          "name": "Goal is 50",
+          "path": "derived.settings.dailyGoal",
+          "op": "eq",
+          "value": 50,
+          "weight": 3
+        },
+        {
+          "name": "Sound left alone",
+          "path": "derived.settings.sound",
+          "op": "eq",
+          "value": true
+        }
+      ]
+    }
+  ]
+}

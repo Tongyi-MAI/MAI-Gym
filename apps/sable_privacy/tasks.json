@@ -1,0 +1,864 @@
+{
+  "env": "sable_privacy",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_settings",
+      "name": "Two switches",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "settings"
+      ],
+      "instruction": "In Settings, turn on «Limit ad tracking» and turn off «Let apps ask to track». Leave the analytics switch alone.",
+      "goal": [
+        {
+          "name": "Ad tracking limited",
+          "path": "derived.settings.limitAdTracking",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Apps can no longer ask",
+          "path": "derived.settings.askToTrack",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Analytics untouched",
+          "path": "derived.settings.shareAnalytics",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "No permission was changed",
+          "path": "derived.brokenCount",
+          "op": "eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T02_bgloc",
+      "name": "Question: who can find you?",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "How many apps can work out where you are while you are not using them, and which are they?",
+      "goal": [
+        {
+          "name": "three",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)3(?!\\d)|[Tt]hree",
+          "weight": 3
+        },
+        {
+          "name": "Compass Maps",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Cc]ompass",
+          "weight": 3
+        },
+        {
+          "name": "Cirrus Weather",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Ww]eather",
+          "weight": 3
+        },
+        {
+          "name": "Stride Fitness",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Ss]tride",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.backgroundLocationCount",
+          "op": "eq",
+          "value": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T03_tracking",
+      "name": "Question: who tracks you?",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "Which apps are allowed to track you across other apps?",
+      "goal": [
+        {
+          "name": "Chatter",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Cc]hatter",
+          "weight": 3
+        },
+        {
+          "name": "Marketplace",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Mm]arketplace",
+          "weight": 3
+        },
+        {
+          "name": "Streamly",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Ss]treamly",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.trackingApps",
+          "op": "len_eq",
+          "value": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T04_maps",
+      "name": "Open Compass Maps",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "query",
+        "navigate"
+      ],
+      "instruction": "Open Compass Maps and tell me which of its three features actually needs location set to «Always».",
+      "goal": [
+        {
+          "name": "You are on Compass Maps",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "a_maps"
+        },
+        {
+          "name": "the arrival alerts",
+          "source": "answer",
+          "op": "regex",
+          "value": "([Aa]rrival|closed|alert)",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.brokenCount",
+          "op": "eq",
+          "value": 0
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T05_broken",
+      "name": "Question: anything broken?",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "How many features are currently not working, out of how many?",
+      "goal": [
+        {
+          "name": "none",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![A-Za-z])(?:(?<!\\d)0(?!\\d)|[Nn]one|[Nn]o)",
+          "weight": 3
+        },
+        {
+          "name": "nineteen",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)19(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.brokenCount",
+          "op": "eq",
+          "value": 0
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T06_precise",
+      "name": "Precise without location",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "refusal"
+      ],
+      "instruction": "Open Compass Maps, set its location to «Never», then try to turn precise location back on. Say what the app told you.",
+      "goal": [
+        {
+          "name": "Location is off",
+          "path": "derived.locationLevel.Compass Maps",
+          "op": "eq",
+          "value": "Never"
+        },
+        {
+          "name": "Precise did not come back",
+          "path": "derived.featureOn.Compass Maps·Lane-level guidance",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "location is off so it is meaningless",
+          "source": "answer",
+          "op": "regex",
+          "value": "(location|位置|meaning|没有意义|off|关)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T07_stop_bg",
+      "name": "Nobody in the background",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "multi-step"
+      ],
+      "instruction": "Use the button that stops every app locating you in the background. Then say how many features that cost you and which ones.",
+      "goal": [
+        {
+          "name": "Nobody can any more",
+          "path": "derived.backgroundLocationCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Three features stopped",
+          "path": "derived.brokenCount",
+          "op": "eq",
+          "value": 3
+        },
+        {
+          "name": "Navigation still works",
+          "path": "derived.featureOn.Compass Maps·Turn-by-turn navigation",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "The run route still works",
+          "path": "derived.featureOn.Stride Fitness·Outdoor run route",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "three features",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)3(?!\\d)|[Tt]hree",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T08_maps_bg",
+      "name": "Turn off one background refresh",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "reasoning"
+      ],
+      "instruction": "Open Compass Maps and turn off background refresh alone. What happened to its location setting, and which feature broke?",
+      "goal": [
+        {
+          "name": "Location degraded",
+          "path": "derived.locationLevel.Compass Maps",
+          "op": "eq",
+          "value": "While using"
+        },
+        {
+          "name": "Only the arrival alerts broke",
+          "path": "derived.brokenCount",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "it dropped to While using",
+          "source": "answer",
+          "op": "regex",
+          "value": "([Ww]hile|using|degrad|降)",
+          "weight": 3
+        },
+        {
+          "name": "the arrival alerts",
+          "source": "answer",
+          "op": "regex",
+          "value": "([Aa]rrival|closed|alert)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T09_maps_never",
+      "name": "Turn location off entirely",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "reasoning"
+      ],
+      "instruction": "Set Compass Maps' location to «Never» and say how many of its features that kills and why lane guidance is one of them.",
+      "goal": [
+        {
+          "name": "Location is off",
+          "path": "derived.locationLevel.Compass Maps",
+          "op": "eq",
+          "value": "Never"
+        },
+        {
+          "name": "All three broke",
+          "path": "derived.brokenCount",
+          "op": "eq",
+          "value": 3
+        },
+        {
+          "name": "all three",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)3(?!\\d)|three|all",
+          "weight": 3
+        },
+        {
+          "name": "precise depends on location",
+          "source": "answer",
+          "op": "regex",
+          "value": "(precise|depend|location)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T10_camera",
+      "name": "Take the camera off Chatter",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "reasoning"
+      ],
+      "instruction": "Turn off Chatter's camera and say exactly which of its features stop working — and which keep working.",
+      "goal": [
+        {
+          "name": "One feature broke",
+          "path": "derived.brokenCount",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "Taking a photo in-app is gone",
+          "path": "derived.featureOn.Chatter·Taking a photo in-app",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Sending photos still works",
+          "path": "derived.featureOn.Chatter·Sending photos",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "taking a photo in-app",
+          "source": "answer",
+          "op": "regex",
+          "value": "([Tt]aking|in-app|camera)",
+          "weight": 3
+        },
+        {
+          "name": "sending photos still works",
+          "source": "answer",
+          "op": "regex",
+          "value": "([Ss]ending|photos|library)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T11_revoke_tracking",
+      "name": "No more tracking",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "multi-step"
+      ],
+      "instruction": "Revoke tracking from every app at once, and say how many features that costs.",
+      "goal": [
+        {
+          "name": "Nobody tracks you",
+          "path": "derived.trackingApps",
+          "op": "len_eq",
+          "value": 0
+        },
+        {
+          "name": "Two features stopped",
+          "path": "derived.brokenCount",
+          "op": "eq",
+          "value": 2
+        },
+        {
+          "name": "two",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)2(?!\\d)|[Tt]wo",
+          "weight": 3
+        },
+        {
+          "name": "Chatter loses nothing",
+          "source": "answer",
+          "op": "regex",
+          "value": "(Chatter|nothing|none)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T12_by_perm",
+      "name": "Who has the microphone?",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "navigate",
+        "query"
+      ],
+      "instruction": "Use the by-permission view to find out how many apps hold the microphone, and which.",
+      "goal": [
+        {
+          "name": "You are looking at the microphone",
+          "path": "derived.perm",
+          "op": "eq",
+          "value": "p_mic"
+        },
+        {
+          "name": "one app",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![A-Za-z])(?:(?<![\\d-])1(?!\\d)|[Oo]ne|只有)",
+          "weight": 3
+        },
+        {
+          "name": "Chatter",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Cc]hatter",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T13_contacts",
+      "name": "Take contacts off Chatter",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "reasoning"
+      ],
+      "instruction": "Turn off Chatter's contacts permission and say which feature that breaks.",
+      "goal": [
+        {
+          "name": "One feature broke",
+          "path": "derived.brokenCount",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "Find friends is gone",
+          "path": "derived.featureOn.Chatter·Find friends by number",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "find friends by number",
+          "source": "answer",
+          "op": "regex",
+          "value": "([Ff]ind|friends|number|contacts)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T14_weather",
+      "name": "The weather app",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "reasoning"
+      ],
+      "instruction": "Cirrus Weather is one of the three that can locate you in the background. Drop it to «While using» and say what it loses and what it keeps.",
+      "goal": [
+        {
+          "name": "Weather is while-using",
+          "path": "derived.locationLevel.Cirrus Weather",
+          "op": "eq",
+          "value": "While using"
+        },
+        {
+          "name": "Two apps left in the background",
+          "path": "derived.backgroundLocationCount",
+          "op": "eq",
+          "value": 2
+        },
+        {
+          "name": "It keeps local weather",
+          "path": "derived.featureOn.Cirrus Weather·Weather where you are",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "loses the rain warning",
+          "source": "answer",
+          "op": "regex",
+          "value": "([Rr]ain|20 min|warning)",
+          "weight": 3
+        },
+        {
+          "name": "keeps local weather",
+          "source": "answer",
+          "op": "regex",
+          "value": "([Ww]eather where|local|current)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T15_keep_nav",
+      "name": "Nothing in the background, but keep what matters",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "constraint",
+        "reasoning"
+      ],
+      "instruction": "Get the background-location count to nought while keeping turn-by-turn navigation, lane-level guidance and the outdoor run route all working. Say which three things you had to give up.",
+      "goal": [
+        {
+          "name": "Nobody in the background",
+          "path": "derived.backgroundLocationCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Navigation kept",
+          "path": "derived.featureOn.Compass Maps·Turn-by-turn navigation",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Lane guidance kept",
+          "path": "derived.featureOn.Compass Maps·Lane-level guidance",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Run route kept",
+          "path": "derived.featureOn.Stride Fitness·Outdoor run route",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Only three things lost",
+          "path": "derived.brokenCount",
+          "op": "eq",
+          "value": 3
+        },
+        {
+          "name": "the arrival alerts",
+          "source": "answer",
+          "op": "regex",
+          "value": "([Aa]rrival|closed)",
+          "weight": 3
+        },
+        {
+          "name": "the rain warning",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:([Rr]ain|20))(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "automatic workout detection",
+          "source": "answer",
+          "op": "regex",
+          "value": "([Aa]utomatic|workout|detection)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T16_which_free",
+      "name": "The permission nobody would miss",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "search",
+        "reasoning"
+      ],
+      "instruction": "One permission is held by three apps and only two features anywhere depend on it. Find it, revoke it everywhere, and name it.",
+      "goal": [
+        {
+          "name": "Tracking is gone",
+          "path": "derived.trackingApps",
+          "op": "len_eq",
+          "value": 0
+        },
+        {
+          "name": "Only two features lost",
+          "path": "derived.brokenCount",
+          "op": "eq",
+          "value": 2
+        },
+        {
+          "name": "tracking",
+          "source": "answer",
+          "op": "regex",
+          "value": "([Tt]racking|track)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T17_chatter_strip",
+      "name": "Strip Chatter down",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 32,
+      "tags": [
+        "multi-step",
+        "reasoning"
+      ],
+      "instruction": "Take the camera, the microphone and the contacts off Chatter, leaving everything else alone. How many of its five features survive?",
+      "goal": [
+        {
+          "name": "Camera gone",
+          "path": "derived.featureOn.Chatter·Taking a photo in-app",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Voice messages gone",
+          "path": "derived.featureOn.Chatter·Voice messages",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Find friends gone",
+          "path": "derived.featureOn.Chatter·Find friends by number",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Sending photos survives",
+          "path": "derived.featureOn.Chatter·Sending photos",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "People nearby survives",
+          "path": "derived.featureOn.Chatter·People nearby",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Three features lost in total",
+          "path": "derived.brokenCount",
+          "op": "eq",
+          "value": 3
+        },
+        {
+          "name": "two survive",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)2(?!\\d)|[Tt]wo",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T18_all_location",
+      "name": "Take location away from everyone",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "multi-step",
+        "reasoning"
+      ],
+      "instruction": "Revoke location from every app at once and say how many features that costs in total.",
+      "goal": [
+        {
+          "name": "Nobody has location",
+          "path": "derived.permissionCounts.Location",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Nobody in the background",
+          "path": "derived.backgroundLocationCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Nine features lost",
+          "path": "derived.brokenCount",
+          "op": "eq",
+          "value": 9
+        },
+        {
+          "name": "nine",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)9(?!\\d)|[Nn]ine",
+          "weight": 3,
+          "hint": "lane guidance and the run route go too, because precise location goes with it"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T19_bank",
+      "name": "The bank keeps working",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 28,
+      "tags": [
+        "constraint"
+      ],
+      "instruction": "Harbour Bank has two features. Take away the one permission that would break the cheque photo but leave the branch finder alone, then confirm what the bank can and cannot do.",
+      "goal": [
+        {
+          "name": "Camera is off",
+          "path": "derived.featureOn.Harbour Bank·Photograph a cheque",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Branch finder still works",
+          "path": "derived.featureOn.Harbour Bank·Nearest branch",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Only one feature lost anywhere",
+          "path": "derived.brokenCount",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "the camera",
+          "source": "answer",
+          "op": "regex",
+          "value": "([Cc]amera)",
+          "weight": 3
+        },
+        {
+          "name": "the branch finder is fine",
+          "source": "answer",
+          "op": "regex",
+          "value": "([Bb]ranch|nearest|location)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T20_tidy",
+      "name": "A whole privacy tidy-up",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 36,
+      "tags": [
+        "constraint",
+        "multi-step"
+      ],
+      "instruction": "Do all three: nobody may locate you in the background, nobody may track you across apps, and Chatter must lose its microphone. Keep navigation and the run route working. Then tell me how many features are down in total.",
+      "goal": [
+        {
+          "name": "Nobody in the background",
+          "path": "derived.backgroundLocationCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Nobody tracks you",
+          "path": "derived.trackingApps",
+          "op": "len_eq",
+          "value": 0
+        },
+        {
+          "name": "Chatter has no microphone",
+          "path": "derived.featureOn.Chatter·Voice messages",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Navigation kept",
+          "path": "derived.featureOn.Compass Maps·Turn-by-turn navigation",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Run route kept",
+          "path": "derived.featureOn.Stride Fitness·Outdoor run route",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Six features down",
+          "path": "derived.brokenCount",
+          "op": "eq",
+          "value": 6
+        },
+        {
+          "name": "six",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)6(?!\\d)|[Ss]ix",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    }
+  ]
+}

@@ -1,0 +1,314 @@
+{
+  "env": "willow_meds",
+  "note": "Golden action sequences replayed by CI.",
+  "solutions": {
+    "T01_settings": [
+      {
+        "action": "tap",
+        "id": "open_settings"
+      },
+      {
+        "action": "tap",
+        "id": "warn_inc"
+      },
+      {
+        "action": "tap",
+        "id": "warn_inc"
+      },
+      {
+        "action": "tap",
+        "id": "warn_inc"
+      },
+      {
+        "action": "tap",
+        "id": "warn_inc"
+      },
+      {
+        "action": "tap",
+        "id": "set_remindEarly"
+      }
+    ],
+    "T02_query_soonest": [
+      {
+        "action": "finish",
+        "answer": "Sertraline"
+      }
+    ],
+    "T03_take_one": [
+      {
+        "action": "tap",
+        "id": "take_m_sert_morning"
+      }
+    ],
+    "T04_take_morning": [
+      {
+        "action": "tap",
+        "id": "take_all_morning"
+      }
+    ],
+    "T05_skip": [
+      {
+        "action": "tap",
+        "id": "skip_m_levo_morning"
+      }
+    ],
+    "T06_query_days": [
+      {
+        "action": "tap",
+        "id": "tab_cabinet"
+      },
+      {
+        "action": "tap",
+        "id": "med_m_metf"
+      },
+      {
+        "action": "finish",
+        "answer": "17"
+      }
+    ],
+    "T07_order": [
+      {
+        "action": "tap",
+        "id": "tab_cabinet"
+      },
+      {
+        "action": "tap",
+        "id": "med_m_ator"
+      },
+      {
+        "action": "tap",
+        "id": "order_med"
+      }
+    ],
+    "T08_receive": [
+      {
+        "action": "tap",
+        "id": "tab_cabinet"
+      },
+      {
+        "action": "tap",
+        "id": "med_m_sert"
+      },
+      {
+        "action": "tap",
+        "id": "order_med"
+      },
+      {
+        "action": "tap",
+        "id": "receive_med"
+      }
+    ],
+    "T09_order_all": [
+      {
+        "action": "tap",
+        "id": "tab_refills"
+      },
+      {
+        "action": "tap",
+        "id": "order_all"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      }
+    ],
+    "T10_query_caution": [
+      {
+        "action": "tap",
+        "id": "tab_cabinet"
+      },
+      {
+        "action": "tap",
+        "id": "med_m_levo"
+      },
+      {
+        "action": "finish",
+        "answer": "Levothyroxine and Vitamin D — leave four hours between them"
+      }
+    ],
+    "T11_schedule": [
+      {
+        "action": "tap",
+        "id": "tab_cabinet"
+      },
+      {
+        "action": "tap",
+        "id": "med_m_metf"
+      },
+      {
+        "action": "tap",
+        "id": "sw_noon"
+      }
+    ],
+    "T12_undo": [
+      {
+        "action": "tap",
+        "id": "take_m_vitd_morning"
+      },
+      {
+        "action": "tap",
+        "id": "undo_m_vitd_morning"
+      }
+    ],
+    "T13_prn": [
+      {
+        "action": "tap",
+        "id": "takeprn_m_ibu"
+      }
+    ],
+    "T14_flagship": [
+      {
+        "action": "tap",
+        "id": "take_all_morning"
+      },
+      {
+        "action": "tap",
+        "id": "tab_refills"
+      },
+      {
+        "action": "tap",
+        "id": "order_all"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      }
+    ],
+    "T15_query_adherence": [
+      {
+        "action": "tap",
+        "id": "tab_history"
+      },
+      {
+        "action": "finish",
+        "answer": "75"
+      }
+    ],
+    "T16_evening": [
+      {
+        "action": "tap",
+        "id": "take_all_evening"
+      }
+    ],
+    "T17_free_stock": [
+      {
+        "action": "tap",
+        "id": "tab_refills"
+      },
+      {
+        "action": "tap",
+        "id": "order_all"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "tap",
+        "id": "arrive_m_ator"
+      },
+      {
+        "action": "tap",
+        "id": "arrive_m_sert"
+      },
+      {
+        "action": "tap",
+        "id": "tab_cabinet"
+      },
+      {
+        "action": "tap",
+        "id": "med_m_levo"
+      },
+      {
+        "action": "tap",
+        "id": "order_med"
+      },
+      {
+        "action": "tap",
+        "id": "receive_med"
+      }
+    ],
+    "T18_low_list": [
+      {
+        "action": "tap",
+        "id": "tab_refills"
+      },
+      {
+        "action": "finish",
+        "answer": "2"
+      }
+    ],
+    "T19_threshold": [
+      {
+        "action": "tap",
+        "id": "open_settings"
+      },
+      {
+        "action": "tap",
+        "id": "warn_inc"
+      },
+      {
+        "action": "tap",
+        "id": "warn_inc"
+      },
+      {
+        "action": "tap",
+        "id": "warn_inc"
+      },
+      {
+        "action": "tap",
+        "id": "warn_inc"
+      },
+      {
+        "action": "tap",
+        "id": "warn_inc"
+      },
+      {
+        "action": "tap",
+        "id": "warn_inc"
+      },
+      {
+        "action": "tap",
+        "id": "warn_inc"
+      },
+      {
+        "action": "tap",
+        "id": "warn_inc"
+      },
+      {
+        "action": "tap",
+        "id": "warn_inc"
+      },
+      {
+        "action": "tap",
+        "id": "warn_inc"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "tab_refills"
+      },
+      {
+        "action": "finish",
+        "answer": "4"
+      }
+    ],
+    "T20_mixed": [
+      {
+        "action": "tap",
+        "id": "take_all_morning"
+      },
+      {
+        "action": "tap",
+        "id": "skip_m_ator_evening"
+      },
+      {
+        "action": "tap",
+        "id": "take_m_metf_evening"
+      }
+    ]
+  }
+}

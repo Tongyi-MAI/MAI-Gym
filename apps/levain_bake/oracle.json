@@ -1,0 +1,322 @@
+{
+  "env": "levain_bake",
+  "note": "Golden action sequences replayed by CI.",
+  "solutions": {
+    "T01_settings": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_markNights"
+      },
+      {
+        "action": "tap",
+        "id": "set_showPreheat"
+      }
+    ],
+    "T02_start": [
+      {
+        "action": "finish",
+        "answer": "Friday 20:35."
+      }
+    ],
+    "T03_nights": [
+      {
+        "action": "finish",
+        "answer": "Two — mixing at 00:55 and shaping at 05:15."
+      }
+    ],
+    "T04_mix_time": [
+      {
+        "action": "tap",
+        "id": "step_mix"
+      },
+      {
+        "action": "finish",
+        "answer": "Saturday 00:55."
+      }
+    ],
+    "T05_total": [
+      {
+        "action": "tap",
+        "id": "tab_steps"
+      },
+      {
+        "action": "finish",
+        "answer": "13h 25m."
+      }
+    ],
+    "T06_too_soon": [
+      {
+        "action": "tap",
+        "id": "slot_6"
+      },
+      {
+        "action": "finish",
+        "answer": "It cannot be started — you would have had to begin 1h 25m ago."
+      }
+    ],
+    "T07_warm": [
+      {
+        "action": "tap",
+        "id": "tab_levers"
+      },
+      {
+        "action": "tap",
+        "id": "temp_28"
+      },
+      {
+        "action": "finish",
+        "answer": "Start slides to Friday 23:25, but it is still two — mixing and shaping just move later into the night."
+      }
+    ],
+    "T08_ripe": [
+      {
+        "action": "tap",
+        "id": "tab_levers"
+      },
+      {
+        "action": "tap",
+        "id": "set_starter"
+      },
+      {
+        "action": "finish",
+        "answer": "Friday 23:55 — three hours and twenty minutes later, and still two steps in the small hours."
+      }
+    ],
+    "T09_cold_bulk": [
+      {
+        "action": "tap",
+        "id": "tab_levers"
+      },
+      {
+        "action": "tap",
+        "id": "where_bulk"
+      },
+      {
+        "action": "finish",
+        "answer": "It says you would have had to start at Friday 12:35 — the plan becomes 21h 25m long, so with the loaf due at Sat 10:00 the first step falls five and a half hours ago."
+      }
+    ],
+    "T10_later": [
+      {
+        "action": "tap",
+        "id": "slot_18"
+      },
+      {
+        "action": "finish",
+        "answer": "Only one now — feeding the starter, at Saturday 04:35."
+      }
+    ],
+    "T11_preheat": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "finish",
+        "answer": "No — the preheat runs alongside the final proof, which is longer than 45 minutes, so it never adds anything to the plan."
+      }
+    ],
+    "T12_hands": [
+      {
+        "action": "tap",
+        "id": "tab_steps"
+      },
+      {
+        "action": "finish",
+        "answer": "Four: feeding the starter, mixing and salting, shaping, and baking."
+      }
+    ],
+    "T13_three_levers": [
+      {
+        "action": "tap",
+        "id": "tab_levers"
+      },
+      {
+        "action": "tap",
+        "id": "temp_28"
+      },
+      {
+        "action": "tap",
+        "id": "set_starter"
+      },
+      {
+        "action": "tap",
+        "id": "tab_plan"
+      },
+      {
+        "action": "tap",
+        "id": "slot_20"
+      },
+      {
+        "action": "finish",
+        "answer": "Start Saturday 11:45, and none — the whole thing runs in daylight because the plan is only 8h 15m long once the feed comes out."
+      }
+    ],
+    "T14_temp_table": [
+      {
+        "action": "tap",
+        "id": "tab_steps"
+      },
+      {
+        "action": "finish",
+        "answer": "18 hours flat at 18°, and 6h 45m at 28°."
+      }
+    ],
+    "T15_clean_ten": [
+      {
+        "action": "tap",
+        "id": "tab_levers"
+      },
+      {
+        "action": "tap",
+        "id": "set_starter"
+      },
+      {
+        "action": "tap",
+        "id": "retard_8"
+      }
+    ],
+    "T16_coldest": [
+      {
+        "action": "tap",
+        "id": "tab_levers"
+      },
+      {
+        "action": "tap",
+        "id": "set_starter"
+      },
+      {
+        "action": "tap",
+        "id": "retard_8"
+      },
+      {
+        "action": "tap",
+        "id": "temp_24"
+      },
+      {
+        "action": "finish",
+        "answer": "24°."
+      }
+    ],
+    "T17_earliest": [
+      {
+        "action": "tap",
+        "id": "tab_levers"
+      },
+      {
+        "action": "tap",
+        "id": "set_starter"
+      },
+      {
+        "action": "tap",
+        "id": "retard_8"
+      },
+      {
+        "action": "tap",
+        "id": "temp_27"
+      },
+      {
+        "action": "tap",
+        "id": "tab_plan"
+      },
+      {
+        "action": "tap",
+        "id": "slot_9"
+      },
+      {
+        "action": "finish",
+        "answer": "Saturday 09:00 — and only at 27 or 28° with the starter already ripe and an eight-hour cold proof."
+      }
+    ],
+    "T18_eight": [
+      {
+        "action": "tap",
+        "id": "tab_levers"
+      },
+      {
+        "action": "tap",
+        "id": "set_starter"
+      },
+      {
+        "action": "tap",
+        "id": "retard_8"
+      },
+      {
+        "action": "tap",
+        "id": "temp_28"
+      },
+      {
+        "action": "tap",
+        "id": "tab_plan"
+      },
+      {
+        "action": "tap",
+        "id": "slot_9"
+      },
+      {
+        "action": "finish",
+        "answer": "No. Even at 28° with the starter ripe and the shortest cold proof, the earliest clean plan lands at Saturday 09:00."
+      }
+    ],
+    "T19_must_feed": [
+      {
+        "action": "tap",
+        "id": "tab_levers"
+      },
+      {
+        "action": "tap",
+        "id": "retard_8"
+      },
+      {
+        "action": "tap",
+        "id": "where_bulk"
+      },
+      {
+        "action": "tap",
+        "id": "temp_25"
+      },
+      {
+        "action": "tap",
+        "id": "tab_plan"
+      },
+      {
+        "action": "tap",
+        "id": "slot_11"
+      },
+      {
+        "action": "finish",
+        "answer": "Saturday 11:00 — at 25° or warmer, with an eight-hour cold bulk rather than a cold proof."
+      }
+    ],
+    "T20_all_three": [
+      {
+        "action": "tap",
+        "id": "tab_levers"
+      },
+      {
+        "action": "tap",
+        "id": "retard_8"
+      },
+      {
+        "action": "tap",
+        "id": "where_bulk"
+      },
+      {
+        "action": "tap",
+        "id": "temp_23"
+      },
+      {
+        "action": "tap",
+        "id": "tab_plan"
+      },
+      {
+        "action": "tap",
+        "id": "slot_12"
+      }
+    ]
+  }
+}

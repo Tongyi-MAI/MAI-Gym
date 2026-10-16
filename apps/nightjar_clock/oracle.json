@@ -1,0 +1,317 @@
+{
+  "env": "nightjar_clock",
+  "note": "Golden action sequences replayed by CI.",
+  "solutions": {
+    "T01_settings": [
+      {
+        "action": "tap",
+        "id": "tab_bed"
+      },
+      {
+        "action": "tap",
+        "id": "set_show24"
+      },
+      {
+        "action": "tap",
+        "id": "set_bedtimeReminder"
+      }
+    ],
+    "T02_next": [
+      {
+        "action": "finish",
+        "answer": "「上班」，周五 06:40。"
+      }
+    ],
+    "T03_sleep": [
+      {
+        "action": "finish",
+        "answer": "7 小时 53 分钟。"
+      }
+    ],
+    "T04_why_not": [
+      {
+        "action": "tap",
+        "id": "alarm_a_early"
+      },
+      {
+        "action": "finish",
+        "answer": "它的「跳过下一次」开着，所以周五这一次不响，要等到周一 05:30。"
+      }
+    ],
+    "T05_count": [
+      {
+        "action": "finish",
+        "answer": "一共 6 个，开着的 5 个 —— 只有「跑步」是关的。"
+      }
+    ],
+    "T06_skip_off": [
+      {
+        "action": "tap",
+        "id": "alarm_a_run"
+      },
+      {
+        "action": "tap",
+        "id": "edit_skip"
+      },
+      {
+        "action": "finish",
+        "answer": "它说「跑步」是关着的，没有下一次可跳。"
+      }
+    ],
+    "T07_unskip": [
+      {
+        "action": "tap",
+        "id": "alarm_a_early"
+      },
+      {
+        "action": "tap",
+        "id": "edit_skip"
+      },
+      {
+        "action": "finish",
+        "answer": "变成「早班」周五 05:30，还能睡 6 小时 43 分钟。"
+      }
+    ],
+    "T08_off_work": [
+      {
+        "action": "tap",
+        "id": "sw_a_work"
+      },
+      {
+        "action": "finish",
+        "answer": "下一个是「吃药」，周五 22:00 —— 因为「早班」还在跳过，要等到周一。"
+      }
+    ],
+    "T09_weekend": [
+      {
+        "action": "tap",
+        "id": "alarm_a_wknd"
+      },
+      {
+        "action": "tap",
+        "id": "hr_9"
+      },
+      {
+        "action": "tap",
+        "id": "mn_0"
+      }
+    ],
+    "T10_london": [
+      {
+        "action": "tap",
+        "id": "tab_world"
+      },
+      {
+        "action": "finish",
+        "answer": "15:47。伦敦现在是夏令时 UTC+1，不是冬天的 UTC+0，所以比上海慢 7 小时不是 8 小时。"
+      }
+    ],
+    "T11_delhi": [
+      {
+        "action": "tap",
+        "id": "tab_world"
+      },
+      {
+        "action": "finish",
+        "answer": "20:17，比上海慢两个半小时 —— 印度的时区是 UTC+5:30，不是整点。"
+      }
+    ],
+    "T12_timer_first": [
+      {
+        "action": "tap",
+        "id": "tab_timer"
+      },
+      {
+        "action": "finish",
+        "answer": "「泡面」，还剩 1:12，大概 22:49 响。"
+      }
+    ],
+    "T13_lap": [
+      {
+        "action": "tap",
+        "id": "tab_timer"
+      },
+      {
+        "action": "finish",
+        "answer": "第 2 圈，9:58。"
+      }
+    ],
+    "T14_add_city": [
+      {
+        "action": "tap",
+        "id": "tab_world"
+      },
+      {
+        "action": "tap",
+        "id": "add_city"
+      },
+      {
+        "action": "tap",
+        "id": "pc_c_tk"
+      },
+      {
+        "action": "finish",
+        "answer": "23:47，比上海快一个小时。"
+      }
+    ],
+    "T15_bed_goal": [
+      {
+        "action": "tap",
+        "id": "tab_bed"
+      },
+      {
+        "action": "tap",
+        "id": "bed_s_dec"
+      },
+      {
+        "action": "tap",
+        "id": "bed_s_dec"
+      },
+      {
+        "action": "tap",
+        "id": "bed_s_dec"
+      },
+      {
+        "action": "tap",
+        "id": "bed_s_dec"
+      },
+      {
+        "action": "finish",
+        "answer": "22:30，窗口 8 小时 10 分钟。步进器一次十五分钟，22:45 只有 7 小时 55 分，所以只能一次挪到 22:30。"
+      }
+    ],
+    "T16_seven_hours": [
+      {
+        "action": "tap",
+        "id": "alarm_a_early"
+      },
+      {
+        "action": "tap",
+        "id": "edit_skip"
+      },
+      {
+        "action": "tap",
+        "id": "hr_5"
+      },
+      {
+        "action": "tap",
+        "id": "mn_45"
+      },
+      {
+        "action": "tap",
+        "id": "plus_1"
+      },
+      {
+        "action": "tap",
+        "id": "plus_1"
+      }
+    ],
+    "T17_ny_meeting": [
+      {
+        "action": "tap",
+        "id": "tab_world"
+      },
+      {
+        "action": "tap",
+        "id": "city_c_ny"
+      },
+      {
+        "action": "finish",
+        "answer": "对纽约来说是周四晚上 22:00 —— 上海快 12 小时，所以会开在他们的前一天。"
+      }
+    ],
+    "T18_la_window": [
+      {
+        "action": "tap",
+        "id": "tab_world"
+      },
+      {
+        "action": "tap",
+        "id": "add_city"
+      },
+      {
+        "action": "tap",
+        "id": "pc_c_la"
+      },
+      {
+        "action": "tap",
+        "id": "city_c_la"
+      },
+      {
+        "action": "finish",
+        "answer": "上海时间周六 00:00 到 08:00 —— 洛杉矶慢 15 小时，他们的周五白天正好是我们的周六凌晨。"
+      }
+    ],
+    "T19_oven": [
+      {
+        "action": "tap",
+        "id": "tab_timer"
+      },
+      {
+        "action": "tap",
+        "id": "ta_t_oven"
+      },
+      {
+        "action": "tap",
+        "id": "ta_t_oven"
+      },
+      {
+        "action": "tap",
+        "id": "ta_t_oven"
+      },
+      {
+        "action": "tap",
+        "id": "ta_t_oven"
+      },
+      {
+        "action": "tap",
+        "id": "ta_t_oven"
+      },
+      {
+        "action": "finish",
+        "answer": "原本 23:06，加五分钟以后 23:11。这中间没有闹钟 —— 吃药那个 22:00 的今天已经过了，下一个要等到周五 06:40。"
+      }
+    ],
+    "T20_early_flight": [
+      {
+        "action": "tap",
+        "id": "alarm_a_run"
+      },
+      {
+        "action": "tap",
+        "id": "hr_4"
+      },
+      {
+        "action": "tap",
+        "id": "mn_30"
+      },
+      {
+        "action": "tap",
+        "id": "dow_0"
+      },
+      {
+        "action": "tap",
+        "id": "dow_2"
+      },
+      {
+        "action": "tap",
+        "id": "edit_on"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "sw_a_work"
+      },
+      {
+        "action": "tap",
+        "id": "sw_a_early"
+      },
+      {
+        "action": "finish",
+        "answer": "还能睡 5 小时 43 分钟。"
+      }
+    ]
+  }
+}

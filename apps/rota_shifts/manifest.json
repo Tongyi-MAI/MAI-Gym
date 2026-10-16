@@ -1,0 +1,32 @@
+{
+  "id": "rota_shifts",
+  "name": "排班",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "viewport": {"width": 390, "height": 844},
+  "description": "一个单文件 H5 排班应用（界面为中文）。主屏是一张五天两班的表格而不是列表，世界模型是这十个格子上的约束满足问题：每班两个人、每班至少一个能带班的、同一天不能连上两个班、不可用的日子不能排、每人有周工时上限；超出合同工时的部分按 1.5 倍计薪，所以合规的排法有很多种而价钱各不相同。三个带班的人各有一天不在，这个稀缺把答案的形状几乎完全逼死了：唯一最便宜的合规排法是每个格子恰好一个带班的加一个非带班的。共 11,264 种合规排法，最便宜 ¥4,696.00，加班下限 24 小时。6 个界面，5 名员工，10 个班次。",
+  "tasks_file": "tasks.json",
+  "oracle_file": "oracle.json",
+  "action_space": {
+    "tap":    {"id": "test-id of the element"},
+    "type":   {"id": "test-id of a text field", "text": "replaces the whole value"},
+    "back":   {}, "home": {}, "wait": {},
+    "finish": {"answer": "final answer for question tasks; optional for action tasks"},
+    "tap_xy": {"x": "screen pixel x", "y": "screen pixel y", "note": "browser backend only"}
+  },
+  "observation": {
+    "text": "engine.a11y(state) — 整张表格逐格序列化，每格列出人名、谁能带班、缺几人；被挡住的人还会各自打印挡住的理由，所以纯文本也能把约束推完。",
+    "pixels": "390x844 screenshot (browser backend); __ENV__.bounds() maps every test-id to a pixel box",
+    "state": "engine.snapshot(state) — canonical state 加上按人名和班次名索引的 derived view。仅供校验器使用。"
+  },
+  "world": {
+    "clock": "09:12",
+    "grid": "周一到周五 × 早班 08:00–16:00 / 晚班 16:00–24:00，共 10 个格子、20 个人次、160 小时",
+    "rules": "每班 2 人；每班至少 1 名带班；同一天不得连上两班；不可用日不得排；各人有周工时上限",
+    "money": "整数分。时薪 林晓 ¥28、赵敏 ¥32、吴斌 ¥24、陈露 ¥26、何俊 ¥30，超出合同工时按 1.5 倍",
+    "scarcity": "能带班的只有林晓（周五不在）、赵敏（周三不在）、何俊（周一不在，上限 24 小时）；三人一周合计最多能带 11 个班，而需求是 10 个",
+    "seeded": "19/20 已排，四处问题：周五晚班缺 1 人、周四早班无带班、赵敏被排在周三、陈露周二连班；工资 ¥4,568.00",
+    "optimum": "合规排法 11,264 种，工资区间 ¥4,696.00–¥4,832.00，加班只可能是 24 或 32 小时",
+    "ordering": "周五晚班在陈露的工时被周二的连班占满之前补不上，所以有些修法必须按顺序做"
+  }
+}

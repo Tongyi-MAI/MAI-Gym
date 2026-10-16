@@ -1,0 +1,316 @@
+{
+  "env": "sam_phone",
+  "note": "Golden action sequences replayed by CI.",
+  "solutions": {
+    "T01_most_unread": [
+      {
+        "action": "tap",
+        "id": "ic_marlin_mail"
+      }
+    ],
+    "T02_low_power": [
+      {
+        "action": "tap",
+        "id": "tab_battery"
+      },
+      {
+        "action": "tap",
+        "id": "sw_low"
+      }
+    ],
+    "T03_sleep_focus": [
+      {
+        "action": "tap",
+        "id": "tab_notifs"
+      },
+      {
+        "action": "tap",
+        "id": "fc_sleep"
+      }
+    ],
+    "T04_owner": [
+      {
+        "action": "tap",
+        "id": "tab_about"
+      },
+      {
+        "action": "finish",
+        "answer": "机主是张三（Sam Zhang）。紧急联系人里最亲的是他爱人王倩，138 0013 8000；另一位是他妈张桂芬。"
+      }
+    ],
+    "T05_bg_off_all": [
+      {
+        "action": "tap",
+        "id": "tab_battery"
+      },
+      {
+        "action": "tap",
+        "id": "bg_off_all"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      }
+    ],
+    "T06_screen_today": [
+      {
+        "action": "tap",
+        "id": "w_screen"
+      },
+      {
+        "action": "finish",
+        "answer": "446 分钟，也就是 7 小时 26 分钟。最费时间的是音乐 74 分钟。"
+      }
+    ],
+    "T07_dies": [
+      {
+        "action": "tap",
+        "id": "tab_battery"
+      },
+      {
+        "action": "finish",
+        "answer": "按现在的 5.65 %/时，23% 只够撑 4 小时 4 分钟，02:51 就没电，比 06:40 的闹钟早了 3 小时 49 分钟。"
+      }
+    ],
+    "T08_low_only": [
+      {
+        "action": "tap",
+        "id": "tab_battery"
+      },
+      {
+        "action": "tap",
+        "id": "sw_low"
+      },
+      {
+        "action": "finish",
+        "answer": "不够。低电量模式把耗电降到 3.28 %/时，还能撑 7 小时整（420 分钟），05:47 就没电了，比闹钟早 53 分钟。"
+      }
+    ],
+    "T09_move_sudoku": [
+      {
+        "action": "tap",
+        "id": "pg_p2"
+      },
+      {
+        "action": "tap",
+        "id": "fo_f_play"
+      },
+      {
+        "action": "tap",
+        "id": "fi_grid_puzzle"
+      },
+      {
+        "action": "tap",
+        "id": "mv_p1"
+      }
+    ],
+    "T10_dock_swap": [
+      {
+        "action": "tap",
+        "id": "dk_lumen_camera"
+      },
+      {
+        "action": "tap",
+        "id": "mv_p2"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "pg_p2"
+      },
+      {
+        "action": "tap",
+        "id": "ic_kestrel_bank"
+      },
+      {
+        "action": "tap",
+        "id": "mv_dock"
+      }
+    ],
+    "T11_sleep_count": [
+      {
+        "action": "tap",
+        "id": "tab_notifs"
+      },
+      {
+        "action": "tap",
+        "id": "fc_sleep"
+      },
+      {
+        "action": "finish",
+        "answer": "4 条：王倩那条（她是紧急联系人），加上银行扣款、天气预警、吃药提醒这三条时效性的。"
+      }
+    ],
+    "T12_work_count": [
+      {
+        "action": "tap",
+        "id": "tab_notifs"
+      },
+      {
+        "action": "tap",
+        "id": "fc_work"
+      },
+      {
+        "action": "finish",
+        "answer": "7 条：张伟的两条（他是放行的同事）、邮件、排班，再加上银行扣款、天气预警、吃药提醒这三条时效性的。"
+      }
+    ],
+    "T13_gavel_why": [
+      {
+        "action": "tap",
+        "id": "pg_p2"
+      },
+      {
+        "action": "tap",
+        "id": "fo_f_play"
+      },
+      {
+        "action": "tap",
+        "id": "fi_gavel_auction"
+      },
+      {
+        "action": "finish",
+        "answer": "因为「拍卖」这个 app 自己的通知开关是关的。这一关就直接没有通知了，轮不到专注模式去放行，所以哪个模式下它都静音。"
+      }
+    ],
+    "T14_allow_zhangwei": [
+      {
+        "action": "tap",
+        "id": "tab_notifs"
+      },
+      {
+        "action": "tap",
+        "id": "fc_sleep"
+      },
+      {
+        "action": "tap",
+        "id": "go_focus"
+      },
+      {
+        "action": "tap",
+        "id": "al_quill_messages"
+      }
+    ],
+    "T15_mute_and_clear": [
+      {
+        "action": "tap",
+        "id": "ic_sonora_music"
+      },
+      {
+        "action": "tap",
+        "id": "sw_notify"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "tab_notifs"
+      },
+      {
+        "action": "tap",
+        "id": "clear_all"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      }
+    ],
+    "T16_survive_min": [
+      {
+        "action": "tap",
+        "id": "tab_battery"
+      },
+      {
+        "action": "tap",
+        "id": "sw_low"
+      },
+      {
+        "action": "tap",
+        "id": "bg_sonora_music"
+      }
+    ],
+    "T17_count_without_low": [
+      {
+        "action": "tap",
+        "id": "tab_battery"
+      },
+      {
+        "action": "finish",
+        "answer": "6 个。要撑到闹钟耗电得压到 2.91 %/时以下，也就是从后台那 4.55 里砍掉至少 2.74；最耗电的五个（音乐 0.70、地图 0.60、健身 0.50、相册 0.45、邮件 0.40）加起来才 2.65，还不够，必须再算上天气 0.35，一共六个。"
+      }
+    ],
+    "T18_do_without_low": [
+      {
+        "action": "tap",
+        "id": "tab_battery"
+      },
+      {
+        "action": "tap",
+        "id": "bg_sonora_music"
+      },
+      {
+        "action": "tap",
+        "id": "bg_compass_maps"
+      },
+      {
+        "action": "tap",
+        "id": "bg_ironwood_gym"
+      },
+      {
+        "action": "tap",
+        "id": "bg_umber_photos"
+      },
+      {
+        "action": "tap",
+        "id": "bg_marlin_mail"
+      },
+      {
+        "action": "tap",
+        "id": "bg_cirrus_weather"
+      }
+    ],
+    "T19_compass_saving": [
+      {
+        "action": "tap",
+        "id": "tab_battery"
+      },
+      {
+        "action": "tap",
+        "id": "bg_compass_maps"
+      },
+      {
+        "action": "finish",
+        "answer": "多撑 29 分钟：从 244 分钟变成 273 分钟，没电时间从 02:51 推到 03:20。离 06:40 还差得远。"
+      }
+    ],
+    "T20_night": [
+      {
+        "action": "tap",
+        "id": "tab_battery"
+      },
+      {
+        "action": "tap",
+        "id": "sw_low"
+      },
+      {
+        "action": "tap",
+        "id": "bg_sonora_music"
+      },
+      {
+        "action": "tap",
+        "id": "tab_notifs"
+      },
+      {
+        "action": "tap",
+        "id": "fc_sleep"
+      },
+      {
+        "action": "finish",
+        "answer": "4 条：王倩那条，加上银行扣款、天气预警、吃药提醒三条时效性的。电量方面开了低电量模式再关掉「音乐」的后台，能撑到 06:47，刚好过闹钟。"
+      }
+    ]
+  }
+}

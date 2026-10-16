@@ -1,0 +1,29 @@
+{
+  "id": "aperture_cinema",
+  "name": "Aperture Cinema",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "viewport": {"width": 390, "height": 844},
+  "description": "A single-file H5 cinema booking app. The distinctive surface is a 2D seat map: choosing seats is spatial selection on a 6x10 grid with aisles, taken seats, accessible spaces and premium rows, not a pick from a list. On top of it sits a cross-field constraint — the ticket-type counts must add up to exactly the number of seats chosen or checkout stays shut. 12 screens, 6 films with generated posters, 11 showings, member points, cancellations that put seats back on sale.",
+  "tasks_file": "tasks.json",
+  "oracle_file": "oracle.json",
+  "action_space": {
+    "tap":    {"id": "test-id of the element"},
+    "type":   {"id": "test-id of a text field", "text": "replaces the whole value"},
+    "back":   {}, "home": {}, "wait": {},
+    "finish": {"answer": "final answer for question tasks; optional for action tasks"},
+    "tap_xy": {"x": "screen pixel x", "y": "screen pixel y", "note": "browser backend only"}
+  },
+  "observation": {
+    "text": "engine.a11y(state) — the seat map serialises row by row into free / SELECTED / taken lists with the exact test-id pattern, so a text-only agent can pick seats as precisely as a viewer.",
+    "pixels": "390x844 screenshot (browser backend); __ENV__.bounds() maps every test-id to a pixel box",
+    "state": "engine.snapshot(state) — canonical state plus a derived view. For the verifier only."
+  },
+  "world": {
+    "clock": "18:05",
+    "money": "every price is held in pence, so all totals are exact integer arithmetic",
+    "seats": "rows A-F, ten per row, aisles after seat 2 and seat 8; rows D and E cost £2.00 more per seat; F1 and F2 are accessible spaces",
+    "occupancy": "which seats are taken lives in state, so booking and cancelling change availability for the rest of the episode and reset cleanly",
+    "points": "100 points is £1.00 off; spending them deducts from the member balance and a cancellation refunds them"
+  }
+}

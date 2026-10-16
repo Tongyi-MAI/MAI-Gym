@@ -1,0 +1,790 @@
+{
+  "env": "kestrel_bank",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_freeze",
+      "name": "Freeze the card",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "tags": [
+        "card"
+      ],
+      "instruction": "Freeze your card. Leave everything else on the card page alone.",
+      "goal": [
+        {
+          "name": "The card is frozen",
+          "path": "derived.card.frozen",
+          "op": "eq",
+          "value": true,
+          "weight": 3
+        },
+        {
+          "name": "Online payments untouched",
+          "path": "derived.card.online",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "You did not report it lost",
+          "path": "derived.card.replacement",
+          "op": "eq",
+          "value": false,
+          "weight": 2,
+          "hint": "freezing is reversible; reporting it lost is not"
+        }
+      ]
+    },
+    {
+      "id": "T02_query_payday",
+      "name": "Question: when does the money land",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "answer_expected": true,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "What day of the month does your salary go in? Answer with just the number.",
+      "goal": [
+        {
+          "name": "The 28th",
+          "source": "answer",
+          "op": "eq",
+          "value": 28,
+          "extract": "number",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.upcomingCount",
+          "op": "eq",
+          "value": 8
+        }
+      ]
+    },
+    {
+      "id": "T03_settings",
+      "name": "Two settings",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "settings"
+      ],
+      "instruction": "In Settings, turn on rounding up card payments and turn off the weekly spending report. Leave the low balance warning alone.",
+      "goal": [
+        {
+          "name": "Round-ups on",
+          "path": "settings.roundUps",
+          "op": "eq",
+          "value": true,
+          "weight": 2
+        },
+        {
+          "name": "Weekly report off",
+          "path": "settings.weeklyReport",
+          "op": "eq",
+          "value": false,
+          "weight": 2
+        },
+        {
+          "name": "Low balance warning untouched",
+          "path": "settings.notifyLow",
+          "op": "eq",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "T04_query_groceries",
+      "name": "Question: groceries this month",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "answer_expected": true,
+      "tags": [
+        "query",
+        "categories",
+        "read-only"
+      ],
+      "instruction": "How much have you spent on groceries this month? Answer in pounds and pence.",
+      "goal": [
+        {
+          "name": "£117.77",
+          "source": "answer",
+          "op": "contains",
+          "value": "117.77",
+          "weight": 3,
+          "hint": "three trips to the same shop"
+        },
+        {
+          "name": "Nothing was recategorised",
+          "path": "derived.categorySpend.Groceries",
+          "op": "eq",
+          "value": 11777
+        }
+      ]
+    },
+    {
+      "id": "T05_query_refund",
+      "name": "Question: shopping, after the refund",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "answer_expected": true,
+      "tags": [
+        "query",
+        "categories",
+        "read-only"
+      ],
+      "instruction": "Shopping this month has two purchases and one refund in it. What is the net shopping spend? Answer in pounds and pence.",
+      "goal": [
+        {
+          "name": "£12.99",
+          "source": "answer",
+          "op": "contains",
+          "value": "12.99",
+          "weight": 3,
+          "hint": "£14.99 out, £14.99 back, £12.99 out"
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.categorySpend.Shopping",
+          "op": "eq",
+          "value": 1299
+        }
+      ]
+    },
+    {
+      "id": "T06_recategorise",
+      "name": "File the day pass properly",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "categories",
+        "edit"
+      ],
+      "instruction": "The Ironwood day pass is filed under Health. It belongs in Fitness — move it.",
+      "goal": [
+        {
+          "name": "It is Fitness now",
+          "path": "derived.txnCategories.Ironwood day pass",
+          "op": "eq",
+          "value": "Fitness",
+          "weight": 3
+        },
+        {
+          "name": "Health drops to £53.12",
+          "path": "derived.categorySpend.Health",
+          "op": "eq",
+          "value": 5312,
+          "weight": 2
+        },
+        {
+          "name": "Fitness now holds £9.00",
+          "path": "derived.categorySpend.Fitness",
+          "op": "eq",
+          "value": 900,
+          "weight": 2
+        },
+        {
+          "name": "The money itself did not move",
+          "path": "derived.balance",
+          "op": "eq",
+          "value": 42150
+        }
+      ]
+    },
+    {
+      "id": "T07_pause_gym",
+      "name": "Pause the gym",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "scheduled",
+        "forecast"
+      ],
+      "instruction": "Skip the Ironwood membership this month — pause it, do not cancel it.",
+      "goal": [
+        {
+          "name": "It is paused",
+          "path": "derived.orderStatus.Ironwood membership",
+          "op": "eq",
+          "value": "paused",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was cancelled",
+          "path": "derived.cancelledCount",
+          "op": "eq",
+          "value": 0,
+          "weight": 2
+        },
+        {
+          "name": "Seven payments left to come",
+          "path": "derived.upcomingCount",
+          "op": "eq",
+          "value": 7
+        },
+        {
+          "name": "The dip is £32 shallower",
+          "path": "derived.lowestBalance",
+          "op": "eq",
+          "value": -4049,
+          "weight": 2,
+          "hint": "-£72.49 plus the £32 you just kept"
+        }
+      ]
+    },
+    {
+      "id": "T08_pot_out",
+      "name": "Pull £50 back out",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "pots",
+        "balance"
+      ],
+      "instruction": "Take £50 out of the Holiday pot and put it back in the current account.",
+      "goal": [
+        {
+          "name": "Holiday is down to £410",
+          "path": "derived.potBalances.Holiday",
+          "op": "eq",
+          "value": 41000,
+          "weight": 2
+        },
+        {
+          "name": "The account is up to £471.50",
+          "path": "derived.balance",
+          "op": "eq",
+          "value": 47150,
+          "weight": 3
+        },
+        {
+          "name": "You still have the same money overall",
+          "path": "derived.everything",
+          "op": "eq",
+          "value": 113650,
+          "weight": 2,
+          "hint": "moving between a pot and the account does not create or destroy anything"
+        },
+        {
+          "name": "The forecast lifts with it",
+          "path": "derived.lowestBalance",
+          "op": "eq",
+          "value": -2249
+        }
+      ]
+    },
+    {
+      "id": "T09_new_pot",
+      "name": "A pot for the dentist",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "pots",
+        "form"
+      ],
+      "instruction": "Create a new pot called \"Dentist\" with a £250 target. Leave it empty for now.",
+      "goal": [
+        {
+          "name": "The pot exists",
+          "path": "derived.potNames",
+          "op": "contains",
+          "value": "Dentist",
+          "weight": 3
+        },
+        {
+          "name": "Its target is £250",
+          "path": "derived.potTargets.Dentist",
+          "op": "eq",
+          "value": 25000,
+          "weight": 2,
+          "hint": "the target starts at £300 and moves in £50 steps"
+        },
+        {
+          "name": "It starts empty",
+          "path": "derived.potBalances.Dentist",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Four pots now",
+          "path": "derived.potNames",
+          "op": "len_eq",
+          "value": 4
+        }
+      ]
+    },
+    {
+      "id": "T10_contactless",
+      "name": "Lower the contactless limit",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "card",
+        "stepper"
+      ],
+      "instruction": "Bring the contactless limit down to £30.",
+      "goal": [
+        {
+          "name": "£30",
+          "path": "derived.card.contactless",
+          "op": "eq",
+          "value": 3000,
+          "weight": 3,
+          "hint": "it starts at £45 and moves in £5 steps"
+        },
+        {
+          "name": "The card is not frozen",
+          "path": "derived.card.frozen",
+          "op": "eq",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "T11_query_lowest",
+      "name": "Question: the lowest point",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "answer_expected": true,
+      "tags": [
+        "forecast",
+        "query",
+        "read-only"
+      ],
+      "instruction": "Before your salary lands, what is the lowest your balance gets? Answer in pounds and pence.",
+      "goal": [
+        {
+          "name": "-£72.49",
+          "source": "answer",
+          "op": "contains",
+          "value": "72.49",
+          "weight": 3,
+          "hint": "the savings transfer on the 27th is what does it"
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.upcomingCount",
+          "op": "eq",
+          "value": 8,
+          "weight": 2
+        },
+        {
+          "name": "The forecast still says the same",
+          "path": "derived.lowestBalance",
+          "op": "eq",
+          "value": -7249
+        }
+      ]
+    },
+    {
+      "id": "T12_cancel_stream",
+      "name": "Cancel the streaming bundle",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "scheduled",
+        "confirm-dialog"
+      ],
+      "instruction": "You are done with the streaming bundle. Cancel it for good, not just this month.",
+      "goal": [
+        {
+          "name": "It is cancelled",
+          "path": "derived.orderStatus.Streaming bundle",
+          "op": "eq",
+          "value": "cancelled",
+          "weight": 3
+        },
+        {
+          "name": "Nothing else was touched",
+          "path": "derived.pausedCount",
+          "op": "eq",
+          "value": 0,
+          "weight": 2
+        },
+        {
+          "name": "Seven payments left",
+          "path": "derived.upcomingCount",
+          "op": "eq",
+          "value": 7
+        },
+        {
+          "name": "The dip is £15.99 shallower",
+          "path": "derived.lowestBalance",
+          "op": "eq",
+          "value": -5650,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T13_move_day",
+      "name": "Move the savings transfer",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "scheduled",
+        "forecast",
+        "stepper"
+      ],
+      "instruction": "The savings transfer goes out on the 27th, one day before payday. Move it to the 30th and leave it running.",
+      "goal": [
+        {
+          "name": "It goes out on the 30th",
+          "path": "derived.orderDays.Savings transfer",
+          "op": "eq",
+          "value": 30,
+          "weight": 3
+        },
+        {
+          "name": "Still active",
+          "path": "derived.orderStatus.Savings transfer",
+          "op": "eq",
+          "value": "active",
+          "weight": 2
+        },
+        {
+          "name": "The line never dips below zero now",
+          "path": "derived.lowestBalance",
+          "op": "eq",
+          "value": 12751,
+          "weight": 3,
+          "hint": "the salary lands before the transfer does"
+        },
+        {
+          "name": "The month still ends on the same figure",
+          "path": "derived.endOfMonth",
+          "op": "eq",
+          "value": 203501,
+          "weight": 2,
+          "hint": "you moved it, you did not stop it"
+        }
+      ]
+    },
+    {
+      "id": "T14_query_count",
+      "name": "Question: how many still to go",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "answer_expected": true,
+      "tags": [
+        "scheduled",
+        "query",
+        "read-only"
+      ],
+      "instruction": "How many payments are still due to come OUT of the account before the month ends? Money coming in does not count. Answer with just the number.",
+      "goal": [
+        {
+          "name": "Seven",
+          "source": "answer",
+          "op": "eq",
+          "value": 7,
+          "extract": "number",
+          "weight": 3,
+          "hint": "eight things are scheduled, one of them is the salary"
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.upcomingCount",
+          "op": "eq",
+          "value": 8
+        }
+      ]
+    },
+    {
+      "id": "T15_flagship",
+      "name": "A hundred pounds of headroom (flagship, many valid answers)",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 34,
+      "unique_solution": false,
+      "tags": [
+        "forecast",
+        "constraint",
+        "multi-solution",
+        "long-horizon"
+      ],
+      "instruction": "Your balance is due to go below zero before payday, and you want more room than just scraping past: it must never fall below £100 between now and the 28th. This has to come out of what is scheduled — leave your pots exactly as they are, leave the savings transfer on its own day, and do not cancel anything for good. Everything else is yours to move.",
+      "notes": "No single change is enough: the deepest payment you are allowed to touch is the council tax at £142, and you need £172.49 of headroom.",
+      "goal": [
+        {
+          "name": "Never below £100",
+          "path": "derived.lowestBalance",
+          "op": "gte",
+          "value": 10000,
+          "weight": 3,
+          "hint": "from -£72.49 you have to find £172.49 of headroom"
+        },
+        {
+          "name": "The pots were left alone",
+          "path": "derived.potsTotal",
+          "op": "eq",
+          "value": 71500,
+          "weight": 3,
+          "hint": "no raiding the savings"
+        },
+        {
+          "name": "All three pots still there",
+          "path": "derived.potNames",
+          "op": "len_eq",
+          "value": 3,
+          "weight": 2
+        },
+        {
+          "name": "The savings transfer is untouched",
+          "path": "derived.orderStatus.Savings transfer",
+          "op": "eq",
+          "value": "active",
+          "weight": 2
+        },
+        {
+          "name": "And still on the 27th",
+          "path": "derived.orderDays.Savings transfer",
+          "op": "eq",
+          "value": 27,
+          "weight": 2
+        },
+        {
+          "name": "Nothing was cancelled for good",
+          "path": "derived.cancelledCount",
+          "op": "eq",
+          "value": 0,
+          "weight": 2
+        },
+        {
+          "name": "The salary is still coming",
+          "path": "derived.orderStatus.Salary — Wren & Co",
+          "op": "eq",
+          "value": "active",
+          "weight": 2
+        },
+        {
+          "name": "You still have the same money overall",
+          "path": "derived.everything",
+          "op": "eq",
+          "value": 113650,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T16_card_controls",
+      "name": "Two card controls",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "card"
+      ],
+      "instruction": "Turn on the gambling block and switch off online payments. Do not freeze the card.",
+      "goal": [
+        {
+          "name": "Gambling blocked",
+          "path": "derived.card.gambling",
+          "op": "eq",
+          "value": true,
+          "weight": 2
+        },
+        {
+          "name": "Online payments off",
+          "path": "derived.card.online",
+          "op": "eq",
+          "value": false,
+          "weight": 2
+        },
+        {
+          "name": "The card is not frozen",
+          "path": "derived.card.frozen",
+          "op": "eq",
+          "value": false,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T17_note",
+      "name": "Note it for the insurance",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "transactions",
+        "text-input"
+      ],
+      "instruction": "Add a note to the Bridge Street Dental payment saying you will claim it on insurance.",
+      "goal": [
+        {
+          "name": "The note is on the right payment",
+          "path": "derived.txnNotes.Bridge Street Dental",
+          "op": "contains",
+          "value": "insurance",
+          "weight": 3
+        },
+        {
+          "name": "The bookshop note is untouched",
+          "path": "derived.txnNotes.Pallant Bookshop",
+          "op": "contains",
+          "value": "duplicate"
+        },
+        {
+          "name": "Its category did not change",
+          "path": "derived.txnCategories.Bridge Street Dental",
+          "op": "eq",
+          "value": "Health"
+        }
+      ]
+    },
+    {
+      "id": "T18_lost_card",
+      "name": "Check the PIN, then report it lost",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "card",
+        "confirm-dialog",
+        "sheet"
+      ],
+      "instruction": "Look up your PIN first, then report the card lost so a replacement gets sent.",
+      "goal": [
+        {
+          "name": "You looked the PIN up",
+          "source": "trajectory",
+          "path": "ids",
+          "op": "contains",
+          "value": "show_pin",
+          "weight": 2
+        },
+        {
+          "name": "The card is blocked",
+          "path": "derived.card.frozen",
+          "op": "eq",
+          "value": true,
+          "weight": 2
+        },
+        {
+          "name": "A replacement is coming",
+          "path": "derived.card.replacement",
+          "op": "eq",
+          "value": true,
+          "weight": 3
+        }
+      ]
+    },
+    {
+      "id": "T19_pot_and_fix",
+      "name": "Top the pot up, then mind the gap",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "unique_solution": false,
+      "tags": [
+        "pots",
+        "forecast",
+        "constraint",
+        "multi-solution",
+        "long-horizon"
+      ],
+      "instruction": "Get the Rainy day pot to exactly £250. That takes money out of the current account, so afterwards make sure the forecast still never dips below zero before payday — again without cancelling anything.",
+      "goal": [
+        {
+          "name": "Rainy day holds exactly £250",
+          "path": "derived.potBalances.Rainy day",
+          "op": "eq",
+          "value": 25000,
+          "weight": 3,
+          "hint": "it starts at £180 and the buttons move £10, £25 and £50"
+        },
+        {
+          "name": "The line stays above zero",
+          "path": "derived.lowestBalance",
+          "op": "gte",
+          "value": 0,
+          "weight": 3,
+          "hint": "moving £70 into the pot makes the dip £70 deeper before you fix it"
+        },
+        {
+          "name": "Nothing was cancelled",
+          "path": "derived.cancelledCount",
+          "op": "eq",
+          "value": 0,
+          "weight": 2
+        },
+        {
+          "name": "You still have the same money overall",
+          "path": "derived.everything",
+          "op": "eq",
+          "value": 113650,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T20_two_moves",
+      "name": "Two things in the wrong drawer",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 24,
+      "answer_expected": true,
+      "tags": [
+        "categories",
+        "edit",
+        "query",
+        "long-horizon"
+      ],
+      "instruction": "The Ironwood day pass is filed under Health and the Scoot hire under Transport, but both are really Fitness. Move them both, then tell me what Fitness adds up to.",
+      "goal": [
+        {
+          "name": "The day pass moved",
+          "path": "derived.txnCategories.Ironwood day pass",
+          "op": "eq",
+          "value": "Fitness",
+          "weight": 2
+        },
+        {
+          "name": "The scooter moved",
+          "path": "derived.txnCategories.Scoot hire",
+          "op": "eq",
+          "value": "Fitness",
+          "weight": 2
+        },
+        {
+          "name": "Fitness comes to £13.50",
+          "path": "derived.categorySpend.Fitness",
+          "op": "eq",
+          "value": 1350,
+          "weight": 3
+        },
+        {
+          "name": "Transport is down to £2.90",
+          "path": "derived.categorySpend.Transport",
+          "op": "eq",
+          "value": 290,
+          "weight": 2
+        },
+        {
+          "name": "And the answer says £13.50",
+          "source": "answer",
+          "op": "contains",
+          "value": "13.50",
+          "weight": 2
+        }
+      ]
+    }
+  ]
+}

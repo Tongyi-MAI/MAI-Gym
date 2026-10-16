@@ -1,0 +1,502 @@
+{
+  "env": "gavel_auction",
+  "note": "Golden action sequences replayed by CI.",
+  "solutions": {
+    "T01_settings": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_confirmBids"
+      },
+      {
+        "action": "tap",
+        "id": "set_autoWatch"
+      }
+    ],
+    "T02_query_min": [
+      {
+        "action": "tap",
+        "id": "lot_l_chair"
+      },
+      {
+        "action": "finish",
+        "answer": "£84.00"
+      }
+    ],
+    "T03_watch": [
+      {
+        "action": "tap",
+        "id": "lot_l_clock"
+      },
+      {
+        "action": "tap",
+        "id": "watch"
+      }
+    ],
+    "T04_outbid": [
+      {
+        "action": "tap",
+        "id": "lot_l_books"
+      },
+      {
+        "action": "tap",
+        "id": "place_bid"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_bid"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      }
+    ],
+    "T05_lead_prints": [
+      {
+        "action": "tap",
+        "id": "lot_l_prints"
+      },
+      {
+        "action": "tap",
+        "id": "place_bid"
+      },
+      {
+        "action": "tap",
+        "id": "quick_2"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_bid"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      }
+    ],
+    "T06_query_pay": [
+      {
+        "action": "tap",
+        "id": "lot_l_prints"
+      },
+      {
+        "action": "tap",
+        "id": "place_bid"
+      },
+      {
+        "action": "tap",
+        "id": "quick_3"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_bid"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "finish",
+        "answer": "£54.00"
+      }
+    ],
+    "T07_lead_books": [
+      {
+        "action": "tap",
+        "id": "lot_l_books"
+      },
+      {
+        "action": "tap",
+        "id": "place_bid"
+      },
+      {
+        "action": "tap",
+        "id": "quick_2"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_bid"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      }
+    ],
+    "T08_reserve_trap": [
+      {
+        "action": "tap",
+        "id": "lot_l_clock"
+      },
+      {
+        "action": "tap",
+        "id": "place_bid"
+      },
+      {
+        "action": "tap",
+        "id": "quick_2"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_bid"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "finish",
+        "answer": "No — you are the highest bidder but the reserve has not been met"
+      }
+    ],
+    "T09_watch_three": [
+      {
+        "action": "tap",
+        "id": "lot_l_lamp"
+      },
+      {
+        "action": "tap",
+        "id": "watch"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "lot_l_chair"
+      },
+      {
+        "action": "tap",
+        "id": "watch"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "lot_l_desk"
+      },
+      {
+        "action": "tap",
+        "id": "watch"
+      }
+    ],
+    "T10_query_reserve": [
+      {
+        "action": "tap",
+        "id": "lot_l_lamp"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "lot_l_clock"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "lot_l_rug"
+      },
+      {
+        "action": "finish",
+        "answer": "3"
+      }
+    ],
+    "T11_sort": [
+      {
+        "action": "tap",
+        "id": "sort_price"
+      },
+      {
+        "action": "tap",
+        "id": "lot_l_books"
+      }
+    ],
+    "T12_flagship": [
+      {
+        "action": "tap",
+        "id": "lot_l_prints"
+      },
+      {
+        "action": "tap",
+        "id": "place_bid"
+      },
+      {
+        "action": "tap",
+        "id": "quick_2"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_bid"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "lot_l_books"
+      },
+      {
+        "action": "tap",
+        "id": "place_bid"
+      },
+      {
+        "action": "tap",
+        "id": "quick_2"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_bid"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      }
+    ],
+    "T13_category": [
+      {
+        "action": "tap",
+        "id": "cat_furniture"
+      },
+      {
+        "action": "tap",
+        "id": "lot_l_chair"
+      },
+      {
+        "action": "tap",
+        "id": "place_bid"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_bid"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      }
+    ],
+    "T14_query_step": [
+      {
+        "action": "tap",
+        "id": "lot_l_desk"
+      },
+      {
+        "action": "finish",
+        "answer": "10"
+      }
+    ],
+    "T15_raise": [
+      {
+        "action": "tap",
+        "id": "lot_l_books"
+      },
+      {
+        "action": "tap",
+        "id": "place_bid"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_bid"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "tap",
+        "id": "place_bid"
+      },
+      {
+        "action": "tap",
+        "id": "quick_2"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_bid"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      }
+    ],
+    "T16_three_leads": [
+      {
+        "action": "tap",
+        "id": "lot_l_books"
+      },
+      {
+        "action": "tap",
+        "id": "place_bid"
+      },
+      {
+        "action": "tap",
+        "id": "quick_2"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_bid"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "lot_l_prints"
+      },
+      {
+        "action": "tap",
+        "id": "place_bid"
+      },
+      {
+        "action": "tap",
+        "id": "quick_2"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_bid"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "lot_l_lamp"
+      },
+      {
+        "action": "tap",
+        "id": "place_bid"
+      },
+      {
+        "action": "tap",
+        "id": "quick_3"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_bid"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      }
+    ],
+    "T17_no_confirm": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_confirmBids"
+      },
+      {
+        "action": "tap",
+        "id": "tab_browse"
+      },
+      {
+        "action": "tap",
+        "id": "lot_l_lamp"
+      },
+      {
+        "action": "tap",
+        "id": "place_bid"
+      },
+      {
+        "action": "tap",
+        "id": "quick_3"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_bid"
+      }
+    ],
+    "T18_query_ladder": [
+      {
+        "action": "tap",
+        "id": "lot_l_clock"
+      },
+      {
+        "action": "finish",
+        "answer": "5"
+      }
+    ],
+    "T19_watch_and_bid": [
+      {
+        "action": "tap",
+        "id": "lot_l_lamp"
+      },
+      {
+        "action": "tap",
+        "id": "watch"
+      },
+      {
+        "action": "tap",
+        "id": "place_bid"
+      },
+      {
+        "action": "tap",
+        "id": "quick_3"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_bid"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      }
+    ],
+    "T20_unwatch": [
+      {
+        "action": "tap",
+        "id": "tab_watch"
+      },
+      {
+        "action": "tap",
+        "id": "wlot_l_camera"
+      },
+      {
+        "action": "tap",
+        "id": "watch"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "tab_browse"
+      },
+      {
+        "action": "tap",
+        "id": "lot_l_desk"
+      },
+      {
+        "action": "tap",
+        "id": "watch"
+      }
+    ]
+  }
+}

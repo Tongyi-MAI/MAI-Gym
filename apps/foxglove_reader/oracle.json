@@ -1,0 +1,392 @@
+{
+  "env": "foxglove_reader",
+  "note": "Golden action sequences replayed by CI.",
+  "solutions": {
+    "T01_look": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "theme_sepia"
+      },
+      {
+        "action": "tap",
+        "id": "margin_wide"
+      }
+    ],
+    "T02_query_pages": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "finish",
+        "answer": "4"
+      }
+    ],
+    "T03_turn": [
+      {
+        "action": "tap",
+        "id": "continue"
+      },
+      {
+        "action": "tap",
+        "id": "page_next"
+      },
+      {
+        "action": "tap",
+        "id": "page_next"
+      }
+    ],
+    "T04_bigger": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "font_xl"
+      },
+      {
+        "action": "finish",
+        "answer": "8"
+      }
+    ],
+    "T05_chapter_bookmark": [
+      {
+        "action": "tap",
+        "id": "continue"
+      },
+      {
+        "action": "tap",
+        "id": "do_contents"
+      },
+      {
+        "action": "tap",
+        "id": "chap_2"
+      },
+      {
+        "action": "tap",
+        "id": "bookmark"
+      }
+    ],
+    "T06_anchor": [
+      {
+        "action": "tap",
+        "id": "continue"
+      },
+      {
+        "action": "tap",
+        "id": "do_contents"
+      },
+      {
+        "action": "tap",
+        "id": "chap_2"
+      },
+      {
+        "action": "tap",
+        "id": "bookmark"
+      },
+      {
+        "action": "tap",
+        "id": "reader_settings"
+      },
+      {
+        "action": "tap",
+        "id": "font_xl"
+      },
+      {
+        "action": "finish",
+        "answer": "4"
+      }
+    ],
+    "T07_highlight": [
+      {
+        "action": "tap",
+        "id": "continue"
+      },
+      {
+        "action": "tap",
+        "id": "page_next"
+      },
+      {
+        "action": "tap",
+        "id": "do_highlight"
+      }
+    ],
+    "T08_search": [
+      {
+        "action": "tap",
+        "id": "tab_search"
+      },
+      {
+        "action": "type",
+        "id": "q_book",
+        "text": "lantern"
+      },
+      {
+        "action": "tap",
+        "id": "hit_0"
+      }
+    ],
+    "T09_halfway": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "pct_25"
+      },
+      {
+        "action": "tap",
+        "id": "tab_library"
+      },
+      {
+        "action": "tap",
+        "id": "continue"
+      },
+      {
+        "action": "tap",
+        "id": "bookmark"
+      }
+    ],
+    "T10_other_book": [
+      {
+        "action": "tap",
+        "id": "book_bk_orchard"
+      },
+      {
+        "action": "tap",
+        "id": "read_book"
+      }
+    ],
+    "T11_query_cpp": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "font_l"
+      },
+      {
+        "action": "tap",
+        "id": "margin_wide"
+      },
+      {
+        "action": "finish",
+        "answer": "492"
+      }
+    ],
+    "T12_delete_mark": [
+      {
+        "action": "tap",
+        "id": "tab_marks"
+      },
+      {
+        "action": "tap",
+        "id": "del_mk_1"
+      },
+      {
+        "action": "tap",
+        "id": "tab_library"
+      },
+      {
+        "action": "tap",
+        "id": "continue"
+      },
+      {
+        "action": "tap",
+        "id": "do_contents"
+      },
+      {
+        "action": "tap",
+        "id": "chap_1"
+      },
+      {
+        "action": "tap",
+        "id": "bookmark"
+      }
+    ],
+    "T13_flagship": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "font_l"
+      },
+      {
+        "action": "tap",
+        "id": "tab_library"
+      },
+      {
+        "action": "tap",
+        "id": "continue"
+      },
+      {
+        "action": "tap",
+        "id": "do_contents"
+      },
+      {
+        "action": "tap",
+        "id": "chap_3"
+      },
+      {
+        "action": "tap",
+        "id": "bookmark"
+      },
+      {
+        "action": "tap",
+        "id": "reader_settings"
+      },
+      {
+        "action": "tap",
+        "id": "font_xl"
+      },
+      {
+        "action": "finish",
+        "answer": "6"
+      }
+    ],
+    "T14_night": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "theme_night"
+      },
+      {
+        "action": "tap",
+        "id": "set_showProgress"
+      }
+    ],
+    "T15_query_chapter": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "pct_50"
+      },
+      {
+        "action": "finish",
+        "answer": "Chapter two"
+      }
+    ],
+    "T16_three_quarters": [
+      {
+        "action": "tap",
+        "id": "continue"
+      },
+      {
+        "action": "tap",
+        "id": "page_next"
+      },
+      {
+        "action": "tap",
+        "id": "page_next"
+      },
+      {
+        "action": "tap",
+        "id": "page_next"
+      },
+      {
+        "action": "tap",
+        "id": "do_highlight"
+      }
+    ],
+    "T17_taps": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_tapToTurn"
+      },
+      {
+        "action": "tap",
+        "id": "margin_narrow"
+      }
+    ],
+    "T18_query_other": [
+      {
+        "action": "tap",
+        "id": "book_bk_orchard"
+      },
+      {
+        "action": "finish",
+        "answer": "1"
+      }
+    ],
+    "T19_three_marks": [
+      {
+        "action": "tap",
+        "id": "continue"
+      },
+      {
+        "action": "tap",
+        "id": "do_contents"
+      },
+      {
+        "action": "tap",
+        "id": "chap_1"
+      },
+      {
+        "action": "tap",
+        "id": "bookmark"
+      },
+      {
+        "action": "tap",
+        "id": "do_contents"
+      },
+      {
+        "action": "tap",
+        "id": "chap_2"
+      },
+      {
+        "action": "tap",
+        "id": "bookmark"
+      },
+      {
+        "action": "tap",
+        "id": "do_contents"
+      },
+      {
+        "action": "tap",
+        "id": "chap_3"
+      },
+      {
+        "action": "tap",
+        "id": "bookmark"
+      }
+    ],
+    "T20_search_highlight": [
+      {
+        "action": "tap",
+        "id": "tab_search"
+      },
+      {
+        "action": "type",
+        "id": "q_book",
+        "text": "ledger"
+      },
+      {
+        "action": "tap",
+        "id": "hit_0"
+      },
+      {
+        "action": "tap",
+        "id": "do_highlight"
+      }
+    ]
+  }
+}

@@ -1,0 +1,840 @@
+{
+  "env": "harbour_files",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_settings",
+      "name": "Two switches",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "settings"
+      ],
+      "instruction": "In Settings, turn on «Show hidden files» and turn off «Ask before deleting». Leave the sort switch alone.",
+      "goal": [
+        {
+          "name": "Hidden files shown",
+          "path": "derived.settings.showHidden",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "No delete confirmation",
+          "path": "derived.settings.confirmDelete",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Sorting untouched",
+          "path": "derived.settings.sortBySize",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Nothing was moved",
+          "path": "derived.moves",
+          "op": "eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T02_free",
+      "name": "Question: how much room is left?",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "How much free space is there on internal storage, and how much on the SD card?",
+      "goal": [
+        {
+          "name": "2.35 GB internal",
+          "source": "answer",
+          "op": "regex",
+          "value": "2[.,]35",
+          "weight": 3
+        },
+        {
+          "name": "26.73 GB on the card",
+          "source": "answer",
+          "op": "regex",
+          "value": "26[.,]73",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was moved",
+          "path": "derived.internalFree",
+          "op": "eq",
+          "value": 2403
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T03_biggest",
+      "name": "Question: what is taking the room?",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "Which folder on internal storage is the biggest, and how big is it?",
+      "goal": [
+        {
+          "name": "WhatsApp",
+          "source": "answer",
+          "op": "contains",
+          "value": "WhatsApp",
+          "weight": 3
+        },
+        {
+          "name": "9.33 GB",
+          "source": "answer",
+          "op": "regex",
+          "value": "9[.,]33",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was moved",
+          "path": "derived.moves",
+          "op": "eq",
+          "value": 0
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T04_video",
+      "name": "Open the video folder",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "query",
+        "navigate"
+      ],
+      "instruction": "Go into WhatsApp, then Media, and tell me how big the Video folder is.",
+      "goal": [
+        {
+          "name": "You are inside Media",
+          "path": "derived.cwdPath",
+          "op": "contains",
+          "value": "Media"
+        },
+        {
+          "name": "7.91 GB",
+          "source": "answer",
+          "op": "regex",
+          "value": "7[.,]91",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was moved",
+          "path": "derived.moves",
+          "op": "eq",
+          "value": 0
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T05_dupes",
+      "name": "Question: duplicates",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "How many groups of duplicate files are there, and how much space are they wasting?",
+      "goal": [
+        {
+          "name": "2 groups",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)2(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "1.18 GB",
+          "source": "answer",
+          "op": "regex",
+          "value": "1[.,]18",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was deleted",
+          "path": "derived.deletes",
+          "op": "eq",
+          "value": 0
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T06_locked",
+      "name": "The folder you cannot touch",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "refusal"
+      ],
+      "instruction": "Try to select the Android folder, and tell me what the app says.",
+      "goal": [
+        {
+          "name": "Nothing got selected",
+          "path": "derived.selectedCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Nothing was moved",
+          "path": "derived.moves",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "it is system storage",
+          "source": "answer",
+          "op": "regex",
+          "value": "(system|locked|cannot|系统)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T07_move_whatsapp",
+      "name": "Move WhatsApp to the card",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "move"
+      ],
+      "instruction": "Move the whole WhatsApp folder to the SD card, and tell me how much free space internal storage has afterwards.",
+      "goal": [
+        {
+          "name": "WhatsApp is on the card",
+          "path": "derived.folderVolume.WhatsApp",
+          "op": "eq",
+          "value": "SD card"
+        },
+        {
+          "name": "Internal has 11.67 GB free",
+          "path": "derived.internalFree",
+          "op": "eq",
+          "value": 11953
+        },
+        {
+          "name": "One move",
+          "path": "derived.moves",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "11.67 GB",
+          "source": "answer",
+          "op": "regex",
+          "value": "11[.,]67",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T08_move_inside",
+      "name": "Move Music into Download",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "move",
+        "reasoning"
+      ],
+      "instruction": "Move the Music folder into Download — both are on internal storage. Then tell me what happened to the free space.",
+      "goal": [
+        {
+          "name": "Music is still on internal",
+          "path": "derived.folderVolume.Music",
+          "op": "eq",
+          "value": "Internal storage"
+        },
+        {
+          "name": "Free space did not budge",
+          "path": "derived.internalFree",
+          "op": "eq",
+          "value": 2403
+        },
+        {
+          "name": "One move happened",
+          "path": "derived.moves",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "nothing changed",
+          "source": "answer",
+          "op": "regex",
+          "value": "(nothing|same|no change|didn|unchanged|2[.,]35)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T09_copy",
+      "name": "Copy instead of move",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 24,
+      "tags": [
+        "copy",
+        "reasoning"
+      ],
+      "instruction": "Copy the WhatsApp Video folder to the SD card instead of moving it. Then say how much internal storage that freed.",
+      "goal": [
+        {
+          "name": "Internal is unchanged",
+          "path": "derived.internalFree",
+          "op": "eq",
+          "value": 2403
+        },
+        {
+          "name": "The card lost 7.91 GB",
+          "path": "derived.sdFree",
+          "op": "eq",
+          "value": 19268
+        },
+        {
+          "name": "No moves, only copies",
+          "path": "derived.moves",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "none at all",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:(?<![A-Za-z])(?:(none|nothing|zero|0|didn|no)))(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T10_dedupe",
+      "name": "Clean up the duplicates",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "cleanup"
+      ],
+      "instruction": "Delete the extra copies of the duplicated files, then tell me how much each volume gained.",
+      "goal": [
+        {
+          "name": "No duplicates left",
+          "path": "derived.duplicateGroups",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Internal gained 6 MB",
+          "path": "derived.internalFree",
+          "op": "eq",
+          "value": 2409
+        },
+        {
+          "name": "The card gained 1.17 GB",
+          "path": "derived.sdFree",
+          "op": "eq",
+          "value": 28568
+        },
+        {
+          "name": "6 MB on internal",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)6(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "1.17 GB on the card",
+          "source": "answer",
+          "op": "regex",
+          "value": "1[.,]17",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T11_delete",
+      "name": "Delete one file",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 22,
+      "tags": [
+        "delete"
+      ],
+      "instruction": "Delete travel-photos-2024.zip out of Download, and tell me how much internal storage that freed and how many duplicate groups are left.",
+      "goal": [
+        {
+          "name": "Internal is 3.52 GB free",
+          "path": "derived.internalFree",
+          "op": "eq",
+          "value": 3603
+        },
+        {
+          "name": "One duplicate group left",
+          "path": "derived.duplicateGroups",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "One delete",
+          "path": "derived.deletes",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "1.17 GB freed",
+          "source": "answer",
+          "op": "regex",
+          "value": "1[.,]17",
+          "weight": 3
+        },
+        {
+          "name": "one group left",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![\\d-])1(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T12_navigate",
+      "name": "Find the tax return",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "navigate",
+        "query"
+      ],
+      "instruction": "Navigate to Documents, then Personal, and tell me how big tax-2025.pdf is.",
+      "goal": [
+        {
+          "name": "You are in Personal",
+          "path": "derived.cwdPath",
+          "op": "contains",
+          "value": "Personal"
+        },
+        {
+          "name": "92 MB",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)92(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was moved",
+          "path": "derived.moves",
+          "op": "eq",
+          "value": 0
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T13_two_folders",
+      "name": "Two folders across",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 24,
+      "tags": [
+        "move"
+      ],
+      "instruction": "Move DCIM and Music to the SD card in one go, and tell me how much internal storage that frees in total.",
+      "goal": [
+        {
+          "name": "DCIM is on the card",
+          "path": "derived.folderVolume.DCIM",
+          "op": "eq",
+          "value": "SD card"
+        },
+        {
+          "name": "Music is on the card",
+          "path": "derived.folderVolume.Music",
+          "op": "eq",
+          "value": "SD card"
+        },
+        {
+          "name": "Internal has 13.50 GB free",
+          "path": "derived.internalFree",
+          "op": "eq",
+          "value": 13823
+        },
+        {
+          "name": "11.15 GB freed",
+          "source": "answer",
+          "op": "regex",
+          "value": "11[.,]15",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T14_total",
+      "name": "Question: does the total change?",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 22,
+      "tags": [
+        "move",
+        "reasoning"
+      ],
+      "instruction": "Move DCIM to the SD card, then tell me whether the two volumes together are holding any less than before.",
+      "goal": [
+        {
+          "name": "DCIM is on the card",
+          "path": "derived.folderVolume.DCIM",
+          "op": "eq",
+          "value": "SD card"
+        },
+        {
+          "name": "The total is unchanged",
+          "path": "derived.totalUsed",
+          "op": "eq",
+          "value": 35765
+        },
+        {
+          "name": "no, the total is the same",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![A-Za-z])(?:(no|same|unchanged|nothing|didn))",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T15_exact_eight",
+      "name": "Exactly eight gigabytes",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 34,
+      "tags": [
+        "optimise",
+        "search"
+      ],
+      "instruction": "Internal storage has to give up 8 GB — that is 8,192 MB. Move the least you possibly can to the SD card: not one megabyte more than 8,192. Say what you moved.",
+      "goal": [
+        {
+          "name": "Exactly 8,192 MB freed",
+          "path": "derived.internalFree",
+          "op": "eq",
+          "value": 10595,
+          "hint": "the video folder is 8,100 — ninety-two short. What on this phone is exactly 92 MB?"
+        },
+        {
+          "name": "Two things moved",
+          "path": "derived.moves",
+          "op": "eq",
+          "value": 2
+        },
+        {
+          "name": "Nothing was deleted",
+          "path": "derived.deletes",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Nothing was copied",
+          "path": "derived.copies",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "the WhatsApp video folder",
+          "source": "answer",
+          "op": "regex",
+          "value": "([Vv]ideo|8[,.]?100)",
+          "weight": 3
+        },
+        {
+          "name": "and tax-2025.pdf",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:(tax|92))(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T16_one_move",
+      "name": "Eight gigabytes in a single move",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "optimise",
+        "reasoning"
+      ],
+      "instruction": "Free at least 8 GB from internal storage using exactly one move operation, and say why there was only one folder that could do it.",
+      "goal": [
+        {
+          "name": "Freed at least 8 GB",
+          "path": "derived.internalFree",
+          "op": "gte",
+          "value": 10595
+        },
+        {
+          "name": "Exactly one move",
+          "path": "derived.moves",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "WhatsApp went to the card",
+          "path": "derived.folderVolume.WhatsApp",
+          "op": "eq",
+          "value": "SD card"
+        },
+        {
+          "name": "WhatsApp",
+          "source": "answer",
+          "op": "contains",
+          "value": "WhatsApp",
+          "weight": 3
+        },
+        {
+          "name": "DCIM is only 7.44 GB",
+          "source": "answer",
+          "op": "regex",
+          "value": "(7[.,]44|DCIM|7[,.]?620)",
+          "weight": 3,
+          "hint": "what is the second biggest folder, and is it big enough?"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T17_no_photos",
+      "name": "Eight gigabytes, no photos or videos",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "constraint",
+        "optimise"
+      ],
+      "instruction": "Free at least 8 GB again, but this time you may not move DCIM or WhatsApp — the photos and videos stay put. Say what you moved instead.",
+      "goal": [
+        {
+          "name": "Freed at least 8 GB",
+          "path": "derived.internalFree",
+          "op": "gte",
+          "value": 10595
+        },
+        {
+          "name": "DCIM stayed",
+          "path": "derived.folderVolume.DCIM",
+          "op": "eq",
+          "value": "Internal storage"
+        },
+        {
+          "name": "WhatsApp stayed",
+          "path": "derived.folderVolume.WhatsApp",
+          "op": "eq",
+          "value": "Internal storage"
+        },
+        {
+          "name": "Download went across",
+          "path": "derived.folderVolume.Download",
+          "op": "eq",
+          "value": "SD card"
+        },
+        {
+          "name": "Music went across",
+          "path": "derived.folderVolume.Music",
+          "op": "eq",
+          "value": "SD card"
+        },
+        {
+          "name": "Download and Music",
+          "source": "answer",
+          "op": "regex",
+          "value": "([Dd]ownload|[Mm]usic)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T18_copy_wrong",
+      "name": "Why copying does not help",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "reasoning",
+        "copy"
+      ],
+      "instruction": "Someone says «just copy the big folders to the SD card and internal storage will have room again». Try it with the WhatsApp folder and show what actually happens — then undo the damage by deleting the copy.",
+      "goal": [
+        {
+          "name": "Internal is still 2.35 GB free",
+          "path": "derived.internalFree",
+          "op": "eq",
+          "value": 2403
+        },
+        {
+          "name": "The card is back where it was",
+          "path": "derived.sdFree",
+          "op": "eq",
+          "value": 27368
+        },
+        {
+          "name": "One copy was made",
+          "path": "derived.copies",
+          "op": "gte",
+          "value": 1
+        },
+        {
+          "name": "And deleted again",
+          "path": "derived.deletes",
+          "op": "gte",
+          "value": 1
+        },
+        {
+          "name": "copying frees nothing",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![A-Za-z])(?:(nothing|no|none|zero|didn|unchanged))",
+          "weight": 3
+        },
+        {
+          "name": "it only fills the card",
+          "source": "answer",
+          "op": "regex",
+          "value": "(card|SD|destination|both)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T19_everything",
+      "name": "Everything that can go, goes",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 32,
+      "tags": [
+        "move",
+        "arithmetic"
+      ],
+      "instruction": "Move every folder that is allowed to move off internal storage onto the SD card. Then tell me what is left on internal storage and how much room each volume has.",
+      "goal": [
+        {
+          "name": "Internal has only the system left",
+          "path": "derived.internalUsed",
+          "op": "eq",
+          "value": 4100
+        },
+        {
+          "name": "Internal free is 28.00 GB",
+          "path": "derived.internalFree",
+          "op": "eq",
+          "value": 28668
+        },
+        {
+          "name": "The card is nearly full",
+          "path": "derived.sdFree",
+          "op": "eq",
+          "value": 1103
+        },
+        {
+          "name": "Five things moved",
+          "path": "derived.moves",
+          "op": "eq",
+          "value": 5
+        },
+        {
+          "name": "only Android is left",
+          "source": "answer",
+          "op": "regex",
+          "value": "([Aa]ndroid|system|4[.,]00|4[,.]?100)",
+          "weight": 3
+        },
+        {
+          "name": "the card has about 1 GB left",
+          "source": "answer",
+          "op": "regex",
+          "value": "(1[.,]08|1[,.]?103|1 GB)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T20_clean_and_move",
+      "name": "Clean first, then move",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 34,
+      "tags": [
+        "multi-step",
+        "optimise"
+      ],
+      "instruction": "First delete the duplicate copies, then move whatever single folder is needed so that internal storage ends up with at least 11.5 GB free. Say what it came to.",
+      "goal": [
+        {
+          "name": "No duplicates left",
+          "path": "derived.duplicateGroups",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "At least 11.5 GB free",
+          "path": "derived.internalFree",
+          "op": "gte",
+          "value": 11776
+        },
+        {
+          "name": "WhatsApp went to the card",
+          "path": "derived.folderVolume.WhatsApp",
+          "op": "eq",
+          "value": "SD card"
+        },
+        {
+          "name": "One move only",
+          "path": "derived.moves",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "11.68 GB after the move",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:(11[.,]68|11959|11[,.]?9))(?!\\d)",
+          "weight": 3,
+          "hint": "the dedupe gives internal 6 MB back before the move even starts"
+        }
+      ],
+      "answer_expected": true
+    }
+  ]
+}

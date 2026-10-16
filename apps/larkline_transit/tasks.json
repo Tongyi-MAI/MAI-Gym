@@ -1,0 +1,843 @@
+{
+  "env": "larkline_transit",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_settings",
+      "name": "Two settings",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "settings"
+      ],
+      "instruction": "In Settings, turn on step-free routes only and turn off the setting that shows how busy trains are. Leave the disruption alerts alone.",
+      "goal": [
+        {
+          "name": "Step-free routing is on",
+          "path": "settings.stepFreeOnly",
+          "op": "eq",
+          "value": true,
+          "weight": 2
+        },
+        {
+          "name": "Crowding is off",
+          "path": "settings.showCrowding",
+          "op": "eq",
+          "value": false,
+          "weight": 2
+        },
+        {
+          "name": "Disruption alerts untouched",
+          "path": "settings.notifyDisruption",
+          "op": "eq",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "T02_query_suspension",
+      "name": "Question: what is suspended",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "answer_expected": true,
+      "tags": [
+        "query",
+        "status",
+        "read-only"
+      ],
+      "instruction": "One line has no service on part of its route. Which line is it, and between which two stations?",
+      "goal": [
+        {
+          "name": "The Coral line",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Cc]oral",
+          "weight": 2
+        },
+        {
+          "name": "Cinder Street",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Cc]inder",
+          "weight": 2
+        },
+        {
+          "name": "Brindle Park",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Bb]rindle",
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T03_favourite",
+      "name": "Favourite a station",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "favourites",
+        "navigation"
+      ],
+      "instruction": "Add Weaver Hill to your favourite stations.",
+      "goal": [
+        {
+          "name": "Weaver Hill is a favourite",
+          "path": "derived.favourites",
+          "op": "contains",
+          "value": "Weaver Hill",
+          "weight": 3
+        },
+        {
+          "name": "The four you already had are still there",
+          "path": "derived.favourites",
+          "op": "set_eq",
+          "value": [
+            "Larkfield Central",
+            "Quay Street",
+            "Mossbank",
+            "Harbour North",
+            "Weaver Hill"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "T04_plan_direct",
+      "name": "Plan a direct journey",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "planner",
+        "timetable"
+      ],
+      "instruction": "Find journeys from Larkfield Central to Harbour North leaving now, and open the one that arrives first.",
+      "goal": [
+        {
+          "name": "The right destination",
+          "path": "derived.plan.to",
+          "op": "eq",
+          "value": "Harbour North"
+        },
+        {
+          "name": "Opened the 14:34",
+          "path": "derived.selected.depart",
+          "op": "eq",
+          "value": "14:34",
+          "weight": 3,
+          "hint": "the first Blue line train after 14:26"
+        },
+        {
+          "name": "Arriving 14:52",
+          "path": "derived.selected.arrive",
+          "op": "eq",
+          "value": "14:52",
+          "weight": 2
+        },
+        {
+          "name": "It is direct",
+          "path": "derived.selected.changes",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "and it is the one asked for (from)",
+          "path": "derived.plan.from",
+          "op": "eq",
+          "value": "Larkfield Central"
+        }
+      ]
+    },
+    {
+      "id": "T05_query_next",
+      "name": "Question: the next train out",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "answer_expected": true,
+      "tags": [
+        "board",
+        "query",
+        "read-only"
+      ],
+      "instruction": "Look at the live departures. What time does the next Green line train towards Weaver Hill leave Larkfield Central?",
+      "goal": [
+        {
+          "name": "14:31",
+          "source": "answer",
+          "op": "contains",
+          "value": "14:31",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was booked",
+          "path": "derived.ticketCount",
+          "op": "eq",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "T06_time_stepper",
+      "name": "Leave at three o'clock",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "planner",
+        "time",
+        "stepper"
+      ],
+      "instruction": "Set the departure time to 15:00, then find journeys from Larkfield Central to Weaver Hill and open the first one.",
+      "notes": "The stepper snaps onto the five-minute grid on its first tap.",
+      "goal": [
+        {
+          "name": "Departure time is 15:00",
+          "path": "derived.plan.time",
+          "op": "eq",
+          "value": "15:00",
+          "weight": 2
+        },
+        {
+          "name": "Opened the 15:07",
+          "path": "derived.selected.depart",
+          "op": "eq",
+          "value": "15:07",
+          "weight": 3
+        },
+        {
+          "name": "Arriving 15:25",
+          "path": "derived.selected.arrive",
+          "op": "eq",
+          "value": "15:25",
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T07_arrive_by",
+      "name": "Be there by half past",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 32,
+      "tags": [
+        "planner",
+        "arrive-by",
+        "time"
+      ],
+      "instruction": "You are at Mossbank and have to be at Harbour North by 15:30. Switch the planner to arrive-by, set 15:30, search, and open the latest journey that still gets you there in time.",
+      "goal": [
+        {
+          "name": "Arrive-by mode",
+          "path": "derived.plan.mode",
+          "op": "eq",
+          "value": "arrive",
+          "weight": 2
+        },
+        {
+          "name": "Set to 15:30",
+          "path": "derived.plan.time",
+          "op": "eq",
+          "value": "15:30",
+          "weight": 2
+        },
+        {
+          "name": "Leaves at 14:51",
+          "path": "derived.selected.depart",
+          "op": "eq",
+          "value": "14:51",
+          "weight": 3,
+          "hint": "anything later misses it"
+        },
+        {
+          "name": "Arrives 15:22",
+          "path": "derived.selected.arrive",
+          "op": "eq",
+          "value": "15:22",
+          "weight": 2
+        },
+        {
+          "name": "Changing at Larkfield Central",
+          "path": "derived.selected.changeAt",
+          "op": "eq",
+          "value": "Larkfield Central"
+        },
+        {
+          "name": "and it is the one asked for (from)",
+          "path": "derived.plan.from",
+          "op": "eq",
+          "value": "Mossbank"
+        },
+        {
+          "name": "and it is the one asked for (to)",
+          "path": "derived.plan.to",
+          "op": "eq",
+          "value": "Harbour North"
+        }
+      ]
+    },
+    {
+      "id": "T08_step_free",
+      "name": "No stairs",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 22,
+      "tags": [
+        "planner",
+        "filter",
+        "accessibility"
+      ],
+      "instruction": "Plan Larkfield Central to Foxglove Lane leaving now. You cannot manage stairs, so turn on the step-free filter, sort by fastest, and open the top option.",
+      "notes": "Aldergate has no lift, so every option that changes there should disappear.",
+      "goal": [
+        {
+          "name": "Step-free filter is on",
+          "path": "derived.plan.stepFree",
+          "op": "eq",
+          "value": true,
+          "weight": 2
+        },
+        {
+          "name": "Sorted by fastest",
+          "path": "derived.plan.sort",
+          "op": "eq",
+          "value": "fastest"
+        },
+        {
+          "name": "Three options survive",
+          "path": "derived.optionCount",
+          "op": "eq",
+          "value": 3,
+          "weight": 2
+        },
+        {
+          "name": "Changing at Mossbank",
+          "path": "derived.selected.changeAt",
+          "op": "eq",
+          "value": "Mossbank",
+          "weight": 3
+        },
+        {
+          "name": "The 14:31",
+          "path": "derived.selected.depart",
+          "op": "eq",
+          "value": "14:31",
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T09_save",
+      "name": "Save a journey",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "planner",
+        "saved"
+      ],
+      "instruction": "Find journeys from Quay Street to Brindle Park and save that journey for later.",
+      "goal": [
+        {
+          "name": "Three saved journeys",
+          "path": "derived.savedCount",
+          "op": "eq",
+          "value": 3,
+          "weight": 2
+        },
+        {
+          "name": "The new one is there",
+          "path": "derived.savedLabels",
+          "op": "contains",
+          "value": "Quay Street to Brindle Park",
+          "weight": 3
+        }
+      ]
+    },
+    {
+      "id": "T10_delete_saved",
+      "name": "Tidy the saved journeys, then use the other one",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "saved",
+        "delete"
+      ],
+      "instruction": "Remove the saved journey from Mossbank to Larkfield Central — you never use it — and then run the one you do use.",
+      "goal": [
+        {
+          "name": "It is gone",
+          "path": "derived.savedLabels",
+          "op": "not_contains",
+          "value": "Mossbank to Larkfield Central",
+          "weight": 3
+        },
+        {
+          "name": "One saved journey left",
+          "path": "derived.savedCount",
+          "op": "eq",
+          "value": 1,
+          "weight": 2
+        },
+        {
+          "name": "And you ran it",
+          "path": "derived.route",
+          "op": "eq",
+          "value": "results",
+          "weight": 3
+        },
+        {
+          "name": "From Larkfield Central",
+          "path": "derived.plan.from",
+          "op": "eq",
+          "value": "Larkfield Central",
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T11_buy_single",
+      "name": "Buy an off-peak single",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "tickets",
+        "fares"
+      ],
+      "instruction": "Buy a single ticket for zones 1-2 at the off-peak fare.",
+      "goal": [
+        {
+          "name": "A ticket was bought",
+          "path": "derived.ticketCount",
+          "op": "eq",
+          "value": 2,
+          "weight": 2
+        },
+        {
+          "name": "A single",
+          "path": "derived.lastTicket.type",
+          "op": "eq",
+          "value": "single",
+          "weight": 2
+        },
+        {
+          "name": "Zones 1-2",
+          "path": "derived.lastTicket.zones",
+          "op": "eq",
+          "value": "z12",
+          "weight": 2
+        },
+        {
+          "name": "Off-peak",
+          "path": "derived.lastTicket.peak",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "It cost £3.00",
+          "path": "derived.lastTicket.price",
+          "op": "eq",
+          "value": 300,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T12_buy_peak_day",
+      "name": "Buy a peak day ticket",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "tickets",
+        "fares",
+        "arithmetic"
+      ],
+      "instruction": "Buy a day ticket covering zones 1-3 for travel before 09:30.",
+      "goal": [
+        {
+          "name": "A day ticket",
+          "path": "derived.lastTicket.type",
+          "op": "eq",
+          "value": "day",
+          "weight": 2
+        },
+        {
+          "name": "Zones 1-3",
+          "path": "derived.lastTicket.zones",
+          "op": "eq",
+          "value": "z13",
+          "weight": 2
+        },
+        {
+          "name": "Peak",
+          "path": "derived.lastTicket.peak",
+          "op": "eq",
+          "value": true,
+          "weight": 2
+        },
+        {
+          "name": "£9.20 with the surcharge",
+          "path": "derived.lastTicket.price",
+          "op": "eq",
+          "value": 920,
+          "weight": 3,
+          "hint": "£7.80 plus £1.40"
+        }
+      ]
+    },
+    {
+      "id": "T13_activate",
+      "name": "Buy one and start it",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "tickets",
+        "confirm-dialog"
+      ],
+      "instruction": "Buy an off-peak single for zone 1 only, then activate it.",
+      "goal": [
+        {
+          "name": "Zone 1 single",
+          "path": "derived.lastTicket.zones",
+          "op": "eq",
+          "value": "z1",
+          "weight": 2
+        },
+        {
+          "name": "It cost £2.30",
+          "path": "derived.lastTicket.price",
+          "op": "eq",
+          "value": 230,
+          "weight": 2
+        },
+        {
+          "name": "It is running",
+          "path": "derived.lastTicket.status",
+          "op": "eq",
+          "value": "active",
+          "weight": 3
+        },
+        {
+          "name": "Exactly one active ticket",
+          "path": "derived.activeTickets",
+          "op": "eq",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "T14_query_fare",
+      "name": "Question: the price of a return",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "answer_expected": true,
+      "tags": [
+        "tickets",
+        "query",
+        "read-only"
+      ],
+      "instruction": "How much is an off-peak return covering zones 1-3? Answer in pounds and pence.",
+      "goal": [
+        {
+          "name": "£7.20",
+          "source": "answer",
+          "op": "contains",
+          "value": "7.20",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was actually bought",
+          "path": "derived.ticketCount",
+          "op": "eq",
+          "value": 1,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T15_flagship",
+      "name": "Step-free, on time, ticket in hand (flagship)",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 45,
+      "tags": [
+        "planner",
+        "arrive-by",
+        "filter",
+        "saved",
+        "tickets",
+        "long-horizon"
+      ],
+      "instruction": "You are at Mossbank and must be at Harbour North by 15:30, and you cannot use stairs. Set the planner to arrive by 15:30, search, turn on the step-free filter, open the latest journey that still works, save it, and buy the ticket the app suggests for that journey.",
+      "goal": [
+        {
+          "name": "Arrive-by 15:30",
+          "path": "derived.plan.time",
+          "op": "eq",
+          "value": "15:30",
+          "weight": 2
+        },
+        {
+          "name": "Step-free",
+          "path": "derived.plan.stepFree",
+          "op": "eq",
+          "value": true,
+          "weight": 2
+        },
+        {
+          "name": "The 14:51",
+          "path": "derived.selected.depart",
+          "op": "eq",
+          "value": "14:51",
+          "weight": 3
+        },
+        {
+          "name": "Changing at Larkfield Central",
+          "path": "derived.selected.changeAt",
+          "op": "eq",
+          "value": "Larkfield Central",
+          "weight": 2
+        },
+        {
+          "name": "Journey saved",
+          "path": "derived.savedLabels",
+          "op": "contains",
+          "value": "Mossbank to Harbour North",
+          "weight": 2
+        },
+        {
+          "name": "A zone 1-3 ticket",
+          "path": "derived.lastTicket.zones",
+          "op": "eq",
+          "value": "z13",
+          "weight": 2
+        },
+        {
+          "name": "Paid £3.80",
+          "path": "derived.lastTicket.price",
+          "op": "eq",
+          "value": 380,
+          "weight": 3,
+          "hint": "the journey touches zone 3, and 14:51 is off-peak"
+        },
+        {
+          "name": "Efficiency: 30 steps or fewer",
+          "source": "trajectory",
+          "path": "steps",
+          "op": "lte",
+          "value": 30,
+          "critical": false,
+          "weight": 0.5
+        }
+      ]
+    },
+    {
+      "id": "T16_query_platform",
+      "name": "Question: which platform",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "answer_expected": true,
+      "tags": [
+        "board",
+        "query",
+        "read-only"
+      ],
+      "instruction": "Show the live departures for Mossbank. Which platform does the 14:33 Amber line train towards Foxglove Lane leave from? Answer with just the number.",
+      "goal": [
+        {
+          "name": "Platform 3",
+          "source": "answer",
+          "op": "eq",
+          "value": 3,
+          "extract": "number",
+          "weight": 3
+        },
+        {
+          "name": "The board really is at Mossbank",
+          "path": "derived.boardStation",
+          "op": "eq",
+          "value": "Mossbank",
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T17_swap",
+      "name": "Turn the journey round",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "planner",
+        "swap",
+        "process-check"
+      ],
+      "instruction": "You want to go from Harbour North back to Larkfield Central. Set Harbour North as the destination first, then use the swap button to turn the journey round rather than editing the stations again. Search and open the first option.",
+      "goal": [
+        {
+          "name": "Starting at Harbour North",
+          "path": "derived.plan.from",
+          "op": "eq",
+          "value": "Harbour North",
+          "weight": 2
+        },
+        {
+          "name": "Ending at Larkfield Central",
+          "path": "derived.plan.to",
+          "op": "eq",
+          "value": "Larkfield Central",
+          "weight": 2
+        },
+        {
+          "name": "The swap button was used",
+          "source": "trajectory",
+          "path": "ids",
+          "op": "contains",
+          "value": "swap_ends",
+          "weight": 2,
+          "hint": "a process check — picking the stations by hand does not count"
+        },
+        {
+          "name": "Opened the 14:29",
+          "path": "derived.selected.depart",
+          "op": "eq",
+          "value": "14:29",
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T18_station_page",
+      "name": "Start from a station page",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 22,
+      "tags": [
+        "navigation",
+        "station",
+        "planner"
+      ],
+      "instruction": "Open Cinder Street's station page from the line status, use it to start a journey from there, set Quay Street as the destination and search.",
+      "goal": [
+        {
+          "name": "Starting at Cinder Street",
+          "path": "derived.plan.from",
+          "op": "eq",
+          "value": "Cinder Street",
+          "weight": 3
+        },
+        {
+          "name": "Going to Quay Street",
+          "path": "derived.plan.to",
+          "op": "eq",
+          "value": "Quay Street",
+          "weight": 2
+        },
+        {
+          "name": "On the results",
+          "path": "derived.route",
+          "op": "eq",
+          "value": "results"
+        },
+        {
+          "name": "Three options",
+          "path": "derived.optionCount",
+          "op": "eq",
+          "value": 3
+        }
+      ]
+    },
+    {
+      "id": "T19_any_day_ticket",
+      "name": "Any all-day ticket for zone 3 (many valid answers)",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 20,
+      "unique_solution": false,
+      "tags": [
+        "tickets",
+        "constraint",
+        "multi-solution"
+      ],
+      "instruction": "Get a ticket into your wallet that lets you travel all day and covers zone 3. Peak or off-peak is your call.",
+      "goal": [
+        {
+          "name": "It is a day ticket",
+          "path": "derived.lastTicket.type",
+          "op": "eq",
+          "value": "day",
+          "weight": 3
+        },
+        {
+          "name": "It reaches zone 3",
+          "path": "derived.lastTicket.zones",
+          "op": "eq",
+          "value": "z13",
+          "weight": 3
+        },
+        {
+          "name": "Exactly one was bought",
+          "path": "derived.ticketCount",
+          "op": "eq",
+          "value": 2,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T20_saved_to_board",
+      "name": "From a saved journey to the platform",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 22,
+      "answer_expected": true,
+      "tags": [
+        "saved",
+        "board",
+        "query",
+        "long-horizon"
+      ],
+      "instruction": "Run your saved Larkfield Central to Harbour North journey, open the first option, then jump to the live departures for the station it starts from. What platform does the first Blue line departure use? Answer with just the number.",
+      "goal": [
+        {
+          "name": "The journey was opened",
+          "path": "derived.selected.depart",
+          "op": "eq",
+          "value": "14:34",
+          "weight": 2
+        },
+        {
+          "name": "On the board at Larkfield Central",
+          "path": "derived.boardStation",
+          "op": "eq",
+          "value": "Larkfield Central",
+          "weight": 2
+        },
+        {
+          "name": "The Live tab",
+          "path": "derived.tab",
+          "op": "eq",
+          "value": "live"
+        },
+        {
+          "name": "Platform 1",
+          "source": "answer",
+          "op": "eq",
+          "value": 1,
+          "extract": "number",
+          "weight": 3
+        }
+      ]
+    }
+  ]
+}

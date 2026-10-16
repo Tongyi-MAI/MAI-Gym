@@ -1,0 +1,278 @@
+{
+  "env": "bastion_loan",
+  "note": "Golden action sequences replayed by CI.",
+  "solutions": {
+    "T01_settings": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_showSchedule"
+      },
+      {
+        "action": "tap",
+        "id": "set_showFee"
+      }
+    ],
+    "T02_now": [
+      {
+        "action": "finish",
+        "answer": "47 months, and £3,718.41 of interest."
+      }
+    ],
+    "T03_cheapest_target": [
+      {
+        "action": "finish",
+        "answer": "Everything spare at the card — £2,688.76."
+      }
+    ],
+    "T04_card_clears": [
+      {
+        "action": "tap",
+        "id": "tab_debts"
+      },
+      {
+        "action": "tap",
+        "id": "debt_card"
+      },
+      {
+        "action": "finish",
+        "answer": "Month 47."
+      }
+    ],
+    "T05_rules": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "finish",
+        "answer": "1.825% a month, and the minimum is 2.5% of the balance or £25, whichever is more."
+      }
+    ],
+    "T06_too_little": [
+      {
+        "action": "tap",
+        "id": "bud_400"
+      },
+      {
+        "action": "finish",
+        "answer": "It does not cover the £348 loan payment and the card's £60 minimum on top — £408 before anything is a choice."
+      }
+    ],
+    "T07_switch_target": [
+      {
+        "action": "tap",
+        "id": "tgt_card"
+      },
+      {
+        "action": "finish",
+        "answer": "£2,688.76 instead of £3,718.41 — £1,029.65 saved, and two months quicker."
+      }
+    ],
+    "T08_use_best": [
+      {
+        "action": "tap",
+        "id": "use_best"
+      }
+    ],
+    "T09_take_transfer": [
+      {
+        "action": "tap",
+        "id": "tgt_card"
+      },
+      {
+        "action": "tap",
+        "id": "set_transfer"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "finish",
+        "answer": "£2,311.63, including the £69.60 fee."
+      }
+    ],
+    "T10_six_hundred": [
+      {
+        "action": "tap",
+        "id": "bud_600"
+      },
+      {
+        "action": "tap",
+        "id": "tgt_card"
+      },
+      {
+        "action": "finish",
+        "answer": "38 months."
+      }
+    ],
+    "T11_interest_split": [
+      {
+        "action": "tap",
+        "id": "tab_sched"
+      },
+      {
+        "action": "finish",
+        "answer": "£1,698.41 on the card and £2,020.00 on the loan."
+      }
+    ],
+    "T12_which_first": [
+      {
+        "action": "tap",
+        "id": "tab_sched"
+      },
+      {
+        "action": "finish",
+        "answer": "The loan, at month 43 — the card is only getting its minimum, so it limps on to month 47."
+      }
+    ],
+    "T13_card_gone": [
+      {
+        "action": "tap",
+        "id": "tgt_card"
+      },
+      {
+        "action": "finish",
+        "answer": "Month 17."
+      }
+    ],
+    "T14_transfer_worth": [
+      {
+        "action": "tap",
+        "id": "set_transfer"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "tap",
+        "id": "set_transfer"
+      },
+      {
+        "action": "finish",
+        "answer": "£874.12 — £2,844.29 with it against £3,718.41 without."
+      }
+    ],
+    "T15_best_at_520": [
+      {
+        "action": "tap",
+        "id": "set_transfer"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "tap",
+        "id": "tgt_split"
+      },
+      {
+        "action": "finish",
+        "answer": "£2,288.96."
+      }
+    ],
+    "T16_why_split": [
+      {
+        "action": "tap",
+        "id": "set_transfer"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "tap",
+        "id": "tgt_split"
+      },
+      {
+        "action": "finish",
+        "answer": "Because for 18 months the card costs nothing at all, so every pound rushed at it saves nothing — while the loan is still running at 5.9% and every pound there does save something."
+      }
+    ],
+    "T17_under_six": [
+      {
+        "action": "tap",
+        "id": "bud_600"
+      },
+      {
+        "action": "tap",
+        "id": "set_transfer"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "tap",
+        "id": "tgt_split"
+      },
+      {
+        "action": "finish",
+        "answer": "£1,949.33 — £600 a month, split between the two, with the 0% transfer taken."
+      }
+    ],
+    "T18_two_years": [
+      {
+        "action": "tap",
+        "id": "bud_700"
+      },
+      {
+        "action": "tap",
+        "id": "set_transfer"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "tap",
+        "id": "tgt_split"
+      },
+      {
+        "action": "finish",
+        "answer": "No. Even at £700 a month, split, with the transfer taken, it takes 32 months — and £700 is as high as the budget goes."
+      }
+    ],
+    "T19_forty_months": [
+      {
+        "action": "tap",
+        "id": "tgt_card"
+      },
+      {
+        "action": "tap",
+        "id": "bud_580"
+      },
+      {
+        "action": "finish",
+        "answer": "£580 a month — 40 months exactly. £560 takes 41."
+      }
+    ],
+    "T20_cheapest_ever": [
+      {
+        "action": "tap",
+        "id": "bud_700"
+      },
+      {
+        "action": "tap",
+        "id": "set_transfer"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "tap",
+        "id": "tgt_split"
+      },
+      {
+        "action": "finish",
+        "answer": "£1,667.11 over 32 months — £700 a month, split, with the 0% transfer taken."
+      }
+    ]
+  }
+}

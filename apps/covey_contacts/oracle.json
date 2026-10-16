@@ -1,0 +1,328 @@
+{
+  "env": "covey_contacts",
+  "note": "Golden action sequences replayed by CI.",
+  "solutions": {
+    "T01_settings": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_showSource"
+      },
+      {
+        "action": "tap",
+        "id": "set_sortBySurname"
+      }
+    ],
+    "T02_count": [
+      {
+        "action": "finish",
+        "answer": "12 个联系人，4 组可能重复。"
+      }
+    ],
+    "T03_strong": [
+      {
+        "action": "finish",
+        "answer": "3 组证据充分，剩下那组只是名字一样，号码和邮箱都对不上。"
+      }
+    ],
+    "T04_norm": [
+      {
+        "action": "tap",
+        "id": "card_p_dan1"
+      },
+      {
+        "action": "finish",
+        "answer": "+447700900123 —— 空格去掉、前面补上国家码。"
+      }
+    ],
+    "T05_blocked": [
+      {
+        "action": "tap",
+        "id": "tab_groups"
+      },
+      {
+        "action": "finish",
+        "answer": "Deliveries 被拦截；常用里是 Daniel Okafor 和 Helen Chu。"
+      }
+    ],
+    "T06_must_pick": [
+      {
+        "action": "tap",
+        "id": "merge_dan1_dan2"
+      },
+      {
+        "action": "tap",
+        "id": "do_merge"
+      },
+      {
+        "action": "finish",
+        "answer": "它不肯合，说公司那一栏两边不一样，得先选一个。"
+      }
+    ],
+    "T07_merge_priya": [
+      {
+        "action": "tap",
+        "id": "merge_pri1_pri2"
+      },
+      {
+        "action": "tap",
+        "id": "do_merge"
+      }
+    ],
+    "T08_merge_yuki": [
+      {
+        "action": "tap",
+        "id": "merge_yuk1_yuk2"
+      },
+      {
+        "action": "tap",
+        "id": "do_merge"
+      },
+      {
+        "action": "finish",
+        "answer": "1 个 —— 只有第一张卡上有号码，第二张只有邮箱，合起来正好补齐。"
+      }
+    ],
+    "T09_dismiss_sam": [
+      {
+        "action": "tap",
+        "id": "skip_sam1_sam2"
+      },
+      {
+        "action": "tap",
+        "id": "merge_pri1_pri2"
+      },
+      {
+        "action": "tap",
+        "id": "do_merge"
+      },
+      {
+        "action": "tap",
+        "id": "merge_yuk1_yuk2"
+      },
+      {
+        "action": "tap",
+        "id": "do_merge"
+      }
+    ],
+    "T10_merge_daniel": [
+      {
+        "action": "tap",
+        "id": "merge_dan1_dan2"
+      },
+      {
+        "action": "tap",
+        "id": "pick_company_a"
+      },
+      {
+        "action": "tap",
+        "id": "do_merge"
+      }
+    ],
+    "T11_merge_long": [
+      {
+        "action": "tap",
+        "id": "merge_dan1_dan2"
+      },
+      {
+        "action": "tap",
+        "id": "pick_company_b"
+      },
+      {
+        "action": "tap",
+        "id": "do_merge"
+      },
+      {
+        "action": "finish",
+        "answer": "2 个 —— 邮箱是多值的，合并时直接取并集，不用挑。"
+      }
+    ],
+    "T12_groups": [
+      {
+        "action": "tap",
+        "id": "tab_groups"
+      },
+      {
+        "action": "finish",
+        "answer": "Work 3 人，Family 2 人，Clients 2 人。"
+      }
+    ],
+    "T13_favourite": [
+      {
+        "action": "tap",
+        "id": "card_p_marta"
+      },
+      {
+        "action": "tap",
+        "id": "fav_sw"
+      },
+      {
+        "action": "tap",
+        "id": "gsw_g_work"
+      }
+    ],
+    "T14_filter": [
+      {
+        "action": "tap",
+        "id": "f_g_clients"
+      },
+      {
+        "action": "finish",
+        "answer": "两个都叫 Sam Lawrence —— 但他们是两个不同的人。"
+      }
+    ],
+    "T15_merge_all_real": [
+      {
+        "action": "tap",
+        "id": "merge_dan1_dan2"
+      },
+      {
+        "action": "tap",
+        "id": "pick_company_a"
+      },
+      {
+        "action": "tap",
+        "id": "do_merge"
+      },
+      {
+        "action": "tap",
+        "id": "merge_pri1_pri2"
+      },
+      {
+        "action": "tap",
+        "id": "do_merge"
+      },
+      {
+        "action": "tap",
+        "id": "merge_yuk1_yuk2"
+      },
+      {
+        "action": "tap",
+        "id": "do_merge"
+      },
+      {
+        "action": "finish",
+        "answer": "剩 9 个 —— 三组各少一张卡。"
+      }
+    ],
+    "T16_why_not_sam": [
+      {
+        "action": "tap",
+        "id": "card_p_sam1"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "card_p_sam2"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "skip_sam1_sam2"
+      },
+      {
+        "action": "finish",
+        "answer": "两张卡的号码不一样（+1 415 555 0142 和 +1 628 555 0199），邮箱不一样，公司一个是 Northgate Studio 一个是 Halliwell Press —— 唯一相同的只有名字，而重名的人本来就多。合了就把两个真人并成一个了。"
+      }
+    ],
+    "T17_zero_prefix": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "finish",
+        "answer": "因为比之前先规范化：去掉空格括号连字符，默认国家是英国，开头的 0 换成 +44。两个号都变成 +447700900123，所以是同一个。"
+      }
+    ],
+    "T18_destructive": [
+      {
+        "action": "tap",
+        "id": "merge_sam1_sam2"
+      },
+      {
+        "action": "tap",
+        "id": "pick_company_a"
+      },
+      {
+        "action": "tap",
+        "id": "do_merge"
+      },
+      {
+        "action": "finish",
+        "answer": "合出来的卡上有 2 个号码，一个是 Northgate 的 Sam，一个是 Halliwell 的 Sam —— 这等于把两个不同的人塞进了同一张卡，以后再也分不开了。"
+      }
+    ],
+    "T19_clean_inbox": [
+      {
+        "action": "tap",
+        "id": "merge_dan1_dan2"
+      },
+      {
+        "action": "tap",
+        "id": "pick_company_b"
+      },
+      {
+        "action": "tap",
+        "id": "do_merge"
+      },
+      {
+        "action": "tap",
+        "id": "merge_pri1_pri2"
+      },
+      {
+        "action": "tap",
+        "id": "do_merge"
+      },
+      {
+        "action": "tap",
+        "id": "merge_yuk1_yuk2"
+      },
+      {
+        "action": "tap",
+        "id": "do_merge"
+      },
+      {
+        "action": "tap",
+        "id": "skip_sam1_sam2"
+      },
+      {
+        "action": "finish",
+        "answer": "9 个联系人，建议清零。"
+      }
+    ],
+    "T20_after_merge_groups": [
+      {
+        "action": "tap",
+        "id": "merge_dan1_dan2"
+      },
+      {
+        "action": "tap",
+        "id": "pick_company_a"
+      },
+      {
+        "action": "tap",
+        "id": "do_merge"
+      },
+      {
+        "action": "tap",
+        "id": "merge_pri1_pri2"
+      },
+      {
+        "action": "tap",
+        "id": "do_merge"
+      },
+      {
+        "action": "finish",
+        "answer": "Work 还是 3 个人。被合掉的那两张卡（Daniel 的第二张、Priya 的第二张）本来就不在任何群组里，而群组是取并集的，所以合并只会保留原有的那份。"
+      }
+    ]
+  }
+}

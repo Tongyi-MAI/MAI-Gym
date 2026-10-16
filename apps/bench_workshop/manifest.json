@@ -1,0 +1,32 @@
+{
+  "id": "bench_workshop",
+  "name": "Bench",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "viewport": {"width": 390, "height": 844},
+  "description": "A single-file H5 workshop planner. A production plan is two quantities, and every other number on screen — what each raw part is needed in, what is short, what putting it right costs, how many more you could make — comes from exploding a bill of materials down through a shared sub-assembly and netting it against the shelf. Two things stop it being mental arithmetic: the six ready-built leg assemblies run out partway through, so the rest have to be made from raw stock, which pulls in screws the products were also counting on; and nothing is sold singly, so being two dowels short and being twenty-five short cost exactly the same £15. 5 screens, an expandable parts tree, a shelf with pack sizes, and a purchase basket.",
+  "tasks_file": "tasks.json",
+  "oracle_file": "oracle.json",
+  "action_space": {
+    "tap":    {"id": "test-id of the element"},
+    "type":   {"id": "test-id of a text field", "text": "replaces the whole value"},
+    "back":   {}, "home": {}, "wait": {},
+    "finish": {"answer": "final answer for question tasks; optional for action tasks"},
+    "tap_xy": {"x": "screen pixel x", "y": "screen pixel y", "note": "browser backend only"}
+  },
+  "observation": {
+    "text": "engine.a11y(state) — the parts tree serialises with its indentation, quantities and per-unit multipliers, and every shelf line prints stock, requirement and shortfall, so the whole explosion is checkable without pixels.",
+    "pixels": "390x844 screenshot (browser backend); __ENV__.bounds() maps every test-id to a pixel box",
+    "state": "engine.snapshot(state) — canonical state plus a derived view keyed by part name. For the verifier only."
+  },
+  "world": {
+    "clock": "08:35",
+    "bom": "bench = 2 seat planks + 4 leg assemblies + 12 screws; side table = 1 top + 4 leg assemblies + 8 screws; leg assembly = 1 square stock + 2 dowels + 4 screws",
+    "stock": "20 seat planks, 3 tops, 30 square stock, 50 dowels, 200 screws, and 6 leg assemblies already built",
+    "packs": "seat planks 5 at £120, tops 1 at £86, square stock 10 at £90, dowels 25 at £15, screws 100 at £24",
+    "seeded": "6 benches and 3 side tables — 10 dowels and 16 screws short, £39.00 to put right",
+    "frontier": "with nothing bought the shelf carries (7,0), (6,1), (5,2) or (4,3); one bench per table, all the way down",
+    "contention": "the plan needs 216 screws but the products only ask for 96 — the other 120 go into the 30 legs that have to be built",
+    "cliff": "£40 of parts reaches 9 benches; £100 reaches no further, because the next part to run out only comes ten to a pack at £90"
+  }
+}

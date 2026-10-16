@@ -1,0 +1,31 @@
+{
+  "id": "compass_maps",
+  "name": "Maps",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "viewport": {"width": 390, "height": 844},
+  "description": "A single-file H5 stock navigation app. A journey has no fixed length: each route has a free-flowing time and a sensitivity to traffic, and the traffic multiplier is looked up by the hour you set off in — so the same motorway is 24 minutes at eleven and 52 at eight, and which of the three roads is quickest changes with the clock. At 08:00 the ring road, eleven kilometres longer than anything else, is the fastest way there; by mid-morning it is the slowest. That makes «leave by» a search rather than a subtraction, because the journey time you would subtract is the one for the hour you have not chosen yet. Four modes, a bus with a twelve-minute headway that traffic cannot touch, tolls, fuel and banded parking. 4 screens, 6 routes, a generated map.",
+  "tasks_file": "tasks.json",
+  "oracle_file": "oracle.json",
+  "action_space": {
+    "tap":    {"id": "test-id of the element"},
+    "type":   {"id": "test-id of a text field", "text": "replaces the whole value"},
+    "back":   {}, "home": {}, "wait": {},
+    "finish": {"answer": "final answer for question tasks; optional for action tasks"},
+    "tap_xy": {"x": "screen pixel x", "y": "screen pixel y", "note": "browser backend only"}
+  },
+  "observation": {
+    "text": "engine.a11y(state) — every route prints its distance, free-flowing time, the multiplier in force and the resulting arrival; the departure strip prints the best journey and arrival for each ten-minute slot, flagging the ones that miss.",
+    "pixels": "390x844 screenshot (browser backend); __ENV__.bounds() maps every test-id to a pixel box",
+    "state": "engine.snapshot(state) — canonical state plus per-route times, arrivals and costs. For the verifier only."
+  },
+  "world": {
+    "clock": "07:20",
+    "times": "journey = free-flowing minutes × the multiplier for the departure hour, rounded up",
+    "routes": "A38 22.4 km / 24 min / high sensitivity / £25 toll; through town 14.1 km / 27 min / very high / no toll; ring road 31.8 km / 33 min / low / £12 toll",
+    "flip": "at 08:00 the ring road wins 47 to 52 to 67; at 09:00 the motorway wins 42 to 43 to 52; at 11:00 it is 28 to 32 to 35",
+    "leave_by": "arriving by 09:00 means leaving at 08:10 on the ring road; arriving by 08:30 means leaving at 07:50 on the motorway, not 07:43",
+    "transit": "bus 41 minutes plus the wait for a :04 departure every 12 minutes; unaffected by traffic",
+    "costs": "fuel 60p/km, parking £1.80 an hour after a free first half hour, bus £6, bike hire £3, walking free"
+  }
+}

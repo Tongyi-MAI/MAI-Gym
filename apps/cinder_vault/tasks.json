@@ -1,0 +1,756 @@
+{
+  "env": "cinder_vault",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_settings",
+      "name": "Lock it sooner",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "settings"
+      ],
+      "instruction": "Set the vault to lock after one minute and turn off the breach warnings.",
+      "goal": [
+        {
+          "name": "One minute",
+          "path": "derived.settings.autoLock",
+          "op": "eq",
+          "value": 1,
+          "weight": 2
+        },
+        {
+          "name": "Breach warnings off",
+          "path": "derived.settings.breachAlerts",
+          "op": "eq",
+          "value": false,
+          "weight": 2
+        },
+        {
+          "name": "Fingerprint unlock untouched",
+          "path": "derived.settings.biometrics",
+          "op": "eq",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "T02_query_score",
+      "name": "Question: what is the score",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "answer_expected": true,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "What is your vault health score out of a hundred? Answer with just the number.",
+      "goal": [
+        {
+          "name": "Twenty-six",
+          "source": "answer",
+          "op": "eq",
+          "value": 26,
+          "extract": "number",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.score",
+          "op": "eq",
+          "value": 26
+        }
+      ]
+    },
+    {
+      "id": "T03_2fa",
+      "name": "Second factor on the mail",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "entry",
+        "2fa"
+      ],
+      "instruction": "Turn on the second factor for Fenwold Mail.",
+      "goal": [
+        {
+          "name": "It is on",
+          "path": "derived.twofa.Fenwold Mail",
+          "op": "eq",
+          "value": true,
+          "weight": 3
+        },
+        {
+          "name": "The score went up by two",
+          "path": "derived.score",
+          "op": "eq",
+          "value": 28,
+          "weight": 3
+        },
+        {
+          "name": "Nothing else got one",
+          "path": "derived.no2faCount",
+          "op": "eq",
+          "value": 4
+        }
+      ]
+    },
+    {
+      "id": "T04_query_reused",
+      "name": "Question: the password used twice",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "answer_expected": true,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "Two accounts share the same password. Which two sites are they?",
+      "goal": [
+        {
+          "name": "Larkfield Shop",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Ll]arkfield",
+          "weight": 3
+        },
+        {
+          "name": "And Pigeon Cloud",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Pp]igeon",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.reusedCount",
+          "op": "eq",
+          "value": 2
+        }
+      ]
+    },
+    {
+      "id": "T05_fix_one",
+      "name": "Fix the forum",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "entry",
+        "password"
+      ],
+      "instruction": "The Ironwood Forum password is the worst one in there. Give it a new generated passphrase.",
+      "goal": [
+        {
+          "name": "It is strong now",
+          "path": "derived.strength.Ironwood Forum",
+          "op": "gte",
+          "value": 3,
+          "weight": 3
+        },
+        {
+          "name": "And no longer stale",
+          "path": "derived.ages.Ironwood Forum",
+          "op": "eq",
+          "value": 0,
+          "weight": 2,
+          "hint": "changing a password resets its age at the same time"
+        },
+        {
+          "name": "The score is 37",
+          "path": "derived.score",
+          "op": "eq",
+          "value": 37,
+          "weight": 3,
+          "hint": "eight for the weak one plus three for the stale one"
+        },
+        {
+          "name": "Four weak ones left",
+          "path": "derived.weakCount",
+          "op": "eq",
+          "value": 4
+        }
+      ]
+    },
+    {
+      "id": "T06_typed",
+      "name": "Type one in yourself",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "entry",
+        "password",
+        "text-input"
+      ],
+      "instruction": "Change the Larkfield Shop password to \"marsh-ladder-quarry-84\" by typing it in.",
+      "goal": [
+        {
+          "name": "That is the password now",
+          "path": "derived.passwords.Larkfield Shop",
+          "op": "eq",
+          "value": "marsh-ladder-quarry-84",
+          "weight": 3
+        },
+        {
+          "name": "It scores well",
+          "path": "derived.strength.Larkfield Shop",
+          "op": "gte",
+          "value": 3,
+          "weight": 2
+        },
+        {
+          "name": "And it is no longer a reuse",
+          "path": "derived.reusedCount",
+          "op": "eq",
+          "value": 0,
+          "weight": 3,
+          "hint": "the other account that shared it stops being a reuse too"
+        }
+      ]
+    },
+    {
+      "id": "T07_query_weak",
+      "name": "Question: how many weak ones",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "answer_expected": true,
+      "tags": [
+        "health",
+        "query",
+        "read-only"
+      ],
+      "instruction": "How many of the passwords count as weak? Answer with just the number.",
+      "goal": [
+        {
+          "name": "Five",
+          "source": "answer",
+          "op": "eq",
+          "value": 5,
+          "extract": "number",
+          "weight": 3,
+          "hint": "one of them is dressed up with a zero and still counts"
+        },
+        {
+          "name": "Nothing was fixed",
+          "path": "derived.weakCount",
+          "op": "eq",
+          "value": 5
+        }
+      ]
+    },
+    {
+      "id": "T08_generate",
+      "name": "Make one and use it",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "generator",
+        "password"
+      ],
+      "instruction": "Generate a passphrase and put it on the Pigeon Cloud account.",
+      "goal": [
+        {
+          "name": "Cloud has the generated one",
+          "path": "derived.passwords.Pigeon Cloud",
+          "op": "eq",
+          "value": "copper-kettle-ivory137",
+          "weight": 3,
+          "hint": "the generator is a counter — the first tap always gives the same phrase"
+        },
+        {
+          "name": "Strong now",
+          "path": "derived.strength.Pigeon Cloud",
+          "op": "gte",
+          "value": 3,
+          "weight": 2
+        },
+        {
+          "name": "No reuse left",
+          "path": "derived.reusedCount",
+          "op": "eq",
+          "value": 0,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T09_gen_options",
+      "name": "A longer one, no numbers",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "generator",
+        "settings"
+      ],
+      "instruction": "Set the generator to twenty characters with no number on the end, then generate one.",
+      "goal": [
+        {
+          "name": "Twenty",
+          "path": "derived.genSettings.length",
+          "op": "eq",
+          "value": 20,
+          "weight": 2
+        },
+        {
+          "name": "No number",
+          "path": "derived.genSettings.numbers",
+          "op": "eq",
+          "value": false,
+          "weight": 2
+        },
+        {
+          "name": "Four words, no digits",
+          "path": "derived.generated",
+          "op": "eq",
+          "value": "copper-kettle-ivory-harbour",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was applied to an entry",
+          "path": "derived.weakCount",
+          "op": "eq",
+          "value": 5
+        }
+      ]
+    },
+    {
+      "id": "T10_forget",
+      "name": "Forget the forum",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "entry",
+        "delete",
+        "confirm-dialog"
+      ],
+      "instruction": "You do not use the Ironwood Forum any more. Forget that entry entirely.",
+      "goal": [
+        {
+          "name": "Seven entries left",
+          "path": "derived.entryCount",
+          "op": "eq",
+          "value": 7,
+          "weight": 3
+        },
+        {
+          "name": "The forum is gone",
+          "path": "derived.sites",
+          "op": "not_contains",
+          "value": "Ironwood Forum",
+          "weight": 2
+        },
+        {
+          "name": "The score is 39",
+          "path": "derived.score",
+          "op": "eq",
+          "value": 39,
+          "weight": 3,
+          "hint": "that one entry was carrying weak, stale and no-second-factor at once"
+        }
+      ]
+    },
+    {
+      "id": "T11_bank",
+      "name": "Question: the one with nothing wrong",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "answer_expected": true,
+      "tags": [
+        "health",
+        "query",
+        "read-only"
+      ],
+      "instruction": "Which accounts have nothing at all wrong with them? Name them.",
+      "goal": [
+        {
+          "name": "Kestrel Bank",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Kk]estrel",
+          "weight": 3
+        },
+        {
+          "name": "And Sonora",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Ss]onora",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.score",
+          "op": "eq",
+          "value": 26
+        }
+      ]
+    },
+    {
+      "id": "T12_two_fixes",
+      "name": "Two of the weak ones",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 22,
+      "tags": [
+        "password",
+        "arithmetic"
+      ],
+      "instruction": "Give new passphrases to both Fenwold Mail and Wren & Co.",
+      "goal": [
+        {
+          "name": "Mail is strong",
+          "path": "derived.strength.Fenwold Mail",
+          "op": "gte",
+          "value": 3,
+          "weight": 2
+        },
+        {
+          "name": "Work is strong",
+          "path": "derived.strength.Wren & Co",
+          "op": "gte",
+          "value": 3,
+          "weight": 2
+        },
+        {
+          "name": "Three weak ones left",
+          "path": "derived.weakCount",
+          "op": "eq",
+          "value": 3,
+          "weight": 2
+        },
+        {
+          "name": "The score is 48",
+          "path": "derived.score",
+          "op": "eq",
+          "value": 48,
+          "weight": 3,
+          "hint": "two weak and two stale come off at once"
+        }
+      ]
+    },
+    {
+      "id": "T13_flagship",
+      "name": "Get it to a hundred (flagship)",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 50,
+      "tags": [
+        "password",
+        "2fa",
+        "long-horizon",
+        "arithmetic"
+      ],
+      "instruction": "Put the whole vault right: no weak passwords, no reuse, nothing over a year old, and a second factor on every account. Do not delete anything.",
+      "goal": [
+        {
+          "name": "Full marks",
+          "path": "derived.score",
+          "op": "eq",
+          "value": 100,
+          "weight": 3
+        },
+        {
+          "name": "No weak passwords",
+          "path": "derived.weakCount",
+          "op": "eq",
+          "value": 0,
+          "weight": 2
+        },
+        {
+          "name": "No reuse",
+          "path": "derived.reusedCount",
+          "op": "eq",
+          "value": 0,
+          "weight": 2
+        },
+        {
+          "name": "Nothing stale",
+          "path": "derived.oldCount",
+          "op": "eq",
+          "value": 0,
+          "weight": 2
+        },
+        {
+          "name": "Everything has a second factor",
+          "path": "derived.no2faCount",
+          "op": "eq",
+          "value": 0,
+          "weight": 2
+        },
+        {
+          "name": "All eight entries still there",
+          "path": "derived.entryCount",
+          "op": "eq",
+          "value": 8,
+          "weight": 3,
+          "hint": "deleting the bad ones would also work on the score, and is not what was asked"
+        },
+        {
+          "name": "Efficiency: 12 steps or fewer",
+          "source": "trajectory",
+          "path": "steps",
+          "op": "lte",
+          "value": 12,
+          "critical": false,
+          "weight": 0.5
+        }
+      ]
+    },
+    {
+      "id": "T14_search",
+      "name": "Find it by name",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "search",
+        "navigation"
+      ],
+      "instruction": "Search the vault for \"sonora\" and open that entry.",
+      "goal": [
+        {
+          "name": "On an entry page",
+          "path": "derived.route",
+          "op": "eq",
+          "value": "entry"
+        },
+        {
+          "name": "It is Sonora",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "e_music",
+          "weight": 3
+        },
+        {
+          "name": "You used the search box",
+          "source": "trajectory",
+          "path": "ids",
+          "op": "contains",
+          "value": "q_vault",
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T15_category",
+      "name": "Just the work ones",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "filter",
+        "navigation"
+      ],
+      "instruction": "Filter the vault down to the Work category and open Pigeon Cloud from there.",
+      "goal": [
+        {
+          "name": "On the cloud entry",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "e_cloud",
+          "weight": 3
+        },
+        {
+          "name": "You used the filter",
+          "source": "trajectory",
+          "path": "ids",
+          "op": "contains",
+          "value": "cat_work",
+          "weight": 3
+        }
+      ]
+    },
+    {
+      "id": "T16_over_fifty",
+      "name": "Past seventy, any way you like (many valid answers)",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "unique_solution": false,
+      "tags": [
+        "constraint",
+        "multi-solution",
+        "arithmetic"
+      ],
+      "instruction": "Get the health score to at least 70 without deleting any entries. How you do it is up to you.",
+      "goal": [
+        {
+          "name": "70 or better",
+          "path": "derived.score",
+          "op": "gte",
+          "value": 70,
+          "weight": 3
+        },
+        {
+          "name": "All eight entries still there",
+          "path": "derived.entryCount",
+          "op": "eq",
+          "value": 8,
+          "weight": 3,
+          "hint": "forgetting the bad ones would raise the score and is not allowed here"
+        }
+      ]
+    },
+    {
+      "id": "T17_reveal",
+      "name": "Read one out",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "answer_expected": true,
+      "tags": [
+        "entry",
+        "query"
+      ],
+      "instruction": "What is the actual password on the Kestrel Bank entry? You will have to reveal it.",
+      "goal": [
+        {
+          "name": "Tr0ub4dor&3",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Tt]r0ub4dor\\&3",
+          "weight": 3
+        },
+        {
+          "name": "You revealed it rather than guessing",
+          "source": "trajectory",
+          "path": "ids",
+          "op": "contains",
+          "value": "reveal",
+          "weight": 2
+        },
+        {
+          "name": "And left it alone",
+          "path": "derived.passwords.Kestrel Bank",
+          "op": "eq",
+          "value": "Tr0ub4dor&3",
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T18_2fa_all",
+      "name": "A second factor everywhere",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "2fa",
+        "long-horizon"
+      ],
+      "instruction": "Turn on the second factor for every account that does not have one yet. Change nothing else.",
+      "goal": [
+        {
+          "name": "None left without one",
+          "path": "derived.no2faCount",
+          "op": "eq",
+          "value": 0,
+          "weight": 3
+        },
+        {
+          "name": "The score is 36",
+          "path": "derived.score",
+          "op": "eq",
+          "value": 36,
+          "weight": 3,
+          "hint": "five accounts at two points each"
+        },
+        {
+          "name": "The weak ones are still weak",
+          "path": "derived.weakCount",
+          "op": "eq",
+          "value": 5,
+          "weight": 2,
+          "hint": "this task was only about second factors"
+        }
+      ]
+    },
+    {
+      "id": "T19_query_stale",
+      "name": "Question: the oldest of them",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "answer_expected": true,
+      "tags": [
+        "health",
+        "query",
+        "read-only"
+      ],
+      "instruction": "Which password has gone the longest without being changed, and how many days is it?",
+      "goal": [
+        {
+          "name": "The forum",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Ii]ronwood|forum",
+          "weight": 3
+        },
+        {
+          "name": "1200 days",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)1200(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.oldCount",
+          "op": "eq",
+          "value": 4
+        }
+      ]
+    },
+    {
+      "id": "T20_no_reuse",
+      "name": "Break the shared password",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "password",
+        "reuse"
+      ],
+      "instruction": "Two accounts share a password. Fix it so that neither of them counts as a reuse, and do it by giving both of them their own new passphrase.",
+      "goal": [
+        {
+          "name": "No reuse anywhere",
+          "path": "derived.reusedCount",
+          "op": "eq",
+          "value": 0,
+          "weight": 3
+        },
+        {
+          "name": "The shop is strong",
+          "path": "derived.strength.Larkfield Shop",
+          "op": "gte",
+          "value": 3,
+          "weight": 2
+        },
+        {
+          "name": "The cloud is strong",
+          "path": "derived.strength.Pigeon Cloud",
+          "op": "gte",
+          "value": 3,
+          "weight": 2
+        },
+        {
+          "name": "They are not the same string",
+          "path": "derived.weakCount",
+          "op": "eq",
+          "value": 3,
+          "weight": 2
+        }
+      ]
+    }
+  ]
+}

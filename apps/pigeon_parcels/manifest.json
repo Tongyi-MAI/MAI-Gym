@@ -1,0 +1,28 @@
+{
+  "id": "pigeon_parcels",
+  "name": "Pigeon",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "viewport": {"width": 390, "height": 844},
+  "description": "A single-file H5 parcel tracker whose world model is permission. Every parcel sits at a point on its own journey and what you may do to it follows from that point alone: an address can be moved while the parcel is at the depot but not once it is on the van, safe-place instructions close when the driver sets off, a parcel can only be reported missing after a delivery attempt, and a return has fourteen days from delivery. Seven parcels are seeded at seven different points, so for any given rule exactly some of them qualify — and every refusal names the rule that stopped it. 11 screens, 4 pickup points, 3 addresses.",
+  "tasks_file": "tasks.json",
+  "oracle_file": "oracle.json",
+  "action_space": {
+    "tap":    {"id": "test-id of the element"},
+    "type":   {"id": "test-id of a text field", "text": "replaces the whole value"},
+    "back":   {}, "home": {}, "wait": {},
+    "finish": {"answer": "final answer for question tasks; optional for action tasks"},
+    "tap_xy": {"x": "screen pixel x", "y": "screen pixel y", "note": "browser backend only"}
+  },
+  "observation": {
+    "text": "engine.a11y(state) — each parcel's stage, its scan history and the reason any action is refused all serialise as text.",
+    "pixels": "390x844 screenshot (browser backend); __ENV__.bounds() maps every test-id to a pixel box",
+    "state": "engine.snapshot(state) — canonical state plus a derived view keyed by parcel name. For the verifier only."
+  },
+  "world": {
+    "today": "Tuesday 14 May, fixed",
+    "stages": "label created, collected, on its way, at your depot, out for delivery, delivered; plus attempted and going back",
+    "rules": "reschedule needs a depot or a failed attempt; an address change closes when the van loads; safe place closes at the same moment; a divert needs the parcel to be in transit or at the depot; missing needs a delivery or an attempt; a return needs delivery within the last 14 days",
+    "refusals": "every blocked action returns the reason as a toast rather than a disabled button, so an agent can read why"
+  }
+}

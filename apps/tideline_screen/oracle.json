@@ -1,0 +1,305 @@
+{
+  "env": "tideline_screen",
+  "note": "Golden action sequences replayed by CI.",
+  "solutions": {
+    "T01_settings": [
+      {
+        "action": "tap",
+        "id": "tab_downtime"
+      },
+      {
+        "action": "tap",
+        "id": "set_shareAcrossDevices"
+      },
+      {
+        "action": "tap",
+        "id": "set_showPickups"
+      }
+    ],
+    "T02_total": [
+      {
+        "action": "finish",
+        "answer": "9 小时 42 分，拿起 161 次。"
+      }
+    ],
+    "T03_blocked": [
+      {
+        "action": "finish",
+        "answer": "Chatter 和 Reels。"
+      }
+    ],
+    "T04_social": [
+      {
+        "action": "tap",
+        "id": "tab_limits"
+      },
+      {
+        "action": "finish",
+        "answer": "用了 174 分钟，限额 150，超了 24 分钟。"
+      }
+    ],
+    "T05_downtime": [
+      {
+        "action": "finish",
+        "answer": "22:00 开始，离现在还有 1 小时 25 分。"
+      }
+    ],
+    "T06_no_effect": [
+      {
+        "action": "tap",
+        "id": "app_a_reels"
+      },
+      {
+        "action": "tap",
+        "id": "own_inc"
+      },
+      {
+        "action": "tap",
+        "id": "own_inc"
+      },
+      {
+        "action": "finish",
+        "answer": "一点没变，还是 0 分钟 —— 卡住它的根本不是它自己那条限额。"
+      }
+    ],
+    "T07_why_reels": [
+      {
+        "action": "tap",
+        "id": "app_a_reels"
+      },
+      {
+        "action": "finish",
+        "answer": "它自己的限额还剩 14 分钟，可社交类别的 150 分钟已经被用掉 174 —— 类别那一条是 0，取最小就是 0。"
+      }
+    ],
+    "T08_chatter": [
+      {
+        "action": "tap",
+        "id": "app_a_reels"
+      },
+      {
+        "action": "finish",
+        "answer": "Chatter，98 分钟 —— Reels 只有 76。"
+      }
+    ],
+    "T09_slate": [
+      {
+        "action": "tap",
+        "id": "app_a_slate"
+      },
+      {
+        "action": "finish",
+        "answer": "因为 22:00 就进停用时间了，而它不在白名单里 —— 离现在正好 85 分钟。"
+      }
+    ],
+    "T10_raise_social": [
+      {
+        "action": "tap",
+        "id": "tab_limits"
+      },
+      {
+        "action": "tap",
+        "id": "cl_c_social_inc"
+      },
+      {
+        "action": "tap",
+        "id": "cl_c_social_inc"
+      },
+      {
+        "action": "finish",
+        "answer": "两个都变成 6 分钟 —— 类别里还剩的那 6 分钟是它们一起分的。"
+      }
+    ],
+    "T11_allow": [
+      {
+        "action": "tap",
+        "id": "app_a_slate"
+      },
+      {
+        "action": "tap",
+        "id": "allow_sw"
+      },
+      {
+        "action": "finish",
+        "answer": "变成「不限」了 —— 它没有任何限额，现在连停用时间也管不着它。"
+      }
+    ],
+    "T12_streamly": [
+      {
+        "action": "tap",
+        "id": "app_a_streamly"
+      },
+      {
+        "action": "finish",
+        "answer": "是它自己的：120 分钟用了 112，还剩 8。视频类别还剩 24，管不到它。"
+      }
+    ],
+    "T13_downtime_off": [
+      {
+        "action": "tap",
+        "id": "tab_downtime"
+      },
+      {
+        "action": "tap",
+        "id": "dt_switch"
+      },
+      {
+        "action": "finish",
+        "answer": "变成不限 —— 它本来就没有任何限额，唯一管着它的就是那道墙。"
+      }
+    ],
+    "T14_extra": [
+      {
+        "action": "tap",
+        "id": "app_a_questa"
+      },
+      {
+        "action": "tap",
+        "id": "extra_inc"
+      },
+      {
+        "action": "tap",
+        "id": "extra_inc"
+      },
+      {
+        "action": "finish",
+        "answer": "33 分钟 —— 原来的 3 分钟加上临时的 30 分钟。"
+      }
+    ],
+    "T15_reels_15": [
+      {
+        "action": "tap",
+        "id": "app_a_reels"
+      },
+      {
+        "action": "tap",
+        "id": "own_inc"
+      },
+      {
+        "action": "tap",
+        "id": "catl_inc"
+      },
+      {
+        "action": "tap",
+        "id": "catl_inc"
+      },
+      {
+        "action": "tap",
+        "id": "catl_inc"
+      },
+      {
+        "action": "finish",
+        "answer": "两条都得动。社交类别放到 195 才够它分 15 分钟以上，可它自己的限额只剩 14 分，所以还得把自己那条也往上抬一档到 105。取最小，两边都得过线。"
+      }
+    ],
+    "T16_cheapest_fix": [
+      {
+        "action": "tap",
+        "id": "tab_limits"
+      },
+      {
+        "action": "tap",
+        "id": "cl_c_social_inc"
+      },
+      {
+        "action": "tap",
+        "id": "cl_c_social_inc"
+      },
+      {
+        "action": "tap",
+        "id": "cl_c_social_inc"
+      },
+      {
+        "action": "finish",
+        "answer": "只动社交类别限额，抬到 195。Chatter 本来就没有单独限额，停用时间还剩 85 分钟也够宽，所以只有类别那一条卡着它。"
+      }
+    ],
+    "T17_all_zero": [
+      {
+        "action": "tap",
+        "id": "tab_limits"
+      },
+      {
+        "action": "tap",
+        "id": "cl_c_social_off"
+      },
+      {
+        "action": "finish",
+        "answer": "取消之后 Chatter 变成 85 分钟 —— 它没有单独限额，类别也没了，剩下卡它的只有停用时间。Reels 变成 14 分，因为它自己那条还在。"
+      }
+    ],
+    "T18_two_hours": [
+      {
+        "action": "tap",
+        "id": "tab_limits"
+      },
+      {
+        "action": "tap",
+        "id": "cl_c_social_dec"
+      },
+      {
+        "action": "tap",
+        "id": "cl_c_social_dec"
+      },
+      {
+        "action": "finish",
+        "answer": "超了 54 分钟 —— 已经用掉 174，限额只有 120。"
+      }
+    ],
+    "T19_video_night": [
+      {
+        "action": "tap",
+        "id": "app_a_streamly"
+      },
+      {
+        "action": "tap",
+        "id": "extra_inc"
+      },
+      {
+        "action": "tap",
+        "id": "extra_inc"
+      },
+      {
+        "action": "finish",
+        "answer": "两档，也就是 30 分钟。加完自己那条剩 38、类别那条剩 54，取最小是 38，够 30 了。"
+      }
+    ],
+    "T20_tidy": [
+      {
+        "action": "tap",
+        "id": "app_a_reels"
+      },
+      {
+        "action": "tap",
+        "id": "own_inc"
+      },
+      {
+        "action": "tap",
+        "id": "catl_inc"
+      },
+      {
+        "action": "tap",
+        "id": "catl_inc"
+      },
+      {
+        "action": "tap",
+        "id": "catl_inc"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "app_a_slate"
+      },
+      {
+        "action": "tap",
+        "id": "allow_sw"
+      },
+      {
+        "action": "finish",
+        "answer": "Reels 剩 21 分钟。自己的限额抬到 105 之后还剩 29，社交类别抬到 195 之后还剩 21，离停用时间还有 85 —— 取最小是 21，过了 15 这条线。Slate 进了白名单变成不限，游戏那边一动没动。"
+      }
+    ]
+  }
+}

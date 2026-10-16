@@ -1,0 +1,860 @@
+{
+  "env": "meter_energy",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_settings",
+      "name": "两个开关",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "settings"
+      ],
+      "instruction": "在设置里关掉「显示年度累计」和「余额不足时提醒」。峰谷分时那一栏别动。",
+      "goal": [
+        {
+          "name": "年度累计关了",
+          "path": "derived.settings.showYearly",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "余额提醒关了",
+          "path": "derived.settings.remind",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "峰谷分时没动",
+          "path": "derived.settings.timeOfUse",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "表也没抄",
+          "path": "derived.allRead",
+          "op": "eq",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "T02_last",
+      "name": "问一句：电表上次读数",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "电表上次的峰时和谷时读数分别是多少？",
+      "goal": [
+        {
+          "name": "峰 12486",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)12486(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "谷 5204",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)5204(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "还没抄表",
+          "path": "derived.allRead",
+          "op": "eq",
+          "value": false
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T03_ytd",
+      "name": "问一句：年度累计",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "今年到上个月为止一共用了多少度电？离第二档还差多少度？",
+      "goal": [
+        {
+          "name": "2380 度",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)2380(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "还差 140 度",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)140(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "还没抄表",
+          "path": "derived.allRead",
+          "op": "eq",
+          "value": false
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T04_peak_month",
+      "name": "问一句：今年哪个月最费电",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "query",
+        "navigate"
+      ],
+      "instruction": "打开用量页，今年到目前为止哪个月用电最多，用了多少度？",
+      "goal": [
+        {
+          "name": "1月",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)1(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "412 度",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)412(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "停在用量页",
+          "path": "derived.route",
+          "op": "eq",
+          "value": "use"
+        },
+        {
+          "name": "还没抄表",
+          "path": "derived.allRead",
+          "op": "eq",
+          "value": false
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T05_tariff",
+      "name": "问一句：三档电价",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "电费三个档位的单价分别是多少？",
+      "goal": [
+        {
+          "name": "0.5583",
+          "source": "answer",
+          "op": "regex",
+          "value": "0[.,]?5583",
+          "weight": 3
+        },
+        {
+          "name": "0.6083",
+          "source": "answer",
+          "op": "regex",
+          "value": "0[.,]?6083",
+          "weight": 3
+        },
+        {
+          "name": "0.8583",
+          "source": "answer",
+          "op": "regex",
+          "value": "0[.,]?8583",
+          "weight": 3
+        },
+        {
+          "name": "还没抄表",
+          "path": "derived.allRead",
+          "op": "eq",
+          "value": false
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T06_too_low",
+      "name": "抄错了的读数",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "refusal"
+      ],
+      "instruction": "把电表峰时这个月的读数填成 12000，看看会怎么样，把应用说的话讲给我听。",
+      "goal": [
+        {
+          "name": "这个读数没有被收下",
+          "path": "derived.readings.电表峰时",
+          "op": "eq",
+          "value": null
+        },
+        {
+          "name": "表还是没抄完",
+          "path": "derived.allRead",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "比上次小，表不会倒转",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:(12486|倒转|小|不对))(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T07_read_all",
+      "name": "把三块表抄了",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "multi-step"
+      ],
+      "instruction": "这个月的读数是：电表峰时 12672、谷时 5322，水表 500，燃气表 1254。全部填进去，然后告诉我这个月一共多少钱。",
+      "goal": [
+        {
+          "name": "四个读数都填了",
+          "path": "derived.allRead",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "电用了 304 度",
+          "path": "derived.elecUsed",
+          "op": "eq",
+          "value": 304
+        },
+        {
+          "name": "账单 ¥241.52",
+          "path": "derived.billFen",
+          "op": "eq",
+          "value": 24152
+        },
+        {
+          "name": "¥241.52",
+          "source": "answer",
+          "op": "regex",
+          "value": "241[.,]?52",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T08_tier_split",
+      "name": "这 304 度是怎么分档的",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 22,
+      "tags": [
+        "arithmetic"
+      ],
+      "instruction": "抄完表之后看账单：这个月的 304 度电不是一个价。说清楚有多少度按第一档算、多少度按第二档算。",
+      "goal": [
+        {
+          "name": "第一档 140 度",
+          "path": "derived.firstTierUnits",
+          "op": "eq",
+          "value": 140
+        },
+        {
+          "name": "第二档 164 度",
+          "path": "derived.secondTierUnits",
+          "op": "eq",
+          "value": 164
+        },
+        {
+          "name": "确实跨了两档",
+          "path": "derived.elecTierCount",
+          "op": "eq",
+          "value": 2
+        },
+        {
+          "name": "140 度第一档",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)140(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "164 度第二档",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)164(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T09_water",
+      "name": "水费",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "arithmetic"
+      ],
+      "instruction": "抄完三块表，告诉我水这个月用了多少方、水费多少钱。",
+      "goal": [
+        {
+          "name": "水用了 14 方",
+          "path": "derived.waterUsed",
+          "op": "eq",
+          "value": 14
+        },
+        {
+          "name": "水费 ¥39.20",
+          "path": "derived.waterFen",
+          "op": "eq",
+          "value": 3920
+        },
+        {
+          "name": "14 方",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)14(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "¥39.20",
+          "source": "answer",
+          "op": "regex",
+          "value": "39[.,]?20?",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T10_balance",
+      "name": "余额够不够",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "arithmetic"
+      ],
+      "instruction": "抄完三块表，看看预存的 250 元够不够付这个月，付完还剩多少。",
+      "goal": [
+        {
+          "name": "四个读数都填了",
+          "path": "derived.allRead",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "不用充值",
+          "path": "derived.shortfall",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "没有充过值",
+          "path": "derived.toppedUp",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "够",
+          "source": "answer",
+          "op": "regex",
+          "value": "(够|足|可以|剩)",
+          "weight": 3
+        },
+        {
+          "name": "剩 ¥8.48",
+          "source": "answer",
+          "op": "regex",
+          "value": "8[.,]?48",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T11_tou_on",
+      "name": "开峰谷分时",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 24,
+      "tags": [
+        "multi-step"
+      ],
+      "instruction": "抄完表以后把峰谷分时电价打开，告诉我电费变成了多少、比原来多还是少、差多少。",
+      "goal": [
+        {
+          "name": "峰谷分时开着",
+          "path": "derived.settings.timeOfUse",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "电费 ¥198.32",
+          "path": "derived.elecFen",
+          "op": "eq",
+          "value": 19832
+        },
+        {
+          "name": "多出 ¥20.40",
+          "path": "derived.elecAdjFen",
+          "op": "eq",
+          "value": 2040
+        },
+        {
+          "name": "¥198.32",
+          "source": "answer",
+          "op": "regex",
+          "value": "198[.,]?32",
+          "weight": 3
+        },
+        {
+          "name": "多了 ¥20.40",
+          "source": "answer",
+          "op": "regex",
+          "value": "20[.,]?40?",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T12_gas_cliff",
+      "name": "多用三方燃气",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 24,
+      "tags": [
+        "cliff",
+        "arithmetic"
+      ],
+      "instruction": "这个月燃气表其实读到 1257，不是 1254。按 1257 抄，其它三个读数照旧。然后告诉我余额还差多少、最少要充多少。",
+      "goal": [
+        {
+          "name": "燃气用了 11 方",
+          "path": "derived.gasUsed",
+          "op": "eq",
+          "value": 11
+        },
+        {
+          "name": "还差 ¥0.67",
+          "path": "derived.shortfall",
+          "op": "eq",
+          "value": 67
+        },
+        {
+          "name": "最少要充 ¥50",
+          "path": "derived.topupNeeded",
+          "op": "eq",
+          "value": 5000
+        },
+        {
+          "name": "还没充",
+          "path": "derived.toppedUp",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "差 ¥0.67",
+          "source": "answer",
+          "op": "regex",
+          "value": "0?[.,]67",
+          "weight": 3
+        },
+        {
+          "name": "要充 ¥50",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)50(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T13_typo",
+      "name": "谷时抄错了一位",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 24,
+      "tags": [
+        "multi-step",
+        "edit"
+      ],
+      "instruction": "先按 12672 / 5322 / 500 / 1254 把四个读数抄好。回头发现电表谷时其实是 5300，不是 5322。只改谷时那一栏，别动其它三个，然后告诉我账单变成了多少。",
+      "goal": [
+        {
+          "name": "谷时改成了 5300",
+          "path": "derived.readings.电表谷时",
+          "op": "eq",
+          "value": 5300
+        },
+        {
+          "name": "峰时没动",
+          "path": "derived.readings.电表峰时",
+          "op": "eq",
+          "value": 12672
+        },
+        {
+          "name": "电用了 282 度",
+          "path": "derived.elecUsed",
+          "op": "eq",
+          "value": 282
+        },
+        {
+          "name": "四个读数还是齐的",
+          "path": "derived.allRead",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "¥228.14",
+          "source": "answer",
+          "op": "regex",
+          "value": "228[.,]?14",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T14_absurd",
+      "name": "走了八万度的电表",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "refusal"
+      ],
+      "instruction": "有人把电表峰时读数抄成了 99999。填进去看看，把应用的说法讲给我听。",
+      "goal": [
+        {
+          "name": "这个读数没有被收下",
+          "path": "derived.readings.电表峰时",
+          "op": "eq",
+          "value": null
+        },
+        {
+          "name": "表还是没抄完",
+          "path": "derived.allRead",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "一个月不可能走这么多",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:(87513|不像|不对|太多|不可能))(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T15_tou_decision",
+      "name": "峰谷分时到底划不划算",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "reasoning",
+        "compare"
+      ],
+      "instruction": "按 12672 / 5322 / 500 / 1254 抄完表。峰谷分时两种都看一遍，把便宜的那种留下，并说清楚判断划不划算的标准是什么。",
+      "goal": [
+        {
+          "name": "四个读数都填了",
+          "path": "derived.allRead",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "最后是关着的",
+          "path": "derived.settings.timeOfUse",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "电费回到 ¥177.92",
+          "path": "derived.elecFen",
+          "op": "eq",
+          "value": 17792
+        },
+        {
+          "name": "不划算",
+          "source": "answer",
+          "op": "regex",
+          "value": "(不划算|不合适|贵|多|关)",
+          "weight": 3
+        },
+        {
+          "name": "看谷时有没有超过一半",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:(谷|一半|峰.*多|186|118))(?!\\d)",
+          "weight": 3,
+          "hint": "峰时每度加的和谷时每度减的一样多，那什么时候才划算？"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T16_no_cross",
+      "name": "不跨档的那个月",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 28,
+      "tags": [
+        "reasoning",
+        "arithmetic"
+      ],
+      "instruction": "如果这个月只用 140 度电（峰时 100 度、谷时 40 度），水气照旧读到 500 和 1254，电费会是多少？把读数按这个填进去，并说清楚为什么这次只有一个价。",
+      "goal": [
+        {
+          "name": "电用了 140 度",
+          "path": "derived.elecUsed",
+          "op": "eq",
+          "value": 140
+        },
+        {
+          "name": "只有一个档",
+          "path": "derived.elecTierCount",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "电费 ¥78.16",
+          "path": "derived.elecFen",
+          "op": "eq",
+          "value": 7816
+        },
+        {
+          "name": "¥78.16",
+          "source": "answer",
+          "op": "regex",
+          "value": "78[.,]?16",
+          "weight": 3
+        },
+        {
+          "name": "正好卡在 2520",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:(2520|第一档|没超|刚好))(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T17_max_first_tier",
+      "name": "最多能用多少还不进二档",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "optimise",
+        "arithmetic"
+      ],
+      "instruction": "这个月最多能用多少度电，还能整个月都留在第一档里？把电表读数按那个用量填进去（峰谷怎么分随你），水气不用管。",
+      "goal": [
+        {
+          "name": "正好用满第一档",
+          "path": "derived.elecUsed",
+          "op": "eq",
+          "value": 140
+        },
+        {
+          "name": "只有一个档",
+          "path": "derived.elecTierCount",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "140 度",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)140(?!\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T18_budget",
+      "name": "250 块钱能用多少电",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "optimise",
+        "budget"
+      ],
+      "instruction": "水表读到 500、燃气读到 1254，峰谷分时不开。预存的 250 元一分不许充，这个月电最多能用到多少度？把电表读数按那个用量填进去。",
+      "goal": [
+        {
+          "name": "电正好用 317 度",
+          "path": "derived.elecUsed",
+          "op": "eq",
+          "value": 317
+        },
+        {
+          "name": "水气也抄了",
+          "path": "derived.allRead",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "余额刚好够",
+          "path": "derived.shortfall",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "没有充值",
+          "path": "derived.toppedUp",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "峰谷分时没开",
+          "path": "derived.settings.timeOfUse",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "317 度",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)317(?!\\d)",
+          "weight": 3,
+          "hint": "水气先扣掉 63.60，剩下的钱要分两个档位买"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T19_water_tier",
+      "name": "水什么时候进第二档",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "reasoning",
+        "arithmetic"
+      ],
+      "instruction": "水表读到多少，水费才刚好进第二档？把水表按那个数填进去，电表按峰 100 谷 40 抄、燃气按 1254 抄，然后告诉我那时候水费是多少。",
+      "goal": [
+        {
+          "name": "水用了 18 方",
+          "path": "derived.waterUsed",
+          "op": "eq",
+          "value": 18
+        },
+        {
+          "name": "水费 ¥51.30",
+          "path": "derived.waterFen",
+          "op": "eq",
+          "value": 5130
+        },
+        {
+          "name": "表都抄完了",
+          "path": "derived.allRead",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "读到 504",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)504(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "¥51.30",
+          "source": "answer",
+          "op": "regex",
+          "value": "51[.,]?30?",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T20_forced_tou",
+      "name": "公司规定必须开分时",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 32,
+      "tags": [
+        "multi-step",
+        "cliff"
+      ],
+      "instruction": "按 12672 / 5322 / 500 / 1254 抄完表。公司规定这个月必须开峰谷分时电价。算出要充多少值，充最小的那一档，最后告诉我账单和剩下的余额。",
+      "goal": [
+        {
+          "name": "峰谷分时开着",
+          "path": "derived.settings.timeOfUse",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "充了 ¥50",
+          "path": "derived.toppedUp",
+          "op": "eq",
+          "value": 5000
+        },
+        {
+          "name": "账单 ¥261.92",
+          "path": "derived.billFen",
+          "op": "eq",
+          "value": 26192
+        },
+        {
+          "name": "余额够了",
+          "path": "derived.shortfall",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "账单 ¥261.92",
+          "source": "answer",
+          "op": "regex",
+          "value": "261[.,]?92",
+          "weight": 3
+        },
+        {
+          "name": "余额剩 ¥38.08",
+          "source": "answer",
+          "op": "regex",
+          "value": "38[.,]?08",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    }
+  ]
+}

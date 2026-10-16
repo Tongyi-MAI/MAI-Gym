@@ -1,0 +1,1083 @@
+{
+  "env": "roost_stays",
+  "version": "1.1.0",
+  "tasks": [
+    {
+      "id": "T01_currency_and_optout",
+      "name": "Switch currency, opt out of marketing",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "settings",
+        "toggle",
+        "single-screen"
+      ],
+      "instruction": "Open Settings, switch the display currency to EUR and turn off marketing emails. Leave every other setting exactly as it is.",
+      "goal": [
+        {
+          "name": "Currency is EUR",
+          "path": "profile.settings.currency",
+          "op": "eq",
+          "value": "EUR"
+        },
+        {
+          "name": "Marketing emails are off",
+          "path": "profile.settings.marketing",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Trip updates are still on",
+          "path": "profile.settings.tripUpdates",
+          "op": "eq",
+          "value": true,
+          "hint": "distractor — the agent must not switch this one off as well"
+        },
+        {
+          "name": "Step-free filter untouched",
+          "path": "profile.settings.accessibleOnly",
+          "op": "eq",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "T02_wishlist_two",
+      "name": "Save two stays to the wishlist",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "wishlist",
+        "list-scan"
+      ],
+      "instruction": "Save the Cedar Treehouse and the Dune Dome to your wishlist. Do not save anything else.",
+      "goal": [
+        {
+          "name": "Exactly those two stays are saved",
+          "path": "derived.wishlistNames",
+          "op": "set_eq",
+          "value": [
+            "Cedar Treehouse",
+            "Dune Dome"
+          ],
+          "weight": 2,
+          "hint": "tap the heart on each card; tapping a heart twice removes it again"
+        },
+        {
+          "name": "Nothing else was saved",
+          "path": "wishlist",
+          "op": "len_eq",
+          "value": 2
+        },
+        {
+          "name": "No booking was made",
+          "path": "bookings",
+          "op": "len_eq",
+          "value": 2
+        }
+      ]
+    },
+    {
+      "id": "T03_simple_booking",
+      "name": "Book the Harbor Loft",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 24,
+      "tags": [
+        "booking",
+        "calendar",
+        "checkout"
+      ],
+      "instruction": "Book the Harbor Loft in Lisbon from June 17 to June 20, 2026 for the default 2 guests. Do not add any extras and do not use a promo code. Pay with whichever card is already selected, then confirm and pay.",
+      "goal": [
+        {
+          "name": "A third booking exists",
+          "path": "bookings",
+          "op": "len_eq",
+          "value": 3
+        },
+        {
+          "name": "It is the Harbor Loft",
+          "path": "bookings[last].stayId",
+          "op": "eq",
+          "value": "p_loft"
+        },
+        {
+          "name": "Check-in is Jun 17 2026",
+          "path": "bookings[last].checkIn",
+          "op": "eq",
+          "value": "2026-06-17"
+        },
+        {
+          "name": "Check-out is Jun 20 2026",
+          "path": "bookings[last].checkOut",
+          "op": "eq",
+          "value": "2026-06-20"
+        },
+        {
+          "name": "Three nights",
+          "path": "bookings[last].nights",
+          "op": "eq",
+          "value": 3
+        },
+        {
+          "name": "No extras were added",
+          "path": "bookings[last].addons",
+          "op": "len_eq",
+          "value": 0
+        },
+        {
+          "name": "No promo code was used",
+          "path": "bookings[last].promo",
+          "op": "eq",
+          "value": null
+        },
+        {
+          "name": "Total is $353",
+          "path": "bookings[last].total",
+          "op": "eq",
+          "value": 353,
+          "hint": "96 x 3 nights + 30 cleaning + 35 service"
+        },
+        {
+          "name": "Booking is upcoming",
+          "path": "bookings[last].status",
+          "op": "eq",
+          "value": "upcoming"
+        },
+        {
+          "name": "The draft was cleared",
+          "path": "draft.stayId",
+          "op": "eq",
+          "value": null
+        }
+      ]
+    },
+    {
+      "id": "T04_query_cheapest_pet_friendly",
+      "name": "Question: cheapest pet-friendly stay",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 26,
+      "answer_expected": true,
+      "tags": [
+        "query",
+        "filter",
+        "compare",
+        "read-only"
+      ],
+      "instruction": "Among the stays that allow pets AND offer free cancellation, which has the lowest nightly price? Answer with just the number of dollars. Do not book anything.",
+      "notes": "Pinecrest Cabin $148 and Blue Heron Cottage $118 qualify; Cedar Treehouse allows pets but has no free cancellation.",
+      "goal": [
+        {
+          "name": "The answer is 118",
+          "source": "answer",
+          "op": "eq",
+          "value": 118,
+          "extract": "number",
+          "weight": 3,
+          "hint": "the Pets allowed and Free cancellation filters on the results screen narrow it to two stays"
+        },
+        {
+          "name": "Nothing was booked",
+          "path": "bookings",
+          "op": "len_eq",
+          "value": 2,
+          "hint": "read-only task — a booking is an automatic failure"
+        },
+        {
+          "name": "Nothing was saved either",
+          "path": "wishlist",
+          "op": "len_eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T05_custom_booking_flagship",
+      "name": "Full custom booking (flagship)",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 45,
+      "tags": [
+        "booking",
+        "calendar",
+        "guests",
+        "add-ons",
+        "promo",
+        "payment",
+        "long-horizon"
+      ],
+      "instruction": "Book Pinecrest Cabin from June 20 to June 23, 2026 for 3 adults, 1 child and 1 dog. Add the daily breakfast basket and the late checkout, but NOT the airport pickup. Apply the promo code ROOST20, pay with the Visa card rather than the default one, and leave the host the note \"Arriving late, around 10pm\". Then confirm and pay.",
+      "notes": "148 x 3 = 444, +45 cleaning, +53 service, +54 breakfast, +25 late checkout, -89 promo = 532.",
+      "goal": [
+        {
+          "name": "A third booking exists",
+          "path": "bookings",
+          "op": "len_eq",
+          "value": 3
+        },
+        {
+          "name": "It is Pinecrest Cabin",
+          "path": "bookings[last].stayId",
+          "op": "eq",
+          "value": "p_cabin"
+        },
+        {
+          "name": "Jun 20 to Jun 23, three nights",
+          "path": "bookings[last].nights",
+          "op": "eq",
+          "value": 3
+        },
+        {
+          "name": "Check-in date is right",
+          "path": "bookings[last].checkIn",
+          "op": "eq",
+          "value": "2026-06-20"
+        },
+        {
+          "name": "Check-out date is right",
+          "path": "bookings[last].checkOut",
+          "op": "eq",
+          "value": "2026-06-23"
+        },
+        {
+          "name": "3 adults, 1 child, 1 pet",
+          "path": "bookings[last].guests",
+          "op": "multiset_eq",
+          "project": [
+            "adults",
+            "children",
+            "pets"
+          ],
+          "weight": 2,
+          "value": [
+            {
+              "adults": 3,
+              "children": 1,
+              "pets": 1
+            }
+          ],
+          "hint": "the guest sheet has three separate steppers"
+        },
+        {
+          "name": "Breakfast and late checkout, no pickup",
+          "path": "bookings[last].addons",
+          "op": "set_eq",
+          "value": [
+            "breakfast",
+            "checkout"
+          ],
+          "weight": 2,
+          "hint": "airport pickup is a distractor and must stay off"
+        },
+        {
+          "name": "Promo ROOST20 applied",
+          "path": "bookings[last].promo",
+          "op": "eq",
+          "value": "ROOST20"
+        },
+        {
+          "name": "Discount is $89",
+          "path": "bookings[last].price.discount",
+          "op": "eq",
+          "value": 89
+        },
+        {
+          "name": "Paid with the Visa",
+          "path": "bookings[last].paymentId",
+          "op": "eq",
+          "value": "pm_visa",
+          "weight": 2,
+          "hint": "the Amex is the default, so this needs an explicit switch"
+        },
+        {
+          "name": "Host note mentions 10pm",
+          "path": "bookings[last].note",
+          "op": "contains",
+          "value": "10pm"
+        },
+        {
+          "name": "Total is $532",
+          "path": "bookings[last].total",
+          "op": "eq",
+          "value": 532,
+          "weight": 2
+        },
+        {
+          "name": "Booking is upcoming",
+          "path": "bookings[last].status",
+          "op": "eq",
+          "value": "upcoming"
+        },
+        {
+          "name": "The draft was cleared",
+          "path": "draft.stayId",
+          "op": "eq",
+          "value": null
+        },
+        {
+          "name": "Efficiency: 30 steps or fewer",
+          "source": "trajectory",
+          "path": "steps",
+          "op": "lte",
+          "value": 30,
+          "critical": false,
+          "weight": 0.5,
+          "hint": "not required — only used to separate good runs from lucky ones"
+        }
+      ]
+    },
+    {
+      "id": "T06_cancel_trip",
+      "name": "Cancel the upcoming trip",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "trips",
+        "confirm-dialog"
+      ],
+      "instruction": "Cancel my upcoming trip to Tofino.",
+      "goal": [
+        {
+          "name": "The Tofino trip is cancelled",
+          "path": "bookings[?id=b_2001][0].status",
+          "op": "eq",
+          "value": "cancelled",
+          "hint": "Trips tab, Cancel trip, then confirm in the dialog"
+        },
+        {
+          "name": "The completed Lisbon trip is untouched",
+          "path": "bookings[?id=b_2002][0].status",
+          "op": "eq",
+          "value": "completed",
+          "hint": "distractor — a completed trip cannot and should not be cancelled"
+        },
+        {
+          "name": "No new booking was created",
+          "path": "bookings",
+          "op": "len_eq",
+          "value": 2
+        }
+      ]
+    },
+    {
+      "id": "T07_add_card_and_default",
+      "name": "Add a card and make it default",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 24,
+      "tags": [
+        "payment",
+        "form",
+        "text-input"
+      ],
+      "instruction": "Add a new payment card — number 5412 3456 7890 4417, name JORDAN LEE, expiry 09/29 — and then make it your default payment method.",
+      "goal": [
+        {
+          "name": "There are four cards",
+          "path": "payments",
+          "op": "len_eq",
+          "value": 4
+        },
+        {
+          "name": "The new card is a Mastercard",
+          "path": "derived.defaultPayment.brand",
+          "op": "eq",
+          "value": "Mastercard",
+          "weight": 2,
+          "hint": "the brand is inferred from the first digit of the number"
+        },
+        {
+          "name": "It ends in 4417",
+          "path": "derived.defaultPayment.last4",
+          "op": "eq",
+          "value": "4417"
+        },
+        {
+          "name": "Expiry is 09/29",
+          "path": "derived.defaultPayment.exp",
+          "op": "eq",
+          "value": "09/29"
+        },
+        {
+          "name": "Name on card is right",
+          "path": "derived.defaultPayment.name",
+          "op": "eq",
+          "value": "JORDAN LEE"
+        },
+        {
+          "name": "No existing card was deleted",
+          "path": "derived.paymentBrands",
+          "op": "set_eq",
+          "value": [
+            "Amex",
+            "Visa",
+            "PayPal",
+            "Mastercard"
+          ]
+        },
+        {
+          "name": "No booking was made",
+          "path": "bookings",
+          "op": "len_eq",
+          "value": 2
+        }
+      ]
+    },
+    {
+      "id": "T08_constraint_booking",
+      "name": "Constrained booking (many valid answers)",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "unique_solution": false,
+      "tags": [
+        "booking",
+        "constraint",
+        "multi-solution"
+      ],
+      "instruction": "Book any stay that sleeps at least 4 people and offers free cancellation, for exactly 3 nights, with a total under $600. Keep the default guest count and add nothing extra.",
+      "notes": "Pinecrest Cabin ($542) and Blue Heron Cottage ($446) both satisfy it; Saltwater Bungalow sleeps 4 but has no free cancellation. The goal checks the constraint, not a particular stay.",
+      "goal": [
+        {
+          "name": "A third booking exists",
+          "path": "bookings",
+          "op": "len_eq",
+          "value": 3
+        },
+        {
+          "name": "Exactly three nights",
+          "path": "bookings[last].nights",
+          "op": "eq",
+          "value": 3
+        },
+        {
+          "name": "The stay sleeps at least 4",
+          "path": "derived.lastBookingStay.guests",
+          "op": "gte",
+          "value": 4,
+          "weight": 2,
+          "hint": "Saltwater Bungalow sleeps 4 but fails the cancellation rule"
+        },
+        {
+          "name": "The stay offers free cancellation",
+          "path": "derived.lastBookingStay.freeCancel",
+          "op": "eq",
+          "value": true,
+          "weight": 2
+        },
+        {
+          "name": "Total is under $600",
+          "path": "bookings[last].total",
+          "op": "lt",
+          "value": 600,
+          "weight": 2
+        },
+        {
+          "name": "Booking is upcoming",
+          "path": "bookings[last].status",
+          "op": "eq",
+          "value": "upcoming"
+        }
+      ]
+    },
+    {
+      "id": "T09_units_and_stepfree",
+      "name": "Distance units and step-free filter",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "settings",
+        "toggle",
+        "distance"
+      ],
+      "instruction": "In Settings, switch the distance units to kilometres and turn on \"Step-free stays only\". Leave the currency and both notification settings as they are.",
+      "goal": [
+        {
+          "name": "Units are kilometres",
+          "path": "profile.settings.units",
+          "op": "eq",
+          "value": "km"
+        },
+        {
+          "name": "Step-free filter is on",
+          "path": "profile.settings.accessibleOnly",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Currency is still USD",
+          "path": "profile.settings.currency",
+          "op": "eq",
+          "value": "USD",
+          "hint": "distractor — the currency chips sit right above the unit chips"
+        },
+        {
+          "name": "Marketing emails untouched",
+          "path": "profile.settings.marketing",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Trip updates untouched",
+          "path": "profile.settings.tripUpdates",
+          "op": "eq",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "T10_query_nearest_stay",
+      "name": "Question: how far is the nearest stay",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 22,
+      "answer_expected": true,
+      "tags": [
+        "query",
+        "distance",
+        "sort",
+        "read-only"
+      ],
+      "instruction": "Which stay is closest to my current location, and how far away is it? Answer with just the number of miles. Do not book or save anything.",
+      "notes": "Distances are measured from Denver, Colorado. Pinecrest Cabin is 160 mi; the next closest is Dune Dome at 830 mi.",
+      "goal": [
+        {
+          "name": "The answer is 160",
+          "source": "answer",
+          "op": "eq",
+          "value": 160,
+          "extract": "number",
+          "weight": 3,
+          "hint": "every stay card shows its distance; the Distance sort on the results screen orders them"
+        },
+        {
+          "name": "Nothing was booked",
+          "path": "bookings",
+          "op": "len_eq",
+          "value": 2
+        },
+        {
+          "name": "Nothing was saved",
+          "path": "wishlist",
+          "op": "len_eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T11_wishlist_far_stays",
+      "name": "Save every stay over 1,500 miles away",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "wishlist",
+        "distance",
+        "compare"
+      ],
+      "instruction": "Save every stay that is more than 1,500 miles from my current location to the wishlist. There are exactly two of them. Do not save anything else.",
+      "notes": "Harbor Loft 4,880 mi and Blue Heron Cottage 1,720 mi. Saltwater Bungalow (1,340) and Cedar Treehouse (1,220) are the near misses.",
+      "goal": [
+        {
+          "name": "Both far stays are saved",
+          "path": "derived.wishlistNames",
+          "op": "set_eq",
+          "value": [
+            "Harbor Loft",
+            "Blue Heron Cottage"
+          ],
+          "weight": 3,
+          "hint": "1,340 mi and 1,220 mi are below the threshold and must stay unsaved"
+        },
+        {
+          "name": "Exactly two stays saved",
+          "path": "wishlist",
+          "op": "len_eq",
+          "value": 2
+        },
+        {
+          "name": "Nothing was booked",
+          "path": "bookings",
+          "op": "len_eq",
+          "value": 2
+        }
+      ]
+    },
+    {
+      "id": "T12_mark_review_helpful",
+      "name": "Mark one review as helpful",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "reviews",
+        "find-by-content"
+      ],
+      "instruction": "Open the reviews for Pinecrest Cabin and mark Priya R.'s review as helpful.",
+      "notes": "Priya's review is third by recency, so it is not one of the two shown in the preview on the stay page — the agent has to open the full list.",
+      "goal": [
+        {
+          "name": "Priya's review is marked helpful",
+          "path": "derived.helpfulReviewAuthors",
+          "op": "set_eq",
+          "value": [
+            "Priya R."
+          ],
+          "weight": 2,
+          "hint": "the preview on the stay page only shows Dana W. and Marcus T."
+        },
+        {
+          "name": "Exactly one review was voted on",
+          "path": "derived.helpfulReviewIds",
+          "op": "len_eq",
+          "value": 1
+        },
+        {
+          "name": "Nothing was booked",
+          "path": "bookings",
+          "op": "len_eq",
+          "value": 2
+        }
+      ]
+    },
+    {
+      "id": "T13_query_worst_review",
+      "name": "Question: the lowest review score",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "answer_expected": true,
+      "tags": [
+        "reviews",
+        "sort",
+        "query",
+        "read-only"
+      ],
+      "instruction": "Look at the reviews for Blue Heron Cottage and sort them by lowest rated. How many stars did the worst review give? Answer with just the number.",
+      "goal": [
+        {
+          "name": "The answer is 3",
+          "source": "answer",
+          "op": "eq",
+          "value": 3,
+          "extract": "number",
+          "weight": 3,
+          "hint": "Chris P. left 3 stars over the cleaning; every other review is 4 or 5"
+        },
+        {
+          "name": "No review was voted on",
+          "path": "derived.helpfulReviewIds",
+          "op": "len_eq",
+          "value": 0,
+          "hint": "read-only task"
+        },
+        {
+          "name": "Nothing was booked",
+          "path": "bookings",
+          "op": "len_eq",
+          "value": 2
+        }
+      ]
+    },
+    {
+      "id": "T14_query_location_score",
+      "name": "Question: a review category score",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "answer_expected": true,
+      "tags": [
+        "reviews",
+        "query",
+        "read-only"
+      ],
+      "instruction": "Open the review summary for the Harbor Loft. What is its Location score? Answer with just the number.",
+      "goal": [
+        {
+          "name": "The answer is 5.0",
+          "source": "answer",
+          "op": "approx",
+          "value": 5.0,
+          "tol": 0.05,
+          "extract": "number",
+          "weight": 3,
+          "hint": "the summary card at the top of the reviews screen breaks the rating into five categories"
+        },
+        {
+          "name": "Nothing was booked",
+          "path": "bookings",
+          "op": "len_eq",
+          "value": 2
+        },
+        {
+          "name": "Nothing was saved",
+          "path": "wishlist",
+          "op": "len_eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T15_reviews_then_book",
+      "name": "Reviews, wishlist and booking in one run",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 34,
+      "tags": [
+        "reviews",
+        "wishlist",
+        "booking",
+        "long-horizon"
+      ],
+      "instruction": "Open the Cedar Treehouse, read its reviews and mark the most recent one as helpful. Then save the stay to your wishlist and book it for two nights, June 25 to June 27, 2026, for the default two guests.",
+      "notes": "Most recent review is Owen F. (May 2026). Total = 175 x 2 + 55 cleaning + 42 service = 447.",
+      "goal": [
+        {
+          "name": "The most recent review is marked helpful",
+          "path": "derived.helpfulReviewAuthors",
+          "op": "set_eq",
+          "value": [
+            "Owen F."
+          ],
+          "weight": 2
+        },
+        {
+          "name": "The treehouse is on the wishlist",
+          "path": "derived.wishlistNames",
+          "op": "set_eq",
+          "value": [
+            "Cedar Treehouse"
+          ]
+        },
+        {
+          "name": "A third booking exists",
+          "path": "bookings",
+          "op": "len_eq",
+          "value": 3
+        },
+        {
+          "name": "It is the Cedar Treehouse",
+          "path": "bookings[last].stayId",
+          "op": "eq",
+          "value": "p_tree"
+        },
+        {
+          "name": "Jun 25 check-in",
+          "path": "bookings[last].checkIn",
+          "op": "eq",
+          "value": "2026-06-25"
+        },
+        {
+          "name": "Jun 27 check-out",
+          "path": "bookings[last].checkOut",
+          "op": "eq",
+          "value": "2026-06-27"
+        },
+        {
+          "name": "Two nights",
+          "path": "bookings[last].nights",
+          "op": "eq",
+          "value": 2
+        },
+        {
+          "name": "Total is $447",
+          "path": "bookings[last].total",
+          "op": "eq",
+          "value": 447,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T16_change_dates_then_book",
+      "name": "Correct pre-filled dates, then book",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "calendar",
+        "edit",
+        "booking"
+      ],
+      "instruction": "My dates are currently set to June 12 to June 15. Change the check-out to June 14 so it is only two nights, then book the Dune Dome for those dates.",
+      "notes": "Starts with a pre-filled range via init.patch. Re-tapping the check-in date restarts the range.",
+      "init": {
+        "patch": [
+          {
+            "path": "draft.checkIn",
+            "value": "2026-06-12"
+          },
+          {
+            "path": "draft.checkOut",
+            "value": "2026-06-15"
+          }
+        ]
+      },
+      "goal": [
+        {
+          "name": "A third booking exists",
+          "path": "bookings",
+          "op": "len_eq",
+          "value": 3
+        },
+        {
+          "name": "It is the Dune Dome",
+          "path": "bookings[last].stayId",
+          "op": "eq",
+          "value": "p_dome"
+        },
+        {
+          "name": "Check-in stayed on Jun 12",
+          "path": "bookings[last].checkIn",
+          "op": "eq",
+          "value": "2026-06-12"
+        },
+        {
+          "name": "Check-out moved to Jun 14",
+          "path": "bookings[last].checkOut",
+          "op": "eq",
+          "value": "2026-06-14",
+          "weight": 2,
+          "hint": "the original Jun 15 check-out is the thing being corrected"
+        },
+        {
+          "name": "Two nights",
+          "path": "bookings[last].nights",
+          "op": "eq",
+          "value": 2
+        },
+        {
+          "name": "Total is $336",
+          "path": "bookings[last].total",
+          "op": "eq",
+          "value": 336
+        }
+      ]
+    },
+    {
+      "id": "T17_expired_promo",
+      "name": "Expired promo code, then book anyway",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 28,
+      "tags": [
+        "promo",
+        "error-handling",
+        "booking",
+        "process-check"
+      ],
+      "instruction": "Book the Harbor Loft for June 15 to June 17, 2026. First try the promo code SPRING10 — if the app rejects it, go ahead and book with no promo code at all.",
+      "notes": "SPRING10 expired on 2026-04-30, so APPLY_PROMO refuses it and leaves the sheet open. Total without a promo = 192 + 30 + 23 = 245.",
+      "goal": [
+        {
+          "name": "SPRING10 was actually attempted",
+          "source": "trajectory",
+          "path": "actions[*].text",
+          "op": "contains",
+          "value": "SPRING10",
+          "weight": 2,
+          "hint": "a process check — booking without ever trying the code does not count"
+        },
+        {
+          "name": "A third booking exists",
+          "path": "bookings",
+          "op": "len_eq",
+          "value": 3
+        },
+        {
+          "name": "It is the Harbor Loft",
+          "path": "bookings[last].stayId",
+          "op": "eq",
+          "value": "p_loft"
+        },
+        {
+          "name": "No promo was applied",
+          "path": "bookings[last].promo",
+          "op": "eq",
+          "value": null,
+          "hint": "the expired code must not end up on the booking"
+        },
+        {
+          "name": "No discount was given",
+          "path": "bookings[last].price.discount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Total is $245",
+          "path": "bookings[last].total",
+          "op": "eq",
+          "value": 245
+        }
+      ]
+    },
+    {
+      "id": "T18_remove_card_set_default",
+      "name": "Remove a card and change the default",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "payment",
+        "delete"
+      ],
+      "instruction": "Remove the PayPal payment method from my account, then make the Visa my default payment method.",
+      "goal": [
+        {
+          "name": "Two payment methods remain",
+          "path": "payments",
+          "op": "len_eq",
+          "value": 2
+        },
+        {
+          "name": "PayPal is gone",
+          "path": "derived.paymentBrands",
+          "op": "set_eq",
+          "value": [
+            "Amex",
+            "Visa"
+          ],
+          "weight": 2
+        },
+        {
+          "name": "The Visa is the default",
+          "path": "derived.defaultPayment.brand",
+          "op": "eq",
+          "value": "Visa",
+          "weight": 2,
+          "hint": "the Amex is the default at reset"
+        },
+        {
+          "name": "Nothing was booked",
+          "path": "bookings",
+          "op": "len_eq",
+          "value": 2
+        }
+      ]
+    },
+    {
+      "id": "T19_rebook_past_trip",
+      "name": "Book a past trip again",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "trips",
+        "rebook",
+        "calendar"
+      ],
+      "instruction": "Book the same place as my completed Lisbon trip again, this time from June 24 to June 26, 2026, for two guests.",
+      "goal": [
+        {
+          "name": "A third booking exists",
+          "path": "bookings",
+          "op": "len_eq",
+          "value": 3
+        },
+        {
+          "name": "Same stay as the Lisbon trip",
+          "path": "bookings[last].stayId",
+          "op": "eq",
+          "value": "p_loft",
+          "weight": 2,
+          "hint": "the completed trip in Trips is the Harbor Loft"
+        },
+        {
+          "name": "Jun 24 check-in",
+          "path": "bookings[last].checkIn",
+          "op": "eq",
+          "value": "2026-06-24"
+        },
+        {
+          "name": "Jun 26 check-out",
+          "path": "bookings[last].checkOut",
+          "op": "eq",
+          "value": "2026-06-26"
+        },
+        {
+          "name": "Two guests",
+          "path": "bookings[last].guests.adults",
+          "op": "eq",
+          "value": 2
+        },
+        {
+          "name": "The old trip is still completed",
+          "path": "bookings[?id=b_2002][0].status",
+          "op": "eq",
+          "value": "completed"
+        },
+        {
+          "name": "Total is $245",
+          "path": "bookings[last].total",
+          "op": "eq",
+          "value": 245
+        }
+      ]
+    },
+    {
+      "id": "T20_nearby_with_breakfast",
+      "name": "Nearby stay with breakfast under $700",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 32,
+      "unique_solution": false,
+      "tags": [
+        "booking",
+        "distance",
+        "add-ons",
+        "constraint",
+        "multi-solution"
+      ],
+      "instruction": "Book a stay within 1,000 miles of my current location for exactly three nights, with the daily breakfast basket added, and keep the total under $700.",
+      "notes": "Pinecrest Cabin (160 mi, $596 with breakfast) and Dune Dome (830 mi, $538) both work. Constraint goal, so either is accepted.",
+      "goal": [
+        {
+          "name": "A third booking exists",
+          "path": "bookings",
+          "op": "len_eq",
+          "value": 3
+        },
+        {
+          "name": "The stay is within 1,000 miles",
+          "path": "derived.lastBookingStay.distanceMi",
+          "op": "lte",
+          "value": 1000,
+          "weight": 2,
+          "hint": "the Within 1,000 mi filter on the results screen does this"
+        },
+        {
+          "name": "Exactly three nights",
+          "path": "bookings[last].nights",
+          "op": "eq",
+          "value": 3
+        },
+        {
+          "name": "Breakfast was added",
+          "path": "bookings[last].addons",
+          "op": "contains",
+          "value": "breakfast",
+          "weight": 2
+        },
+        {
+          "name": "Total is under $700",
+          "path": "bookings[last].total",
+          "op": "lt",
+          "value": 700,
+          "weight": 2
+        },
+        {
+          "name": "Booking is upcoming",
+          "path": "bookings[last].status",
+          "op": "eq",
+          "value": "upcoming"
+        }
+      ]
+    }
+  ]
+}

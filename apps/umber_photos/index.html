@@ -1,0 +1,1597 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Umber (mocked GUI env)</title>
+<!--
+  ============================================================================
+  Umber — a single-file H5 photo library for agent research.
+
+  Same two-block contract as every environment here: script#engine is a pure,
+  DOM-free state machine on globalThis.GUI_ENGINE; script#ui renders its screen
+  tree and exposes window.__ENV__.
+
+  What is new: an edit is a thing that happened, not a value that was set. Each
+  photo carries an ordered stack of adjustments, and what you see is that stack
+  folded down — three taps of exposure are three entries, so undo takes one of
+  them back rather than everything. Reset empties the stack and the original is
+  still there underneath, because nothing was ever written over. The stack can
+  also be copied whole from one photo to another, which is the fastest way to
+  make twelve holiday pictures look like they belong together.
+
+  Every picture is generated from its own palette and id — there is not one
+  image file in this environment — and the fold is applied to it as real CSS,
+  so an agent looking at pixels sees the edit it just made.
+  ============================================================================
+-->
+<style>
+:root{
+  --outer:#05070a;
+  --bezel:#000000;
+  --bg:#101012;
+  --card:#1a1a1d;
+  --card2:#232327;
+  --line:#26262b;
+  --line2:#33333a;
+  --press:#232327;
+  --chev:#4a4a52;
+  --ink:#f4f2ee;
+  --ink2:#a5a099;
+  --muted:#736f6a;
+  --accent:#e0a35c;
+  --accent-d:#c2853f;
+  --accent-s:#2b2116;
+  --on-accent:#17130d;
+  --good:#6fce9a;
+  --good-s:#132a1e;
+  --warn:#e7c168;
+  --warn-s:#2c2513;
+  --bad:#e8776f;
+  --bad-s:#2e1a19;
+  --bad-line:#4a2a28;
+  --btn:#232327;
+  --btn-off:#26262b;
+  --off:#3a3a42;
+  --appbar:#101012;
+  --appbar-ink:#f2f5f9;
+  --appbar-line:transparent;
+  --tabbar:#141416;
+  --scrim:rgba(0,0,0,.7);
+  --toast:#f4f2ee;
+  --toast-ink:#17130d;
+  --hero:linear-gradient(140deg,#2a2118,#1a1a1d);
+  --hero-line:#26262b;
+  --hero-ink:#f4f2ee;
+  --disp:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --r:18px; --r2:12px;
+  --shadow:0 1px 2px rgba(16,18,26,.05),0 10px 26px rgba(16,18,26,.07);
+  --ui:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;height:100%}
+body{background:var(--outer);color:var(--ink);font:14px/1.55 var(--ui);
+  display:flex;align-items:center;justify-content:center;overflow:hidden}
+
+#device{position:relative;width:390px;height:844px;background:var(--bezel);border-radius:46px;padding:5px;
+  box-shadow:0 30px 70px rgba(0,0,0,.34);flex:0 0 auto}
+#screen{position:relative;width:100%;height:100%;background:var(--bg);border-radius:41px;
+  overflow:hidden;display:flex;flex-direction:column}
+#notch{position:absolute;top:5px;left:50%;transform:translateX(-50%);width:118px;height:30px;
+  background:var(--bezel);border-radius:0 0 18px 18px;z-index:60}
+body.bare{background:var(--bg)}
+body.bare #device{width:390px;height:844px;padding:0;border-radius:0;box-shadow:none;background:var(--bg)}
+body.bare #screen{border-radius:0}
+body.bare #notch{display:none}
+body.bare .n-sheet{animation:none}
+
+.statusbar{height:44px;flex:0 0 44px;display:flex;align-items:flex-end;justify-content:space-between;
+  padding:0 22px 6px;font-size:13px;font-weight:600;z-index:50;color:var(--ink)}
+.statusbar .sb-r{display:flex;gap:5px;align-items:center}
+.sb-bat{width:22px;height:11px;border:1.3px solid currentColor;border-radius:3px;position:relative;opacity:.9}
+.sb-bat:after{content:"";position:absolute;right:-3px;top:3px;width:2px;height:5px;background:currentColor;border-radius:0 1px 1px 0}
+.sb-bat i{position:absolute;left:1.3px;top:1.3px;bottom:1.3px;width:78%;background:currentColor;border-radius:1px}
+
+#app{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;position:relative}
+
+.n-appbar{flex:0 0 auto;min-height:52px;display:flex;align-items:center;gap:8px;padding:6px 12px;
+  background:var(--appbar);color:var(--appbar-ink);z-index:20;border-bottom:1px solid var(--appbar-line)}
+.n-appbar .ab-title{flex:1 1 auto;text-align:center;font:650 17px/1.3 var(--disp);letter-spacing:-.2px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.n-appbar .ab-side{flex:0 0 auto;min-width:56px;display:flex;align-items:center;gap:2px}
+.n-appbar .ab-side.right{justify-content:flex-end}
+.n-appbar .iconbtn{color:var(--appbar-ink);opacity:.85}
+.iconbtn{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  color:var(--ink2);cursor:pointer}
+.iconbtn:active{background:var(--press)}
+
+.n-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding-bottom:10px}
+.n-scroll::-webkit-scrollbar{width:0}
+
+.n-text{padding:2px 18px;color:var(--ink2)}
+.n-text.h1{font:700 26px/1.18 var(--disp);color:var(--ink);padding:10px 18px 6px;letter-spacing:-.6px}
+.n-text.h2{font:650 18px/1.3 var(--disp);color:var(--ink);padding:12px 18px 2px}
+.n-text.body{font-size:13.5px;padding:5px 18px;line-height:1.7}
+.n-text.muted{font-size:12.5px;color:var(--muted);padding:6px 18px;line-height:1.6}
+.n-text.empty{padding:14px 18px 40px;text-align:center;color:var(--muted);font-size:13.5px}
+.n-sec{padding:18px 18px 6px;font:700 11.5px/1 var(--ui);color:var(--muted);letter-spacing:1.3px;
+  text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.n-space{height:16px}
+
+.n-card{background:var(--card);border-radius:var(--r);margin:9px 16px;overflow:hidden;border:1px solid var(--line)}
+.n-card.flush{padding:0}
+.n-card.pad{padding:14px 16px}
+.n-card.tap{cursor:pointer}
+.n-card.tap:active{background:var(--press)}
+
+.n-row{display:flex;align-items:center;gap:13px;padding:12px 16px;border-bottom:1px solid var(--line);min-height:54px}
+.n-row:last-child{border-bottom:none}
+.n-row.tap{cursor:pointer}
+.n-row.tap:active{background:var(--press)}
+.n-row .r-lead{flex:0 0 auto;width:26px;color:var(--ink2);display:flex;align-items:center;justify-content:center}
+.n-row .r-main{flex:1 1 auto;min-width:0}
+.n-row .r-label{font-size:14.5px}
+.n-row .r-label.strike{text-decoration:line-through;color:var(--muted)}
+.n-row .r-sub{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.5}
+.n-row .r-value{flex:0 0 auto;font-size:14px;color:var(--ink2);text-align:right;font-variant-numeric:tabular-nums}
+.n-row .r-value.strong{color:var(--ink);font-weight:700}
+.n-row .r-value.acc{color:var(--accent);font-weight:700}
+.n-row .r-value.good{color:var(--good);font-weight:700}
+.n-row .r-value.warn{color:var(--warn);font-weight:700}
+.n-row .r-value.bad{color:var(--bad);font-weight:700}
+.n-row .r-arrow{flex:0 0 auto;color:var(--chev);display:flex}
+
+.n-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:47px;padding:0 20px;
+  border-radius:13px;font:650 15px/1 var(--ui);background:var(--btn);color:var(--ink);
+  border:none;cursor:pointer;user-select:none}
+.n-btn:active{filter:brightness(.97)}
+.n-btn.primary{background:var(--accent);color:var(--on-accent)}
+.n-btn.primary.off{background:var(--btn-off);color:var(--muted);cursor:not-allowed}
+.n-btn.ghost{background:transparent;border:1px solid var(--line2);height:37px;font-size:13px;padding:0 14px;color:var(--ink2)}
+.n-btn.danger{background:transparent;border:1px solid var(--bad-line);color:var(--bad);height:37px;font-size:13px;padding:0 14px}
+.n-btn.block{display:flex;width:100%}
+.n-btnrow{display:flex;gap:10px;padding:12px 16px;justify-content:flex-end;align-items:center;flex-wrap:wrap}
+
+.n-chips{display:flex;gap:8px;padding:8px 16px;overflow-x:auto}
+.n-chips::-webkit-scrollbar{height:0}
+.n-chip{flex:0 0 auto;height:34px;padding:0 14px;border-radius:11px;background:var(--card);
+  border:1px solid var(--line2);display:flex;align-items:center;font-size:13px;
+  color:var(--ink2);cursor:pointer;white-space:nowrap;font-weight:600}
+.n-chip.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+
+.n-input{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line);background:var(--card)}
+.n-input .i-label{flex:0 0 78px;font-size:13px;color:var(--muted)}
+.n-input input{flex:1 1 auto;border:none;outline:none;background:transparent;font-size:14.5px;
+  font-family:inherit;color:var(--ink);min-width:0}
+.n-input input::placeholder{color:var(--muted)}
+.n-switch{flex:0 0 auto;width:46px;height:27px;border-radius:14px;background:var(--off);position:relative;cursor:pointer;transition:background .16s}
+.n-switch.on{background:var(--accent)}
+.n-switch i{position:absolute;top:2.5px;left:2.5px;width:22px;height:22px;border-radius:50%;background:#fff;
+  transition:transform .16s;box-shadow:0 1px 3px rgba(0,0,0,.22)}
+.n-switch.on i{transform:translateX(19px)}
+.n-check{flex:0 0 auto;width:23px;height:23px;border-radius:7px;border:1.8px solid var(--off);position:relative;background:var(--card)}
+.n-check.on{border-color:var(--accent);background:var(--accent)}
+.n-check.on:after{content:"";position:absolute;left:7.5px;top:4px;width:5px;height:10px;
+  border:2px solid var(--on-accent);border-top:0;border-left:0;transform:rotate(42deg)}
+.n-radio{flex:0 0 auto;width:22px;height:22px;border-radius:50%;border:1.8px solid var(--off);position:relative}
+.n-radio.on{border-color:var(--accent);background:var(--accent)}
+.n-radio.on:after{content:"";position:absolute;left:7px;top:4px;width:5px;height:9px;
+  border:2px solid var(--on-accent);border-top:0;border-left:0;transform:rotate(42deg)}
+
+.tag{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11px;
+  font-weight:700;background:var(--btn);color:var(--ink2)}
+.tag.acc{background:var(--accent-s);color:var(--accent)}
+.tag.good{background:var(--good-s);color:var(--good)}
+.tag.warn{background:var(--warn-s);color:var(--warn)}
+.tag.bad{background:var(--bad-s);color:var(--bad)}
+
+.n-tabbar{flex:0 0 auto;height:58px;background:var(--tabbar);border-top:1px solid var(--line);display:flex;z-index:30}
+.n-tabbar .tb{flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  color:var(--muted);font-size:10.5px;cursor:pointer;font-weight:600}
+.n-tabbar .tb i{display:flex}
+.n-tabbar .tb.on{color:var(--accent)}
+
+.n-mask{position:absolute;inset:0;background:var(--scrim);z-index:70;display:flex;align-items:flex-end}
+.n-sheet{width:100%;max-height:80%;background:var(--card);border-radius:22px 22px 0 0;display:flex;
+  flex-direction:column;overflow:hidden;animation:up .18s ease-out}
+@keyframes up{from{transform:translateY(24px)}to{transform:none}}
+.n-sheet .sh-hd{padding:16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
+.n-sheet .sh-hd .t{font:650 17px/1.2 var(--disp)}
+.n-sheet .sh-bd{flex:1 1 auto;overflow-y:auto;min-height:0}
+.n-sheet .sh-bd::-webkit-scrollbar{width:0}
+.n-toast{position:absolute;left:50%;bottom:118px;transform:translateX(-50%);background:var(--toast);
+  color:var(--toast-ink);padding:11px 18px;border-radius:11px;font-size:13px;z-index:90;max-width:84%;text-align:center}
+.dialog{margin:auto;width:82%;background:var(--card);border-radius:18px;overflow:hidden;border:1px solid var(--line)}
+
+.stats{display:flex;gap:9px;padding:4px 16px}
+.stat{flex:1 1 0;background:var(--card);border:1px solid var(--line);border-radius:var(--r2);padding:13px 12px}
+.stat.tap{cursor:pointer}
+.stat .st-n{font:800 19px/1.1 var(--disp);letter-spacing:-.5px;font-variant-numeric:tabular-nums}
+.stat .st-l{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.4}
+.stat.acc .st-n{color:var(--accent)}
+
+.hero{margin:8px 16px 4px;padding:18px;border-radius:var(--r);background:var(--hero);
+  border:1px solid var(--hero-line);color:var(--hero-ink)}
+.hero.tap{cursor:pointer}
+.hero .he-k{font-size:11px;letter-spacing:1.3px;text-transform:uppercase;font-weight:800;opacity:.85}
+.hero .he-t{font:800 25px/1.16 var(--disp);margin-top:9px;letter-spacing:-.7px}
+.hero .he-s{font-size:13px;margin-top:8px;line-height:1.6;opacity:.9}
+
+
+.grid{display:grid;gap:4px;padding:4px 6px}
+.grid.g2{grid-template-columns:repeat(2,1fr)}
+.grid.g3{grid-template-columns:repeat(3,1fr)}
+.cell{position:relative;border-radius:8px;overflow:hidden;cursor:pointer;background:#000;aspect-ratio:1/1}
+.cell svg{display:block;width:100%;height:100%}
+.cell .cl-tag{position:absolute;left:6px;bottom:6px;font-size:9.5px;font-weight:800;letter-spacing:.4px;
+  color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7)}
+.cell .cl-fav{position:absolute;right:6px;top:6px;color:#fff;filter:drop-shadow(0 1px 3px rgba(0,0,0,.6))}
+.cell .cl-ed{position:absolute;left:6px;top:6px;font-size:9px;font-weight:800;letter-spacing:.6px;
+  background:rgba(224,163,92,.9);color:#17130d;border-radius:4px;padding:2px 5px}
+.cell .cl-sel{position:absolute;inset:0;border:3px solid var(--accent);border-radius:8px;
+  background:rgba(224,163,92,.16)}
+.cell .cl-chk{position:absolute;right:6px;bottom:6px;width:20px;height:20px;border-radius:50%;
+  border:2px solid #fff;background:rgba(0,0,0,.35)}
+.cell .cl-chk.on{background:var(--accent);border-color:var(--accent)}
+
+.viewer{background:#000;display:flex;align-items:center;justify-content:center;padding:0;margin:0}
+.viewer svg{display:block;width:100%;height:100%}
+.frame{margin:0 auto;overflow:hidden;background:#000;position:relative}
+.frame.sq{aspect-ratio:1/1}
+.frame.ph{aspect-ratio:4/5}
+.frame.wd{aspect-ratio:16/9}
+.frame.or{aspect-ratio:3/2}
+
+.strip{display:flex;gap:9px;padding:10px 14px;overflow-x:auto}
+.strip::-webkit-scrollbar{height:0}
+.strip .st-i{flex:0 0 auto;width:64px;cursor:pointer;text-align:center}
+.strip .st-i .st-th{width:64px;height:64px;border-radius:9px;overflow:hidden;border:2px solid transparent;background:#000}
+.strip .st-i.on .st-th{border-color:var(--accent)}
+.strip .st-i .st-l{font-size:10.5px;color:var(--muted);margin-top:6px;font-weight:600}
+.strip .st-i.on .st-l{color:var(--accent)}
+
+.slider{display:flex;align-items:center;gap:11px;padding:9px 16px}
+.slider .sl-l{flex:0 0 74px;font-size:12px;color:var(--ink2);font-weight:600}
+.slider .sl-t{flex:1 1 auto;height:6px;border-radius:3px;background:var(--card2);position:relative}
+.slider .sl-t i{position:absolute;top:-5px;width:16px;height:16px;border-radius:50%;background:var(--accent);
+  transform:translateX(-8px)}
+.slider .sl-t b{position:absolute;top:2px;bottom:2px;width:1px;background:var(--line2);left:50%}
+.slider .sl-v{flex:0 0 34px;text-align:right;font:700 12.5px/1 var(--mono);font-variant-numeric:tabular-nums}
+.slider .sl-b{width:30px;height:30px;border-radius:9px;background:var(--card2);color:var(--ink);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto}
+.slider .sl-b:active{background:#2e2e34}
+
+.stack{margin:9px 16px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.stack .sk-i{display:flex;gap:10px;align-items:center;padding:9px 14px;border-bottom:1px solid var(--line);
+  font-size:12.5px}
+.stack .sk-i:last-child{border-bottom:none}
+.stack .sk-n{flex:0 0 20px;height:20px;border-radius:6px;background:var(--card2);color:var(--muted);
+  display:flex;align-items:center;justify-content:center;font:700 10.5px/1 var(--mono)}
+.stack .sk-t{flex:1 1 auto}
+.stack .sk-i.last .sk-n{background:var(--accent-s);color:var(--accent)}
+
+.bulkbar{position:absolute;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line2);
+  padding:10px 12px 14px;display:flex;gap:8px;z-index:40}
+
+</style>
+</head>
+<body>
+<div id="device">
+  <div id="notch"></div>
+  <div id="screen">
+    <div class="statusbar" id="sb">
+      <div id="sb-clock">09:41</div>
+      <div class="sb-r">
+        <svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="4.6" y="5.5" width="3" height="6.5" rx="1"/><rect x="9.2" y="3" width="3" height="9" rx="1"/><rect x="13.8" y="0" width="3" height="12" rx="1"/></svg>
+        <svg width="15" height="12" viewBox="0 0 15 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 4.2a9 9 0 0 1 13 0"/><path d="M3.4 6.9a5.6 5.6 0 0 1 8.2 0"/><circle cx="7.5" cy="10" r=".9" fill="currentColor" stroke="none"/></svg>
+        <span class="sb-bat"><i></i></span>
+      </div>
+    </div>
+    <div id="app"></div>
+  </div>
+</div>
+<div id="hud" class="off"></div>
+
+<script id="engine">
+/* ===========================================================================
+ * ENGINE — pure, deterministic, DOM-free.
+ * A photo is its original plus an ordered stack of adjustments. What you
+ * see is the fold of that stack; undo pops one entry; reset empties it.
+ * ======================================================================== */
+(function(root){
+'use strict';
+
+var ENV_ID  = 'umber_photos';
+var VERSION = '1.0.0';
+
+/* ------------------------------------------------------------- utilities */
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+function pad2(n){ return (n < 10 ? '0' : '') + n; }
+function hhmm(m){ m = ((m % 1440) + 1440) % 1440; return pad2(Math.floor(m/60)) + ':' + pad2(m%60); }
+function sum(a){ var s = 0; for (var i=0;i<a.length;i++) s += a[i]; return s; }
+function clamp(v, lo, hi){ return v < lo ? lo : (v > hi ? hi : v); }
+function lcg(seed){ var s=(seed>>>0)||1; return function(){ s=(s*1664525+1013904223)>>>0; return s/4294967296; }; }
+function shuffled(list, seed){
+  if (!seed) return list.slice();
+  var r = lcg(seed), a = list.slice();
+  for (var i=a.length-1;i>0;i--){ var j = Math.floor(r()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; }
+  return a;
+}
+function money(p, sym){
+  var neg = p < 0; p = Math.abs(p);
+  return (neg ? '-' : '') + (sym === undefined ? '\u00a3' : sym) +
+         (Math.floor(p/100)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '.' + pad2(p%100);
+}
+function getPath(o, path){
+  var cur = o, parts = String(path).split('.');
+  for (var i=0;i<parts.length;i++){
+    var k = parts[i], m = k.match(/^(.*?)\[(\d+)\]$/);
+    if (m){ cur = cur ? cur[m[1]] : undefined; cur = cur ? cur[+m[2]] : undefined; }
+    else cur = cur ? cur[k] : undefined;
+    if (cur === undefined) return undefined;
+  }
+  return cur;
+}
+function setPath(o, path, value){
+  var parts = String(path).split('.'), cur = o;
+  for (var i=0;i<parts.length-1;i++){
+    var k = parts[i], m = k.match(/^(.*?)\[(\d+)\]$/);
+    cur = m ? cur[m[1]][+m[2]] : (cur[k] = cur[k] || {});
+  }
+  var lastK = parts[parts.length-1], lm = lastK.match(/^(.*?)\[(\d+)\]$/);
+  if (lm) cur[lm[1]][+lm[2]] = value; else cur[lastK] = value;
+  return o;
+}
+
+/* ------------------------------------------- screen-tree node constructors */
+function N(t, o){ o = o || {}; o.t = t; return o; }
+function txt(s, cls){ return N('text', {text:s, cls:cls || ''}); }
+function row(id, text, o){
+  o = o || {}; o.id = id; o.text = text;
+  if (o.arrow === undefined) o.arrow = !!o.act;
+  return N('row', o);
+}
+function btn(id, text, act, cls, disabled){
+  return N('btn', {id:id, text:text, act:act, cls:cls || '', disabled:!!disabled});
+}
+function iconbtn(id, ic, act, cls){ return N('iconbtn', {id:id, icon:ic, act:act, cls:cls || ''}); }
+function appbar(title, o){ o = o || {}; o.title = title; return N('appbar', o); }
+function stepper(id, value, minus, plus){
+  return N('stepper', {id:id, value:value, minusId:id + '_dec', plusId:id + '_inc',
+                       minus:minus, plus:plus});
+}
+function sheet(id, title, kids){
+  return N('sheet', {id:id, title:title, closeId:id + '_close', close:{type:'CLOSE_SHEET'}, c:kids});
+}
+function route(st){ return st.ui.stack[st.ui.stack.length - 1]; }
+function push(st, name, params){ st.ui.stack.push({name:name, params:params || {}}); st.ui.sheet = null; }
+function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
+function toast(st, t){ st.ui.toast = t; }
+
+/* ------------------------------------------------------------- the world */
+var ADJUSTS = [
+  {id:'exposure',   label:'Exposure',   lo:-5, hi:5},
+  {id:'contrast',   label:'Contrast',   lo:-5, hi:5},
+  {id:'warmth',     label:'Warmth',     lo:-5, hi:5},
+  {id:'saturation', label:'Saturation', lo:-5, hi:5}
+];
+var FILTERS = [
+  {id:'none',  label:'Original'},
+  {id:'noir',  label:'Noir'},
+  {id:'vivid', label:'Vivid'},
+  {id:'fade',  label:'Fade'},
+  {id:'sepia', label:'Sepia'}
+];
+var CROPS = [
+  {id:'original', label:'As shot', cls:'or'},
+  {id:'square',   label:'Square',  cls:'sq'},
+  {id:'portrait', label:'4:5',     cls:'ph'},
+  {id:'wide',     label:'16:9',    cls:'wd'}
+];
+function adjustOf(id){ for (var i=0;i<ADJUSTS.length;i++) if (ADJUSTS[i].id===id) return ADJUSTS[i]; return null; }
+function filterOf(id){ for (var i=0;i<FILTERS.length;i++) if (FILTERS[i].id===id) return FILTERS[i]; return FILTERS[0]; }
+function cropOf(id){ for (var i=0;i<CROPS.length;i++) if (CROPS[i].id===id) return CROPS[i]; return CROPS[0]; }
+
+/* the fold: an ordered stack of things that happened, read down into one look */
+function foldEdits(edits){
+  var f = {exposure:0, contrast:0, warmth:0, saturation:0, filter:'none', crop:'original'};
+  (edits || []).forEach(function(e){
+    if (e.op === 'filter') f.filter = e.v;
+    else if (e.op === 'crop') f.crop = e.v;
+    else f[e.op] = clamp(f[e.op] + e.v, -5, 5);
+  });
+  return f;
+}
+function editLabel(e){
+  if (e.op === 'filter') return 'Filter · ' + filterOf(e.v).label;
+  if (e.op === 'crop')   return 'Crop · ' + cropOf(e.v).label;
+  return adjustOf(e.op).label + ' ' + (e.v > 0 ? '+' : '') + e.v;
+}
+function isEdited(p){ return (p.edits || []).length > 0; }
+function editCount(p){ return (p.edits || []).length; }
+
+var ALBUMS0 = [
+  {id:'al_coast', name:'Coast, April',  cover:'ph_03'},
+  {id:'al_city',  name:'City at night', cover:'ph_06'},
+  {id:'al_home',  name:'Around home',   cover:'ph_09'}
+];
+function albumOf(st, id){ for (var i=0;i<st.albums.length;i++) if (st.albums[i].id === id) return st.albums[i]; return null; }
+
+function PH(id, title, place, date, kind, palette, album, fav, edits){
+  return {id:id, title:title, place:place, date:date, kind:kind, palette:palette,
+          album:album, fav:!!fav, edits:edits || [], deleted:false};
+}
+var PHOTOS0 = [
+  PH('ph_01','Long tide out','Wells beach','2 April','sea',   ['#2f4858','#86a5ad','#e8dcc4'], 'al_coast', true),
+  PH('ph_02','Groynes','Wells beach','2 April','sea',         ['#22333b','#5f7d80','#d9cbb2'], 'al_coast', false,
+     [{op:'contrast', v:1}]),
+  PH('ph_03','Salt marsh','Stiffkey','3 April','land',        ['#3d4a2a','#8a9b5e','#ded6b8'], 'al_coast', true),
+  PH('ph_04','Beach huts','Wells beach','3 April','land',     ['#b5563f','#e2a05c','#f0e4cd'], 'al_coast', false),
+  PH('ph_05','Rain on the window','Home','9 April','still',   ['#3a3f4b','#6f7787','#c9ccd4'], null, false),
+  PH('ph_06','Bridge, blue hour','Quay Street','12 April','city',['#1b2340','#3f5a8a','#e0b168'], 'al_city', true,
+     [{op:'exposure', v:-1}, {op:'filter', v:'vivid'}]),
+  PH('ph_07','Neon, wet road','Quay Street','12 April','city',['#221826','#7a2f52','#e5654f'], 'al_city', false),
+  PH('ph_08','Late tram','Millgate','12 April','city',        ['#141a24','#31435c','#d3a24a'], 'al_city', false),
+  PH('ph_09','Kitchen table','Home','20 April','still',       ['#5a4632','#a98a5e','#eadfc9'], 'al_home', false),
+  PH('ph_10','The cat, asleep','Home','21 April','still',     ['#4a3b32','#9a7f68','#e6d8c6'], 'al_home', true),
+  PH('ph_11','Washing line','Home','21 April','still',        ['#4b5a52','#93a89b','#e9e6dc'], 'al_home', false),
+  PH('ph_12','Frost on the gate','Fenwold','28 April','land', ['#42505c','#93a4b3','#f0f2f4'], null, false)
+];
+function photoOf(st, id){ for (var i=0;i<st.photos.length;i++) if (st.photos[i].id === id) return st.photos[i]; return null; }
+function livePhotos(st){ return st.photos.filter(function(p){ return !p.deleted; }); }
+function binned(st){ return st.photos.filter(function(p){ return p.deleted; }); }
+function albumPhotos(st, id){ return livePhotos(st).filter(function(p){ return p.album === id; }); }
+function favourites(st){ return livePhotos(st).filter(function(p){ return p.fav; }); }
+function editedPhotos(st){ return livePhotos(st).filter(isEdited); }
+function visibleLibrary(st){
+  var f = st.ui.filter;
+  var list = livePhotos(st);
+  if (f === 'fav') list = list.filter(function(p){ return p.fav; });
+  if (f === 'edited') list = list.filter(isEdited);
+  if (f === 'unsorted') list = list.filter(function(p){ return !p.album; });
+  return list;
+}
+function selCount(st){ return st.ui.sel.length; }
+function isSel(st, id){ return st.ui.sel.indexOf(id) >= 0; }
+
+/* =========================================================== state */
+function createInitialState(seed){
+  seed = seed || 0;
+  return {
+    meta:{env:ENV_ID, version:VERSION, seed:seed, steps:0, finished:false, answer:null},
+    /* the seed permutes the order the roll is laid out in — same photos */
+    photos:shuffled(clone(PHOTOS0), seed),
+    albums:clone(ALBUMS0),
+    clipboard:null,
+    ui:{tab:'library', stack:[{name:'library', params:{}}], sheet:null, confirm:null, inputs:{},
+        toast:null, filter:'all', sel:[], selecting:false, compare:false, tool:'exposure'},
+    settings:{cols:2, showEdited:true, autoEnhance:false, keepOriginals:true}
+  };
+}
+var SELECT = {
+  foldEdits:foldEdits, editLabel:editLabel, isEdited:isEdited, editCount:editCount,
+  photoOf:photoOf, livePhotos:livePhotos, binned:binned, albumPhotos:albumPhotos,
+  favourites:favourites, editedPhotos:editedPhotos, visibleLibrary:visibleLibrary,
+  albumOf:albumOf, filterOf:filterOf, cropOf:cropOf, adjustOf:adjustOf, route:route,
+  selCount:selCount, isSel:isSel
+};
+
+/* =========================================================== reducer */
+function reduce(prev, action){
+  var st = clone(prev), A = action || {};
+  st.ui.toast = null;
+  st.meta.steps += 1;
+
+  switch (A.type) {
+
+  case 'NOOP': break;
+  case 'FINISH': st.meta.finished = true; st.meta.answer = A.answer === undefined ? null : A.answer; break;
+
+  case 'NAV': push(st, A.to, A.params); break;
+  case 'BACK':
+    if (st.ui.sheet) st.ui.sheet = null;
+    else if (st.ui.confirm) st.ui.confirm = null;
+    else if (st.ui.selecting) { st.ui.selecting = false; st.ui.sel = []; }
+    else pop(st);
+    break;
+  case 'TAB': {
+    var roots = {library:'library', albums:'albums', favourites:'favourites', bin:'bin'};
+    st.ui.tab = A.tab; st.ui.sheet = null; st.ui.confirm = null;
+    st.ui.selecting = false; st.ui.sel = [];
+    st.ui.stack = [{name:roots[A.tab] || 'library', params:{}}];
+    break;
+  }
+  case 'HOME':
+    st.ui.tab = 'library'; st.ui.stack = [{name:'library', params:{}}];
+    st.ui.sheet = null; st.ui.confirm = null; st.ui.selecting = false; st.ui.sel = [];
+    break;
+  case 'SET_INPUT': st.ui.inputs[A.field] = A.value; break;
+  case 'OPEN_SHEET': st.ui.sheet = {type:A.sheet, id:A.id || null}; break;
+  case 'CLOSE_SHEET': st.ui.sheet = null; break;
+  case 'CONFIRM_NO': st.ui.confirm = null; break;
+  case 'CONFIRM_YES': {
+    var yes = st.ui.confirm && st.ui.confirm.yes; st.ui.confirm = null;
+    if (yes) { var keep = st.meta.steps; var out = reduce(st, yes); out.meta.steps = keep; return out; }
+    break;
+  }
+
+  /* ---- browsing ---- */
+  case 'FILTER': st.ui.filter = A.id; break;
+  case 'GO_UNSORTED':
+    st.ui.filter = 'unsorted'; st.ui.tab = 'library';
+    st.ui.stack = [{name:'library', params:{}}];
+    break;
+  case 'OPEN_PHOTO':
+    if (st.ui.selecting) { return reduce(prev, {type:'TOGGLE_SEL', id:A.id}); }
+    push(st, 'photo', {id:A.id});
+    break;
+  case 'START_SELECT': st.ui.selecting = true; st.ui.sel = []; break;
+  case 'STOP_SELECT': st.ui.selecting = false; st.ui.sel = []; break;
+  case 'TOGGLE_SEL': {
+    if (isSel(st, A.id)) st.ui.sel = st.ui.sel.filter(function(x){ return x !== A.id; });
+    else st.ui.sel = st.ui.sel.concat([A.id]);
+    break;
+  }
+  case 'SELECT_ALL': st.ui.sel = visibleLibrary(st).map(function(p){ return p.id; }); break;
+
+  /* ---- the edit stack ---- */
+  case 'TOOL': st.ui.tool = A.id; break;
+  case 'ADJUST': {
+    var p = photoOf(st, A.id);
+    if (!p) break;
+    var f = foldEdits(p.edits);
+    if (f[A.op] + A.v > 5 || f[A.op] + A.v < -5) {
+      toast(st, adjustOf(A.op).label + ' is as far as it goes');
+      break;
+    }
+    p.edits.push({op:A.op, v:A.v});
+    break;
+  }
+  case 'SET_FILTER_EDIT': {
+    var p2 = photoOf(st, A.id);
+    if (!p2) break;
+    if (foldEdits(p2.edits).filter === A.v) { toast(st, 'That filter is already on'); break; }
+    p2.edits.push({op:'filter', v:A.v});
+    break;
+  }
+  case 'SET_CROP': {
+    var p3 = photoOf(st, A.id);
+    if (!p3) break;
+    if (foldEdits(p3.edits).crop === A.v) { toast(st, 'It is already cropped that way'); break; }
+    p3.edits.push({op:'crop', v:A.v});
+    break;
+  }
+  case 'UNDO': {
+    var p4 = photoOf(st, A.id);
+    if (!p4 || !p4.edits.length) { toast(st, 'Nothing to undo — this is the original'); break; }
+    var last = p4.edits.pop();
+    toast(st, 'Took back: ' + editLabel(last));
+    break;
+  }
+  case 'RESET': {
+    var p5 = photoOf(st, A.id);
+    if (!p5) break;
+    if (!p5.edits.length) { toast(st, 'It is already the original'); break; }
+    st.ui.confirm = {title:'Back to the original?',
+      text:'All ' + p5.edits.length + ' adjustments come off. The original was never written over.',
+      okText:'Reset it', yes:{type:'RESET_YES', id:A.id}};
+    break;
+  }
+  case 'RESET_YES': {
+    var p6 = photoOf(st, A.id);
+    if (!p6) break;
+    var n = p6.edits.length;
+    p6.edits = [];
+    toast(st, n + ' adjustments removed');
+    break;
+  }
+  case 'COMPARE': st.ui.compare = !st.ui.compare; break;
+  case 'COPY_EDITS': {
+    var p7 = photoOf(st, A.id);
+    if (!p7) break;
+    if (!p7.edits.length) { toast(st, 'There is nothing on this one to copy'); break; }
+    st.clipboard = clone(p7.edits);
+    toast(st, 'Copied ' + p7.edits.length + ' adjustments');
+    break;
+  }
+  case 'PASTE_EDITS': {
+    var p8 = photoOf(st, A.id);
+    if (!p8) break;
+    if (!st.clipboard) { toast(st, 'Nothing has been copied yet'); break; }
+    p8.edits = clone(st.clipboard);
+    toast(st, 'Pasted ' + p8.edits.length + ' adjustments onto ' + p8.title);
+    break;
+  }
+  case 'PASTE_TO_SELECTION': {
+    if (!st.clipboard) { toast(st, 'Nothing has been copied yet'); break; }
+    var n2 = 0;
+    st.ui.sel.forEach(function(id){
+      var q = photoOf(st, id);
+      if (q) { q.edits = clone(st.clipboard); n2 += 1; }
+    });
+    st.ui.selecting = false; st.ui.sel = [];
+    toast(st, 'Pasted onto ' + n2 + ' photos');
+    break;
+  }
+
+  /* ---- library housekeeping ---- */
+  case 'FAV': {
+    var p9 = photoOf(st, A.id);
+    if (!p9) break;
+    p9.fav = !p9.fav;
+    toast(st, p9.fav ? 'Added to favourites' : 'Removed from favourites');
+    break;
+  }
+  case 'FAV_SELECTION': {
+    st.ui.sel.forEach(function(id){ var q = photoOf(st, id); if (q) q.fav = true; });
+    toast(st, st.ui.sel.length + ' photos favourited');
+    st.ui.selecting = false; st.ui.sel = [];
+    break;
+  }
+  case 'SET_ALBUM': {
+    var p10 = photoOf(st, A.id);
+    if (!p10) break;
+    p10.album = A.album;
+    st.ui.sheet = null;
+    toast(st, A.album ? 'Moved to ' + albumOf(st, A.album).name : 'Taken out of its album');
+    break;
+  }
+  case 'ALBUM_SELECTION': {
+    var n3 = 0;
+    st.ui.sel.forEach(function(id){ var q = photoOf(st, id); if (q) { q.album = A.album; n3 += 1; } });
+    st.ui.sheet = null; st.ui.selecting = false; st.ui.sel = [];
+    toast(st, n3 + ' photos moved to ' + albumOf(st, A.album).name);
+    break;
+  }
+  case 'DELETE': {
+    var p11 = photoOf(st, A.id);
+    if (!p11) break;
+    p11.deleted = true;
+    if (route(st).name === 'photo') pop(st);
+    toast(st, p11.title + ' moved to the bin');
+    break;
+  }
+  case 'DELETE_SELECTION': {
+    var n4 = 0;
+    st.ui.sel.forEach(function(id){ var q = photoOf(st, id); if (q) { q.deleted = true; n4 += 1; } });
+    st.ui.selecting = false; st.ui.sel = [];
+    toast(st, n4 + ' photos moved to the bin');
+    break;
+  }
+  case 'RESTORE': {
+    var p12 = photoOf(st, A.id);
+    if (!p12) break;
+    p12.deleted = false;
+    toast(st, p12.title + ' is back in the library');
+    break;
+  }
+  case 'EMPTY_BIN':
+    if (!binned(st).length) { toast(st, 'The bin is already empty'); break; }
+    st.ui.confirm = {title:'Empty the bin?',
+      text:binned(st).length + ' photos go for good, edits and all.',
+      okText:'Empty it', yes:{type:'EMPTY_BIN_YES'}};
+    break;
+  case 'EMPTY_BIN_YES': {
+    var n5 = binned(st).length;
+    st.photos = st.photos.filter(function(p){ return !p.deleted; });
+    toast(st, n5 + ' photos deleted for good');
+    break;
+  }
+
+  /* ---- settings ---- */
+  case 'SET_COLS': st.settings.cols = A.n; break;
+  case 'SET_TOGGLE': st.settings[A.key] = !st.settings[A.key]; break;
+
+  default: break;
+  }
+  return st;
+}
+
+/* =========================================================== screens */
+function tabbar(st){
+  var items = [
+    {id:'tab_library',    text:'Library',    icon:'image',  tab:'library'},
+    {id:'tab_albums',     text:'Albums',     icon:'box',    tab:'albums'},
+    {id:'tab_favourites', text:'Favourites', icon:'star',   tab:'favourites'},
+    {id:'tab_bin',        text:'Bin',        icon:'trash',  tab:'bin'}
+  ].map(function(i){
+    return {id:i.id, text:i.text, icon:i.icon, on:(st.ui.tab === i.tab), act:{type:'TAB', tab:i.tab}};
+  });
+  return N('tabbar', {id:'tabbar', items:items});
+}
+function cellOf(st, p, prefix){
+  return N('cell', {id:prefix + p.id, photo:p.id, title:p.title, place:p.place, date:p.date,
+    kind:p.kind, palette:p.palette, look:foldEdits(p.edits), edits:editCount(p.edits ? p.edits : []),
+    editN:editCount(p), fav:p.fav, sel:isSel(st, p.id), selecting:st.ui.selecting,
+    act:{type:'OPEN_PHOTO', id:p.id}});
+}
+function gridOf(st, list, prefix, empty){
+  if (!list.length) return txt(empty, 'empty');
+  return N('grid', {id:'grid_' + prefix, cols:st.settings.cols,
+    c:list.map(function(p){ return cellOf(st, p, prefix); })});
+}
+
+function scrLibrary(st){
+  var list = visibleLibrary(st);
+  var chips = [['all','Everything'], ['fav','Favourites'], ['edited','Edited'], ['unsorted','No album']]
+    .map(function(x){
+      return N('chip', {id:'f_' + x[0], text:x[1], on:st.ui.filter === x[0],
+        act:{type:'FILTER', id:x[0]}});
+    });
+  var body = [
+    N('chips', {id:'lib_chips', c:chips}),
+    N('sec', {text:list.length + ' photos', side:editedPhotos(st).length + ' edited'}),
+    gridOf(st, list, 'cell_', 'Nothing here.'),
+    N('space', {})
+  ];
+  var right = st.ui.selecting
+    ? [iconbtn('sel_all', 'check', {type:'SELECT_ALL'}),
+       iconbtn('sel_done', 'close', {type:'STOP_SELECT'})]
+    : [iconbtn('start_select', 'check', {type:'START_SELECT'}),
+       iconbtn('open_settings', 'gear', {type:'NAV', to:'settings'})];
+  var kids = [
+    appbar(st.ui.selecting ? selCount(st) + ' selected' : 'Umber', {right:right}),
+    N('scroll', {id:'library_scroll', c:body})
+  ];
+  if (st.ui.selecting) kids.push(N('bulkbar', {id:'bulk', c:[
+    btn('bulk_fav', 'Favourite', {type:'FAV_SELECTION'}, 'ghost', !selCount(st)),
+    btn('bulk_album', 'Album', {type:'OPEN_SHEET', sheet:'albumsel'}, 'ghost', !selCount(st)),
+    btn('bulk_paste', 'Paste edits', {type:'PASTE_TO_SELECTION'}, 'ghost',
+        !selCount(st) || !st.clipboard),
+    btn('bulk_delete', 'Bin', {type:'DELETE_SELECTION'}, 'danger', !selCount(st))]}));
+  else kids.push(tabbar(st));
+  return N('screen', {id:'scr_library', name:'library', c:kids});
+}
+
+function scrPhoto(st, params){
+  var p = photoOf(st, params.id);
+  if (!p) return scrLibrary(st);
+  var f = foldEdits(p.edits);
+  var shown = st.ui.compare ? foldEdits([]) : f;
+  return N('screen', {id:'scr_photo', name:'photo', params:params, c:[
+    appbar(p.title, {back:true, right:[
+      iconbtn('fav_toggle', p.fav ? 'starOn' : 'star', {type:'FAV', id:p.id})]}),
+    N('scroll', {id:'photo_scroll', c:[
+      N('viewer', {id:'viewer', photo:p.id, kind:p.kind, palette:p.palette, look:shown,
+        crop:shown.crop, compare:st.ui.compare}),
+      N('pills', {id:'photo_pills', items:[
+        {text:p.place, cls:''}, {text:p.date, cls:''},
+        {text:p.album ? albumOf(st, p.album).name : 'no album', cls:p.album ? 'acc' : ''},
+        {text:editCount(p) ? editCount(p) + ' adjustments' : 'original', cls:editCount(p) ? 'warn' : ''}
+      ]}),
+      N('card', {id:'photo_ops', cls:'flush', c:[
+        row('do_edit', 'Edit', {lead:'sliders', sub:'Exposure, filters, crop',
+          act:{type:'NAV', to:'edit', params:{id:p.id}}}),
+        row('do_album', 'Album', {lead:'box', val:p.album ? albumOf(st, p.album).name : 'none',
+          valCls:p.album ? 'acc' : '', act:{type:'OPEN_SHEET', sheet:'album', id:p.id}}),
+        row('do_copy', 'Copy the adjustments', {lead:'copy',
+          sub:editCount(p) ? 'All ' + editCount(p) + ' of them' : 'There are none on this one',
+          act:{type:'COPY_EDITS', id:p.id}}),
+        row('do_paste', 'Paste adjustments here', {lead:'paste',
+          sub:st.clipboard ? st.clipboard.length + ' waiting on the clipboard' : 'Nothing copied yet',
+          act:{type:'PASTE_EDITS', id:p.id}}),
+        row('do_delete', 'Move to the bin', {lead:'trash', act:{type:'DELETE', id:p.id}})
+      ]}),
+      N('sec', {text:'What has been done to it', side:editCount(p) + ''}),
+      editCount(p)
+        ? N('stack', {id:'edit_stack', items:p.edits.map(function(e, i){
+            return {n:i + 1, text:editLabel(e), last:i === p.edits.length - 1};
+          })})
+        : txt('Nothing — this is straight off the camera.', 'empty'),
+      N('space', {})
+    ]})
+  ]});
+}
+
+function scrEdit(st, params){
+  var p = photoOf(st, params.id);
+  if (!p) return scrLibrary(st);
+  var f = foldEdits(p.edits);
+  var shown = st.ui.compare ? foldEdits([]) : f;
+  var tool = adjustOf(st.ui.tool) || ADJUSTS[0];
+  return N('screen', {id:'scr_edit', name:'edit', params:params, c:[
+    appbar(st.ui.compare ? 'Original' : 'Edit', {back:true, right:[
+      iconbtn('compare', 'eye', {type:'COMPARE'}),
+      iconbtn('undo', 'undo', {type:'UNDO', id:p.id})]}),
+    N('scroll', {id:'edit_scroll', c:[
+      N('viewer', {id:'viewer', photo:p.id, kind:p.kind, palette:p.palette, look:shown,
+        crop:shown.crop, compare:st.ui.compare}),
+      N('chips', {id:'tool_chips', c: ADJUSTS.map(function(a){
+        return N('chip', {id:'tool_' + a.id, text:a.label + ' ' + (f[a.id] > 0 ? '+' : '') + f[a.id],
+          on:st.ui.tool === a.id, act:{type:'TOOL', id:a.id}});
+      })}),
+      N('slider', {id:'slider', label:tool.label, value:f[tool.id], lo:-5, hi:5,
+        minusId:'adj_down', plusId:'adj_up',
+        minus:{type:'ADJUST', id:p.id, op:tool.id, v:-1},
+        plus:{type:'ADJUST', id:p.id, op:tool.id, v:1}}),
+      N('sec', {text:'Filters'}),
+      N('strip', {id:'filter_strip', items: FILTERS.map(function(fl){
+        return {id:'filt_' + fl.id, label:fl.label, on:f.filter === fl.id,
+          photo:p.id, kind:p.kind, palette:p.palette,
+          look:foldEdits(p.edits.concat([{op:'filter', v:fl.id}])),
+          act:{type:'SET_FILTER_EDIT', id:p.id, v:fl.id}};
+      })}),
+      N('sec', {text:'Crop'}),
+      N('chips', {id:'crop_chips', c: CROPS.map(function(c){
+        return N('chip', {id:'crop_' + c.id, text:c.label, on:f.crop === c.id,
+          act:{type:'SET_CROP', id:p.id, v:c.id}});
+      })}),
+      N('sec', {text:'The stack', side:editCount(p) + ''}),
+      editCount(p)
+        ? N('stack', {id:'edit_stack', items:p.edits.map(function(e, i){
+            return {n:i + 1, text:editLabel(e), last:i === p.edits.length - 1};
+          })})
+        : txt('Nothing yet.', 'empty'),
+      N('btnrow', {id:'edit_ops', c:[
+        btn('reset', 'Back to the original', {type:'RESET', id:p.id}, 'danger'),
+        btn('copy_edits', 'Copy these', {type:'COPY_EDITS', id:p.id}, 'ghost')]}),
+      txt('Every tap is one entry on the stack, so undo takes back one tap — not the lot.', 'muted'),
+      N('space', {})
+    ]})
+  ]});
+}
+
+function scrAlbums(st){
+  return N('screen', {id:'scr_albums', name:'albums', c:[
+    appbar('Albums'),
+    N('scroll', {id:'albums_scroll', c:[
+      N('sec', {text:'Your albums', side:st.albums.length + ''}),
+      N('card', {id:'album_list', cls:'flush', c: st.albums.map(function(a){
+        var n = albumPhotos(st, a.id).length;
+        var cover = photoOf(st, a.cover);
+        return row('album_' + a.id, a.name,
+          {sub:n + (n === 1 ? ' photo' : ' photos'),
+           thumb:cover ? {photo:cover.id, kind:cover.kind, palette:cover.palette,
+                          look:foldEdits(cover.edits)} : null,
+           act:{type:'NAV', to:'album', params:{id:a.id}}});
+      })}),
+      N('sec', {text:'Not in any album'}),
+      N('card', {id:'unsorted_row', cls:'flush', c:[
+        row('go_unsorted', 'Unsorted photos', {lead:'image',
+          val:livePhotos(st).filter(function(p){ return !p.album; }).length + '',
+          act:{type:'GO_UNSORTED'}})
+      ]}),
+      N('space', {})
+    ]}),
+    tabbar(st)
+  ]});
+}
+
+function scrAlbum(st, params){
+  var a = albumOf(st, params.id);
+  if (!a) return scrAlbums(st);
+  var list = albumPhotos(st, a.id);
+  return N('screen', {id:'scr_album', name:'album', params:params, c:[
+    appbar(a.name, {back:true}),
+    N('scroll', {id:'album_scroll', c:[
+      N('sec', {text:list.length + ' photos'}),
+      gridOf(st, list, 'acell_', 'This album is empty.'),
+      N('space', {})
+    ]})
+  ]});
+}
+
+function scrFavourites(st){
+  var list = favourites(st);
+  return N('screen', {id:'scr_favourites', name:'favourites', c:[
+    appbar('Favourites'),
+    N('scroll', {id:'fav_scroll', c:[
+      N('sec', {text:list.length + ' favourites'}),
+      gridOf(st, list, 'fcell_', 'Nothing favourited yet.'),
+      N('space', {})
+    ]}),
+    tabbar(st)
+  ]});
+}
+
+function scrBin(st){
+  var list = binned(st);
+  return N('screen', {id:'scr_bin', name:'bin', c:[
+    appbar('Bin'),
+    N('scroll', {id:'bin_scroll', c:[
+      N('sec', {text:list.length + ' in the bin', side:'restorable'}),
+      N('card', {id:'bin_list', cls:'flush', c: list.length
+        ? list.map(function(p){
+            return row('restore_' + p.id, p.title, {sub:p.place + ' · ' + p.date,
+              thumb:{photo:p.id, kind:p.kind, palette:p.palette, look:foldEdits(p.edits)},
+              val:'restore', valCls:'acc', act:{type:'RESTORE', id:p.id}});
+          })
+        : [txt('The bin is empty.', 'empty')]}),
+      N('padded', {c:[btn('empty_bin', 'Empty the bin', {type:'EMPTY_BIN'}, 'danger')]}),
+      txt('A photo in the bin keeps its adjustments. Restoring it brings the stack back too.', 'muted'),
+      N('space', {})
+    ]}),
+    tabbar(st)
+  ]});
+}
+
+function scrSettings(st){
+  function sw(id, text, key, sub){
+    return row(id, text, {sub:sub, arrow:false,
+      c:[N('switch', {id:'set_' + key, on:!!st.settings[key], act:{type:'SET_TOGGLE', key:key}})]});
+  }
+  return N('screen', {id:'scr_settings', name:'settings', c:[
+    appbar('Settings', {back:true}),
+    N('scroll', {id:'settings_scroll', c:[
+      N('sec', {text:'Grid'}),
+      N('chips', {id:'col_chips', c:[
+        N('chip', {id:'cols_2', text:'Two across', on:st.settings.cols === 2, act:{type:'SET_COLS', n:2}}),
+        N('chip', {id:'cols_3', text:'Three across', on:st.settings.cols === 3, act:{type:'SET_COLS', n:3}})
+      ]}),
+      N('sec', {text:'Editing'}),
+      N('card', {id:'edit_settings', cls:'flush', c:[
+        sw('badge_row', 'Mark edited photos', 'showEdited', 'A small tag in the corner of the thumbnail'),
+        sw('keep_row', 'Always keep originals', 'keepOriginals', 'Umber never writes over the file'),
+        sw('auto_row', 'Auto-enhance new photos', 'autoEnhance', 'Off by default, and it stays off here')
+      ]}),
+      N('sec', {text:'About'}),
+      N('card', {id:'about', cls:'flush', c:[
+        row('about_version', 'Version', {val:VERSION, arrow:false}),
+        row('about_count', 'Photos', {val:st.photos.length + '', arrow:false})
+      ]}),
+      txt('Adjustments are stored as a list of things you did, not as a new picture. '
+          + 'That is why undo can take back one tap and reset can take back all of them.', 'muted'),
+      N('space', {})
+    ]})
+  ]});
+}
+
+function sheetAlbum(st){
+  var id = st.ui.sheet.id, p = photoOf(st, id);
+  return sheet('album_sheet', 'Put ' + (p ? p.title : '') + ' in', [
+    N('card', {id:'album_pick', cls:'flush', c: st.albums.map(function(a){
+      return row('pick_' + a.id, a.name, {lead:'box', sub:albumPhotos(st, a.id).length + ' photos',
+        val:p && p.album === a.id ? 'now' : '', valCls:'acc',
+        act:{type:'SET_ALBUM', id:id, album:a.id}});
+    }).concat([row('pick_none', 'No album', {lead:'close', act:{type:'SET_ALBUM', id:id, album:null}})])})
+  ]);
+}
+function sheetAlbumSel(st){
+  return sheet('albumsel_sheet', 'Move ' + selCount(st) + ' photos to', [
+    N('card', {id:'albumsel_pick', cls:'flush', c: st.albums.map(function(a){
+      return row('bulkpick_' + a.id, a.name, {lead:'box', sub:albumPhotos(st, a.id).length + ' photos',
+        act:{type:'ALBUM_SELECTION', album:a.id}});
+    })})
+  ]);
+}
+
+var ROUTES = {
+  library:scrLibrary, photo:scrPhoto, edit:scrEdit, albums:scrAlbums, album:scrAlbum,
+  favourites:scrFavourites, bin:scrBin, settings:scrSettings
+};
+function screen(st){
+  var r = route(st), fn = ROUTES[r.name] || scrLibrary;
+  var rootNode = fn(st, r.params || {});
+  rootNode.route = r.name;
+  var extra = [];
+  if (st.ui.sheet) {
+    var t = st.ui.sheet.type;
+    var sh = t === 'album' ? sheetAlbum(st) : t === 'albumsel' ? sheetAlbumSel(st) : null;
+    if (sh) extra.push(N('mask', {id:'mask', close:{type:'CLOSE_SHEET'}, c:[sh]}));
+  }
+  if (st.ui.confirm)
+    extra.push(N('mask', {id:'confirm_mask', c:[N('dialog', {id:'confirm_dialog',
+      title:st.ui.confirm.title || '', text:st.ui.confirm.text,
+      ok: btn('confirm_ok', st.ui.confirm.okText || 'Confirm', {type:'CONFIRM_YES'}, 'primary'),
+      cancel: btn('confirm_cancel', 'Keep it', {type:'CONFIRM_NO'}, '')})]}));
+  if (st.ui.toast) extra.push(N('toast', {id:'toast', text:st.ui.toast}));
+  rootNode.c = rootNode.c.concat(extra);
+  return rootNode;
+}
+
+/* =======================================================================
+ * TRAVERSAL — element index, GUI action interface, text observation.
+ * Identical in every environment here: the screen tree is the only thing
+ * that differs, and all three readers below walk that same tree.
+ * ==================================================================== */
+var SKIP_KEYS = {act:1, minus:1, plus:1, close:1, yes:1, params:1, meta:1, palette:1, look:1, edits:1};
+
+function labelOf(n){ return n.text || n.title || n.name || n.label || n.main || ''; }
+
+function collect(n, out){
+  if (!n || typeof n !== 'object') return;
+  if (Array.isArray(n)) { for (var i=0;i<n.length;i++) collect(n[i], out); return; }
+  if (n.t === 'appbar' && n.back) out.push({id:'nav_back', act:{type:'BACK'}, text:'Back', t:'back'});
+  if (n.id && n.act)              out.push({id:n.id, act:n.act, text:labelOf(n), t:n.t||'el',
+                                            disabled:!!n.disabled,
+                                            input:(n.t === 'inputrow')});
+  if (n.t === 'mask' && n.close)  out.push({id:n.id, act:n.close, text:'Dismiss overlay', t:'mask'});
+  for (var k in n){
+    /* a node may carry extra buttons as a pair of keys: someId holds the
+     * test-id and some holds the action. That is how steppers, sheet close
+     * buttons and per-row buttons all get into the element index. */
+    if (k.length > 2 && k.slice(-2) === 'Id' && typeof n[k] === 'string'){
+      var sib = n[k.slice(0, -2)];
+      if (sib && typeof sib === 'object' && sib.type)
+        out.push({id:n[k], act:sib, text:k.slice(0, -2), t:'sub'});
+    }
+    if (SKIP_KEYS[k]) continue;
+    var v = n[k];
+    if (v && typeof v === 'object') collect(v, out);
+  }
+}
+function elements(st){
+  var rootNode = (st && st.t === 'screen') ? st : screen(st);
+  var masks = (rootNode.c || []).filter(function(n){ return n.t === 'mask'; });
+  var out = [];
+  collect(masks.length ? masks[masks.length-1] : rootNode, out);
+  return out;
+}
+function findEl(st, id){
+  var els = elements(st);
+  for (var i=0;i<els.length;i++) if (els[i].id === id) return els[i];
+  return null;
+}
+function substitute(act, text){
+  var a = clone(act);
+  for (var k in a) if (a[k] === '$VALUE') a[k] = text;
+  return a;
+}
+function step(st, a){
+  a = a || {};
+  var kind = a.action || a.type;
+  switch (kind) {
+  case 'tap': {
+    var el = findEl(st, a.id);
+    if (!el) return {state:st, ok:false, error:'ELEMENT_NOT_FOUND: ' + a.id};
+    if (el.disabled) return {state:st, ok:false, error:'ELEMENT_DISABLED: ' + a.id};
+    return {state:reduce(st, el.act), ok:true};
+  }
+  case 'type': {
+    var e2 = findEl(st, a.id);
+    if (!e2) return {state:st, ok:false, error:'ELEMENT_NOT_FOUND: ' + a.id};
+    if (!e2.input) return {state:st, ok:false, error:'NOT_A_TEXT_FIELD: ' + a.id};
+    return {state:reduce(st, substitute(e2.act, a.text == null ? '' : String(a.text))), ok:true};
+  }
+  case 'back':   return {state:reduce(st, {type:'BACK'}), ok:true};
+  case 'home':   return {state:reduce(st, {type:'HOME'}), ok:true};
+  case 'wait':   return {state:reduce(st, {type:'NOOP'}), ok:true};
+  case 'finish': return {state:reduce(st, {type:'FINISH', answer:a.answer}), ok:true};
+  case 'raw':    return {state:reduce(st, a.act || {}), ok:true};
+  default:       return {state:st, ok:false, error:'UNKNOWN_ACTION: ' + kind};
+  }
+}
+
+/* ------------------------------------------------- text observation (a11y) */
+function a11y(st){
+  var rootNode = screen(st), lines = [], r = route(st);
+  lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
+             '  step ' + st.meta.steps);
+  lines.push('# ' + livePhotos(st).length + ' photos, ' + editedPhotos(st).length + ' edited, ' +
+             binned(st).length + ' in the bin' +
+             (st.clipboard ? '. Clipboard holds ' + st.clipboard.length + ' adjustments.' : '.'));
+  if (st.ui.selecting) lines.push('# Selecting: ' + selCount(st) + ' photos picked.');
+  var masks = (rootNode.c || []).filter(function(n){ return n.t === 'mask'; });
+  if (masks.length) lines.push('# An overlay is open. Nothing behind it can be tapped.');
+  walkText(masks.length ? masks[masks.length-1] : rootNode, 0, lines, st);
+  (rootNode.c || []).forEach(function(n){ if (n.t === 'toast') lines.push('[Toast] ' + n.text); });
+  return lines.join('\n');
+}
+function tid(n){ return (n && n.id && n.act) ? ' #' + n.id : ''; }
+function ind(d){ return new Array(d+1).join('  '); }
+
+function walkText(n, d, out, st){
+  if (!n || typeof n !== 'object') return;
+  if (Array.isArray(n)) { n.forEach(function(x){ walkText(x, d, out, st); }); return; }
+  var line = null;
+  switch (n.t) {
+  case 'screen': break;
+  case 'appbar': line = '[AppBar] ' + (n.title || '') + (n.back ? '   Back #nav_back' : ''); break;
+  case 'iconbtn': line = '[IconButton]' + tid(n) + ' ' + n.icon; break;
+  case 'inputrow':
+    line = '[TextField]' + tid(n) + ' ' + (n.label || '') + ' value="' + (n.value || '') + '"'; break;
+  case 'chip':   line = '[Chip]' + tid(n) + ' ' + n.text + (n.on ? '  [selected]' : ''); break;
+  case 'btn':    line = '[Button]' + (n.id ? ' #' + n.id : '') + ' ' + n.text + (n.disabled ? ' (disabled)' : ''); break;
+  case 'row': {
+    var s = '[Row]' + tid(n) + ' ' + (n.text || '') + (n.strike ? ' (crossed out)' : '');
+    if (n.val) s += ' \u2014 ' + n.val;
+    if (n.sub) s += '   (' + n.sub + ')';
+    line = s; break;
+  }
+  case 'switch': line = '[Toggle]' + tid(n) + ' ' + (n.on ? 'ON' : 'OFF'); break;
+  case 'check':  line = '[Checkbox]' + tid(n) + ' ' + (n.on ? 'ticked' : 'not ticked'); break;
+  case 'radio':  line = '[Radio]' + tid(n) + ' ' + (n.on ? 'selected' : 'not selected'); break;
+  case 'stepper':
+    line = '[Stepper] ' + n.value + '  down #' + n.minusId + '  up #' + n.plusId; break;
+  case 'hero':
+    out.push(ind(d) + '[Hero]' + tid(n) + ' ' + n.kicker + ' \u2014 ' + n.title + '. ' + n.sub);
+    return;
+  case 'stat':   line = '[Stat]' + tid(n) + ' ' + n.l + ': ' + n.n; break;
+  case 'pills':  line = n.items.map(function(p){ return '[' + p.text + ']'; }).join(' '); break;
+  case 'sec':    line = '\u2014 ' + n.text + (n.side ? ' (' + n.side + ')' : '') + ' \u2014'; break;
+  case 'text':   line = n.text || null; break;
+  case 'tabbar':
+    out.push(ind(d) + '[TabBar] ' + n.items.map(function(i){
+      return i.text + ' #' + i.id + (i.on ? '[current]' : ''); }).join('  '));
+    return;
+  case 'sheet':  line = '[Sheet] ' + n.title + '   close #' + n.closeId; break;
+  case 'dialog': line = '[Dialog] ' + (n.title ? n.title + ' \u2014 ' : '') + n.text; break;
+  case 'mask': case 'toast': line = null; break;
+  default: {
+    var extra = walkExtra(n, d, out, st);
+    if (extra === true) return;
+    line = extra || null;
+  }
+  }
+  if (line !== null) out.push(ind(d) + line);
+  for (var k in n){
+    if (SKIP_KEYS[k]) continue;
+    var v = n[k];
+    if (v && typeof v === 'object') walkText(v, line !== null ? d+1 : d, out, st);
+  }
+}
+/* per-environment nodes: return a string to print, true if already printed,
+ * or null to ignore */
+function walkExtra(n, d, out, st){
+
+  if (n.t === 'cell'){
+    out.push(ind(d) + '[Photo]' + tid(n) + ' ' + n.title + ' — ' + n.place + ', ' + n.date
+             + (n.editN ? '  (' + n.editN + ' adjustments)' : '  (original)')
+             + (n.fav ? '  [favourite]' : '')
+             + (n.selecting ? (n.sel ? '  [selected]' : '  [not selected]') : ''));
+    return true;
+  }
+  if (n.t === 'viewer'){
+    var f = n.look;
+    out.push(ind(d) + '[Viewer] ' + (n.compare ? 'showing the ORIGINAL' : 'showing the edit') +
+             ' — exposure ' + f.exposure + ', contrast ' + f.contrast + ', warmth ' + f.warmth +
+             ', saturation ' + f.saturation + ', filter ' + filterOf(f.filter).label +
+             ', crop ' + cropOf(f.crop).label);
+    return true;
+  }
+  if (n.t === 'strip'){
+    out.push(ind(d) + '[Filters] ' + n.items.map(function(i){
+      return i.label + ' #' + i.id + (i.on ? '[on]' : ''); }).join('  '));
+    return true;
+  }
+  if (n.t === 'slider')
+    return '[Slider] ' + n.label + ' = ' + (n.value > 0 ? '+' : '') + n.value +
+           '  down #' + n.minusId + '  up #' + n.plusId;
+  if (n.t === 'stack'){
+    out.push(ind(d) + '[Stack] ' + n.items.length + ' adjustments, oldest first');
+    n.items.forEach(function(i){ out.push(ind(d+1) + i.n + '. ' + i.text + (i.last ? '  <- undo takes this one' : '')); });
+    return true;
+  }
+  if (n.t === 'grid' || n.t === 'bulkbar') return null;
+
+  return null;
+}
+
+/* --------------------------------------------------------- derived view */
+function derive(st){
+  var looks = {}, counts = {}, albums = {}, albumCounts = {};
+  livePhotos(st).forEach(function(p){
+    looks[p.title] = foldEdits(p.edits);
+    counts[p.title] = editCount(p);
+    albums[p.title] = p.album ? albumOf(st, p.album).name : null;
+  });
+  st.albums.forEach(function(a){ albumCounts[a.name] = albumPhotos(st, a.id).length; });
+  return {
+    route: route(st).name,
+    routeId: (route(st).params || {}).id || null,
+    tab: st.ui.tab,
+    libraryCount: livePhotos(st).length,
+    looks: looks,
+    editCounts: counts,
+    editedTitles: editedPhotos(st).map(function(p){ return p.title; }).sort(),
+    editedCount: editedPhotos(st).length,
+    favourites: favourites(st).map(function(p){ return p.title; }).sort(),
+    photoAlbum: albums,
+    albumCounts: albumCounts,
+    binCount: binned(st).length,
+    binTitles: binned(st).map(function(p){ return p.title; }).sort(),
+    clipboard: st.clipboard ? st.clipboard.length : 0,
+    clipboardLook: st.clipboard ? foldEdits(st.clipboard) : null,
+    selecting: !!st.ui.selecting,
+    selCount: selCount(st),
+    filter: st.ui.filter,
+    compare: !!st.ui.compare,
+    settings: clone(st.settings),
+    finished: !!st.meta.finished,
+    answer: st.meta.answer
+  };
+}
+
+function snapshot(st){ var o = clone(st); o.derived = derive(st); return o; }
+function applyPatch(st, patch){
+  (patch || []).forEach(function(p){ setPath(st, p.path, clone(p.value)); });
+  return st;
+}
+
+var ENGINE = {
+  ENV_ID: ENV_ID, VERSION: VERSION, CATALOG: {photos:PHOTOS0, albums:ALBUMS0, filters:FILTERS},
+  createInitialState: createInitialState,
+  reduce: reduce, step: step, screen: screen, a11y: a11y,
+  elements: elements, findEl: findEl, applyPatch: applyPatch,
+  getPath: getPath, setPath: setPath, clone: clone,
+  derive: derive, snapshot: snapshot,
+  select: SELECT
+};
+root.UMBER_ENGINE = ENGINE;
+root.GUI_ENGINE = ENGINE;
+
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+</script>
+
+<script id="ui">
+/* ===========================================================================
+ * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
+ * ======================================================================== */
+(function(){
+'use strict';
+var E = window.GUI_ENGINE;
+var app = document.getElementById('app');
+var hud = document.getElementById('hud');
+function esc(s){
+  return String(s === undefined || s === null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+var SVG = {
+  back: '<path d="M15 4.5 8 12l7 7.5"/>',
+  arrow: '<path d="M9 4.5 16 12l-7 7.5"/>',
+  plus: '<path d="M12 5.6v12.8M5.6 12h12.8"/>',
+  minus: '<path d="M5.6 12h12.8"/>',
+  close: '<path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5"/>',
+  check: '<path d="M4.8 12.6 9.8 17.6 19.2 6.8"/>',
+  gear: '<circle cx="12" cy="12" r="3.4"/><path d="M19.1 14.4a1.6 1.6 0 0 0 .3 1.8l.1.1a1.9 1.9 0 1 1-2.7 2.7l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5v.2a1.9 1.9 0 1 1-3.8 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a1.9 1.9 0 1 1-2.7-2.7l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1h-.2a1.9 1.9 0 1 1 0-3.8h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a1.9 1.9 0 1 1 2.7-2.7l.1.1a1.6 1.6 0 0 0 1.8.3h.1a1.6 1.6 0 0 0 1-1.5v-.2a1.9 1.9 0 1 1 3.8 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a1.9 1.9 0 1 1 2.7 2.7l-.1.1a1.6 1.6 0 0 0-.3 1.8v.1a1.6 1.6 0 0 0 1.5 1h.2a1.9 1.9 0 1 1 0 3.8h-.1a1.6 1.6 0 0 0-1.5 1z"/>',
+  image: '<rect x="3.4" y="4.8" width="17.2" height="14.4" rx="2.6"/><circle cx="8.8" cy="9.8" r="1.8"/><path d="m4.6 17.4 4.8-4.6 3.4 3.2 3-2.6 4.6 4"/>',
+  box: '<path d="M3.6 8.2 12 4l8.4 4.2v7.6L12 20l-8.4-4.2z"/><path d="M3.6 8.2 12 12.4l8.4-4.2M12 12.4V20"/>',
+  star: '<path d="m12 3.7 2.6 5.5 6 .8-4.4 4.2 1.1 6-5.3-2.9-5.3 2.9 1.1-6L3.4 10l6-.8z"/>',
+  trash: '<path d="M4.6 6.6h14.8"/><path d="M9.4 6.6V4.8h5.2v1.8"/><path d="M6.6 6.6 7.6 20a1.4 1.4 0 0 0 1.4 1.3h6a1.4 1.4 0 0 0 1.4-1.3l1-13.4"/><path d="M10.4 10.6v6M13.6 10.6v6"/>',
+  undo: '<path d="M4.6 9.4h9.8a5 5 0 0 1 0 10h-5"/><path d="M8.2 5.4 4.4 9.4l3.8 4"/>',
+  eye: '<path d="M1.8 12S5.4 5.6 12 5.6 22.2 12 22.2 12 18.6 18.4 12 18.4 1.8 12 1.8 12z"/><circle cx="12" cy="12" r="3.2"/>',
+  info: '<circle cx="12" cy="12" r="8.8"/><path d="M12 11.1v5.4"/><circle cx="12" cy="7.9" r=".95" fill="currentColor" stroke="none"/>',
+  list: '<path d="M8.6 6.4h11M8.6 12h11M8.6 17.6h11"/><circle cx="4.7" cy="6.4" r="1.2" fill="currentColor" stroke="none"/><circle cx="4.7" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="4.7" cy="17.6" r="1.2" fill="currentColor" stroke="none"/>',
+  user: '<circle cx="12" cy="8.2" r="3.8"/><path d="M4.4 20.4c0-3.8 3.4-6.4 7.6-6.4s7.6 2.6 7.6 6.4"/>',
+  clock: '<circle cx="12" cy="12" r="8.8"/><path d="M12 6.8V12l3.6 2.2"/>',
+  sliders: '<path d="M4.4 7.4h15.2M4.4 16.6h15.2"/><circle cx="9.6" cy="7.4" r="2.4"/><circle cx="15.2" cy="16.6" r="2.4"/>',
+  copy: '<rect x="8.4" y="8.4" width="11.2" height="11.2" rx="2.4"/><path d="M15.6 8.4V6a2 2 0 0 0-2-2H6.4a2 2 0 0 0-2 2v7.2a2 2 0 0 0 2 2h2.4"/>',
+  paste: '<rect x="5.6" y="5.2" width="12.8" height="15.2" rx="2.4"/><path d="M9.2 5.2V4a1.4 1.4 0 0 1 1.4-1.4h2.8A1.4 1.4 0 0 1 14.8 4v1.2z"/><path d="M9 12.4h6M9 16h4"/>',
+  starOn: '<path d="m12 3.7 2.6 5.5 6 .8-4.4 4.2 1.1 6-5.3-2.9-5.3 2.9 1.1-6L3.4 10l6-.8z"/>'
+};
+var FILLED = {starOn:1};
+function icon(name, size, cls){
+  var d = SVG[name]; if (!d) return '';
+  return '<span class="ico ' + (cls||'') + '" style="width:' + (size||20) + 'px;height:' + (size||20) +
+    'px;display:inline-flex;flex:0 0 auto"><svg viewBox="0 0 24 24" width="100%" height="100%" fill="' +
+    (FILLED[name] ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="1.7" ' +
+    'stroke-linecap="round" stroke-linejoin="round">' + d + '</svg></span>';
+}
+
+/* --------- the photographs, generated from a palette and an id --------- */
+function hashOf(s){
+  var h = 2166136261;
+  for (var i=0;i<s.length;i++){ h ^= s.charCodeAt(i); h = (h * 16777619) >>> 0; }
+  return h;
+}
+function photoSvg(kind, palette, seed){
+  var W = 300, H = 200, st = hashOf(String(seed));
+  function rnd(){ st = (st * 1664525 + 1013904223) >>> 0; return st / 4294967296; }
+  var o = '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="xMidYMid slice">';
+  var a = palette[0], b = palette[1], c = palette[2];
+  if (kind === 'sea'){
+    o += '<rect width="' + W + '" height="' + H + '" fill="' + c + '"/>';
+    o += '<rect width="' + W + '" height="' + (H*0.52) + '" fill="' + b + '" opacity=".85"/>';
+    o += '<rect y="' + (H*0.52) + '" width="' + W + '" height="' + (H*0.26) + '" fill="' + a + '"/>';
+    o += '<circle cx="' + (60 + rnd()*180).toFixed(0) + '" cy="' + (H*0.3).toFixed(0) + '" r="'
+       + (12 + rnd()*10).toFixed(0) + '" fill="#fff" opacity=".8"/>';
+    for (var i=0;i<5;i++)
+      o += '<rect x="' + (rnd()*W).toFixed(0) + '" y="' + (H*0.54 + rnd()*H*0.2).toFixed(0)
+         + '" width="' + (30 + rnd()*70).toFixed(0) + '" height="2" fill="' + c + '" opacity=".5"/>';
+    for (var g=0;g<3;g++){
+      var gx = 30 + rnd()*220, gy = 24 + rnd()*40;
+      o += '<path d="M' + gx.toFixed(0) + ' ' + gy.toFixed(0) + ' l6 -4 l6 4" stroke="'
+         + a + '" stroke-width="1.6" fill="none" opacity=".7"/>';
+    }
+  } else if (kind === 'land'){
+    o += '<rect width="' + W + '" height="' + H + '" fill="' + c + '"/>';
+    o += '<rect width="' + W + '" height="' + (H*0.55) + '" fill="' + b + '" opacity=".7"/>';
+    o += '<path d="M0 ' + (H*0.62) + ' Q ' + (W*0.3) + ' ' + (H*0.44) + ' ' + (W*0.55) + ' ' + (H*0.6)
+       + ' T ' + W + ' ' + (H*0.56) + ' L' + W + ' ' + H + ' L0 ' + H + 'z" fill="' + a + '"/>';
+    o += '<path d="M0 ' + (H*0.78) + ' Q ' + (W*0.4) + ' ' + (H*0.66) + ' ' + W + ' ' + (H*0.8)
+       + ' L' + W + ' ' + H + ' L0 ' + H + 'z" fill="' + a + '" opacity=".55"/>';
+    var tx = 40 + rnd()*200;
+    o += '<rect x="' + tx.toFixed(0) + '" y="' + (H*0.58).toFixed(0) + '" width="4" height="'
+       + (H*0.22).toFixed(0) + '" fill="#2a2018" opacity=".8"/>';
+    o += '<circle cx="' + (tx+2).toFixed(0) + '" cy="' + (H*0.56).toFixed(0) + '" r="14" fill="#2a2018" opacity=".65"/>';
+  } else if (kind === 'city'){
+    o += '<rect width="' + W + '" height="' + H + '" fill="' + a + '"/>';
+    o += '<circle cx="' + (W*0.78).toFixed(0) + '" cy="' + (H*0.22).toFixed(0) + '" r="16" fill="'
+       + c + '" opacity=".85"/>';
+    var x = 0;
+    while (x < W){
+      var w = 22 + rnd()*30, h = 40 + rnd()*100;
+      o += '<rect x="' + x.toFixed(0) + '" y="' + (H-h).toFixed(0) + '" width="' + w.toFixed(0)
+         + '" height="' + h.toFixed(0) + '" fill="' + b + '" opacity="' + (0.5 + rnd()*0.4).toFixed(2) + '"/>';
+      for (var wy = H-h+8; wy < H-8; wy += 12){
+        for (var wx = x+5; wx < x+w-6; wx += 10){
+          if (rnd() > 0.55)
+            o += '<rect x="' + wx.toFixed(0) + '" y="' + wy.toFixed(0) + '" width="4" height="5" fill="'
+               + c + '" opacity=".9"/>';
+        }
+      }
+      x += w + 3;
+    }
+    o += '<rect y="' + (H*0.9).toFixed(0) + '" width="' + W + '" height="' + (H*0.1).toFixed(0)
+       + '" fill="' + c + '" opacity=".22"/>';
+  } else {
+    o += '<rect width="' + W + '" height="' + H + '" fill="' + c + '"/>';
+    o += '<circle cx="' + (W*0.3).toFixed(0) + '" cy="' + (H*0.3).toFixed(0) + '" r="' + (H*0.55).toFixed(0)
+       + '" fill="' + b + '" opacity=".45"/>';
+    for (var k=0;k<5;k++){
+      var ox = 30 + rnd()*(W-90), oy = H*0.45 + rnd()*(H*0.3), ow = 26 + rnd()*54, oh = 18 + rnd()*46;
+      o += '<rect x="' + ox.toFixed(0) + '" y="' + oy.toFixed(0) + '" width="' + ow.toFixed(0)
+         + '" height="' + oh.toFixed(0) + '" rx="' + (4 + rnd()*10).toFixed(0) + '" fill="'
+         + (k % 2 ? a : b) + '" opacity="' + (0.55 + rnd()*0.4).toFixed(2) + '"/>';
+    }
+    o += '<rect y="' + (H*0.82).toFixed(0) + '" width="' + W + '" height="' + (H*0.18).toFixed(0)
+       + '" fill="' + a + '" opacity=".35"/>';
+  }
+  return o + '</svg>';
+}
+/* the fold, expressed as the browser's own filter stack */
+function cssFilter(f){
+  var out = 'brightness(' + (1 + f.exposure * 0.075).toFixed(3) + ') contrast('
+          + (1 + f.contrast * 0.08).toFixed(3) + ') saturate('
+          + (1 + f.saturation * 0.16).toFixed(3) + ')';
+  if (f.warmth > 0) out += ' sepia(' + (f.warmth * 0.1).toFixed(2) + ')';
+  if (f.warmth < 0) out += ' hue-rotate(' + (f.warmth * 4) + 'deg)';
+  if (f.filter === 'noir')  out += ' grayscale(1) contrast(1.15)';
+  if (f.filter === 'vivid') out += ' saturate(1.5) contrast(1.08)';
+  if (f.filter === 'fade')  out += ' contrast(.82) brightness(1.07) saturate(.78)';
+  if (f.filter === 'sepia') out += ' sepia(.55) saturate(.92)';
+  return out;
+}
+function thumbHtml(t){
+  return '<div style="flex:0 0 auto;width:44px;height:44px;border-radius:9px;overflow:hidden;'
+    + 'background:#000"><div style="width:100%;height:100%;filter:' + cssFilter(t.look) + '">'
+    + photoSvg(t.kind, t.palette, t.photo) + '</div></div>';
+}
+function cropCls(id){
+  return id === 'square' ? 'sq' : id === 'portrait' ? 'ph' : id === 'wide' ? 'wd' : 'or';
+}
+
+var ACTS = [], TRAJ = [];
+function bind(a){ if (!a) return ''; ACTS.push(a); return ' data-act="' + (ACTS.length-1) + '"'; }
+function bindT(a){ if (!a) return ''; ACTS.push(a); return ' data-actt="' + (ACTS.length-1) + '"'; }
+function tid(id){ return id ? ' data-testid="' + esc(id) + '"' : ''; }
+function R(list){ return (list||[]).map(render).join(''); }
+function tagsHtml(items){
+  return (items||[]).map(function(t){
+    return '<span class="tag ' + (t.cls||'') + '">' + esc(t.text) + '</span>'; }).join('');
+}
+
+function render(n){
+  if (!n || typeof n !== 'object') return '';
+  if (Array.isArray(n)) return R(n);
+  switch (n.t) {
+  case 'screen': return R(n.c);
+  case 'appbar': {
+    var left = (n.back
+      ? '<div class="iconbtn" data-testid="nav_back"' + bind({type:'BACK'}) + '>' + icon('back',19) + '</div>'
+      : '') + R(n.left);
+    return '<div class="n-appbar"' + tid(n.id) + '><div class="ab-side">' + left + '</div>'
+      + '<div class="ab-title">' + esc(n.title) + '</div>'
+      + '<div class="ab-side right">' + R(n.right) + '</div></div>';
+  }
+  case 'iconbtn': return '<div class="iconbtn ' + esc(n.cls||'') + '"' + tid(n.id) + bind(n.act) + '>' + icon(n.icon, 19) + '</div>';
+  case 'scroll':  return '<div class="n-scroll"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'chips':   return '<div class="n-chips"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'chip':    return '<div class="n-chip' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '>' + esc(n.text) + '</div>';
+  case 'card':    return '<div class="n-card ' + esc(n.cls||'') + (n.act?' tap':'') + '"' + tid(n.id) + bind(n.act) + '>' + R(n.c) + '</div>';
+  case 'padded':  return '<div style="padding:5px 16px">' + R(n.c) + '</div>';
+  case 'sec':     return '<div class="n-sec"' + tid(n.id) + '><span>' + esc(n.text) + '</span>'
+                       + (n.side ? '<span>' + esc(n.side) + '</span>' : '') + '</div>';
+  case 'text':    return '<div class="n-text ' + esc(n.cls||'') + '">' + esc(n.text) + '</div>';
+  case 'space':   return '<div class="n-space"></div>';
+  case 'row': {
+    var inline = [], below = [];
+    (n.c||[]).forEach(function(ch){
+      (ch.t==='switch'||ch.t==='radio'||ch.t==='check'||ch.t==='stepper'||ch.t==='btn'||ch.t==='iconbtn')
+        ? inline.push(ch) : below.push(ch);
+    });
+    return '<div class="n-row' + (n.act?' tap':'') + '"' + tid(n.id) + bind(n.act) + '>'
+      + (n.lead ? '<div class="r-lead"' + (n.leadColour ? ' style="color:' + esc(n.leadColour) + '"' : '')
+                + '>' + icon(n.lead, 19) + '</div>' : '')
+      + (n.avatar ? avatarHtml(n.avatar) : '')
+      + (n.thumb && typeof thumbHtml === 'function' ? thumbHtml(n.thumb) : '')
+      + '<div class="r-main"><div class="r-label' + (n.strike?' strike':'') + '">' + esc(n.text) + '</div>'
+      + (n.sub ? '<div class="r-sub">' + esc(n.sub) + '</div>' : '') + '</div>'
+      + (n.val ? '<div class="r-value ' + esc(n.valCls||'') + '">' + esc(n.val) + '</div>' : '')
+      + R(inline)
+      + (n.arrow && !inline.length ? '<div class="r-arrow">' + icon('arrow',15) + '</div>' : '')
+      + '</div>' + R(below);
+  }
+  case 'btn':
+    return '<div class="n-btn ' + esc(n.cls||'') + (n.disabled?' off':'') + '"' + tid(n.id)
+      + (n.disabled?'':bind(n.act)) + '>' + esc(n.text) + '</div>';
+  case 'btnrow': return '<div class="n-btnrow"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'bar':    return '<div style="flex:0 0 auto;background:var(--card);border-top:1px solid var(--line);'
+                      + 'padding:12px 16px 16px;z-index:30"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'switch': return '<div class="n-switch' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '><i></i></div>';
+  case 'check':  return '<div class="n-check' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '></div>';
+  case 'radio':  return '<div class="n-radio' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '></div>';
+  case 'inputrow':
+    return '<div class="n-input"><div class="i-label">' + esc(n.label) + '</div>'
+      + '<input' + tid(n.id) + bindT(n.act) + ' value="' + esc(n.value) + '" placeholder="'
+      + esc(n.placeholder) + '"></div>';
+  case 'stepper':
+    return '<div style="display:flex;align-items:center;gap:8px"' + tid(n.id) + '>'
+      + '<div class="iconbtn" style="background:var(--btn);width:30px;height:30px"' + tid(n.minusId) + bind(n.minus) + '>' + icon('minus',14) + '</div>'
+      + '<div style="min-width:52px;text-align:center;font-weight:700;font-size:12.5px;font-variant-numeric:tabular-nums">'
+      + esc(n.value) + '</div>'
+      + '<div class="iconbtn" style="background:var(--btn);width:30px;height:30px"' + tid(n.plusId) + bind(n.plus) + '>' + icon('plus',14) + '</div></div>';
+  case 'stats':  return '<div class="stats"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'stat':
+    return '<div class="stat' + (n.acc?' acc':'') + (n.act?' tap':'') + '"' + tid(n.id) + bind(n.act)
+      + '><div class="st-n">' + esc(n.n) + '</div><div class="st-l">' + esc(n.l) + '</div></div>';
+  case 'hero':
+    return '<div class="hero' + (n.act?' tap':'') + '"' + tid(n.id) + bind(n.act) + '>'
+      + '<div class="he-k">' + esc(n.kicker) + '</div>'
+      + '<div class="he-t">' + esc(n.title) + '</div>'
+      + '<div class="he-s">' + esc(n.sub) + '</div>' + R(n.c) + '</div>';
+  case 'pills':
+    return '<div style="display:flex;gap:7px;flex-wrap:wrap;padding:8px 18px 4px"' + tid(n.id) + '>'
+      + tagsHtml(n.items) + '</div>';
+  case 'tabbar':
+    return '<div class="n-tabbar"' + tid(n.id) + '>' + n.items.map(function(i){
+      return '<div class="tb' + (i.on?' on':'') + '"' + tid(i.id) + bind(i.act) + '>'
+        + '<i>' + icon(i.icon, 21) + '</i>' + esc(i.text) + '</div>';
+    }).join('') + '</div>';
+  case 'mask':  return '<div class="n-mask"' + tid(n.id) + bind(n.close) + '>' + R(n.c) + '</div>';
+  case 'sheet':
+    return '<div class="n-sheet"' + tid(n.id) + ' data-stop="1"><div class="sh-hd">'
+      + '<div class="t">' + esc(n.title) + '</div>'
+      + '<div class="iconbtn"' + tid(n.closeId) + bind(n.close) + '>' + icon('close',15) + '</div></div>'
+      + '<div class="sh-bd">' + R(n.c) + '</div></div>';
+  case 'dialog':
+    return '<div class="dialog"' + tid(n.id) + ' data-stop="1">'
+      + '<div style="padding:22px 20px 16px;text-align:center">'
+      + (n.title ? '<div style="font:650 17px/1.3 var(--disp);margin-bottom:8px">' + esc(n.title) + '</div>' : '')
+      + '<div style="font-size:13.5px;color:var(--ink2);line-height:1.55">' + esc(n.text) + '</div></div>'
+      + '<div style="display:flex;gap:10px;padding:0 16px 16px">'
+      + '<div class="n-btn" style="flex:1"' + tid(n.cancel.id) + bind(n.cancel.act) + '>' + esc(n.cancel.text) + '</div>'
+      + '<div class="n-btn primary" style="flex:1"' + tid(n.ok.id) + bind(n.ok.act) + '>' + esc(n.ok.text) + '</div>'
+      + '</div></div>';
+  case 'toast': return '<div class="n-toast"' + tid(n.id) + '>' + esc(n.text) + '</div>';
+  default: return renderExtra(n);
+  }
+}
+function avatarHtml(a){
+  return '<div class="av" style="width:38px;height:38px;border-radius:50%;flex:0 0 auto;display:flex;'
+    + 'align-items:center;justify-content:center;font:700 14px/1 var(--disp);color:#fff;background:hsl('
+    + a.hue + ' 52% 46%)">' + esc(a.initial) + '</div>';
+}
+
+function renderExtra(n){
+  switch (n.t) {
+  case 'grid':
+    return '<div class="grid g' + n.cols + '"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'cell':
+    return '<div class="cell"' + tid(n.id) + bind(n.act) + '>'
+      + '<div style="width:100%;height:100%;filter:' + cssFilter(n.look) + '">'
+      + photoSvg(n.kind, n.palette, n.photo) + '</div>'
+      + (n.fav ? '<div class="cl-fav">' + icon('starOn', 15) + '</div>' : '')
+      + (n.editN ? '<div class="cl-ed">EDIT</div>' : '')
+      + '<div class="cl-tag">' + esc(n.title) + '</div>'
+      + (n.selecting ? '<div class="cl-chk' + (n.sel?' on':'') + '"></div>' : '')
+      + (n.sel ? '<div class="cl-sel"></div>' : '')
+      + '</div>';
+  case 'viewer':
+    return '<div class="viewer"' + tid(n.id) + '><div class="frame ' + cropCls(n.crop)
+      + '" style="width:100%;filter:' + cssFilter(n.look) + '">'
+      + photoSvg(n.kind, n.palette, n.photo) + '</div></div>';
+  case 'strip':
+    return '<div class="strip"' + tid(n.id) + '>' + n.items.map(function(i){
+      return '<div class="st-i' + (i.on?' on':'') + '"' + tid(i.id) + bind(i.act) + '>'
+        + '<div class="st-th"><div style="width:100%;height:100%;filter:' + cssFilter(i.look) + '">'
+        + photoSvg(i.kind, i.palette, i.photo) + '</div></div>'
+        + '<div class="st-l">' + esc(i.label) + '</div></div>';
+    }).join('') + '</div>';
+  case 'slider': {
+    var pct = Math.round((n.value - n.lo) * 100 / (n.hi - n.lo));
+    return '<div class="slider"' + tid(n.id) + '>'
+      + '<div class="sl-l">' + esc(n.label) + '</div>'
+      + '<div class="sl-b"' + tid(n.minusId) + bind(n.minus) + '>' + icon('minus', 15) + '</div>'
+      + '<div class="sl-t"><b></b><i style="left:' + pct + '%"></i></div>'
+      + '<div class="sl-b"' + tid(n.plusId) + bind(n.plus) + '>' + icon('plus', 15) + '</div>'
+      + '<div class="sl-v">' + (n.value > 0 ? '+' : '') + n.value + '</div></div>';
+  }
+  case 'stack':
+    return '<div class="stack"' + tid(n.id) + '>' + n.items.map(function(i){
+      return '<div class="sk-i' + (i.last?' last':'') + '"><div class="sk-n">' + i.n + '</div>'
+        + '<div class="sk-t">' + esc(i.text) + '</div></div>';
+    }).join('') + '</div>';
+  case 'bulkbar':
+    return '<div class="bulkbar"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  default: return '';
+  }
+}
+
+var STATE = null;
+function paint(){
+  ACTS = [];
+  app.innerHTML = render(E.screen(STATE));
+  var c = '';
+  if (c) document.getElementById('sb-clock').textContent = c;
+  if (!hud.classList.contains('off')) paintHud();
+}
+app.addEventListener('click', function(ev){
+  var el = ev.target.closest('[data-act]'); if (!el) return;
+  if (el.classList.contains('n-mask') && ev.target.closest('[data-stop]')) return;
+  var act = ACTS[+el.getAttribute('data-act')]; if (!act) return;
+  TRAJ.push({action:'tap', id: el.getAttribute('data-testid') || null});
+  STATE = E.reduce(STATE, act); paint();
+});
+app.addEventListener('input', function(ev){
+  var el = ev.target.closest('[data-actt]'); if (!el) return;
+  var act = JSON.parse(JSON.stringify(ACTS[+el.getAttribute('data-actt')]));
+  for (var k in act) if (act[k] === '$VALUE') act[k] = el.value;
+  var id = el.getAttribute('data-testid'), pos = el.selectionStart;
+  TRAJ.push({action:'type', id:id, text:el.value});
+  STATE = E.reduce(STATE, act); paint();
+  var again = id && app.querySelector('[data-testid="' + id + '"]');
+  if (again && again.focus) { again.focus(); try { again.setSelectionRange(pos, pos); } catch(e){} }
+});
+
+function paintHud(){
+  var d = E.derive(STATE);
+  hud.innerHTML = '<h4>__ENV__ \u00b7 ' + E.ENV_ID + ' v' + E.VERSION + '</h4>'
+    + '<div><span class="k">route</span> ' + d.route + '  <span class="k">step</span> ' + STATE.meta.steps + '</div>'
+    + '<div><span class="k">edited</span> ' + d.editedCount + '  <span class="k">bin</span> ' + d.binCount + '  <span class="k">clip</span> ' + d.clipboard + '</div>'
+    + '<div style="margin-top:8px"><button id="hud-reset">reset</button>'
+    + '<button id="hud-a11y">copy a11y</button><button id="hud-state">copy state</button>'
+    + '<button id="hud-traj">copy traj</button><button id="hud-hide">hide (h)</button></div>'
+    + '<pre>' + esc(E.a11y(STATE)) + '</pre>';
+  hud.querySelector('#hud-reset').onclick = function(){ ENVAPI.reset({seed:STATE.meta.seed}); };
+  hud.querySelector('#hud-a11y').onclick  = function(){ copy(E.a11y(STATE)); };
+  hud.querySelector('#hud-state').onclick = function(){ copy(JSON.stringify(E.snapshot(STATE), null, 2)); };
+  hud.querySelector('#hud-traj').onclick  = function(){ copy(JSON.stringify(TRAJ, null, 2)); };
+  hud.querySelector('#hud-hide').onclick  = function(){ hud.classList.add('off'); };
+}
+function copy(t){ try { navigator.clipboard.writeText(t); } catch(e){} }
+document.addEventListener('keydown', function(e){
+  if (e.key === 'h') { hud.classList.toggle('off'); if (!hud.classList.contains('off')) paintHud(); }
+});
+
+var ENVAPI = {
+  ENV_ID: E.ENV_ID, VERSION: E.VERSION,
+  reset: function(opts){
+    opts = opts || {};
+    STATE = E.createInitialState(opts.seed || 0);
+    if (opts.patch) E.applyPatch(STATE, opts.patch);
+    TRAJ = []; paint();
+    return E.snapshot(STATE);
+  },
+  getState:   function(){ return E.snapshot(STATE); },
+  setState:   function(s){ STATE = JSON.parse(JSON.stringify(s)); paint(); return true; },
+  step:       function(a){ var r = E.step(STATE, a); STATE = r.state; TRAJ.push(a); paint();
+                           return {ok:r.ok, error:r.error || null}; },
+  dispatch:   function(act){ STATE = E.reduce(STATE, act); paint(); return true; },
+  a11y:       function(){ return E.a11y(STATE); },
+  elements:   function(){ return E.elements(STATE); },
+  route:      function(){ return E.select.route(STATE); },
+  trajectory: function(){ return JSON.parse(JSON.stringify(TRAJ)); },
+  bounds: function(){
+    var base = document.getElementById('screen').getBoundingClientRect(), out = {};
+    app.querySelectorAll('[data-testid]').forEach(function(el){
+      var r = el.getBoundingClientRect();
+      out[el.getAttribute('data-testid')] = {
+        x:Math.round(r.left-base.left), y:Math.round(r.top-base.top),
+        w:Math.round(r.width), h:Math.round(r.height),
+        cx:Math.round(r.left-base.left+r.width/2), cy:Math.round(r.top-base.top+r.height/2)};
+    });
+    return out;
+  }
+};
+window.__ENV__ = ENVAPI;
+var qs = new URLSearchParams(location.search);
+if (qs.get('bare') === '1') document.body.classList.add('bare');
+if (qs.get('hud')  === '1') hud.classList.remove('off');
+ENVAPI.reset({seed: parseInt(qs.get('seed') || '0', 10) || 0});
+window.__ENV_READY__ = true;
+})();
+</script>
+</body>
+</html>

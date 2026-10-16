@@ -1,0 +1,843 @@
+{
+  "env": "tally_split",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_settings",
+      "name": "Two settings",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "settings"
+      ],
+      "instruction": "In Settings, turn off \"Simplify debts\" and turn on rounding shares up to the penny. Leave the notification setting alone.",
+      "goal": [
+        {
+          "name": "Simplify debts is off",
+          "path": "settings.simplifyDebts",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Round up is on",
+          "path": "settings.roundUp",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Notifications untouched",
+          "path": "settings.notifyNewExpense",
+          "op": "eq",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "T02_query_net",
+      "name": "Question: your overall balance",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "answer_expected": true,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "How much are you owed across all your groups? Answer in pounds and pence.",
+      "goal": [
+        {
+          "name": "The answer is £249.78",
+          "source": "answer",
+          "op": "contains",
+          "value": "249.78",
+          "weight": 3,
+          "hint": "the two group cards each show what you are owed; add them up"
+        },
+        {
+          "name": "Nothing was added",
+          "path": "derived.expenseCount",
+          "op": "eq",
+          "value": 7
+        }
+      ]
+    },
+    {
+      "id": "T03_query_suri",
+      "name": "Question: what Suri owes",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "answer_expected": true,
+      "tags": [
+        "query",
+        "balances",
+        "read-only"
+      ],
+      "instruction": "In the Lisbon trip group, how much does Suri owe? Answer in pounds and pence.",
+      "goal": [
+        {
+          "name": "The answer is £212.37",
+          "source": "answer",
+          "op": "contains",
+          "value": "212.37",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.expenseCount",
+          "op": "eq",
+          "value": 7
+        }
+      ]
+    },
+    {
+      "id": "T04_add_equal",
+      "name": "Add an equally split expense",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 22,
+      "tags": [
+        "keypad",
+        "expense",
+        "split"
+      ],
+      "instruction": "Add a £36.00 expense called \"Museum tickets\" to the Lisbon trip, paid by Ivo and split equally between all four of you.",
+      "goal": [
+        {
+          "name": "Eight expenses now",
+          "path": "derived.expenseCount",
+          "op": "eq",
+          "value": 8
+        },
+        {
+          "name": "Right title and amount",
+          "path": "derived.lastExpense.amount",
+          "op": "eq",
+          "value": 3600,
+          "weight": 2,
+          "hint": "the keypad takes digits from the right — 3 6 0 0 is £36.00"
+        },
+        {
+          "name": "Ivo paid",
+          "path": "derived.lastExpense.payer",
+          "op": "eq",
+          "value": "Ivo",
+          "weight": 2
+        },
+        {
+          "name": "Split four ways",
+          "path": "derived.lastExpense.among",
+          "op": "set_eq",
+          "value": [
+            "Ivo",
+            "Mo",
+            "Ren",
+            "Suri"
+          ]
+        },
+        {
+          "name": "Everyone owes £9.00",
+          "path": "derived.lastExpenseShares.Suri",
+          "op": "eq",
+          "value": 900
+        },
+        {
+          "name": "Balances still sum to zero",
+          "path": "derived.balancesByGroup.Lisbon trip.Ren",
+          "op": "eq",
+          "value": 21478,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T05_add_subset",
+      "name": "Split between just two of you",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 24,
+      "tags": [
+        "keypad",
+        "split",
+        "subset"
+      ],
+      "instruction": "Add a £24.00 expense called \"Coffee\" to the Lisbon trip. You paid, and it should be split only between you and Suri.",
+      "goal": [
+        {
+          "name": "Only two people in the split",
+          "path": "derived.lastExpense.among",
+          "op": "set_eq",
+          "value": [
+            "Ren",
+            "Suri"
+          ],
+          "weight": 3,
+          "hint": "untick Ivo and Mo"
+        },
+        {
+          "name": "You are the payer",
+          "path": "derived.lastExpense.payer",
+          "op": "eq",
+          "value": "Ren"
+        },
+        {
+          "name": "£12.00 each",
+          "path": "derived.lastExpenseShares.Suri",
+          "op": "eq",
+          "value": 1200,
+          "weight": 2
+        },
+        {
+          "name": "Suri now owes £224.37",
+          "path": "derived.balancesByGroup.Lisbon trip.Suri",
+          "op": "eq",
+          "value": -22437
+        }
+      ]
+    },
+    {
+      "id": "T06_exact_split",
+      "name": "Exact amounts that must add up",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 34,
+      "tags": [
+        "split",
+        "exact",
+        "constraint"
+      ],
+      "instruction": "Add a £40.00 expense called \"Wine\" to the Lisbon trip, paid by Mo, using exact amounts: £16.00 for you, £10.00 for Ivo, £8.00 for Suri and £6.00 for Mo.",
+      "notes": "Exact mode seeds every box with the equal split of £10.00, and each step is £1.00. Saving is blocked until the parts total £40.00.",
+      "goal": [
+        {
+          "name": "Split mode is exact",
+          "path": "derived.lastExpense.mode",
+          "op": "eq",
+          "value": "exact",
+          "weight": 2
+        },
+        {
+          "name": "Your share is £16.00",
+          "path": "derived.lastExpenseShares.Ren",
+          "op": "eq",
+          "value": 1600,
+          "weight": 2
+        },
+        {
+          "name": "Suri's share is £8.00",
+          "path": "derived.lastExpenseShares.Suri",
+          "op": "eq",
+          "value": 800
+        },
+        {
+          "name": "Mo's share is £6.00",
+          "path": "derived.lastExpenseShares.Mo",
+          "op": "eq",
+          "value": 600
+        },
+        {
+          "name": "Mo is the payer",
+          "path": "derived.lastExpense.payer",
+          "op": "eq",
+          "value": "Mo"
+        },
+        {
+          "name": "Your balance is £207.78",
+          "path": "derived.balancesByGroup.Lisbon trip.Ren",
+          "op": "eq",
+          "value": 20778,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T07_shares_split",
+      "name": "Split by shares",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "split",
+        "shares"
+      ],
+      "instruction": "Add a £60.00 expense called \"Car hire\" to the Lisbon trip, paid by Suri, split by shares with two shares for you and one each for Ivo, Suri and Mo.",
+      "goal": [
+        {
+          "name": "Split mode is shares",
+          "path": "derived.lastExpense.mode",
+          "op": "eq",
+          "value": "shares",
+          "weight": 2
+        },
+        {
+          "name": "You carry £24.00 of it",
+          "path": "derived.lastExpenseShares.Ren",
+          "op": "eq",
+          "value": 2400,
+          "weight": 2,
+          "hint": "two shares out of five"
+        },
+        {
+          "name": "Ivo carries £12.00",
+          "path": "derived.lastExpenseShares.Ivo",
+          "op": "eq",
+          "value": 1200
+        },
+        {
+          "name": "Suri now owes £164.37",
+          "path": "derived.balancesByGroup.Lisbon trip.Suri",
+          "op": "eq",
+          "value": -16437,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T08_delete_expense",
+      "name": "Delete an expense",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "delete",
+        "confirm-dialog",
+        "balances"
+      ],
+      "instruction": "Delete the Groceries expense from the Lisbon trip.",
+      "goal": [
+        {
+          "name": "Groceries is gone",
+          "path": "derived.expenseTitles",
+          "op": "not_contains",
+          "value": "Groceries",
+          "weight": 2
+        },
+        {
+          "name": "Six expenses remain",
+          "path": "derived.expenseCount",
+          "op": "eq",
+          "value": 6
+        },
+        {
+          "name": "Suri now owes £248.00",
+          "path": "derived.balancesByGroup.Lisbon trip.Suri",
+          "op": "eq",
+          "value": -24800,
+          "weight": 2,
+          "hint": "she paid for it, so deleting it costs her"
+        }
+      ]
+    },
+    {
+      "id": "T09_settle_suri",
+      "name": "Record the biggest payment",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "settle-up",
+        "balances"
+      ],
+      "instruction": "Open the Lisbon trip balances and record the largest payment the app suggests.",
+      "goal": [
+        {
+          "name": "A settlement was recorded",
+          "path": "derived.settlementCount",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "Suri paid you",
+          "path": "derived.lastSettlement.from",
+          "op": "eq",
+          "value": "Suri",
+          "weight": 2
+        },
+        {
+          "name": "For £212.37",
+          "path": "derived.lastSettlement.amount",
+          "op": "eq",
+          "value": 21237,
+          "weight": 2
+        },
+        {
+          "name": "Suri is now square",
+          "path": "derived.balancesByGroup.Lisbon trip.Suri",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "You are owed £11.41",
+          "path": "derived.balancesByGroup.Lisbon trip.Ren",
+          "op": "eq",
+          "value": 1141
+        }
+      ]
+    },
+    {
+      "id": "T10_query_payments",
+      "name": "Question: how many payments to settle",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "answer_expected": true,
+      "tags": [
+        "settle-up",
+        "query",
+        "read-only"
+      ],
+      "instruction": "How many payments does the Lisbon trip need to settle up completely? Answer with just the number.",
+      "goal": [
+        {
+          "name": "The answer is 3",
+          "source": "answer",
+          "op": "eq",
+          "value": 3,
+          "extract": "number",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was recorded",
+          "path": "derived.settlementCount",
+          "op": "eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T11_query_share",
+      "name": "Question: your share of the dinner",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "answer_expected": true,
+      "tags": [
+        "query",
+        "split",
+        "read-only"
+      ],
+      "instruction": "The Belcanto dinner was split with exact amounts. What is your share? Answer in pounds and pence.",
+      "goal": [
+        {
+          "name": "The answer is £65.00",
+          "source": "answer",
+          "op": "contains",
+          "value": "65.00",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.expenseCount",
+          "op": "eq",
+          "value": 7
+        }
+      ]
+    },
+    {
+      "id": "T12_query_rounding",
+      "name": "Question: the rounding penny",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "answer_expected": true,
+      "tags": [
+        "query",
+        "rounding",
+        "read-only"
+      ],
+      "instruction": "Groceries cost £47.50 split equally four ways, which does not divide evenly. What is your share? Answer in pounds and pence.",
+      "goal": [
+        {
+          "name": "The answer is £11.88",
+          "source": "answer",
+          "op": "contains",
+          "value": "11.88",
+          "weight": 3,
+          "hint": "the remainder pennies go to the earliest people in the group"
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.expenseCount",
+          "op": "eq",
+          "value": 7
+        }
+      ]
+    },
+    {
+      "id": "T13_new_group",
+      "name": "Start a new group",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 22,
+      "tags": [
+        "group",
+        "form"
+      ],
+      "instruction": "Create a new group called \"Ski week\" with you, Jules and Mo in it.",
+      "goal": [
+        {
+          "name": "The group exists",
+          "path": "derived.groupNames",
+          "op": "contains",
+          "value": "Ski week",
+          "weight": 2
+        },
+        {
+          "name": "Three groups now",
+          "path": "groups",
+          "op": "len_eq",
+          "value": 3
+        },
+        {
+          "name": "The right three people",
+          "path": "groups[last].members",
+          "op": "set_eq",
+          "value": [
+            "p_ren",
+            "p_jules",
+            "p_mo"
+          ],
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T14_flat_expense",
+      "name": "Add to the flat group",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 22,
+      "tags": [
+        "keypad",
+        "expense",
+        "group"
+      ],
+      "instruction": "Add a £90.00 expense called \"Boiler service\" to Flat 3B, paid by Ada and split equally.",
+      "goal": [
+        {
+          "name": "It landed in Flat 3B",
+          "path": "derived.lastExpense.group",
+          "op": "eq",
+          "value": "Flat 3B",
+          "weight": 2
+        },
+        {
+          "name": "Ada paid",
+          "path": "derived.lastExpense.payer",
+          "op": "eq",
+          "value": "Ada"
+        },
+        {
+          "name": "£30.00 each",
+          "path": "derived.lastExpenseShares.Ren",
+          "op": "eq",
+          "value": 3000
+        },
+        {
+          "name": "Ada is now owed £26.00",
+          "path": "derived.balancesByGroup.Flat 3B.Ada",
+          "op": "eq",
+          "value": 2600,
+          "weight": 2
+        },
+        {
+          "name": "You now owe £4.00",
+          "path": "derived.balancesByGroup.Flat 3B.Ren",
+          "op": "eq",
+          "value": -400,
+          "weight": 2
+        },
+        {
+          "name": "Lisbon untouched",
+          "path": "derived.balancesByGroup.Lisbon trip.Ren",
+          "op": "eq",
+          "value": 22378
+        }
+      ]
+    },
+    {
+      "id": "T15_flagship",
+      "name": "Exact split with a category (flagship)",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 50,
+      "tags": [
+        "keypad",
+        "exact",
+        "payer",
+        "category",
+        "long-horizon"
+      ],
+      "instruction": "Add a £128.00 expense to the Lisbon trip called \"Boat trip\", paid by Ivo, filed under Travel, split with exact amounts: £40.00 for you, £32.00 for Ivo, £32.00 for Suri and £24.00 for Mo.",
+      "notes": "Equal would be £32.00 each; only your share and Mo's need moving.",
+      "goal": [
+        {
+          "name": "Right amount",
+          "path": "derived.lastExpense.amount",
+          "op": "eq",
+          "value": 12800,
+          "weight": 2
+        },
+        {
+          "name": "Ivo paid",
+          "path": "derived.lastExpense.payer",
+          "op": "eq",
+          "value": "Ivo",
+          "weight": 2
+        },
+        {
+          "name": "Filed under travel",
+          "path": "derived.lastExpense.category",
+          "op": "eq",
+          "value": "travel",
+          "weight": 2
+        },
+        {
+          "name": "Exact split",
+          "path": "derived.lastExpense.mode",
+          "op": "eq",
+          "value": "exact"
+        },
+        {
+          "name": "Your share is £40.00",
+          "path": "derived.lastExpenseShares.Ren",
+          "op": "eq",
+          "value": 4000,
+          "weight": 2
+        },
+        {
+          "name": "Mo's share is £24.00",
+          "path": "derived.lastExpenseShares.Mo",
+          "op": "eq",
+          "value": 2400,
+          "weight": 2
+        },
+        {
+          "name": "Ivo is now owed £138.79",
+          "path": "derived.balancesByGroup.Lisbon trip.Ivo",
+          "op": "eq",
+          "value": 13879,
+          "weight": 3
+        },
+        {
+          "name": "Efficiency: 34 steps or fewer",
+          "source": "trajectory",
+          "path": "steps",
+          "op": "lte",
+          "value": 34,
+          "critical": false,
+          "weight": 0.5
+        }
+      ]
+    },
+    {
+      "id": "T16_mode_roundtrip",
+      "name": "Try shares, then go back to equal",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "split",
+        "mode",
+        "process-check"
+      ],
+      "instruction": "Add a £30.00 expense called \"Snacks\" to the Lisbon trip, paid by Mo. Have a look at the by-shares mode first, then switch back to splitting equally and save it.",
+      "goal": [
+        {
+          "name": "Saved as an equal split",
+          "path": "derived.lastExpense.mode",
+          "op": "eq",
+          "value": "equal",
+          "weight": 2
+        },
+        {
+          "name": "£7.50 each",
+          "path": "derived.lastExpenseShares.Ren",
+          "op": "eq",
+          "value": 750,
+          "weight": 2
+        },
+        {
+          "name": "Shares mode was actually opened",
+          "source": "trajectory",
+          "path": "ids",
+          "op": "contains",
+          "value": "mode_shares",
+          "weight": 2,
+          "hint": "a process check — going straight to save does not count"
+        }
+      ]
+    },
+    {
+      "id": "T17_reduce_suri",
+      "name": "Get Suri under £200 (many valid answers)",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "unique_solution": false,
+      "tags": [
+        "constraint",
+        "balances",
+        "multi-solution"
+      ],
+      "instruction": "Suri owes far too much. Add one expense to the Lisbon trip that brings what she owes below £200. Do not delete anything and do not record any payments.",
+      "notes": "Anything Suri pays for, split among the others, moves her balance up. She is at -£212.37.",
+      "goal": [
+        {
+          "name": "Suri owes less than £200",
+          "path": "derived.balancesByGroup.Lisbon trip.Suri",
+          "op": "gt",
+          "value": -20000,
+          "weight": 3
+        },
+        {
+          "name": "Exactly one expense was added",
+          "path": "derived.expenseCount",
+          "op": "eq",
+          "value": 8,
+          "weight": 2
+        },
+        {
+          "name": "No payments were recorded",
+          "path": "derived.settlementCount",
+          "op": "eq",
+          "value": 0,
+          "weight": 2
+        },
+        {
+          "name": "Nothing was deleted",
+          "path": "derived.expenseTitles",
+          "op": "contains",
+          "value": "Groceries"
+        }
+      ]
+    },
+    {
+      "id": "T18_settle_flat",
+      "name": "Settle the flat",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "settle-up",
+        "group"
+      ],
+      "instruction": "In Flat 3B, record the payment that clears your own balance.",
+      "goal": [
+        {
+          "name": "You are square",
+          "path": "derived.balancesByGroup.Flat 3B.Ren",
+          "op": "eq",
+          "value": 0,
+          "weight": 3
+        },
+        {
+          "name": "Ada paid you £26.00",
+          "path": "derived.lastSettlement.amount",
+          "op": "eq",
+          "value": 2600,
+          "weight": 2
+        },
+        {
+          "name": "Jules is still owed £8.00",
+          "path": "derived.balancesByGroup.Flat 3B.Jules",
+          "op": "eq",
+          "value": 800
+        },
+        {
+          "name": "Lisbon untouched",
+          "path": "derived.balancesByGroup.Lisbon trip.Ren",
+          "op": "eq",
+          "value": 22378
+        }
+      ]
+    },
+    {
+      "id": "T19_delete_and_report",
+      "name": "Delete the taxi, then report",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 22,
+      "answer_expected": true,
+      "tags": [
+        "delete",
+        "query",
+        "balances"
+      ],
+      "instruction": "Delete the \"Taxi from airport\" expense, then tell me what Mo owes afterwards, in pounds and pence.",
+      "goal": [
+        {
+          "name": "The taxi is gone",
+          "path": "derived.expenseTitles",
+          "op": "not_contains",
+          "value": "Taxi from airport",
+          "weight": 2
+        },
+        {
+          "name": "The answer is £44.87",
+          "source": "answer",
+          "op": "contains",
+          "value": "44.87",
+          "weight": 3
+        },
+        {
+          "name": "Mo's balance really is that",
+          "path": "derived.balancesByGroup.Lisbon trip.Mo",
+          "op": "eq",
+          "value": -4487,
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "id": "T20_zero_out",
+      "name": "Clear the whole flat group",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "settle-up",
+        "balances",
+        "long-horizon"
+      ],
+      "instruction": "Record every payment the app suggests for Flat 3B, so that everybody in that group is settled up.",
+      "goal": [
+        {
+          "name": "You are square",
+          "path": "derived.balancesByGroup.Flat 3B.Ren",
+          "op": "eq",
+          "value": 0,
+          "weight": 2
+        },
+        {
+          "name": "Jules is square",
+          "path": "derived.balancesByGroup.Flat 3B.Jules",
+          "op": "eq",
+          "value": 0,
+          "weight": 2
+        },
+        {
+          "name": "Ada is square",
+          "path": "derived.balancesByGroup.Flat 3B.Ada",
+          "op": "eq",
+          "value": 0,
+          "weight": 2
+        },
+        {
+          "name": "Two payments recorded",
+          "path": "derived.settlementCount",
+          "op": "eq",
+          "value": 2,
+          "weight": 2
+        },
+        {
+          "name": "Lisbon was left alone",
+          "path": "derived.balancesByGroup.Lisbon trip.Suri",
+          "op": "eq",
+          "value": -21237
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,330 @@
+{
+  "env": "sable_privacy",
+  "note": "Golden action sequences replayed by CI.",
+  "solutions": {
+    "T01_settings": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_limitAdTracking"
+      },
+      {
+        "action": "tap",
+        "id": "set_askToTrack"
+      }
+    ],
+    "T02_bgloc": [
+      {
+        "action": "finish",
+        "answer": "Three: Compass Maps, Cirrus Weather and Stride Fitness."
+      }
+    ],
+    "T03_tracking": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "finish",
+        "answer": "Chatter, Marketplace and Streamly."
+      }
+    ],
+    "T04_maps": [
+      {
+        "action": "tap",
+        "id": "app_a_maps"
+      },
+      {
+        "action": "finish",
+        "answer": "Only «Arrival alerts while the app is closed». Navigation is happy with «While using» and lane-level guidance only wants precise location."
+      }
+    ],
+    "T05_broken": [
+      {
+        "action": "tap",
+        "id": "tab_matrix"
+      },
+      {
+        "action": "finish",
+        "answer": "None — all 19 are working."
+      }
+    ],
+    "T06_precise": [
+      {
+        "action": "tap",
+        "id": "app_a_maps"
+      },
+      {
+        "action": "tap",
+        "id": "lv_p_loc_0"
+      },
+      {
+        "action": "tap",
+        "id": "sw_p_prec"
+      },
+      {
+        "action": "finish",
+        "answer": "It refused — location itself is off, so turning precise location on would mean nothing."
+      }
+    ],
+    "T07_stop_bg": [
+      {
+        "action": "tap",
+        "id": "stop_bg"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "finish",
+        "answer": "Three: the arrival alerts, the rain warning and automatic workout detection. Navigation and the run route both survive."
+      }
+    ],
+    "T08_maps_bg": [
+      {
+        "action": "tap",
+        "id": "app_a_maps"
+      },
+      {
+        "action": "tap",
+        "id": "sw_p_bg"
+      },
+      {
+        "action": "finish",
+        "answer": "«Always» quietly dropped to «While using», and the arrival alerts stopped. Navigation and lane guidance are fine."
+      }
+    ],
+    "T09_maps_never": [
+      {
+        "action": "tap",
+        "id": "app_a_maps"
+      },
+      {
+        "action": "tap",
+        "id": "lv_p_loc_0"
+      },
+      {
+        "action": "finish",
+        "answer": "All three. Lane guidance needs precise location, and precise location is meaningless once plain location is off, so it goes with it."
+      }
+    ],
+    "T10_camera": [
+      {
+        "action": "tap",
+        "id": "app_a_chatter"
+      },
+      {
+        "action": "tap",
+        "id": "sw_p_cam"
+      },
+      {
+        "action": "finish",
+        "answer": "Only «Taking a photo in-app». Sending photos uses the photo library, not the camera, so it carries on."
+      }
+    ],
+    "T11_revoke_tracking": [
+      {
+        "action": "tap",
+        "id": "tab_perms"
+      },
+      {
+        "action": "tap",
+        "id": "pp_p_track"
+      },
+      {
+        "action": "tap",
+        "id": "revoke_all"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "finish",
+        "answer": "Two — Marketplace's cross-app ads and Streamly's recommendations. Chatter had tracking on but nothing on its feature list depends on it, so it loses nothing at all."
+      }
+    ],
+    "T12_by_perm": [
+      {
+        "action": "tap",
+        "id": "tab_perms"
+      },
+      {
+        "action": "tap",
+        "id": "pp_p_mic"
+      },
+      {
+        "action": "finish",
+        "answer": "One — only Chatter."
+      }
+    ],
+    "T13_contacts": [
+      {
+        "action": "tap",
+        "id": "app_a_chatter"
+      },
+      {
+        "action": "tap",
+        "id": "sw_p_contacts"
+      },
+      {
+        "action": "finish",
+        "answer": "«Find friends by number» — nothing else on Chatter's list touches contacts."
+      }
+    ],
+    "T14_weather": [
+      {
+        "action": "tap",
+        "id": "app_a_weather"
+      },
+      {
+        "action": "tap",
+        "id": "lv_p_loc_1"
+      },
+      {
+        "action": "finish",
+        "answer": "It loses «Rain starting in 20 minutes» and keeps «Weather where you are»."
+      }
+    ],
+    "T15_keep_nav": [
+      {
+        "action": "tap",
+        "id": "stop_bg"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "finish",
+        "answer": "Arrival alerts, the rain warning and automatic workout detection. Everything that matters only ever needed «While using» — plus precise location for the lane guidance and the run route, and that is untouched."
+      }
+    ],
+    "T16_which_free": [
+      {
+        "action": "tap",
+        "id": "tab_perms"
+      },
+      {
+        "action": "tap",
+        "id": "pp_p_track"
+      },
+      {
+        "action": "tap",
+        "id": "revoke_all"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "finish",
+        "answer": "Tracking. Chatter, Marketplace and Streamly all have it, but only Marketplace's cross-app ads and Streamly's recommendations actually use it."
+      }
+    ],
+    "T17_chatter_strip": [
+      {
+        "action": "tap",
+        "id": "app_a_chatter"
+      },
+      {
+        "action": "tap",
+        "id": "sw_p_cam"
+      },
+      {
+        "action": "tap",
+        "id": "sw_p_mic"
+      },
+      {
+        "action": "tap",
+        "id": "sw_p_contacts"
+      },
+      {
+        "action": "finish",
+        "answer": "Two survive — sending photos from the library and people nearby."
+      }
+    ],
+    "T18_all_location": [
+      {
+        "action": "tap",
+        "id": "tab_perms"
+      },
+      {
+        "action": "tap",
+        "id": "pp_p_loc"
+      },
+      {
+        "action": "tap",
+        "id": "revoke_all"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "finish",
+        "answer": "Nine — and two of them, lane guidance and the run route, only went because precise location cannot survive without plain location."
+      }
+    ],
+    "T19_bank": [
+      {
+        "action": "tap",
+        "id": "app_a_bank"
+      },
+      {
+        "action": "tap",
+        "id": "sw_p_cam"
+      },
+      {
+        "action": "finish",
+        "answer": "Took the camera off. The cheque photo is gone; the nearest-branch finder runs on location, which I did not touch."
+      }
+    ],
+    "T20_tidy": [
+      {
+        "action": "tap",
+        "id": "stop_bg"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "tap",
+        "id": "tab_perms"
+      },
+      {
+        "action": "tap",
+        "id": "pp_p_track"
+      },
+      {
+        "action": "tap",
+        "id": "revoke_all"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "tap",
+        "id": "tab_overview"
+      },
+      {
+        "action": "tap",
+        "id": "app_a_chatter"
+      },
+      {
+        "action": "tap",
+        "id": "sw_p_mic"
+      },
+      {
+        "action": "finish",
+        "answer": "Six: the three background-location ones, the two tracking ones and Chatter's voice messages. Navigation and the run route are both untouched."
+      }
+    ]
+  }
+}

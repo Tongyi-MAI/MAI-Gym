@@ -1,0 +1,29 @@
+{
+  "id": "umber_photos",
+  "name": "Umber",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "viewport": {"width": 390, "height": 844},
+  "description": "A single-file H5 photo library whose world model is an edit stack. A photo is its original plus an ordered list of things you did to it; what you see is that list folded down, so three taps of exposure are three entries and undo takes back one of them rather than all. Reset empties the stack and the original is untouched underneath. The stack can be copied whole onto another photo, or onto a whole selection at once, which is how twelve holiday pictures come to match. 8 screens, 12 photos, 3 albums, 5 filters, 4 crops; every picture is generated from its own palette and the fold is applied as real CSS, so pixels change when the stack does.",
+  "tasks_file": "tasks.json",
+  "oracle_file": "oracle.json",
+  "action_space": {
+    "tap":    {"id": "test-id of the element"},
+    "type":   {"id": "test-id of a text field", "text": "replaces the whole value"},
+    "back":   {}, "home": {}, "wait": {},
+    "finish": {"answer": "final answer for question tasks; optional for action tasks"},
+    "tap_xy": {"x": "screen pixel x", "y": "screen pixel y", "note": "browser backend only"}
+  },
+  "observation": {
+    "text": "engine.a11y(state) — the viewer prints the folded look and the stack prints every entry in order, marking which one undo would take.",
+    "pixels": "390x844 screenshot (browser backend); the edit is applied to the picture itself, so a vision agent sees the change it just made",
+    "state": "engine.snapshot(state) — canonical state plus a derived view with the fold per photo. For the verifier only."
+  },
+  "world": {
+    "edits": "an ordered stack per photo; adjustments are deltas that sum, filter and crop are the last one set",
+    "undo": "pops exactly one entry off the stack",
+    "reset": "empties the stack; the original was never written over",
+    "clipboard": "copy takes a whole stack, paste replaces the target's stack with it",
+    "range": "each adjustment folds to between -5 and +5 and refuses to go further"
+  }
+}

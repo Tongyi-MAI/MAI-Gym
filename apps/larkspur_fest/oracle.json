@@ -1,0 +1,291 @@
+{
+  "env": "larkspur_fest",
+  "note": "Golden action sequences replayed by CI.",
+  "solutions": {
+    "T01_settings": [
+      {
+        "action": "tap",
+        "id": "open_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_warnTight"
+      },
+      {
+        "action": "tap",
+        "id": "set_autoRemoveClash"
+      }
+    ],
+    "T02_query_count": [
+      {
+        "action": "tap",
+        "id": "tab_acts"
+      },
+      {
+        "action": "finish",
+        "answer": "8"
+      }
+    ],
+    "T03_add_headliner": [
+      {
+        "action": "tap",
+        "id": "tab_acts"
+      },
+      {
+        "action": "tap",
+        "id": "day_sat"
+      },
+      {
+        "action": "tap",
+        "id": "add_a_lark"
+      }
+    ],
+    "T04_clash": [
+      {
+        "action": "tap",
+        "id": "add_a_fox"
+      },
+      {
+        "action": "finish",
+        "answer": "Marram"
+      }
+    ],
+    "T05_fix": [
+      {
+        "action": "tap",
+        "id": "add_a_fox"
+      },
+      {
+        "action": "tap",
+        "id": "tab_clashes"
+      },
+      {
+        "action": "tap",
+        "id": "fix_fri_0"
+      }
+    ],
+    "T06_query_walk": [
+      {
+        "action": "tap",
+        "id": "tab_map"
+      },
+      {
+        "action": "finish",
+        "answer": "20"
+      }
+    ],
+    "T07_remove": [
+      {
+        "action": "tap",
+        "id": "drop_a_ash"
+      }
+    ],
+    "T08_query_overlap": [
+      {
+        "action": "tap",
+        "id": "tab_acts"
+      },
+      {
+        "action": "finish",
+        "answer": "2"
+      }
+    ],
+    "T09_clear_day": [
+      {
+        "action": "tap",
+        "id": "clear_day"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      }
+    ],
+    "T10_flagship": [
+      {
+        "action": "tap",
+        "id": "tab_acts"
+      },
+      {
+        "action": "tap",
+        "id": "day_sat"
+      },
+      {
+        "action": "tap",
+        "id": "add_a_tern"
+      },
+      {
+        "action": "tap",
+        "id": "add_a_cinder"
+      },
+      {
+        "action": "tap",
+        "id": "add_a_willow"
+      },
+      {
+        "action": "tap",
+        "id": "add_a_lark"
+      }
+    ],
+    "T11_stage_filter": [
+      {
+        "action": "tap",
+        "id": "tab_acts"
+      },
+      {
+        "action": "tap",
+        "id": "stage_chapel"
+      },
+      {
+        "action": "tap",
+        "id": "add_a_vellum"
+      }
+    ],
+    "T12_query_tight": [
+      {
+        "action": "tap",
+        "id": "add_a_fox"
+      },
+      {
+        "action": "tap",
+        "id": "tab_clashes"
+      },
+      {
+        "action": "finish",
+        "answer": "8"
+      }
+    ],
+    "T13_auto_drop": [
+      {
+        "action": "tap",
+        "id": "open_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_autoRemoveClash"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "add_a_puddle"
+      }
+    ],
+    "T14_query_minutes": [
+      {
+        "action": "finish",
+        "answer": "195"
+      }
+    ],
+    "T15_fix_keeping": [
+      {
+        "action": "tap",
+        "id": "add_a_hollow"
+      },
+      {
+        "action": "tap",
+        "id": "drop_a_hollow"
+      }
+    ],
+    "T16_search": [
+      {
+        "action": "tap",
+        "id": "tab_acts"
+      },
+      {
+        "action": "tap",
+        "id": "day_sat"
+      },
+      {
+        "action": "type",
+        "id": "q_act",
+        "text": "kestrel"
+      },
+      {
+        "action": "tap",
+        "id": "act_a_kest"
+      }
+    ],
+    "T17_genre": [
+      {
+        "action": "tap",
+        "id": "tab_acts"
+      },
+      {
+        "action": "tap",
+        "id": "genre_choral"
+      },
+      {
+        "action": "finish",
+        "answer": "2"
+      }
+    ],
+    "T18_three_clean": [
+      {
+        "action": "tap",
+        "id": "tab_acts"
+      },
+      {
+        "action": "tap",
+        "id": "day_sat"
+      },
+      {
+        "action": "tap",
+        "id": "add_a_tern"
+      },
+      {
+        "action": "tap",
+        "id": "add_a_cinder"
+      },
+      {
+        "action": "tap",
+        "id": "add_a_willow"
+      }
+    ],
+    "T19_day_switch": [
+      {
+        "action": "tap",
+        "id": "day_sat"
+      },
+      {
+        "action": "tap",
+        "id": "tab_acts"
+      },
+      {
+        "action": "tap",
+        "id": "day_sat"
+      },
+      {
+        "action": "tap",
+        "id": "add_a_tern"
+      }
+    ],
+    "T20_swap_days": [
+      {
+        "action": "tap",
+        "id": "clear_day"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "tap",
+        "id": "tab_acts"
+      },
+      {
+        "action": "tap",
+        "id": "day_sat"
+      },
+      {
+        "action": "tap",
+        "id": "add_a_tern"
+      },
+      {
+        "action": "tap",
+        "id": "add_a_lark"
+      }
+    ]
+  }
+}

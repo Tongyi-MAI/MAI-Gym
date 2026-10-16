@@ -1,0 +1,29 @@
+{
+  "id": "tally_split",
+  "name": "Tally",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "viewport": {"width": 390, "height": 844},
+  "description": "A single-file H5 shared-expense app. The world is a ledger and every screen is a view of one arithmetic invariant: the balances in a group always sum to zero. Amounts are entered on a numeric keypad rather than a text field, splits come in three modes (equally, exact amounts, by shares), an exact split refuses to save until the parts add up to the whole, and equal splits distribute the remainder pennies explicitly. 10 screens, 2 seeded groups, 7 seeded expenses, greedy settle-up suggestions.",
+  "tasks_file": "tasks.json",
+  "oracle_file": "oracle.json",
+  "action_space": {
+    "tap":    {"id": "test-id of the element"},
+    "type":   {"id": "test-id of a text field", "text": "replaces the whole value"},
+    "back":   {}, "home": {}, "wait": {},
+    "finish": {"answer": "final answer for question tasks; optional for action tasks"},
+    "tap_xy": {"x": "screen pixel x", "y": "screen pixel y", "note": "browser backend only"}
+  },
+  "observation": {
+    "text": "engine.a11y(state) — balances, per-person shares and the keypad all serialise, so a text-only agent can enter an amount digit by digit and read the split back.",
+    "pixels": "390x844 screenshot (browser backend); __ENV__.bounds() maps every test-id to a pixel box",
+    "state": "engine.snapshot(state) — canonical state plus a derived view with balances keyed by name. For the verifier only."
+  },
+  "world": {
+    "clock": "14:26",
+    "money": "every amount is an integer in pence; the keypad appends digits from the right, so 3 6 0 0 is £36.00",
+    "rounding": "an equal split gives the remainder pennies to the earliest people in the group, so £47.50 across four is 11.88 / 11.88 / 11.87 / 11.87",
+    "invariant": "balances within a group always sum to exactly zero, before and after any edit",
+    "settle_up": "the suggestion is a greedy match of the largest debtor to the largest creditor; recording one moves the balance without deleting any expense"
+  }
+}

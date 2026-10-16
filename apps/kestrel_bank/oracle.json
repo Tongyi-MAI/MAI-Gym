@@ -1,0 +1,376 @@
+{
+  "env": "kestrel_bank",
+  "note": "Golden action sequences replayed by CI.",
+  "solutions": {
+    "T01_freeze": [
+      {
+        "action": "tap",
+        "id": "tab_card"
+      },
+      {
+        "action": "tap",
+        "id": "set_frozen"
+      }
+    ],
+    "T02_query_payday": [
+      {
+        "action": "tap",
+        "id": "see_upcoming"
+      },
+      {
+        "action": "finish",
+        "answer": "28"
+      }
+    ],
+    "T03_settings": [
+      {
+        "action": "tap",
+        "id": "open_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_roundUps"
+      },
+      {
+        "action": "tap",
+        "id": "set_weeklyReport"
+      }
+    ],
+    "T04_query_groceries": [
+      {
+        "action": "tap",
+        "id": "tab_activity"
+      },
+      {
+        "action": "tap",
+        "id": "cat_groceries"
+      },
+      {
+        "action": "finish",
+        "answer": "£117.77"
+      }
+    ],
+    "T05_query_refund": [
+      {
+        "action": "tap",
+        "id": "tab_activity"
+      },
+      {
+        "action": "tap",
+        "id": "cat_shopping"
+      },
+      {
+        "action": "finish",
+        "answer": "£12.99 net"
+      }
+    ],
+    "T06_recategorise": [
+      {
+        "action": "tap",
+        "id": "tab_activity"
+      },
+      {
+        "action": "tap",
+        "id": "txn_t_14"
+      },
+      {
+        "action": "tap",
+        "id": "txn_cat"
+      },
+      {
+        "action": "tap",
+        "id": "cat_pick_fitness"
+      }
+    ],
+    "T07_pause_gym": [
+      {
+        "action": "tap",
+        "id": "see_upcoming"
+      },
+      {
+        "action": "tap",
+        "id": "up_so_gym"
+      },
+      {
+        "action": "tap",
+        "id": "order_pause"
+      }
+    ],
+    "T08_pot_out": [
+      {
+        "action": "tap",
+        "id": "tab_pots"
+      },
+      {
+        "action": "tap",
+        "id": "pot_p_holiday"
+      },
+      {
+        "action": "tap",
+        "id": "take_5000"
+      }
+    ],
+    "T09_new_pot": [
+      {
+        "action": "tap",
+        "id": "tab_pots"
+      },
+      {
+        "action": "tap",
+        "id": "new_pot"
+      },
+      {
+        "action": "type",
+        "id": "pot_name",
+        "text": "Dentist"
+      },
+      {
+        "action": "tap",
+        "id": "target_dec"
+      },
+      {
+        "action": "tap",
+        "id": "pot_create"
+      }
+    ],
+    "T10_contactless": [
+      {
+        "action": "tap",
+        "id": "tab_card"
+      },
+      {
+        "action": "tap",
+        "id": "limit_dec"
+      },
+      {
+        "action": "tap",
+        "id": "limit_dec"
+      },
+      {
+        "action": "tap",
+        "id": "limit_dec"
+      }
+    ],
+    "T11_query_lowest": [
+      {
+        "action": "tap",
+        "id": "bal_card"
+      },
+      {
+        "action": "finish",
+        "answer": "-£72.49, on the 27th"
+      }
+    ],
+    "T12_cancel_stream": [
+      {
+        "action": "tap",
+        "id": "see_upcoming"
+      },
+      {
+        "action": "tap",
+        "id": "up_so_stream"
+      },
+      {
+        "action": "tap",
+        "id": "order_cancel"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      }
+    ],
+    "T13_move_day": [
+      {
+        "action": "tap",
+        "id": "see_upcoming"
+      },
+      {
+        "action": "tap",
+        "id": "up_so_savings"
+      },
+      {
+        "action": "tap",
+        "id": "order_day_inc"
+      },
+      {
+        "action": "tap",
+        "id": "order_day_inc"
+      },
+      {
+        "action": "tap",
+        "id": "order_day_inc"
+      }
+    ],
+    "T14_query_count": [
+      {
+        "action": "tap",
+        "id": "see_upcoming"
+      },
+      {
+        "action": "finish",
+        "answer": "7"
+      }
+    ],
+    "T15_flagship": [
+      {
+        "action": "tap",
+        "id": "see_upcoming"
+      },
+      {
+        "action": "tap",
+        "id": "up_so_council"
+      },
+      {
+        "action": "tap",
+        "id": "order_pause"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "up_so_energy"
+      },
+      {
+        "action": "tap",
+        "id": "order_pause"
+      }
+    ],
+    "T16_card_controls": [
+      {
+        "action": "tap",
+        "id": "tab_card"
+      },
+      {
+        "action": "tap",
+        "id": "set_gambling"
+      },
+      {
+        "action": "tap",
+        "id": "set_online"
+      }
+    ],
+    "T17_note": [
+      {
+        "action": "tap",
+        "id": "tab_activity"
+      },
+      {
+        "action": "tap",
+        "id": "txn_t_12"
+      },
+      {
+        "action": "type",
+        "id": "txn_note",
+        "text": "Claim this on insurance"
+      }
+    ],
+    "T18_lost_card": [
+      {
+        "action": "tap",
+        "id": "tab_card"
+      },
+      {
+        "action": "tap",
+        "id": "show_pin"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "tap",
+        "id": "pin_sheet_close"
+      },
+      {
+        "action": "tap",
+        "id": "report_lost"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      }
+    ],
+    "T19_pot_and_fix": [
+      {
+        "action": "tap",
+        "id": "tab_pots"
+      },
+      {
+        "action": "tap",
+        "id": "pot_p_rain"
+      },
+      {
+        "action": "tap",
+        "id": "add_5000"
+      },
+      {
+        "action": "tap",
+        "id": "add_1000"
+      },
+      {
+        "action": "tap",
+        "id": "add_1000"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "tab_home"
+      },
+      {
+        "action": "tap",
+        "id": "see_upcoming"
+      },
+      {
+        "action": "tap",
+        "id": "up_so_savings"
+      },
+      {
+        "action": "tap",
+        "id": "order_pause"
+      }
+    ],
+    "T20_two_moves": [
+      {
+        "action": "tap",
+        "id": "tab_activity"
+      },
+      {
+        "action": "tap",
+        "id": "txn_t_14"
+      },
+      {
+        "action": "tap",
+        "id": "txn_cat"
+      },
+      {
+        "action": "tap",
+        "id": "cat_pick_fitness"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "txn_t_11"
+      },
+      {
+        "action": "tap",
+        "id": "txn_cat"
+      },
+      {
+        "action": "tap",
+        "id": "cat_pick_fitness"
+      },
+      {
+        "action": "finish",
+        "answer": "£13.50"
+      }
+    ]
+  }
+}

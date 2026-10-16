@@ -1,0 +1,790 @@
+{
+  "env": "daniel_phone",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_free",
+      "name": "How tight is it",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "tags": [
+        "storage",
+        "query",
+        "read-only"
+      ],
+      "instruction": "How much free space is on this iPhone, and how far short of the iOS 26.1 update is that?",
+      "goal": [
+        {
+          "name": "3.14 GB free",
+          "source": "answer",
+          "op": "regex",
+          "value": "3[.,]14"
+        },
+        {
+          "name": "3.66 GB short",
+          "source": "answer",
+          "op": "regex",
+          "value": "3[.,]66"
+        },
+        {
+          "name": "nothing changed",
+          "path": "derived.freeDevice",
+          "op": "eq",
+          "value": 3140
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T02_largest",
+      "name": "Open the biggest app",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "tags": [
+        "storage"
+      ],
+      "instruction": "Which app is taking up the most space on this iPhone? Open its storage page.",
+      "goal": [
+        {
+          "name": "Sonora is open",
+          "path": "derived.appOpen",
+          "op": "eq",
+          "value": "sonora_music"
+        },
+        {
+          "name": "on an app page",
+          "path": "derived.route",
+          "op": "eq",
+          "value": "app"
+        }
+      ]
+    },
+    {
+      "id": "T03_empty",
+      "name": "Empty Recently Deleted",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "storage",
+        "photos"
+      ],
+      "instruction": "Empty Recently Deleted. Do not offload or delete any app.",
+      "goal": [
+        {
+          "name": "Recently Deleted is empty",
+          "path": "derived.trash",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "nothing offloaded",
+          "path": "derived.offloadedCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "nothing deleted",
+          "path": "derived.deletedCount",
+          "op": "eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T04_owner",
+      "name": "Whose phone is this",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "tags": [
+        "owner",
+        "query",
+        "read-only"
+      ],
+      "instruction": "Whose iPhone is this, and who is in his Family Sharing group?",
+      "goal": [
+        {
+          "name": "Daniel Okafor",
+          "source": "answer",
+          "op": "contains",
+          "value": "Daniel Okafor"
+        },
+        {
+          "name": "Ama",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Aa]ma"
+        },
+        {
+          "name": "Zoe",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Zz]oe"
+        },
+        {
+          "name": "Kwame",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Kk]wame"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T05_bak_one",
+      "name": "Stop the biggest backup",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "tags": [
+        "icloud"
+      ],
+      "instruction": "Turn off the iCloud backup for whichever app is contributing the most to tonight's backup. Leave every other switch alone.",
+      "goal": [
+        {
+          "name": "Files backup is off",
+          "path": "derived.bakOffIds",
+          "op": "contains",
+          "value": "harbour_files"
+        },
+        {
+          "name": "only that one",
+          "path": "derived.bakOffCount",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "device untouched",
+          "path": "derived.freeDevice",
+          "op": "eq",
+          "value": 3140
+        }
+      ]
+    },
+    {
+      "id": "T06_offload_maps",
+      "name": "Offload Maps",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "storage"
+      ],
+      "instruction": "Offload Maps. Nothing else.",
+      "goal": [
+        {
+          "name": "Maps offloaded",
+          "path": "derived.offloadedIds",
+          "op": "set_eq",
+          "value": [
+            "compass_maps"
+          ]
+        },
+        {
+          "name": "nothing deleted",
+          "path": "derived.deletedCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "480 MB back",
+          "path": "derived.freeDevice",
+          "op": "eq",
+          "value": 3620
+        },
+        {
+          "name": "Recently Deleted untouched",
+          "path": "derived.trash",
+          "op": "eq",
+          "value": 2180
+        }
+      ]
+    },
+    {
+      "id": "T07_offload_vs_delete",
+      "name": "Offload or delete",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "storage",
+        "query",
+        "read-only"
+      ],
+      "instruction": "For Books: how much does offloading it free, and how much does deleting it free? Say both figures and what the difference is made of.",
+      "goal": [
+        {
+          "name": "150 MB offloaded",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)150(?!\\d)"
+        },
+        {
+          "name": "4.39 GB deleted",
+          "source": "answer",
+          "op": "regex",
+          "value": "4[.,]39"
+        },
+        {
+          "name": "mentions documents",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Dd]ocuments|[Dd]ata|downloads"
+        },
+        {
+          "name": "read-only",
+          "path": "derived.offloadedCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "nothing deleted",
+          "path": "derived.deletedCount",
+          "op": "eq",
+          "value": 0
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T08_no_backup",
+      "name": "Big on disk, nothing in the backup",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "icloud",
+        "query",
+        "read-only"
+      ],
+      "instruction": "One app is by far the largest thing on this iPhone and yet adds nothing at all to tonight's iCloud backup. Which one, and why?",
+      "goal": [
+        {
+          "name": "Sonora",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Ss]onora"
+        },
+        {
+          "name": "says it re-downloads",
+          "source": "answer",
+          "op": "regex",
+          "value": "re-?download|redownload|store|streamed|not backed up"
+        },
+        {
+          "name": "nothing switched off",
+          "path": "derived.bakOffCount",
+          "op": "eq",
+          "value": 0
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T09_originals",
+      "name": "The switch that cannot be flipped",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "photos",
+        "query"
+      ],
+      "instruction": "Try switching Photos to Download and Keep Originals, then tell me what happened and by how much it misses.",
+      "goal": [
+        {
+          "name": "still on Optimise",
+          "path": "derived.photosMode",
+          "op": "eq",
+          "value": "optimise"
+        },
+        {
+          "name": "says it cannot",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Cc]an ?not|[Cc]an't|refus|impossible|not enough|too (big|small)|no room"
+        },
+        {
+          "name": "89.5 GB more",
+          "source": "answer",
+          "op": "regex",
+          "value": "89[.,]5"
+        },
+        {
+          "name": "nothing deleted",
+          "path": "derived.deletedCount",
+          "op": "eq",
+          "value": 0
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T10_move_books",
+      "name": "Tidy Books away",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "home",
+        "layout"
+      ],
+      "instruction": "Move Books into the Utilities folder. Leave every other icon where it is.",
+      "goal": [
+        {
+          "name": "Books is in Utilities",
+          "path": "derived.place.foxglove_reader",
+          "op": "eq",
+          "value": "f_util"
+        },
+        {
+          "name": "Sudoku did not move",
+          "path": "derived.place.grid_puzzle",
+          "op": "eq",
+          "value": "f_util"
+        },
+        {
+          "name": "Mail did not move",
+          "path": "derived.place.marlin_mail",
+          "op": "eq",
+          "value": "p1"
+        },
+        {
+          "name": "folder closed",
+          "path": "derived.openFolder",
+          "op": "eq",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "id": "T11_dock",
+      "name": "Rearrange the Dock",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "home",
+        "layout"
+      ],
+      "instruction": "He wants Files in the Dock. The Dock holds four, so move Camera out to Home Screen page 2 first and then put Files in.",
+      "goal": [
+        {
+          "name": "Files in the Dock",
+          "path": "derived.dock",
+          "op": "contains",
+          "value": "harbour_files"
+        },
+        {
+          "name": "Camera out of the Dock",
+          "path": "derived.dock",
+          "op": "not_contains",
+          "value": "lumen_camera"
+        },
+        {
+          "name": "Camera on page 2",
+          "path": "derived.place.lumen_camera",
+          "op": "eq",
+          "value": "p2"
+        },
+        {
+          "name": "Dock still four",
+          "path": "derived.dockCount",
+          "op": "eq",
+          "value": 4
+        }
+      ]
+    },
+    {
+      "id": "T12_after_trash",
+      "name": "Still short",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "storage",
+        "query"
+      ],
+      "instruction": "Empty Recently Deleted, then tell me how much the iOS 26.1 update is still short by.",
+      "goal": [
+        {
+          "name": "emptied",
+          "path": "derived.trash",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "still short",
+          "path": "derived.canUpdate",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "1.48 GB",
+          "source": "answer",
+          "op": "regex",
+          "value": "1[.,]48"
+        },
+        {
+          "name": "no app touched",
+          "path": "derived.offloadedCount",
+          "op": "eq",
+          "value": 0
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T13_bak_count",
+      "name": "How many switches",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "icloud",
+        "query",
+        "read-only"
+      ],
+      "instruction": "As things stand right now, what is the smallest number of app backup switches he has to turn off for tonight's backup to fit? Do not change anything.",
+      "goal": [
+        {
+          "name": "five",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)5(?!\\d)|[Ff]ive"
+        },
+        {
+          "name": "nothing switched off",
+          "path": "derived.bakOffCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Recently Deleted untouched",
+          "path": "derived.trash",
+          "op": "eq",
+          "value": 2180
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T14_bak_do",
+      "name": "Make tonight's backup fit",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "icloud"
+      ],
+      "instruction": "Turn off the smallest number of app backup switches that makes tonight's backup fit, then run the backup.",
+      "goal": [
+        {
+          "name": "backup fits",
+          "path": "derived.backupFits",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "exactly five off",
+          "path": "derived.bakOffCount",
+          "op": "eq",
+          "value": 5
+        },
+        {
+          "name": "it ran",
+          "path": "derived.backupDone",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "device untouched",
+          "path": "derived.freeDevice",
+          "op": "eq",
+          "value": 3140
+        }
+      ]
+    },
+    {
+      "id": "T15_pools",
+      "name": "Two different pools",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "icloud",
+        "storage",
+        "query"
+      ],
+      "instruction": "Turn off the Files backup, then tell me how much space that gave back on the iPhone itself.",
+      "goal": [
+        {
+          "name": "Files backup off",
+          "path": "derived.bakOffIds",
+          "op": "contains",
+          "value": "harbour_files"
+        },
+        {
+          "name": "only that one",
+          "path": "derived.bakOffCount",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "device unchanged",
+          "path": "derived.freeDevice",
+          "op": "eq",
+          "value": 3140
+        },
+        {
+          "name": "none at all",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Nn]one|[Nn]othing|zero|(?<!\\d)0(?!\\d)"
+        },
+        {
+          "name": "says iCloud",
+          "source": "answer",
+          "op": "contains",
+          "value": "iCloud"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T16_cannot",
+      "name": "Can offloading do it",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "storage",
+        "query",
+        "read-only"
+      ],
+      "instruction": "Without deleting anything and without emptying Recently Deleted, can he free enough for iOS 26.1 by offloading apps? Answer yes or no and prove it with the numbers.",
+      "goal": [
+        {
+          "name": "no",
+          "source": "answer",
+          "op": "regex",
+          "value": "^[^.]*\\b([Nn]o|[Cc]annot|[Cc]an't|[Ii]mpossible)\\b"
+        },
+        {
+          "name": "3.62 GB is the ceiling",
+          "source": "answer",
+          "op": "regex",
+          "value": "3[.,]62"
+        },
+        {
+          "name": "3.66 GB is needed",
+          "source": "answer",
+          "op": "regex",
+          "value": "3[.,]66"
+        },
+        {
+          "name": "nothing offloaded",
+          "path": "derived.offloadedCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "nothing deleted",
+          "path": "derived.deletedCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Recently Deleted untouched",
+          "path": "derived.trash",
+          "op": "eq",
+          "value": 2180
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T17_fewest",
+      "name": "Enough room, no documents lost",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "storage",
+        "planning"
+      ],
+      "instruction": "Free enough space for iOS 26.1 without deleting a single app — every app's documents have to survive. Offload as few apps as possible.",
+      "goal": [
+        {
+          "name": "enough room",
+          "path": "derived.canUpdate",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "nothing deleted",
+          "path": "derived.deletedCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Recently Deleted emptied",
+          "path": "derived.trash",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "exactly four offloaded",
+          "path": "derived.offloadedCount",
+          "op": "eq",
+          "value": 4
+        },
+        {
+          "name": "iCloud switches untouched",
+          "path": "derived.bakOffCount",
+          "op": "eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T18_install",
+      "name": "Install it",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "storage",
+        "planning"
+      ],
+      "instruction": "Get iOS 26.1 installed. Do not delete any app and do not touch the iCloud backup switches.",
+      "goal": [
+        {
+          "name": "installed",
+          "path": "derived.updated",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "nothing deleted",
+          "path": "derived.deletedCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "backup switches untouched",
+          "path": "derived.bakOffCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "no more than four offloaded",
+          "path": "derived.offloadedCount",
+          "op": "lte",
+          "value": 4
+        }
+      ]
+    },
+    {
+      "id": "T19_smallest_delete",
+      "name": "One app, no photos touched",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "storage",
+        "planning"
+      ],
+      "instruction": "He refuses to empty Recently Deleted — those photos are staying. Delete the smallest single app that on its own frees enough for the update, and delete nothing else.",
+      "goal": [
+        {
+          "name": "Books deleted",
+          "path": "derived.deletedIds",
+          "op": "set_eq",
+          "value": [
+            "foxglove_reader"
+          ]
+        },
+        {
+          "name": "enough room",
+          "path": "derived.canUpdate",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Recently Deleted still full",
+          "path": "derived.trash",
+          "op": "eq",
+          "value": 2180
+        },
+        {
+          "name": "nothing offloaded",
+          "path": "derived.offloadedCount",
+          "op": "eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T20_both",
+      "name": "Both pools, one evening",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 34,
+      "tags": [
+        "storage",
+        "icloud",
+        "planning"
+      ],
+      "instruction": "Sort this phone out for the night: empty Recently Deleted, then get iOS 26.1 installable AND tonight's iCloud backup to fit — without deleting a single app, and changing as few things as possible. When it is done, tell me how many changes you made in total, counting the empty as one.",
+      "goal": [
+        {
+          "name": "emptied",
+          "path": "derived.trash",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "nothing deleted",
+          "path": "derived.deletedCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "update fits",
+          "path": "derived.canUpdate",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "exactly four offloaded",
+          "path": "derived.offloadedCount",
+          "op": "eq",
+          "value": 4
+        },
+        {
+          "name": "backup fits",
+          "path": "derived.backupFits",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "exactly four switches off",
+          "path": "derived.bakOffCount",
+          "op": "eq",
+          "value": 4
+        },
+        {
+          "name": "nine changes",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)9(?!\\d)|[Nn]ine"
+        }
+      ],
+      "answer_expected": true
+    }
+  ]
+}

@@ -1,0 +1,1612 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Aperture Cinema (mocked GUI env)</title>
+<!--
+  ============================================================================
+  Aperture Cinema — a single-file H5 cinema booking app for agent research.
+
+  Same two-block contract as every environment here.
+
+  What is new: a 2D seat map. Choosing seats is spatial selection on a grid
+  with aisles, occupied seats, accessible spaces and premium rows — not a list
+  pick. On top of that sits a cross-field constraint the agent has to satisfy:
+  the ticket-type counts must add up to exactly the number of seats chosen, or
+  checkout stays closed.
+  ============================================================================
+-->
+<style>
+:root{
+  --bg:#0b1020; --card:#141a2e; --card2:#1c2440; --card3:#26304f;
+  --line:#222b47; --line2:#2f3a5c;
+  --ink:#eef2ff; --ink2:#9aa6c9; --muted:#66729a;
+  --accent:#f5c451; --accent-d:#d8a933; --accent-s:#3a2f14;
+  --seat:#2c3450; --good:#4ade80; --red:#f87171; --cool:#60a5fa;
+  --r:16px; --r2:11px;
+  --disp:ui-rounded,"SF Pro Rounded",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;height:100%}
+body{background:#05070f;color:var(--ink);
+  font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  display:flex;align-items:center;justify-content:center;overflow:hidden}
+
+#device{position:relative;width:390px;height:844px;background:#000;border-radius:46px;padding:5px;
+  box-shadow:0 30px 70px rgba(0,0,0,.6);flex:0 0 auto}
+#screen{position:relative;width:100%;height:100%;background:var(--bg);border-radius:41px;
+  overflow:hidden;display:flex;flex-direction:column}
+#notch{position:absolute;top:5px;left:50%;transform:translateX(-50%);width:118px;height:30px;
+  background:#000;border-radius:0 0 18px 18px;z-index:60}
+body.bare{background:var(--bg)}
+body.bare #device{width:390px;height:844px;padding:0;border-radius:0;box-shadow:none;background:var(--bg)}
+body.bare #screen{border-radius:0}
+body.bare #notch{display:none}
+body.bare .n-sheet{animation:none}
+
+.statusbar{height:44px;flex:0 0 44px;display:flex;align-items:flex-end;justify-content:space-between;
+  padding:0 22px 6px;font-size:13px;font-weight:600;z-index:50}
+.statusbar .sb-r{display:flex;gap:5px;align-items:center}
+.sb-bat{width:22px;height:11px;border:1.3px solid currentColor;border-radius:3px;position:relative;opacity:.9}
+.sb-bat:after{content:"";position:absolute;right:-3px;top:3px;width:2px;height:5px;background:currentColor;border-radius:0 1px 1px 0}
+.sb-bat i{position:absolute;left:1.3px;top:1.3px;bottom:1.3px;width:70%;background:currentColor;border-radius:1px}
+
+#app{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;position:relative}
+
+.n-appbar{flex:0 0 auto;min-height:52px;display:flex;align-items:center;gap:8px;padding:6px 12px;z-index:20}
+.n-appbar .ab-title{flex:1 1 auto;text-align:center;font:650 17px/1.3 var(--disp);letter-spacing:-.2px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.n-appbar .ab-side{flex:0 0 auto;min-width:58px;display:flex;align-items:center;gap:4px}
+.n-appbar .ab-side.right{justify-content:flex-end}
+.iconbtn{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  color:var(--ink2);cursor:pointer}
+.iconbtn:active{background:var(--card2)}
+.iconbtn.on{color:var(--accent)}
+
+.n-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding-bottom:10px}
+.n-scroll::-webkit-scrollbar{width:0}
+
+.n-text{padding:2px 18px;color:var(--ink2)}
+.n-text.h1{font:700 26px/1.2 var(--disp);color:var(--ink);padding:12px 18px 4px;letter-spacing:-.6px}
+.n-text.body{font-size:13.5px;padding:5px 18px;line-height:1.68}
+.n-text.muted{font-size:12.5px;color:var(--muted);padding:5px 18px}
+.n-text.empty{padding:10px 18px 40px;text-align:center;color:var(--muted);font-size:13.5px}
+.n-sec{padding:18px 18px 8px;font:650 16px/1.3 var(--disp);display:flex;justify-content:space-between;
+  align-items:baseline;gap:10px}
+.n-sec .sec-side{font:600 12.5px/1 -apple-system,sans-serif;color:var(--muted)}
+.n-space{height:16px}
+
+.n-card{background:var(--card);border-radius:var(--r);margin:10px 18px;overflow:hidden;border:1px solid var(--line)}
+.n-card.flush{padding:0}
+.n-card.tap{cursor:pointer}
+.n-card.tap:active{background:var(--card2)}
+
+.n-row{display:flex;align-items:center;gap:13px;padding:13px 16px;border-bottom:1px solid var(--line);min-height:54px}
+.n-row:last-child{border-bottom:none}
+.n-row.tap{cursor:pointer}
+.n-row.tap:active{background:var(--card2)}
+.n-row .r-lead{flex:0 0 auto;width:26px;color:var(--ink2);display:flex;align-items:center;justify-content:center}
+.n-row .r-main{flex:1 1 auto;min-width:0}
+.n-row .r-label{font-size:14.5px}
+.n-row .r-sub{font-size:12px;color:var(--muted);margin-top:3px}
+.n-row .r-value{flex:0 0 auto;font-size:13.5px;color:var(--ink2);max-width:150px;text-align:right;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.n-row .r-value.accent{color:var(--accent);font-weight:700}
+.n-row .r-arrow{flex:0 0 auto;color:var(--muted);display:flex}
+
+.n-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:46px;padding:0 20px;
+  border-radius:13px;font:650 15px/1 var(--disp);background:var(--card2);color:var(--ink);
+  border:1px solid var(--line2);cursor:pointer;user-select:none}
+.n-btn:active{filter:brightness(1.2)}
+.n-btn.primary{background:var(--accent);color:#241c05;border-color:transparent}
+.n-btn.primary.off{background:var(--card3);color:var(--muted);cursor:not-allowed;border-color:var(--line2)}
+.n-btn.ghost{background:transparent;height:34px;font-size:13px;padding:0 14px;color:var(--ink2)}
+.n-btn.danger{background:transparent;border-color:#5b2a2a;color:var(--red);height:34px;font-size:13px;padding:0 14px}
+.n-btn.block{display:flex;width:100%}
+.n-btnrow{display:flex;gap:10px;padding:12px 16px;justify-content:flex-end;align-items:center}
+
+.n-chips{display:flex;gap:9px;padding:8px 18px;overflow-x:auto}
+.n-chips::-webkit-scrollbar{height:0}
+.n-chip{flex:0 0 auto;height:34px;padding:0 14px;border-radius:11px;background:var(--card2);
+  border:1px solid var(--line2);display:flex;align-items:center;gap:6px;font-size:13px;
+  color:var(--ink2);cursor:pointer;white-space:nowrap;font-weight:550}
+.n-chip.on{background:var(--accent);border-color:var(--accent);color:#241c05;font-weight:700}
+.n-chip.off{opacity:.4;cursor:not-allowed}
+
+.searchbar{margin:6px 18px 8px;background:var(--card2);border:1px solid var(--line2);border-radius:13px;
+  display:flex;align-items:center;gap:10px;padding:11px 14px}
+.searchbar input{flex:1 1 auto;border:none;outline:none;background:transparent;font-size:14.5px;
+  font-family:inherit;color:var(--ink);min-width:0}
+.searchbar input::placeholder{color:var(--muted)}
+.searchbar .sb-clear{flex:0 0 auto;width:22px;height:22px;border-radius:50%;background:var(--card3);
+  color:var(--ink2);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.searchbar .sb-go{flex:0 0 auto;width:30px;height:30px;border-radius:9px;background:var(--accent);
+  color:#241c05;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.n-input{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line)}
+.n-input .i-label{flex:0 0 88px;font-size:13px;color:var(--muted)}
+.n-input input{flex:1 1 auto;border:none;outline:none;background:transparent;font-size:14.5px;
+  font-family:inherit;color:var(--ink);min-width:0}
+.n-input input::placeholder{color:var(--muted)}
+.n-switch{flex:0 0 auto;width:48px;height:28px;border-radius:15px;background:var(--card3);position:relative;cursor:pointer;transition:background .16s}
+.n-switch.on{background:var(--good)}
+.n-switch i{position:absolute;top:2.5px;left:2.5px;width:23px;height:23px;border-radius:50%;background:#fff;
+  transition:transform .16s;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+.n-switch.on i{transform:translateX(20px)}
+.n-stepper{display:flex;align-items:center;gap:12px;flex:0 0 auto}
+.n-stepper .st-btn{width:32px;height:32px;border-radius:10px;background:var(--card2);border:1px solid var(--line2);
+  color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.n-stepper .st-btn.off{opacity:.32;cursor:not-allowed}
+.n-stepper .st-val{min-width:22px;text-align:center;font:650 16px/1 var(--disp)}
+
+/* ---------------- poster ---------------- */
+.poster{border-radius:var(--r2);overflow:hidden;background:var(--card2);flex:0 0 auto}
+.poster svg{width:100%;height:100%;display:block}
+.filmgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:4px 18px}
+.filmcard{cursor:pointer}
+.filmcard:active{opacity:.84}
+.filmcard .fc-art{width:100%;aspect-ratio:2/3;border-radius:var(--r2);overflow:hidden}
+.filmcard .fc-name{font-size:13.5px;font-weight:650;margin-top:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.filmcard .fc-sub{font-size:11.5px;color:var(--muted);margin-top:3px}
+
+.filmhead{display:flex;gap:14px;padding:6px 18px 12px}
+.filmhead .fh-art{width:112px;aspect-ratio:2/3;border-radius:var(--r2);overflow:hidden;flex:0 0 auto}
+.filmhead .fh-body{flex:1 1 auto;min-width:0}
+.filmhead .fh-title{font:700 21px/1.2 var(--disp);letter-spacing:-.4px}
+.filmhead .fh-meta{font-size:12.5px;color:var(--muted);margin-top:7px;line-height:1.7}
+.filmhead .fh-pills{margin-top:9px;display:flex;gap:6px;flex-wrap:wrap}
+
+.pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:8px;font-size:11px;
+  font-weight:700;background:var(--card2);color:var(--ink2)}
+.pill.cert{background:var(--accent-s);color:var(--accent)}
+.pill.good{background:#12301f;color:var(--good)}
+.pill.cool{background:#132a44;color:var(--cool)}
+.pill.bad{background:#331a1a;color:var(--red)}
+
+/* ---------------- seat map ---------------- */
+.screenbar{margin:6px 24px 18px;text-align:center}
+.screenbar .sb-arc{height:26px;border-radius:100% 100% 0 0 / 100% 100% 0 0;
+  background:linear-gradient(180deg,rgba(245,196,81,.5),rgba(245,196,81,0));border-top:2px solid var(--accent)}
+.screenbar .sb-lab{font-size:10.5px;letter-spacing:2.5px;color:var(--muted);margin-top:7px;font-weight:700}
+.seatmap{padding:0 12px 6px}
+.seatrow{display:flex;align-items:center;justify-content:center;gap:5px;margin-bottom:7px}
+.seatrow .sr-lab{flex:0 0 16px;text-align:center;font-size:10.5px;color:var(--muted);font-weight:700}
+.seat{width:23px;height:21px;border-radius:5px 5px 3px 3px;background:var(--card3);cursor:pointer;
+  border:1px solid transparent;display:flex;align-items:center;justify-content:center;
+  font-size:8.5px;color:var(--muted);font-weight:700}
+.seat.free:active{background:var(--line2)}
+.seat.taken{background:#1a2038;color:#39415e;cursor:not-allowed;border-color:#1a2038}
+.seat.sel{background:var(--accent);color:#241c05;border-color:var(--accent);box-shadow:0 0 10px rgba(245,196,81,.4)}
+.seat.wheel{background:#173049;color:var(--cool)}
+.seat.wheel.sel{background:var(--accent);color:#241c05}
+.seat.gap{background:transparent;cursor:default;width:12px;border:none}
+.legend{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;padding:10px 18px 4px;font-size:11px;color:var(--muted)}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend i{width:14px;height:13px;border-radius:4px 4px 2px 2px;display:block}
+
+.summary{flex:0 0 auto;background:var(--card);border-top:1px solid var(--line);padding:12px 18px 14px;
+  display:flex;align-items:center;gap:14px;z-index:30}
+.summary .sm-txt{flex:1 1 auto;min-width:0}
+.summary .sm-main{font:700 17px/1.15 var(--disp)}
+.summary .sm-sub{font-size:11.5px;color:var(--muted);margin-top:4px}
+
+.kv{display:flex;justify-content:space-between;gap:12px;padding:8px 18px;font-size:13.5px;color:var(--ink2)}
+.kv .v{color:var(--ink);font-weight:600}
+.kv.total{border-top:1px solid var(--line);margin-top:8px;padding-top:13px}
+.kv.total .k,.kv.total .v{color:var(--ink);font-weight:800;font-size:16px}
+.kv.save .v{color:var(--good)}
+
+.ticketcode{margin:14px 18px;background:var(--card);border:1px dashed var(--line2);border-radius:var(--r);
+  padding:20px;text-align:center}
+.ticketcode .tc-lab{font-size:11px;letter-spacing:2px;color:var(--muted);font-weight:700}
+.ticketcode .tc-code{font:800 30px/1.1 var(--disp);letter-spacing:3px;margin-top:10px;color:var(--accent)}
+.ticketcode .tc-sub{font-size:12.5px;color:var(--ink2);margin-top:10px}
+
+.n-tabbar{flex:0 0 auto;height:58px;background:var(--card);border-top:1px solid var(--line);display:flex;z-index:30}
+.n-tabbar .tb{flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  color:var(--muted);font-size:10.5px;cursor:pointer;font-weight:600}
+.n-tabbar .tb i{display:flex}
+.n-tabbar .tb.on{color:var(--accent)}
+
+.n-mask{position:absolute;inset:0;background:rgba(4,6,14,.68);z-index:70;display:flex;align-items:flex-end}
+.n-sheet{width:100%;max-height:80%;background:var(--card);border-radius:20px 20px 0 0;display:flex;
+  flex-direction:column;overflow:hidden;animation:up .18s ease-out;border-top:1px solid var(--line2)}
+@keyframes up{from{transform:translateY(24px)}to{transform:none}}
+.n-sheet .sh-hd{padding:16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
+.n-sheet .sh-hd .t{font:650 17px/1.2 var(--disp)}
+.n-sheet .sh-bd{flex:1 1 auto;overflow-y:auto;min-height:0}
+.n-sheet .sh-bd::-webkit-scrollbar{width:0}
+.n-toast{position:absolute;left:50%;bottom:130px;transform:translateX(-50%);background:#e9edfb;color:#0b1020;
+  padding:11px 18px;border-radius:11px;font-size:13px;font-weight:600;z-index:90;max-width:82%;text-align:center}
+.dialog{margin:auto;width:80%;background:var(--card);border:1px solid var(--line2);border-radius:16px;overflow:hidden}
+
+#hud{position:fixed;top:14px;left:14px;width:310px;max-height:calc(100% - 28px);overflow:auto;
+  background:#070a14;color:#c3cbe4;border-radius:12px;padding:12px;border:1px solid #232c48;
+  font:11.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;z-index:200}
+#hud h4{margin:0 0 8px;font-size:12px;color:#fff}
+#hud .k{color:#66729a}
+#hud pre{margin:6px 0 0;white-space:pre-wrap;word-break:break-word;color:#f5d98d;max-height:250px;overflow:auto}
+#hud button{background:#1b2540;border:none;color:#c3cbe4;border-radius:6px;padding:5px 9px;margin:2px 4px 2px 0;font:inherit;cursor:pointer}
+#hud.off{display:none}
+</style>
+</head>
+<body>
+<div id="device">
+  <div id="notch"></div>
+  <div id="screen">
+    <div class="statusbar" id="sb">
+      <div id="sb-clock">18:05</div>
+      <div class="sb-r">
+        <svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="4.6" y="5.5" width="3" height="6.5" rx="1"/><rect x="9.2" y="3" width="3" height="9" rx="1"/><rect x="13.8" y="0" width="3" height="12" rx="1"/></svg>
+        <svg width="15" height="12" viewBox="0 0 15 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 4.2a9 9 0 0 1 13 0"/><path d="M3.4 6.9a5.6 5.6 0 0 1 8.2 0"/><circle cx="7.5" cy="10" r=".9" fill="currentColor" stroke="none"/></svg>
+        <span class="sb-bat"><i></i></span>
+      </div>
+    </div>
+    <div id="app"></div>
+  </div>
+</div>
+<div id="hud" class="off"></div>
+
+<script id="engine">
+/* ===========================================================================
+ * ENGINE — pure, deterministic, DOM-free.
+ * ======================================================================== */
+(function (root) {
+'use strict';
+
+var VERSION = '1.0.0';
+var ENV_ID  = 'aperture_cinema';
+
+/* ------------------------------------------------------------- catalog */
+var FILMS = [
+  {id:'f_lighthouse', title:'The Lighthouse Keeper', cert:'12A', mins:118, genre:'Drama',
+   palette:['#f5c451','#7c3aed','#0b1020'], style:'beam',
+   blurb:'A relief keeper arrives on a rock nine miles offshore to find his predecessor has left the logbook blank for six weeks.'},
+  {id:'f_orbit', title:'Low Orbit', cert:'12A', mins:141, genre:'Sci-fi',
+   palette:['#60a5fa','#22d3ee','#050b1c'], style:'orbit',
+   blurb:'Two engineers on a decommissioned station discover the deorbit burn was scheduled a year early, and nobody on the ground will say why.'},
+  {id:'f_marmalade', title:'Marmalade Sunday', cert:'PG', mins:96, genre:'Family',
+   palette:['#fb923c','#fbbf24','#3b1d06'], style:'sun',
+   blurb:'A nine-year-old decides the only way to stop her grandmother selling the bakery is to win the county baking fair. She cannot bake.'},
+  {id:'f_thorn', title:'Thorn', cert:'18', mins:104, genre:'Thriller',
+   palette:['#f87171','#7f1d1d','#100608'], style:'shard',
+   blurb:'A locksmith realises the same address has called her out four times this month, and each time the lock was different.'},
+  {id:'f_tide', title:'Tide Tables', cert:'15', mins:127, genre:'Crime',
+   palette:['#34d399','#0f766e','#04140f'], style:'wave',
+   blurb:'A harbourmaster keeps two sets of books. The second one is not about boats.'},
+  {id:'f_paperbirds', title:'Paper Birds', cert:'U', mins:88, genre:'Animation',
+   palette:['#f9a8d4','#c084fc','#1a0f2b'], style:'birds',
+   blurb:'A folded paper crane escapes a hospital windowsill and crosses a city to find the girl who made it.'}
+];
+
+var AUDITORIA = [
+  {id:'s1', name:'Screen 1',  kind:'Standard', surcharge:0},
+  {id:'s2', name:'Screen 2',  kind:'Standard', surcharge:0},
+  {id:'s3', name:'Screen 3',  kind:'Deluxe recliners', surcharge:250}
+];
+
+/* rows A..F, ten seats each, aisles after 2 and 8. Occupancy is hand-authored
+   per showing so the map is identical on every run. */
+var ROWS = ['A','B','C','D','E','F'];
+var SEATS_PER_ROW = 10;
+var AISLE_AFTER = [2, 8];
+var PREMIUM_ROWS = ['D','E'];
+var WHEEL_SEATS = ['F1','F2'];
+
+var SHOWINGS = [
+  {id:'sw_1', film:'f_lighthouse', screen:'s1', day:'Today',    time:'18:40', format:'2D',
+   taken:['C4','C5','C6','D5','D6','E1','E2','B8','B9','A3']},
+  {id:'sw_2', film:'f_lighthouse', screen:'s3', day:'Today',    time:'21:10', format:'2D',
+   taken:['D3','D4','E5','E6','E7','F5']},
+  {id:'sw_3', film:'f_lighthouse', screen:'s1', day:'Tomorrow', time:'15:20', format:'2D',
+   taken:['A1','A2','B3']},
+  {id:'sw_4', film:'f_orbit', screen:'s1', day:'Today',    time:'19:15', format:'IMAX',
+   taken:['C1','C2','C3','C4','D1','D2','D3','D4','E4','E5','E6','B6','B7']},
+  {id:'sw_5', film:'f_orbit', screen:'s2', day:'Tomorrow', time:'20:00', format:'3D',
+   taken:['E9','E10','F9']},
+  {id:'sw_6', film:'f_marmalade', screen:'s2', day:'Today',    time:'16:30', format:'2D',
+   taken:['B4','B5','C7']},
+  {id:'sw_7', film:'f_marmalade', screen:'s2', day:'Tomorrow', time:'11:00', format:'2D',
+   taken:[]},
+  {id:'sw_8', film:'f_thorn', screen:'s3', day:'Today',    time:'22:30', format:'2D',
+   taken:['A5','A6','D7','D8','E3']},
+  {id:'sw_9', film:'f_tide', screen:'s2', day:'Today',    time:'20:45', format:'2D',
+   taken:['B2','B3','C9','C10','D9','D10','F3','F4']},
+  {id:'sw_10', film:'f_paperbirds', screen:'s1', day:'Tomorrow', time:'10:30', format:'2D',
+   taken:['B1','B2']},
+  {id:'sw_11', film:'f_paperbirds', screen:'s2', day:'Today',    time:'17:00', format:'2D',
+   taken:['A9','A10','B10']}
+];
+
+/* prices in pence so every total is exact integer arithmetic */
+var TICKETS = [
+  {key:'adult',   label:'Adult',   price:1250},
+  {key:'child',   label:'Child',   price:800},
+  {key:'senior',  label:'Senior',  price:950},
+  {key:'student', label:'Student', price:900}
+];
+var PREMIUM_SURCHARGE = 200;   /* per seat in rows D and E */
+
+var EXTRAS = [
+  {key:'popcorn', label:'Sweet popcorn, large', price:650},
+  {key:'combo',   label:'Popcorn and drink combo', price:1100},
+  {key:'nachos',  label:'Loaded nachos', price:780},
+  {key:'water',   label:'Still water', price:250}
+];
+
+var PAYMENTS = [
+  {id:'pm_visa',   label:'Visa ···· 8812'},
+  {id:'pm_amex',   label:'Amex ···· 3004'},
+  {id:'pm_wallet', label:'Aperture wallet'}
+];
+
+var CATALOG = {films:FILMS, auditoria:AUDITORIA, showings:SHOWINGS, tickets:TICKETS,
+               extras:EXTRAS, payments:PAYMENTS, rows:ROWS, seatsPerRow:SEATS_PER_ROW};
+
+/* ------------------------------------------------------------- helpers */
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+function film(id){ for (var i=0;i<FILMS.length;i++) if (FILMS[i].id===id) return FILMS[i]; return null; }
+function showing(id){ for (var i=0;i<SHOWINGS.length;i++) if (SHOWINGS[i].id===id) return SHOWINGS[i]; return null; }
+function auditorium(id){ for (var i=0;i<AUDITORIA.length;i++) if (AUDITORIA[i].id===id) return AUDITORIA[i]; return null; }
+function ticketType(k){ for (var i=0;i<TICKETS.length;i++) if (TICKETS[i].key===k) return TICKETS[i]; return null; }
+function extra(k){ for (var i=0;i<EXTRAS.length;i++) if (EXTRAS[i].key===k) return EXTRAS[i]; return null; }
+function showingsFor(id){ return SHOWINGS.filter(function(s){ return s.film === id; }); }
+function isPremium(seat){ return PREMIUM_ROWS.indexOf(seat.charAt(0)) >= 0; }
+function seatCmp(a, b){
+  if (a.charAt(0) !== b.charAt(0)) return a.charAt(0) < b.charAt(0) ? -1 : 1;
+  return (+a.slice(1)) - (+b.slice(1));
+}
+function sortSeats(list){ return list.sort(seatCmp); }
+function isWheel(seat){ return WHEEL_SEATS.indexOf(seat) >= 0; }
+function money(p){
+  var neg = p < 0; p = Math.abs(p);
+  return (neg ? '-' : '') + '£' + Math.floor(p/100) + '.' + (p%100 < 10 ? '0' : '') + (p%100);
+}
+function lcg(seed){ var s=(seed>>>0)||1; return function(){ s=(s*1664525+1013904223)>>>0; return s/4294967296; }; }
+function shuffled(list, seed){
+  if (!seed) return list.slice();
+  var r=lcg(seed), a=list.slice();
+  for (var i=a.length-1;i>0;i--){ var j=Math.floor(r()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; }
+  return a;
+}
+function getPath(obj, path){
+  var parts = String(path).replace(/\[(\w+|last|-1)\]/g,'.$1').split('.').filter(Boolean), cur = obj;
+  for (var i=0;i<parts.length;i++){
+    if (cur == null) return undefined;
+    var k = parts[i];
+    if (Array.isArray(cur) && (k==='last'||k==='-1')) cur = cur[cur.length-1]; else cur = cur[k];
+  }
+  return cur;
+}
+function setPath(obj, path, value){
+  var parts = String(path).replace(/\[(\w+)\]/g,'.$1').split('.').filter(Boolean), cur = obj;
+  for (var i=0;i<parts.length-1;i++){
+    var k = parts[i];
+    if (cur[k] == null) cur[k] = /^\d+$/.test(parts[i+1]) ? [] : {};
+    cur = cur[k];
+  }
+  cur[parts[parts.length-1]] = value;
+  return obj;
+}
+
+/* --------------------------------------------------------- world clock */
+var CLOCK0 = {h:18, mi:5, s:0};
+var SECONDS_PER_STEP = 5;
+function tick(c, n){
+  var t=c.s+n; c.s=t%60;
+  var m=c.mi+Math.floor(t/60); c.mi=m%60;
+  c.h=(c.h+Math.floor(m/60))%24;
+  return c;
+}
+function clockStr(c){ return (c.h<10?'0':'')+c.h+':'+(c.mi<10?'0':'')+c.mi; }
+
+/* ------------------------------------------------------ initial state */
+function createInitialState(seed){
+  seed = seed || 0;
+  return {
+    meta:{ env:ENV_ID, version:VERSION, seed:seed, clock:clone(CLOCK0), steps:0,
+           bookingSeq:1, answer:null, finished:false },
+    /* occupancy is state, not catalog — booking and cancelling must not leak
+       between episodes, so the seed lists are copied in here at reset */
+    taken:(function(){ var o = {}; SHOWINGS.forEach(function(s){ o[s.id] = s.taken.slice(); }); return o; })(),
+    ui:{ stack:[{name:'films', params:{}}], tab:'films', sheet:null, confirm:null, toast:null,
+         inputs:{}, query:'', dayFilter:'all' },
+    member:{ name:'Alex Doyle', tier:'Gold', points:1840, cardId:'AP-4471'},
+    settings:{ defaultPayment:'pm_visa', accessibleSeats:false, reminders:true, emailReceipts:true },
+    draft:{ showing:null, seats:[], tickets:{adult:0, child:0, senior:0, student:0},
+            extras:[], payment:null, usePoints:false },
+    bookings:[
+      {id:'bk_9001', showing:'sw_9', seats:['B2','B3'],
+       tickets:{adult:2, child:0, senior:0, student:0}, extras:['water'],
+       total:2750, code:'APR-4K2M', status:'upcoming', payment:'pm_visa', pointsUsed:0}
+    ]
+  };
+}
+
+/* ------------------------------------------------------------ pricing */
+function seatList(){
+  var out = [];
+  ROWS.forEach(function(r){
+    for (var i = 1; i <= SEATS_PER_ROW; i++) out.push(r + i);
+  });
+  return out;
+}
+function ticketCount(t){ return t.adult + t.child + t.senior + t.student; }
+function ticketSubtotal(t){
+  var s = 0;
+  TICKETS.forEach(function(x){ s += (t[x.key] || 0) * x.price; });
+  return s;
+}
+function premiumCount(seats){ return seats.filter(isPremium).length; }
+function extrasTotal(keys){
+  var s = 0;
+  (keys || []).forEach(function(k){ var e = extra(k); if (e) s += e.price; });
+  return s;
+}
+function quote(st, d){
+  d = d || st.draft;
+  var sw = showing(d.showing);
+  var tickets = ticketSubtotal(d.tickets);
+  var premium = premiumCount(d.seats) * PREMIUM_SURCHARGE;
+  var screenFee = sw ? (auditorium(sw.screen).surcharge * d.seats.length) : 0;
+  var extras = extrasTotal(d.extras);
+  var gross = tickets + premium + screenFee + extras;
+  var discount = d.usePoints ? Math.min(gross, Math.floor(st.member.points / 100) * 100) : 0;
+  return {tickets:tickets, premium:premium, screenFee:screenFee, extras:extras,
+          discount:discount, total:gross - discount};
+}
+function seatsMatchTickets(d){ return d.seats.length > 0 && ticketCount(d.tickets) === d.seats.length; }
+function takenFor(st, showId){ return (st.taken && st.taken[showId]) || []; }
+function searchFilms(st){
+  var q = st.ui.query.trim().toLowerCase();
+  if (!q) return [];
+  var terms = q.split(/\s+/);
+  return FILMS.filter(function(f){
+    var hay = (f.title + ' ' + f.genre + ' ' + f.cert + ' ' + f.blurb).toLowerCase();
+    return terms.every(function(t){ return hay.indexOf(t) >= 0; });
+  });
+}
+function route(st){ return st.ui.stack[st.ui.stack.length-1]; }
+
+var SELECT = { film:film, showing:showing, auditorium:auditorium, showingsFor:showingsFor,
+               seatList:seatList, ticketCount:ticketCount, quote:quote, money:money,
+               seatsMatchTickets:seatsMatchTickets, takenFor:takenFor, isPremium:isPremium,
+               isWheel:isWheel, searchFilms:searchFilms, route:route, clockStr:clockStr,
+               seatCmp:seatCmp, sortSeats:sortSeats };
+
+/* ------------------------------------------------------------- reducer */
+function push(st, name, params){ st.ui.stack.push({name:name, params:params||{}}); st.ui.sheet=null; }
+function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
+function toast(st, t){ st.ui.toast = t; }
+var MAX_SEATS = 8;
+
+function reduce(prev, action){
+  var st = clone(prev), A = action || {};
+  st.ui.toast = null;
+  st.meta.steps += 1;
+  tick(st.meta.clock, SECONDS_PER_STEP);
+
+  switch (A.type) {
+
+  case 'NAV':  push(st, A.to, A.params); break;
+  case 'BACK':
+    if (st.ui.confirm) st.ui.confirm = null;
+    else if (st.ui.sheet) st.ui.sheet = null;
+    else pop(st);
+    break;
+  case 'TAB':
+    st.ui.tab = A.tab; st.ui.sheet = null; st.ui.confirm = null;
+    st.ui.stack = [{name:A.tab, params:{}}];
+    break;
+  case 'HOME':
+    st.ui.tab='films'; st.ui.stack=[{name:'films', params:{}}]; st.ui.sheet=null; st.ui.confirm=null;
+    break;
+
+  case 'SET_INPUT': st.ui.inputs[A.field] = A.value; break;
+  case 'SUBMIT_SEARCH':
+    st.ui.query = String(st.ui.inputs.search || '').trim();
+    if (route(st).name !== 'search') push(st, 'search', {});
+    break;
+  case 'CLEAR_SEARCH': st.ui.query=''; st.ui.inputs.search=''; toast(st, 'Search cleared'); break;
+  case 'SET_DAY': st.ui.dayFilter = A.day; break;
+
+  /* ---- booking flow ---- */
+  case 'PICK_SHOWING': {
+    var sw = showing(A.id); if (!sw) break;
+    st.draft = {showing:A.id, seats:[], tickets:{adult:0, child:0, senior:0, student:0},
+                extras:[], payment:st.settings.defaultPayment, usePoints:false};
+    push(st, 'seats', {id:A.id});
+    break;
+  }
+  case 'TOGGLE_SEAT': {
+    var d = st.draft, seat = A.seat;
+    if (!d.showing) break;
+    if (takenFor(st, d.showing).indexOf(seat) >= 0) { toast(st, seat + ' is already taken'); break; }
+    var i = d.seats.indexOf(seat);
+    if (i >= 0) { d.seats.splice(i, 1); }
+    else {
+      if (d.seats.length >= MAX_SEATS) { toast(st, 'Eight seats is the maximum per booking'); break; }
+      d.seats.push(seat);
+      sortSeats(d.seats);
+    }
+    break;
+  }
+  case 'CLEAR_SEATS': st.draft.seats = []; toast(st, 'Seats cleared'); break;
+  case 'GO_TICKETS':
+    if (!st.draft.seats.length) { toast(st, 'Choose at least one seat'); break; }
+    push(st, 'tickets', {});
+    break;
+  case 'TICKET_BUMP': {
+    var t = st.draft.tickets, k = A.key;
+    var next = Math.max(0, (t[k] || 0) + A.dir);
+    if (A.dir > 0 && ticketCount(t) >= st.draft.seats.length) {
+      toast(st, 'That is one ticket per seat already'); break;
+    }
+    t[k] = next;
+    break;
+  }
+  case 'GO_EXTRAS':
+    if (!seatsMatchTickets(st.draft)) {
+      toast(st, 'Tickets must add up to ' + st.draft.seats.length); break;
+    }
+    push(st, 'extras', {});
+    break;
+  case 'TOGGLE_EXTRA': {
+    var arr = st.draft.extras, j = arr.indexOf(A.key);
+    if (j >= 0) arr.splice(j, 1); else arr.push(A.key);
+    arr.sort();
+    break;
+  }
+  case 'GO_CHECKOUT':
+    if (!seatsMatchTickets(st.draft)) { toast(st, 'Tickets must match the seats'); break; }
+    push(st, 'checkout', {});
+    break;
+  case 'SET_PAYMENT': st.draft.payment = A.id; break;
+  case 'TOGGLE_POINTS': st.draft.usePoints = !st.draft.usePoints; break;
+  case 'CONFIRM_BOOKING': {
+    var d2 = st.draft;
+    if (!d2.showing || !d2.seats.length) { toast(st, 'Nothing to book'); break; }
+    if (!seatsMatchTickets(d2)) { toast(st, 'Tickets must match the seats'); break; }
+    if (!d2.payment) { toast(st, 'Choose a payment method'); break; }
+    var q = quote(st, d2);
+    var n = st.meta.bookingSeq; st.meta.bookingSeq += 1;
+    var code = 'APR-' + (70000 + n * 1371).toString(36).toUpperCase().slice(0, 4);
+    var bid = 'bk_' + (9001 + n);
+    st.bookings.push({id:bid, showing:d2.showing, seats:d2.seats.slice(),
+                      tickets:clone(d2.tickets), extras:d2.extras.slice(),
+                      total:q.total, code:code, status:'upcoming', payment:d2.payment,
+                      pointsUsed:q.discount});
+    /* the seats are now taken for everyone */
+    var tk = st.taken[d2.showing] || (st.taken[d2.showing] = []);
+    d2.seats.forEach(function(s){ if (tk.indexOf(s) < 0) tk.push(s); });
+    sortSeats(tk);
+    if (q.discount) st.member.points -= q.discount;
+    st.draft = {showing:null, seats:[], tickets:{adult:0, child:0, senior:0, student:0},
+                extras:[], payment:null, usePoints:false};
+    st.ui.tab = 'bookings';
+    st.ui.stack = [{name:'bookings', params:{}}, {name:'confirmed', params:{id:bid}}];
+    break;
+  }
+
+  /* ---- bookings ---- */
+  case 'CANCEL_BOOKING': {
+    var b = null;
+    st.bookings.forEach(function(x){ if (x.id === A.id) b = x; });
+    if (!b) break;
+    if (b.status !== 'upcoming') { toast(st, 'Only upcoming bookings can be cancelled'); break; }
+    st.ui.confirm = {title:'Cancel this booking?', text:'Seats go back on sale immediately.',
+                     okText:'Cancel booking', yes:{type:'CANCEL_BOOKING_OK', id:A.id}};
+    break;
+  }
+  case 'CANCEL_BOOKING_OK': {
+    st.bookings.forEach(function(x){
+      if (x.id === A.id && x.status === 'upcoming') {
+        x.status = 'cancelled';
+        var tk2 = st.taken[x.showing] || [];
+        x.seats.forEach(function(s){ var k = tk2.indexOf(s); if (k >= 0) tk2.splice(k, 1); });
+        if (x.pointsUsed) st.member.points += x.pointsUsed;
+      }
+    });
+    toast(st, 'Booking cancelled');
+    break;
+  }
+
+  /* ---- settings ---- */
+  case 'SET_SETTING':    st.settings[A.key] = A.value; break;
+  case 'TOGGLE_SETTING': st.settings[A.key] = !st.settings[A.key]; break;
+
+  case 'OPEN_SHEET':  st.ui.sheet = {type:A.sheet, id:A.id || null}; break;
+  case 'CLOSE_SHEET': st.ui.sheet = null; break;
+  case 'CONFIRM_NO':  st.ui.confirm = null; break;
+  case 'CONFIRM_YES': {
+    var yes = st.ui.confirm && st.ui.confirm.yes; st.ui.confirm = null;
+    if (yes) { var keep = st.meta.steps, kc = clone(st.meta.clock);
+               var out = reduce(st, yes); out.meta.steps = keep; out.meta.clock = kc; return out; }
+    break;
+  }
+  case 'EXPLAIN': toast(st, A.text || ''); break;
+
+  case 'FINISH':
+    st.meta.answer = (A.answer === undefined ? null : A.answer);
+    st.meta.finished = true;
+    break;
+  case 'NOOP': default: break;
+  }
+  return st;
+}
+
+/* =======================================================================
+ * SCREEN TREE
+ * ==================================================================== */
+function N(t, o){ o = o || {}; o.t = t; return o; }
+function appbar(title, o){
+  o = o || {};
+  return N('appbar', {id:'appbar', title:title, back:!!o.back, right:o.right||[], left:o.left||[]});
+}
+function row(id, text, o){
+  o = o || {};
+  return N('row', {id:id, text:text, sub:o.sub, val:o.val, valCls:o.valCls, lead:o.lead,
+                   arrow:o.arrow !== false, act:o.act, c:o.c});
+}
+function btn(id, text, act, cls, disabled){
+  return N('btn', {id:id, text:text, act:act, cls:cls||'', disabled:!!disabled});
+}
+function txt(text, cls){ return N('text', {text:text, cls:cls||'body'}); }
+function iconbtn(id, ic, act, cls){ return N('iconbtn', {id:id, icon:ic, act:act, cls:cls||''}); }
+function posterOf(f){ return {id:f.id, palette:f.palette, style:f.style, title:f.title}; }
+
+function tabbar(st){
+  var items = [
+    {id:'tab_films',    text:'Films',    icon:'film',   tab:'films'},
+    {id:'tab_bookings', text:'Bookings', icon:'ticket', tab:'bookings'},
+    {id:'tab_member',   text:'Member',   icon:'card',   tab:'member'},
+    {id:'tab_settings', text:'Settings', icon:'gear',   tab:'settings'}
+  ].map(function(i){
+    return {id:i.id, text:i.text, icon:i.icon, on:(st.ui.tab===i.tab), act:{type:'TAB', tab:i.tab}};
+  });
+  return N('tabbar', {id:'tabbar', items:items});
+}
+function showLabel(sw){
+  var a = auditorium(sw.screen);
+  return sw.day + ' ' + sw.time + ' · ' + a.name + ' · ' + sw.format;
+}
+
+/* ------------------------------------------------------------- screens */
+function scrFilms(st){
+  var days = ['all','Today','Tomorrow'];
+  var list = shuffled(FILMS.slice(0, 6), st.meta.seed).filter(function(f){
+    if (st.ui.dayFilter === 'all') return true;
+    return showingsFor(f.id).some(function(s){ return s.day === st.ui.dayFilter; });
+  });
+  return N('screen', {id:'scr_films', name:'films', c:[
+    N('appbar', {id:'appbar', title:'Aperture',
+      right:[iconbtn('open_search', 'search', {type:'NAV', to:'search', params:{}})]}),
+    N('scroll', {id:'films_scroll', c:[
+      N('chips', {id:'day_chips', c: days.map(function(d){
+        return N('chip', {id:'day_' + d, text:d === 'all' ? 'All days' : d,
+                          on:st.ui.dayFilter === d, act:{type:'SET_DAY', day:d}});
+      })}),
+      N('sec', {text:'Now showing', side:list.length + ' films'}),
+      N('filmgrid', {id:'film_grid', items: list.map(function(f){
+        return {id:'film_' + f.id, name:f.title, sub:f.cert + ' · ' + f.mins + ' min',
+                art:posterOf(f), act:{type:'NAV', to:'film', params:{id:f.id}}};
+      })}),
+      N('space', {})
+    ]}),
+    tabbar(st)
+  ]});
+}
+
+function scrFilm(st, params){
+  var f = film(params.id); if (!f) return scrFilms(st);
+  var shows = showingsFor(f.id);
+  return N('screen', {id:'scr_film', name:'film', params:{id:f.id}, c:[
+    appbar('', {back:true}),
+    N('scroll', {id:'film_scroll', c:[
+      N('filmhead', {id:'film_head', art:posterOf(f), title:f.title, cert:f.cert,
+        meta:f.genre + ' · ' + f.mins + ' minutes',
+        pills:[{text:f.cert, cls:'cert'}, {text:f.genre, cls:''},
+               {text:f.mins + ' min', cls:''}]}),
+      txt(f.blurb, 'body'),
+      N('sec', {text:'Showtimes', side:shows.length + ''}),
+      N('card', {id:'film_shows', cls:'flush', c: shows.map(function(sw){
+        var a = auditorium(sw.screen);
+        var free = SEATS_PER_ROW * ROWS.length - takenFor(st, sw.id).length;
+        return row('show_' + sw.id, sw.day + ' · ' + sw.time,
+          {sub:a.name + ' · ' + sw.format + (a.surcharge ? ' · ' + money(a.surcharge) + ' per seat' : ''),
+           val:free + ' free', act:{type:'PICK_SHOWING', id:sw.id}});
+      })}),
+      N('space', {})
+    ]}),
+    tabbar(st)
+  ]});
+}
+
+function scrSeats(st, params){
+  var d = st.draft, sw = showing(d.showing || params.id);
+  if (!sw) return scrFilms(st);
+  var f = film(sw.film), a = auditorium(sw.screen);
+  var taken = takenFor(st, sw.id);
+  var rows = ROWS.map(function(r){
+    var cells = [];
+    for (var i = 1; i <= SEATS_PER_ROW; i++) {
+      var seat = r + i;
+      var state = taken.indexOf(seat) >= 0 ? 'taken'
+                : (d.seats.indexOf(seat) >= 0 ? 'sel'
+                : (isWheel(seat) ? 'wheel' : 'free'));
+      cells.push({id:'seat_' + seat, seat:seat, num:i, state:state,
+                  premium:isPremium(seat), wheel:isWheel(seat),
+                  act: state === 'taken' ? {type:'EXPLAIN', text:seat + ' is already taken'}
+                                         : {type:'TOGGLE_SEAT', seat:seat}});
+      if (AISLE_AFTER.indexOf(i) >= 0) cells.push({gap:true});
+    }
+    return {label:r, premium:PREMIUM_ROWS.indexOf(r) >= 0, cells:cells};
+  });
+  var q = quote(st, d);
+  return N('screen', {id:'scr_seats', name:'seats', params:{id:sw.id}, c:[
+    appbar(f.title, {back:true,
+      right:[iconbtn('seats_clear', 'eraser', {type:'CLEAR_SEATS'})]}),
+    N('scroll', {id:'seats_scroll', c:[
+      txt(showLabel(sw), 'muted'),
+      N('screenbar', {id:'screenbar', label:'S C R E E N'}),
+      N('seatmap', {id:'seatmap', rows:rows}),
+      N('legend', {id:'legend', items:[
+        {label:'Free', cls:'free'}, {label:'Selected', cls:'sel'},
+        {label:'Taken', cls:'taken'}, {label:'Accessible', cls:'wheel'}]}),
+      txt('Rows D and E are premium, ' + money(PREMIUM_SURCHARGE) + ' extra per seat.', 'muted'),
+      N('space', {})
+    ]}),
+    N('summary', {id:'seat_summary',
+      main: d.seats.length ? d.seats.join(', ') : 'No seats chosen',
+      sub: d.seats.length
+        ? (d.seats.length + ' seat' + (d.seats.length===1?'':'s') + ' · ' +
+           premiumCount(d.seats) + ' premium · ' + money(q.premium + q.screenFee) + ' in extras')
+        : 'Tap a seat to choose it',
+      btn: btn('seats_continue', 'Continue', {type:'GO_TICKETS'}, 'primary', d.seats.length === 0)})
+  ]});
+}
+
+function scrTickets(st){
+  var d = st.draft, sw = showing(d.showing);
+  if (!sw) return scrFilms(st);
+  var n = ticketCount(d.tickets), need = d.seats.length;
+  var q = quote(st, d);
+  return N('screen', {id:'scr_tickets', name:'tickets', c:[
+    appbar('Tickets', {back:true}),
+    N('scroll', {id:'tickets_scroll', c:[
+      txt(need + ' seat' + (need===1?'':'s') + ' chosen: ' + d.seats.join(', '), 'muted'),
+      N('banner', {id:'ticket_banner',
+        text: n === need ? 'That adds up — ' + n + ' of ' + need
+                         : 'Assign ' + (need - n) + ' more ticket' + ((need-n)===1?'':'s'),
+        ok: n === need}),
+      N('card', {id:'ticket_types', cls:'flush', c: TICKETS.map(function(t){
+        return row('ticket_' + t.key, t.label, {arrow:false, sub:money(t.price) + ' each',
+          c:[N('stepper', {id:'tk_' + t.key, value:d.tickets[t.key] || 0,
+               minusId:'tk_' + t.key + '_dec', plusId:'tk_' + t.key + '_inc',
+               minusOff:(d.tickets[t.key] || 0) === 0, plusOff: n >= need,
+               minus:{type:'TICKET_BUMP', key:t.key, dir:-1},
+               plus:{type:'TICKET_BUMP', key:t.key, dir:1}})]});
+      })}),
+      N('card', {id:'ticket_price', cls:'flush pad', c:[
+        N('kv', {k:'Tickets', v:money(q.tickets)}),
+        N('kv', {k:'Premium seats', v:money(q.premium)}),
+        N('kv', {k:auditorium(sw.screen).kind, v:money(q.screenFee)}),
+        N('kv', {k:'Running total', v:money(q.total), cls:'total'})
+      ]}),
+      N('space', {})
+    ]}),
+    N('summary', {id:'ticket_summary', main:money(q.total),
+      sub:n + ' of ' + need + ' tickets assigned',
+      btn: btn('tickets_continue', 'Continue', {type:'GO_EXTRAS'}, 'primary', n !== need)})
+  ]});
+}
+
+function scrExtras(st){
+  var d = st.draft, q = quote(st, d);
+  return N('screen', {id:'scr_extras', name:'extras', c:[
+    appbar('Snacks', {back:true}),
+    N('scroll', {id:'extras_scroll', c:[
+      txt('Collect from the kiosk with your booking code.', 'muted'),
+      N('card', {id:'extras_list', cls:'flush', c: EXTRAS.map(function(e){
+        return row('extra_' + e.key, e.label, {arrow:false, val:money(e.price),
+          act:{type:'TOGGLE_EXTRA', key:e.key},
+          c:[N('switch', {id:'extra_' + e.key + '_switch', on:d.extras.indexOf(e.key) >= 0,
+                          act:{type:'TOGGLE_EXTRA', key:e.key}})]});
+      })}),
+      N('space', {})
+    ]}),
+    N('summary', {id:'extras_summary', main:money(q.total),
+      sub:d.extras.length + ' extra' + (d.extras.length===1?'':'s') + ' added',
+      btn: btn('extras_continue', 'Continue', {type:'GO_CHECKOUT'}, 'primary')})
+  ]});
+}
+
+function scrCheckout(st){
+  var d = st.draft, sw = showing(d.showing);
+  if (!sw) return scrFilms(st);
+  var f = film(sw.film), q = quote(st, d);
+  var pointsWorth = Math.floor(st.member.points / 100) * 100;
+  return N('screen', {id:'scr_checkout', name:'checkout', c:[
+    appbar('Checkout', {back:true}),
+    N('scroll', {id:'checkout_scroll', c:[
+      N('card', {id:'chk_trip', cls:'flush', c:[
+        row('chk_film', f.title, {sub:showLabel(sw), arrow:false}),
+        row('chk_seats', 'Seats', {val:d.seats.join(', '), arrow:false}),
+        row('chk_tickets', 'Tickets', {arrow:false,
+          val:TICKETS.filter(function(t){ return d.tickets[t.key]; })
+                     .map(function(t){ return d.tickets[t.key] + ' ' + t.label.toLowerCase(); }).join(', ')})
+      ]}),
+      N('sec', {text:'Pay with'}),
+      N('card', {id:'chk_pay', cls:'flush', c: PAYMENTS.map(function(p){
+        return row('pay_' + p.id, p.label, {lead:'card', arrow:false,
+          act:{type:'SET_PAYMENT', id:p.id},
+          c:[N('radio', {id:'pay_' + p.id + '_radio', on:d.payment === p.id,
+                         act:{type:'SET_PAYMENT', id:p.id}})]});
+      })}),
+      N('sec', {text:'Member points', side:st.member.points + ' available'}),
+      N('card', {id:'chk_points', cls:'flush', c:[
+        row('use_points', 'Spend points on this booking', {arrow:false,
+          sub:'Worth ' + money(pointsWorth) + ' off',
+          act:{type:'TOGGLE_POINTS'},
+          c:[N('switch', {id:'use_points_switch', on:d.usePoints, act:{type:'TOGGLE_POINTS'}})]})
+      ]}),
+      N('sec', {text:'Price'}),
+      N('card', {id:'chk_price', cls:'flush pad', c:[
+        N('kv', {k:'Tickets', v:money(q.tickets)}),
+        N('kv', {k:'Premium seats', v:money(q.premium)}),
+        N('kv', {k:auditorium(sw.screen).kind, v:money(q.screenFee)}),
+        N('kv', {k:'Snacks', v:money(q.extras)})
+      ].concat(q.discount ? [N('kv', {k:'Points', v:'-' + money(q.discount), cls:'save'})] : [])
+       .concat([N('kv', {k:'Total', v:money(q.total), cls:'total'})])}),
+      N('space', {})
+    ]}),
+    N('summary', {id:'checkout_summary', main:money(q.total), sub:d.seats.length + ' seats · ' + f.title,
+      btn: btn('confirm_pay', 'Pay now', {type:'CONFIRM_BOOKING'}, 'primary')})
+  ]});
+}
+
+function scrConfirmed(st, params){
+  var b = null;
+  st.bookings.forEach(function(x){ if (x.id === params.id) b = x; });
+  if (!b) return scrBookings(st);
+  var sw = showing(b.showing), f = film(sw.film);
+  return N('screen', {id:'scr_confirmed', name:'confirmed', c:[
+    appbar('', {back:true}),
+    N('scroll', {id:'confirmed_scroll', c:[
+      txt('You are going to see', 'muted'),
+      txt(f.title, 'h1'),
+      txt(showLabel(sw), 'body'),
+      N('ticketcode', {id:'ticket_code', code:b.code, seats:b.seats.join(', '),
+                       total:money(b.total)}),
+      N('padded', {c:[btn('conf_bookings', 'See my bookings',
+                          {type:'TAB', tab:'bookings'}, 'primary block')]}),
+      N('space', {}),
+      N('padded', {c:[btn('conf_films', 'Back to films', {type:'HOME'}, 'block')]}),
+      N('space', {})
+    ]})
+  ]});
+}
+
+var STATUS_PILL = {upcoming:{text:'Upcoming', cls:'good'}, cancelled:{text:'Cancelled', cls:'bad'}};
+
+function scrBookings(st){
+  var cards = st.bookings.slice().reverse().map(function(b){
+    var sw = showing(b.showing), f = film(sw.film);
+    var ops = [];
+    if (b.status === 'upcoming')
+      ops.push(btn('cancel_' + b.id, 'Cancel', {type:'CANCEL_BOOKING', id:b.id}, 'danger'));
+    ops.push(btn('view_' + b.id, 'Details', {type:'NAV', to:'bookingDetail', params:{id:b.id}}, 'ghost'));
+    return N('card', {id:'booking_' + b.id, cls:'flush', c:[
+      N('bookingline', {id:'bk_' + b.id, title:f.title, art:posterOf(f),
+        sub:showLabel(sw), seats:b.seats.join(', '), code:b.code,
+        total:money(b.total), status:STATUS_PILL[b.status],
+        act:{type:'NAV', to:'bookingDetail', params:{id:b.id}}}),
+      N('btnrow', {id:'bkops_' + b.id, c:ops})
+    ]});
+  });
+  return N('screen', {id:'scr_bookings', name:'bookings', c:[
+    appbar('My bookings'),
+    N('scroll', {id:'bookings_scroll', c: cards.length
+      ? cards.concat([N('space', {})])
+      : [N('emptystate', {id:'empty', text:'No bookings yet.'})]}),
+    tabbar(st)
+  ]});
+}
+
+function scrBookingDetail(st, params){
+  var b = null;
+  st.bookings.forEach(function(x){ if (x.id === params.id) b = x; });
+  if (!b) return scrBookings(st);
+  var sw = showing(b.showing), f = film(sw.film);
+  var pay = null;
+  PAYMENTS.forEach(function(p){ if (p.id === b.payment) pay = p; });
+  var ops = [];
+  if (b.status === 'upcoming')
+    ops.push(btn('bd_cancel', 'Cancel booking', {type:'CANCEL_BOOKING', id:b.id}, 'danger'));
+  return N('screen', {id:'scr_bookingDetail', name:'bookingDetail', params:{id:b.id}, c:[
+    appbar('Booking', {back:true}),
+    N('scroll', {id:'bd_scroll', c:[
+      txt(f.title, 'h1'),
+      N('pills', {id:'bd_status', items:[STATUS_PILL[b.status]]}),
+      N('ticketcode', {id:'bd_code', code:b.code, seats:b.seats.join(', '), total:money(b.total)}),
+      N('card', {id:'bd_info', cls:'flush', c:[
+        row('bd_when', 'When', {val:sw.day + ' ' + sw.time, arrow:false}),
+        row('bd_screen', 'Screen', {val:auditorium(sw.screen).name, arrow:false}),
+        row('bd_seats', 'Seats', {val:b.seats.join(', '), arrow:false}),
+        row('bd_tickets', 'Tickets', {arrow:false,
+          val:TICKETS.filter(function(t){ return b.tickets[t.key]; })
+                     .map(function(t){ return b.tickets[t.key] + ' ' + t.label.toLowerCase(); }).join(', ')}),
+        row('bd_extras', 'Snacks', {arrow:false,
+          val:b.extras.length ? b.extras.map(function(k){ return extra(k).label; }).join(', ') : 'None'}),
+        row('bd_pay', 'Paid with', {val:pay ? pay.label : '—', arrow:false}),
+        row('bd_total', 'Total', {val:money(b.total), valCls:'accent', arrow:false})
+      ]}),
+      ops.length ? N('btnrow', {id:'bd_ops', c:ops}) : N('space', {}),
+      N('space', {})
+    ]})
+  ]});
+}
+
+function scrMember(st){
+  return N('screen', {id:'scr_member', name:'member', c:[
+    appbar('Membership'),
+    N('scroll', {id:'member_scroll', c:[
+      N('membercard', {id:'member_card', name:st.member.name, tier:st.member.tier,
+                       points:st.member.points, cardId:st.member.cardId}),
+      N('card', {id:'member_rows', cls:'flush', c:[
+        row('member_points', 'Points balance', {val:st.member.points + '', valCls:'accent', arrow:false}),
+        row('member_worth', 'Worth', {val:money(Math.floor(st.member.points / 100) * 100), arrow:false}),
+        row('member_tier', 'Tier', {val:st.member.tier, arrow:false}),
+        row('member_id', 'Card number', {val:st.member.cardId, arrow:false})
+      ]}),
+      txt('100 points is worth £1.00 off any booking.', 'muted'),
+      N('space', {})
+    ]}),
+    tabbar(st)
+  ]});
+}
+
+function scrSettings(st){
+  var s = st.settings;
+  function sw(id, text, key, sub){
+    return row(id, text, {sub:sub, arrow:false, act:{type:'TOGGLE_SETTING', key:key},
+      c:[N('switch', {id:id + '_switch', on:!!s[key], act:{type:'TOGGLE_SETTING', key:key}})]});
+  }
+  return N('screen', {id:'scr_settings', name:'settings', c:[
+    appbar('Settings'),
+    N('scroll', {id:'settings_scroll', c:[
+      N('sec', {text:'Default payment'}),
+      N('card', {id:'set_pay', cls:'flush', c: PAYMENTS.map(function(p){
+        return row('default_' + p.id, p.label, {lead:'card', arrow:false,
+          act:{type:'SET_SETTING', key:'defaultPayment', value:p.id},
+          c:[N('radio', {id:'default_' + p.id + '_radio', on:s.defaultPayment === p.id,
+                         act:{type:'SET_SETTING', key:'defaultPayment', value:p.id}})]});
+      })}),
+      N('sec', {text:'Booking'}),
+      N('card', {id:'set_book', cls:'flush', c:[
+        sw('set_accessibleSeats', 'Highlight accessible seats', 'accessibleSeats',
+           'Show step-free spaces first on the seat map'),
+        sw('set_reminders', 'Showtime reminders', 'reminders', 'One hour before the film'),
+        sw('set_emailReceipts', 'Email receipts', 'emailReceipts', '')
+      ]}),
+      N('space', {})
+    ]}),
+    tabbar(st)
+  ]});
+}
+
+function scrSearch(st){
+  var hits = searchFilms(st);
+  var body = [
+    N('searchbar', {id:'search_input', field:'search', value:st.ui.inputs.search || '',
+      placeholder:'Film, genre or certificate',
+      act:{type:'SET_INPUT', field:'search', value:'$VALUE'},
+      goId:'search_go', go:{type:'SUBMIT_SEARCH'},
+      clearId:(st.ui.query || st.ui.inputs.search) ? 'search_clear' : null,
+      clear:{type:'CLEAR_SEARCH'}})
+  ];
+  if (!st.ui.query) body.push(txt('Try "animation", "18" or "thriller".', 'muted'));
+  else {
+    body.push(txt(hits.length + ' result' + (hits.length===1?'':'s') + ' for "' + st.ui.query + '"', 'muted'));
+    body = body.concat(hits.length
+      ? [N('filmgrid', {id:'search_grid', items: hits.map(function(f){
+          return {id:'found_' + f.id, name:f.title, sub:f.cert + ' · ' + f.mins + ' min',
+                  art:posterOf(f), act:{type:'NAV', to:'film', params:{id:f.id}}};
+        })})]
+      : [N('emptystate', {id:'empty', text:'Nothing matches "' + st.ui.query + '"'})]);
+  }
+  body.push(N('space', {}));
+  return N('screen', {id:'scr_search', name:'search', c:[
+    appbar('Search', {back:true}), N('scroll', {id:'search_scroll', c:body}), tabbar(st)
+  ]});
+}
+
+var ROUTES = {
+  films:scrFilms, film:scrFilm, seats:scrSeats, tickets:scrTickets, extras:scrExtras,
+  checkout:scrCheckout, confirmed:scrConfirmed, bookings:scrBookings,
+  bookingDetail:scrBookingDetail, member:scrMember, settings:scrSettings, search:scrSearch
+};
+
+function screen(st){
+  var r = route(st), fn = ROUTES[r.name] || scrFilms;
+  var rootNode = fn(st, r.params || {});
+  rootNode.route = r.name;
+  var extraNodes = [];
+  if (st.ui.confirm) {
+    extraNodes.push(N('mask', {id:'confirm_mask', c:[N('dialog', {id:'confirm_dialog',
+      title:st.ui.confirm.title || '', text:st.ui.confirm.text,
+      ok: btn('confirm_ok', st.ui.confirm.okText || 'Confirm', {type:'CONFIRM_YES'}, 'primary'),
+      cancel: btn('confirm_cancel', 'Keep it', {type:'CONFIRM_NO'}, '')})]}));
+  }
+  if (st.ui.toast) extraNodes.push(N('toast', {id:'toast', text:st.ui.toast}));
+  rootNode.c = rootNode.c.concat(extraNodes);
+  return rootNode;
+}
+
+/* =======================================================================
+ * TRAVERSAL — element index, GUI action interface, text observation
+ * ==================================================================== */
+var SKIP_KEYS = {act:1, minus:1, plus:1, go:1, close:1, clear:1, yes:1, params:1, meta:1,
+                 palette:1, taken:1, tickets:1};
+
+function labelOf(n){ return n.text || n.title || n.name || n.label || ''; }
+
+function collect(n, out){
+  if (!n || typeof n !== 'object') return;
+  if (Array.isArray(n)) { for (var i=0;i<n.length;i++) collect(n[i], out); return; }
+  if (n.t === 'appbar' && n.back) out.push({id:'nav_back', act:{type:'BACK'}, text:'Back', t:'back'});
+  if (n.id && n.act)              out.push({id:n.id, act:n.act, text:labelOf(n), t:n.t||'el',
+                                            disabled:!!n.disabled,
+                                            input:(n.t==='searchbar'||n.t==='inputrow')});
+  if (n.t === 'mask' && n.close)  out.push({id:n.id, act:n.close, text:'Dismiss overlay', t:'mask'});
+  if (n.minusId && n.minus)       out.push({id:n.minusId, act:n.minus, text:'decrease', t:'step',
+                                            disabled:!!n.minusOff});
+  if (n.plusId  && n.plus)        out.push({id:n.plusId,  act:n.plus,  text:'increase', t:'step',
+                                            disabled:!!n.plusOff});
+  if (n.goId    && n.go)          out.push({id:n.goId,    act:n.go,    text:'Search', t:'btn'});
+  if (n.clearId && n.clear)       out.push({id:n.clearId, act:n.clear, text:'Clear the search', t:'btn'});
+  for (var k in n){
+    if (SKIP_KEYS[k]) continue;
+    var v = n[k];
+    if (v && typeof v === 'object') collect(v, out);
+  }
+}
+function elements(st){
+  var rootNode = (st && st.t === 'screen') ? st : screen(st);
+  var masks = (rootNode.c||[]).filter(function(n){ return n.t === 'mask'; });
+  var out = [];
+  collect(masks.length ? masks[masks.length-1] : rootNode, out);
+  return out;
+}
+function findEl(st, id){
+  var els = elements(st);
+  for (var i=0;i<els.length;i++) if (els[i].id === id) return els[i];
+  return null;
+}
+function substitute(act, text){
+  var a = clone(act);
+  for (var k in a) if (a[k] === '$VALUE') a[k] = text;
+  return a;
+}
+function step(st, a){
+  a = a || {};
+  var kind = a.action || a.type;
+  switch (kind) {
+  case 'tap': {
+    var el = findEl(st, a.id);
+    if (!el) return {state:st, ok:false, error:'ELEMENT_NOT_FOUND: ' + a.id};
+    if (el.disabled) return {state:st, ok:false, error:'ELEMENT_DISABLED: ' + a.id};
+    return {state:reduce(st, el.act), ok:true};
+  }
+  case 'type': {
+    var e2 = findEl(st, a.id);
+    if (!e2) return {state:st, ok:false, error:'ELEMENT_NOT_FOUND: ' + a.id};
+    if (!e2.input) return {state:st, ok:false, error:'NOT_A_TEXT_FIELD: ' + a.id};
+    return {state:reduce(st, substitute(e2.act, a.text == null ? '' : String(a.text))), ok:true};
+  }
+  case 'back':   return {state:reduce(st, {type:'BACK'}), ok:true};
+  case 'home':   return {state:reduce(st, {type:'HOME'}), ok:true};
+  case 'wait':   return {state:reduce(st, {type:'NOOP'}), ok:true};
+  case 'finish': return {state:reduce(st, {type:'FINISH', answer:a.answer}), ok:true};
+  case 'raw':    return {state:reduce(st, a.act || {}), ok:true};
+  default:       return {state:st, ok:false, error:'UNKNOWN_ACTION: ' + kind};
+  }
+}
+
+/* ------------------------------------------------- text observation (a11y) */
+function a11y(st){
+  var rootNode = screen(st), lines = [], r = route(st);
+  lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
+             '  ' + clockStr(st.meta.clock) + '  step ' + st.meta.steps);
+  if (st.draft.showing) {
+    var q = quote(st, st.draft);
+    lines.push('# Draft booking: ' + (st.draft.seats.length ? st.draft.seats.join(',') : 'no seats') +
+               ' · ' + ticketCount(st.draft.tickets) + ' tickets · ' + money(q.total));
+  }
+  var masks = (rootNode.c||[]).filter(function(n){ return n.t==='mask'; });
+  if (masks.length) lines.push('# A dialog is open. Nothing behind it can be tapped.');
+  walkText(masks.length ? masks[masks.length-1] : rootNode, 0, lines, st);
+  (rootNode.c||[]).forEach(function(n){ if (n.t==='toast') lines.push('[Toast] ' + n.text); });
+  return lines.join('\n');
+}
+function tid(n){ return (n && n.id && n.act) ? ' #'+n.id : ''; }
+function ind(d){ return new Array(d+1).join('  '); }
+
+function walkText(n, d, out, st){
+  if (!n || typeof n !== 'object') return;
+  if (Array.isArray(n)) { n.forEach(function(x){ walkText(x, d, out, st); }); return; }
+  var line = null;
+  switch (n.t) {
+  case 'screen': break;
+  case 'appbar': line = '[AppBar] ' + (n.title || '') + (n.back ? '   Back #nav_back' : ''); break;
+  case 'iconbtn': line = '[IconButton]' + tid(n) + ' ' + n.icon; break;
+  case 'searchbar':
+    line = '[TextField]' + tid(n) + ' placeholder="' + n.placeholder + '" value="' + (n.value||'') +
+           '"   Search #' + n.goId + (n.clearId ? '   Clear #' + n.clearId : ''); break;
+  case 'chip':   line = '[Chip]' + tid(n) + ' ' + n.text + (n.on ? '  [selected]' : ''); break;
+  case 'btn':    line = '[Button]' + (n.id ? ' #'+n.id : '') + ' ' + n.text + (n.disabled ? ' (disabled)' : ''); break;
+  case 'row': {
+    var s = '[Row]' + tid(n) + ' ' + (n.text||'');
+    if (n.val) s += ' = ' + n.val;
+    if (n.sub) s += '   (' + n.sub + ')';
+    line = s; break;
+  }
+  case 'switch': line = '[Toggle]' + tid(n) + ' ' + (n.on ? 'ON' : 'OFF'); break;
+  case 'radio':  line = '[Radio]' + tid(n) + ' ' + (n.on ? 'selected' : 'not selected'); break;
+  case 'stepper':
+    line = '[Stepper] ' + n.value + '  decrease #' + n.minusId + (n.minusOff ? '(disabled)' : '') +
+           '  increase #' + n.plusId + (n.plusOff ? '(disabled)' : ''); break;
+  case 'filmgrid':
+    out.push(ind(d) + '[Films]');
+    n.items.forEach(function(i){ out.push(ind(d+1) + i.name + ' — ' + i.sub + ' #' + i.id); });
+    return;
+  case 'filmhead':
+    out.push(ind(d) + '[Film] ' + n.title + ' — ' + n.meta);
+    out.push(ind(d+1) + 'Poster: generated pattern for "' + n.art.title + '"');
+    return;
+  case 'screenbar': line = '[' + n.label + ' is at the top of the map]'; break;
+  case 'seatmap':
+    out.push(ind(d) + '[SeatMap] rows ' + n.rows[0].label + '-' + n.rows[n.rows.length-1].label +
+             ', ' + SEATS_PER_ROW + ' seats per row, aisles after 2 and 8');
+    n.rows.forEach(function(r){
+      var cells = r.cells.filter(function(c){ return !c.gap; }).map(function(c){
+        var mark = c.state === 'taken' ? '(taken)'
+                 : (c.state === 'sel' ? '(SELECTED)' : (c.wheel ? '(accessible)' : ''));
+        return '#' + c.id + mark;
+      });
+      out.push(ind(d+1) + 'Row ' + r.label + (r.premium ? ' [premium]' : '') + ': ' + cells.join(' '));
+    });
+    return;
+  case 'legend':
+    line = '[Legend] ' + n.items.map(function(i){ return i.label; }).join(' · '); break;
+  case 'banner': line = (n.ok ? '[OK] ' : '[Needs attention] ') + n.text; break;
+  case 'summary':
+    out.push(ind(d) + '[Summary] ' + n.main + ' — ' + n.sub);
+    walkText(n.btn, d+1, out, st);
+    return;
+  case 'kv':      line = '  ' + n.k + ': ' + n.v; break;
+  case 'ticketcode':
+    out.push(ind(d) + '[BookingCode] ' + n.code + ' · seats ' + n.seats + ' · ' + n.total);
+    return;
+  case 'bookingline':
+    out.push(ind(d) + '[Booking]' + tid(n) + ' ' + n.title + ' — ' + n.sub);
+    out.push(ind(d+1) + 'seats ' + n.seats + ' · ' + n.code + ' · ' + n.total + ' · ' + n.status.text);
+    return;
+  case 'membercard':
+    line = '[MemberCard] ' + n.name + ' · ' + n.tier + ' · ' + n.points + ' points · ' + n.cardId; break;
+  case 'pills':
+    line = n.items.map(function(p){ return '[' + p.text + ']'; }).join(' '); break;
+  case 'emptystate': line = '[Empty] ' + n.text; break;
+  case 'sec':     line = '— ' + n.text + (n.side ? ' (' + n.side + ')' : '') + ' —'; break;
+  case 'text':    line = n.text || null; break;
+  case 'tabbar':
+    out.push(ind(d) + '[TabBar] ' + n.items.map(function(i){
+      return i.text + ' #' + i.id + (i.on ? '[current]' : ''); }).join('  '));
+    return;
+  case 'dialog':  line = '[Dialog] ' + (n.title ? n.title + ' — ' : '') + n.text; break;
+  case 'mask': case 'toast': line = null; break;
+  default:        line = null;
+  }
+  if (line !== null) out.push(ind(d) + line);
+  for (var k in n){
+    if (SKIP_KEYS[k]) continue;
+    var v = n[k];
+    if (v && typeof v === 'object') walkText(v, line !== null ? d+1 : d, out, st);
+  }
+}
+
+/* --------------------------------------------------------- derived view */
+function derive(st){
+  var last = st.bookings.length ? st.bookings[st.bookings.length-1] : null;
+  var lastShow = last ? showing(last.showing) : null;
+  var q = st.draft.showing ? quote(st, st.draft) : null;
+  return {
+    route: route(st).name,
+    draftSeats: st.draft.seats.slice(),
+    draftSeatCount: st.draft.seats.length,
+    draftTicketCount: ticketCount(st.draft.tickets),
+    draftTotal: q ? q.total : 0,
+    draftBalanced: seatsMatchTickets(st.draft),
+    bookingCount: st.bookings.length,
+    lastBooking: last,
+    lastBookingFilm: lastShow ? film(lastShow.film).title : null,
+    lastBookingShowLabel: lastShow ? (lastShow.day + ' ' + lastShow.time) : null,
+    lastBookingScreen: lastShow ? auditorium(lastShow.screen).name : null,
+    lastBookingSeatsAdjacent: (function(){
+      if (!last || last.seats.length < 2) return false;
+      var rows = {}; last.seats.forEach(function(s){ (rows[s.charAt(0)] = rows[s.charAt(0)] || []).push(+s.slice(1)); });
+      if (Object.keys(rows).length !== 1) return false;
+      var ns = rows[Object.keys(rows)[0]].sort(function(a,b){ return a-b; });
+      for (var i=1;i<ns.length;i++) if (ns[i] !== ns[i-1] + 1) return false;
+      return true;
+    })(),
+    lastBookingRows: last ? last.seats.map(function(s){ return s.charAt(0); })
+                                      .filter(function(v,i,a){ return a.indexOf(v)===i; }).sort() : [],
+    lastBookingPremium: last ? last.seats.filter(isPremium).length : 0,
+    takenCounts: (function(){ var o = {}; SHOWINGS.forEach(function(s){ o[s.id] = takenFor(st, s.id).length; }); return o; })(),
+    upcomingCodes: st.bookings.filter(function(b){ return b.status === 'upcoming'; })
+                              .map(function(b){ return b.code; }).sort(),
+    memberPoints: st.member.points,
+    settings: clone(st.settings),
+    finished: !!st.meta.finished,
+    answer: st.meta.answer
+  };
+}
+function snapshot(st){ var o = clone(st); o.derived = derive(st); return o; }
+function applyPatch(st, patch){
+  (patch || []).forEach(function(p){ setPath(st, p.path, clone(p.value)); });
+  return st;
+}
+
+var ENGINE = {
+  ENV_ID: ENV_ID, VERSION: VERSION, CATALOG: CATALOG,
+  createInitialState: createInitialState,
+  reduce: reduce, step: step, screen: screen, a11y: a11y,
+  elements: elements, findEl: findEl, applyPatch: applyPatch,
+  getPath: getPath, setPath: setPath, clone: clone,
+  derive: derive, snapshot: snapshot,
+  select: SELECT
+};
+root.APERTURE_ENGINE = ENGINE;
+root.GUI_ENGINE      = ENGINE;
+
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+</script>
+
+<script id="ui">
+/* ===========================================================================
+ * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
+ * Posters are generated from each film's palette and style; the seat map is
+ * a real grid of tappable cells with aisles.
+ * ======================================================================== */
+(function(){
+'use strict';
+var E = window.GUI_ENGINE;
+var app = document.getElementById('app');
+var hud = document.getElementById('hud');
+
+function esc(s){
+  return String(s === undefined || s === null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+var SVG = {
+  back:  '<path d="M15 4.5 8 12l7 7.5"/>',
+  arrow: '<path d="M9 4.5 16 12l-7 7.5"/>',
+  search:'<circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.4 15.4 21 21"/>',
+  close: '<path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5"/>',
+  plus:  '<path d="M12 5.6v12.8M5.6 12h12.8"/>',
+  minus: '<path d="M5.6 12h12.8"/>',
+  film:  '<rect x="2.8" y="4" width="18.4" height="16" rx="2.4"/><path d="M7.4 4v16M16.6 4v16M2.8 12h18.4"/>',
+  ticket:'<path d="M3.4 8.4a2 2 0 0 1 2-2h13.2a2 2 0 0 1 2 2v1.8a2 2 0 0 0 0 3.6v1.8a2 2 0 0 1-2 2H5.4a2 2 0 0 1-2-2v-1.8a2 2 0 0 0 0-3.6z"/><path d="M14.6 7v10" stroke-dasharray="2 2"/>',
+  card:  '<rect x="2.6" y="5.6" width="18.8" height="12.8" rx="2.4"/><path d="M2.6 10h18.8"/>',
+  gear:  '<circle cx="12" cy="12" r="3.4"/><path d="M19.1 14.4a1.6 1.6 0 0 0 .3 1.8l.1.1a1.9 1.9 0 1 1-2.7 2.7l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5v.2a1.9 1.9 0 1 1-3.8 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a1.9 1.9 0 1 1-2.7-2.7l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1h-.2a1.9 1.9 0 1 1 0-3.8h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a1.9 1.9 0 1 1 2.7-2.7l.1.1a1.6 1.6 0 0 0 1.8.3h.1a1.6 1.6 0 0 0 1-1.5v-.2a1.9 1.9 0 1 1 3.8 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a1.9 1.9 0 1 1 2.7 2.7l-.1.1a1.6 1.6 0 0 0-.3 1.8v.1a1.6 1.6 0 0 0 1.5 1h.2a1.9 1.9 0 1 1 0 3.8h-.1a1.6 1.6 0 0 0-1.5 1z"/>',
+  eraser:'<path d="M8.6 20.6 3.4 15.4a2 2 0 0 1 0-2.8l8.2-8.2a2 2 0 0 1 2.8 0l5.2 5.2a2 2 0 0 1 0 2.8l-8.2 8.2z"/><path d="M8.6 20.6H20.6M7.4 11.4l5.2 5.2"/>'
+};
+function icon(name, size, cls){
+  var d = SVG[name]; if (!d) return '';
+  return '<span class="ico ' + (cls||'') + '" style="width:' + (size||20) + 'px;height:' + (size||20) +
+    'px;display:inline-flex;flex:0 0 auto">' +
+    '<svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="currentColor" ' +
+    'stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg></span>';
+}
+
+/* ------------------------------------------------------------- posters */
+var uidSeq = 0;
+function posterSvg(a){
+  if (!a) return '<svg viewBox="0 0 200 300"><rect width="200" height="300" fill="#1c2440"/></svg>';
+  var p = a.palette, u = 'p' + (uidSeq++) + '_', body = '';
+  var defs = '<linearGradient id="' + u + 'g" x1="0" y1="0" x2="0" y2="1">'
+           + '<stop offset="0" stop-color="' + p[1] + '"/><stop offset="1" stop-color="' + p[2] + '"/></linearGradient>';
+  body += '<rect width="200" height="300" fill="url(#' + u + 'g)"/>';
+  if (a.style === 'beam') {
+    body += '<path d="M100 40 L14 300 L186 300 Z" fill="' + p[0] + '" opacity=".28"/>'
+         +  '<circle cx="100" cy="42" r="16" fill="' + p[0] + '"/>'
+         +  '<rect x="88" y="52" width="24" height="120" fill="' + p[2] + '" opacity=".55"/>'
+         +  '<path d="M0 250 q50 -18 100 0 t100 0 v50 H0 z" fill="' + p[2] + '" opacity=".8"/>';
+  } else if (a.style === 'orbit') {
+    body += '<circle cx="100" cy="130" r="54" fill="none" stroke="' + p[0] + '" stroke-width="2" opacity=".55"/>'
+         +  '<ellipse cx="100" cy="130" rx="82" ry="30" fill="none" stroke="' + p[0] + '" stroke-width="2" opacity=".45"/>'
+         +  '<circle cx="100" cy="130" r="34" fill="' + p[0] + '" opacity=".92"/>'
+         +  '<circle cx="168" cy="112" r="7" fill="' + p[0] + '"/>'
+         +  '<g fill="#fff" opacity=".7"><circle cx="34" cy="52" r="1.8"/><circle cx="150" cy="42" r="1.4"/>'
+         +  '<circle cx="60" cy="240" r="1.6"/><circle cx="164" cy="252" r="1.3"/></g>';
+  } else if (a.style === 'sun') {
+    body += '<circle cx="100" cy="112" r="52" fill="' + p[0] + '"/>'
+         +  '<g stroke="' + p[0] + '" stroke-width="5" stroke-linecap="round" opacity=".7">'
+         +  '<path d="M100 32v-16"/><path d="M100 208v16"/><path d="M20 112H4"/><path d="M180 112h16"/>'
+         +  '<path d="M44 56 33 45"/><path d="M156 56l11-11"/></g>'
+         +  '<path d="M0 236 q50 -26 100 0 t100 0 v64 H0 z" fill="' + p[2] + '" opacity=".85"/>';
+  } else if (a.style === 'shard') {
+    body += '<path d="M100 20 L142 150 L100 280 L58 150 Z" fill="' + p[0] + '" opacity=".85"/>'
+         +  '<path d="M100 20 L142 150 L100 150 Z" fill="#fff" opacity=".13"/>'
+         +  '<path d="M20 300 L70 120 L86 300 Z" fill="' + p[0] + '" opacity=".35"/>'
+         +  '<path d="M180 300 L134 140 L118 300 Z" fill="' + p[0] + '" opacity=".3"/>';
+  } else if (a.style === 'wave') {
+    for (var i = 0; i < 6; i++)
+      body += '<path d="M-8 ' + (96 + i*30) + ' q40 -26 80 0 t80 0 t80 0" fill="none" stroke="' + p[0]
+           +  '" stroke-width="' + (2.4 + i*0.9) + '" opacity="' + (0.25 + i*0.12) + '"/>';
+    body += '<circle cx="150" cy="58" r="20" fill="' + p[0] + '" opacity=".8"/>';
+  } else {
+    body += '<g fill="' + p[0] + '">'
+         +  '<path d="M40 96 l30 -16 l-6 22 l24 12 l-32 8 l-4 20 l-18 -22 l-24 4 l16 -16z" opacity=".9"/>'
+         +  '<path d="M120 168 l34 -18 l-7 25 l27 14 l-36 9 l-5 22 l-20 -25 l-27 5 l18 -18z" opacity=".75"/>'
+         +  '<path d="M92 44 l22 -12 l-4 16 l18 9 l-24 6 l-3 15 l-13 -16 l-18 3 l12 -12z" opacity=".55"/></g>';
+  }
+  return '<svg viewBox="0 0 200 300"><defs>' + defs + '</defs>' + body + '</svg>';
+}
+
+var ACTS = [], TRAJ = [];
+function bind(a){ if (!a) return ''; ACTS.push(a); return ' data-act="' + (ACTS.length-1) + '"'; }
+function bindT(a){ if (!a) return ''; ACTS.push(a); return ' data-actt="' + (ACTS.length-1) + '"'; }
+function tid(id){ return id ? ' data-testid="' + esc(id) + '"' : ''; }
+function R(list){ return (list||[]).map(render).join(''); }
+
+function render(n){
+  if (!n || typeof n !== 'object') return '';
+  if (Array.isArray(n)) return R(n);
+  switch (n.t) {
+  case 'screen': return R(n.c);
+  case 'appbar': {
+    var left = (n.back
+      ? '<div class="iconbtn" data-testid="nav_back"' + bind({type:'BACK'}) + '>' + icon('back',19) + '</div>'
+      : '') + R(n.left);
+    return '<div class="n-appbar"' + tid(n.id) + '><div class="ab-side">' + left + '</div>'
+      + '<div class="ab-title">' + esc(n.title) + '</div>'
+      + '<div class="ab-side right">' + R(n.right) + '</div></div>';
+  }
+  case 'iconbtn':
+    return '<div class="iconbtn ' + esc(n.cls||'') + '"' + tid(n.id) + bind(n.act) + '>' + icon(n.icon, 19) + '</div>';
+  case 'searchbar': {
+    var goIdx = n.go ? (ACTS.push(n.go) - 1) : -1;
+    return '<div class="searchbar">' + icon('search', 17)
+      + '<input' + tid(n.id) + bindT(n.act) + ' data-enter="' + goIdx + '"'
+      + ' value="' + esc(n.value) + '" placeholder="' + esc(n.placeholder) + '">'
+      + (n.clearId ? '<div class="sb-clear"' + tid(n.clearId) + bind(n.clear) + '>' + icon('close',12) + '</div>' : '')
+      + '<div class="sb-go"' + tid(n.goId) + ' data-act="' + goIdx + '">' + icon('arrow',15) + '</div></div>';
+  }
+  case 'scroll':  return '<div class="n-scroll"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'chips':   return '<div class="n-chips"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'chip':    return '<div class="n-chip' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '>' + esc(n.text) + '</div>';
+  case 'card':    return '<div class="n-card ' + esc(n.cls||'') + (n.act?' tap':'') + '"' + tid(n.id) + bind(n.act) + '>' + R(n.c) + '</div>';
+  case 'padded':  return '<div style="padding:4px 18px">' + R(n.c) + '</div>';
+  case 'sec':     return '<div class="n-sec"' + tid(n.id) + '><span>' + esc(n.text) + '</span>'
+                       + (n.side ? '<span class="sec-side">' + esc(n.side) + '</span>' : '') + '</div>';
+  case 'text':    return '<div class="n-text ' + esc(n.cls||'') + '">' + esc(n.text) + '</div>';
+  case 'space':   return '<div class="n-space"></div>';
+  case 'emptystate': return '<div class="n-text empty"' + tid(n.id) + '>' + esc(n.text) + '</div>';
+  case 'row': {
+    var inline = [], below = [];
+    (n.c||[]).forEach(function(ch){
+      (ch.t==='switch'||ch.t==='radio'||ch.t==='stepper'||ch.t==='btn') ? inline.push(ch) : below.push(ch);
+    });
+    return '<div class="n-row' + (n.act?' tap':'') + '"' + tid(n.id) + bind(n.act) + '>'
+      + (n.lead ? '<div class="r-lead">' + icon(n.lead, 18) + '</div>' : '')
+      + '<div class="r-main"><div class="r-label">' + esc(n.text) + '</div>'
+      + (n.sub ? '<div class="r-sub">' + esc(n.sub) + '</div>' : '') + '</div>'
+      + (n.val ? '<div class="r-value ' + esc(n.valCls||'') + '">' + esc(n.val) + '</div>' : '')
+      + R(inline)
+      + (n.arrow && !inline.length ? '<div class="r-arrow">' + icon('arrow',15) + '</div>' : '')
+      + '</div>' + R(below);
+  }
+  case 'btn':
+    return '<div class="n-btn ' + esc(n.cls||'') + (n.disabled?' off':'') + '"' + tid(n.id)
+      + (n.disabled?'':bind(n.act)) + '>' + esc(n.text) + '</div>';
+  case 'btnrow': return '<div class="n-btnrow"' + tid(n.id) + '>' + R(n.c) + '</div>';
+  case 'switch': return '<div class="n-switch' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '><i></i></div>';
+  case 'radio':  return '<div class="n-radio' + (n.on?' on':'') + '"' + tid(n.id) + bind(n.act) + '></div>';
+  case 'stepper':
+    return '<div class="n-stepper"' + tid(n.id) + '>'
+      + '<div class="st-btn' + (n.minusOff?' off':'') + '"' + tid(n.minusId) + (n.minusOff?'':bind(n.minus)) + '>' + icon('minus',15) + '</div>'
+      + '<div class="st-val">' + esc(n.value) + '</div>'
+      + '<div class="st-btn' + (n.plusOff?' off':'') + '"' + tid(n.plusId) + (n.plusOff?'':bind(n.plus)) + '>' + icon('plus',15) + '</div></div>';
+
+  case 'filmgrid':
+    return '<div class="filmgrid"' + tid(n.id) + '>' + n.items.map(function(i){
+      return '<div class="filmcard"' + tid(i.id) + bind(i.act) + '>'
+        + '<div class="fc-art">' + posterSvg(i.art) + '</div>'
+        + '<div class="fc-name">' + esc(i.name) + '</div>'
+        + '<div class="fc-sub">' + esc(i.sub) + '</div></div>';
+    }).join('') + '</div>';
+  case 'filmhead':
+    return '<div class="filmhead"' + tid(n.id) + '><div class="fh-art">' + posterSvg(n.art) + '</div>'
+      + '<div class="fh-body"><div class="fh-title">' + esc(n.title) + '</div>'
+      + '<div class="fh-meta">' + esc(n.meta) + '</div>'
+      + '<div class="fh-pills">' + n.pills.map(function(p){
+          return '<span class="pill ' + (p.cls||'') + '">' + esc(p.text) + '</span>'; }).join('')
+      + '</div></div></div>';
+
+  case 'screenbar':
+    return '<div class="screenbar"' + tid(n.id) + '><div class="sb-arc"></div>'
+      + '<div class="sb-lab">' + esc(n.label) + '</div></div>';
+  case 'seatmap':
+    return '<div class="seatmap"' + tid(n.id) + '>' + n.rows.map(function(r){
+      return '<div class="seatrow"><div class="sr-lab">' + r.label + '</div>'
+        + r.cells.map(function(c){
+            if (c.gap) return '<div class="seat gap"></div>';
+            return '<div class="seat ' + c.state + '"' + tid(c.id) + bind(c.act) + '>' + c.num + '</div>';
+          }).join('')
+        + '<div class="sr-lab">' + r.label + '</div></div>';
+    }).join('') + '</div>';
+  case 'legend':
+    return '<div class="legend"' + tid(n.id) + '>' + n.items.map(function(i){
+      var bg = i.cls === 'sel' ? 'var(--accent)' : (i.cls === 'taken' ? '#1a2038'
+             : (i.cls === 'wheel' ? '#173049' : 'var(--card3)'));
+      return '<span><i style="background:' + bg + '"></i>' + esc(i.label) + '</span>';
+    }).join('') + '</div>';
+  case 'banner':
+    return '<div class="n-card pad" style="margin:10px 18px;padding:12px 14px;border-color:'
+      + (n.ok ? 'var(--good)' : 'var(--accent)') + ';color:'
+      + (n.ok ? 'var(--good)' : 'var(--accent)') + ';font-weight:650;font-size:13.5px"'
+      + tid(n.id) + '>' + esc(n.text) + '</div>';
+  case 'summary':
+    return '<div class="summary"' + tid(n.id) + '><div class="sm-txt">'
+      + '<div class="sm-main">' + esc(n.main) + '</div>'
+      + '<div class="sm-sub">' + esc(n.sub) + '</div></div>' + render(n.btn) + '</div>';
+  case 'kv':
+    return '<div class="kv ' + esc(n.cls||'') + '"><span class="k">' + esc(n.k) + '</span>'
+      + '<span class="v">' + esc(n.v) + '</span></div>';
+  case 'ticketcode':
+    return '<div class="ticketcode"' + tid(n.id) + '><div class="tc-lab">BOOKING CODE</div>'
+      + '<div class="tc-code">' + esc(n.code) + '</div>'
+      + '<div class="tc-sub">Seats ' + esc(n.seats) + ' · ' + esc(n.total) + '</div></div>';
+  case 'bookingline':
+    return '<div style="display:flex;gap:13px;padding:13px 14px;cursor:pointer"' + tid(n.id) + bind(n.act) + '>'
+      + '<div class="poster" style="width:56px;flex:0 0 auto;aspect-ratio:2/3">' + posterSvg(n.art) + '</div>'
+      + '<div style="flex:1 1 auto;min-width:0">'
+      + '<div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline">'
+      + '<div style="font:650 15px/1.3 var(--disp);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'
+      + esc(n.title) + '</div><span class="pill ' + n.status.cls + '">' + esc(n.status.text) + '</span></div>'
+      + '<div style="font-size:12px;color:var(--muted);margin-top:5px">' + esc(n.sub) + '</div>'
+      + '<div style="font-size:13px;margin-top:6px">Seats ' + esc(n.seats) + '</div>'
+      + '<div style="font-size:12.5px;color:var(--muted);margin-top:3px">' + esc(n.code) + ' · ' + esc(n.total) + '</div>'
+      + '</div></div>';
+  case 'membercard':
+    return '<div class="n-card" style="margin:12px 18px;padding:20px;background:linear-gradient(140deg,#2a2410,#141a2e);border-color:#4a3f1c"'
+      + tid(n.id) + '>'
+      + '<div style="font-size:11px;letter-spacing:2px;color:var(--accent);font-weight:700">APERTURE ' + esc(n.tier).toUpperCase() + '</div>'
+      + '<div style="font:700 22px/1.2 var(--disp);margin-top:14px">' + esc(n.name) + '</div>'
+      + '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:18px">'
+      + '<span style="font-size:12.5px;color:var(--ink2)">' + esc(n.cardId) + '</span>'
+      + '<span style="font:800 24px/1 var(--disp);color:var(--accent)">' + n.points + '<span style="font-size:12px;color:var(--muted);margin-left:4px">pts</span></span>'
+      + '</div></div>';
+  case 'pills':
+    return '<div style="display:flex;gap:7px;flex-wrap:wrap;padding:2px 18px 8px"' + tid(n.id) + '>'
+      + n.items.map(function(p){ return '<span class="pill ' + (p.cls||'') + '">' + esc(p.text) + '</span>'; }).join('')
+      + '</div>';
+  case 'tabbar':
+    return '<div class="n-tabbar"' + tid(n.id) + '>' + n.items.map(function(i){
+      return '<div class="tb' + (i.on?' on':'') + '"' + tid(i.id) + bind(i.act) + '>'
+        + '<i>' + icon(i.icon, 21) + '</i>' + esc(i.text) + '</div>';
+    }).join('') + '</div>';
+  case 'mask':  return '<div class="n-mask"' + tid(n.id) + bind(n.close) + '>' + R(n.c) + '</div>';
+  case 'dialog':
+    return '<div class="dialog"' + tid(n.id) + ' data-stop="1">'
+      + '<div style="padding:22px 20px 16px;text-align:center">'
+      + (n.title ? '<div style="font:650 17px/1.3 var(--disp);margin-bottom:8px">' + esc(n.title) + '</div>' : '')
+      + '<div style="font-size:13.5px;color:var(--ink2);line-height:1.55">' + esc(n.text) + '</div></div>'
+      + '<div style="display:flex;gap:10px;padding:0 16px 16px">'
+      + '<div class="n-btn" style="flex:1"' + tid(n.cancel.id) + bind(n.cancel.act) + '>' + esc(n.cancel.text) + '</div>'
+      + '<div class="n-btn primary" style="flex:1"' + tid(n.ok.id) + bind(n.ok.act) + '>' + esc(n.ok.text) + '</div>'
+      + '</div></div>';
+  case 'toast': return '<div class="n-toast"' + tid(n.id) + '>' + esc(n.text) + '</div>';
+  default: return '';
+  }
+}
+
+var STATE = null;
+function paint(){
+  ACTS = []; uidSeq = 0;
+  var tree = E.screen(STATE);
+  app.innerHTML = render(tree);
+  document.getElementById('sb-clock').textContent = E.select.clockStr(STATE.meta.clock);
+  if (!hud.classList.contains('off')) paintHud();
+}
+app.addEventListener('click', function(ev){
+  var el = ev.target.closest('[data-act]'); if (!el) return;
+  if (el.classList.contains('n-mask') && ev.target.closest('[data-stop]')) return;
+  var act = ACTS[+el.getAttribute('data-act')]; if (!act) return;
+  TRAJ.push({action:'tap', id: el.getAttribute('data-testid') || null});
+  STATE = E.reduce(STATE, act); paint();
+});
+app.addEventListener('keydown', function(ev){
+  if (ev.key !== 'Enter') return;
+  var el = ev.target.closest('[data-enter]'); if (!el) return;
+  var idx = +el.getAttribute('data-enter'); if (idx < 0) return;
+  ev.preventDefault();
+  var act = ACTS[idx]; if (!act) return;
+  TRAJ.push({action:'tap', id:'(enter)'});
+  STATE = E.reduce(STATE, act); paint();
+});
+app.addEventListener('input', function(ev){
+  var el = ev.target.closest('[data-actt]'); if (!el) return;
+  var act = JSON.parse(JSON.stringify(ACTS[+el.getAttribute('data-actt')]));
+  for (var k in act) if (act[k] === '$VALUE') act[k] = el.value;
+  var id = el.getAttribute('data-testid'), pos = el.selectionStart;
+  TRAJ.push({action:'type', id:id, text:el.value});
+  STATE = E.reduce(STATE, act); paint();
+  var again = id && app.querySelector('[data-testid="' + id + '"]');
+  if (again && again.focus) { again.focus(); try { again.setSelectionRange(pos, pos); } catch(e){} }
+});
+
+function paintHud(){
+  var d = E.derive(STATE);
+  hud.innerHTML = '<h4>__ENV__ · ' + E.ENV_ID + ' v' + E.VERSION + '</h4>'
+    + '<div><span class="k">route</span> ' + d.route + '  <span class="k">step</span> ' + STATE.meta.steps + '</div>'
+    + '<div><span class="k">seats</span> ' + (d.draftSeats.join(',') || '—')
+    + '  <span class="k">tickets</span> ' + d.draftTicketCount + '/' + d.draftSeatCount + '</div>'
+    + '<div style="margin-top:8px"><button id="hud-reset">reset</button>'
+    + '<button id="hud-a11y">copy a11y</button><button id="hud-state">copy state</button>'
+    + '<button id="hud-traj">copy traj</button><button id="hud-hide">hide (h)</button></div>'
+    + '<pre>' + esc(E.a11y(STATE)) + '</pre>';
+  hud.querySelector('#hud-reset').onclick = function(){ ENVAPI.reset({seed:STATE.meta.seed}); };
+  hud.querySelector('#hud-a11y').onclick  = function(){ copy(E.a11y(STATE)); };
+  hud.querySelector('#hud-state').onclick = function(){ copy(JSON.stringify(E.snapshot(STATE), null, 2)); };
+  hud.querySelector('#hud-traj').onclick  = function(){ copy(JSON.stringify(TRAJ, null, 2)); };
+  hud.querySelector('#hud-hide').onclick  = function(){ hud.classList.add('off'); };
+}
+function copy(t){ try { navigator.clipboard.writeText(t); } catch(e){} }
+document.addEventListener('keydown', function(e){
+  if (e.key === 'h') { hud.classList.toggle('off'); if (!hud.classList.contains('off')) paintHud(); }
+});
+
+var ENVAPI = {
+  ENV_ID: E.ENV_ID, VERSION: E.VERSION,
+  reset: function(opts){
+    opts = opts || {};
+    STATE = E.createInitialState(opts.seed || 0);
+    if (opts.patch) E.applyPatch(STATE, opts.patch);
+    TRAJ = []; paint();
+    return E.snapshot(STATE);
+  },
+  getState:   function(){ return E.snapshot(STATE); },
+  setState:   function(s){ STATE = JSON.parse(JSON.stringify(s)); paint(); return true; },
+  step:       function(a){ var r = E.step(STATE, a); STATE = r.state; TRAJ.push(a); paint();
+                           return {ok:r.ok, error:r.error || null}; },
+  dispatch:   function(act){ STATE = E.reduce(STATE, act); paint(); return true; },
+  a11y:       function(){ return E.a11y(STATE); },
+  elements:   function(){ return E.elements(STATE); },
+  route:      function(){ return E.select.route(STATE); },
+  trajectory: function(){ return JSON.parse(JSON.stringify(TRAJ)); },
+  bounds: function(){
+    var base = document.getElementById('screen').getBoundingClientRect(), out = {};
+    app.querySelectorAll('[data-testid]').forEach(function(el){
+      var r = el.getBoundingClientRect();
+      out[el.getAttribute('data-testid')] = {
+        x:Math.round(r.left-base.left), y:Math.round(r.top-base.top),
+        w:Math.round(r.width), h:Math.round(r.height),
+        cx:Math.round(r.left-base.left+r.width/2), cy:Math.round(r.top-base.top+r.height/2)};
+    });
+    return out;
+  }
+};
+window.__ENV__ = ENVAPI;
+var qs = new URLSearchParams(location.search);
+if (qs.get('bare') === '1') document.body.classList.add('bare');
+if (qs.get('hud')  === '1') hud.classList.remove('off');
+ENVAPI.reset({seed: parseInt(qs.get('seed') || '0', 10) || 0});
+window.__ENV_READY__ = true;
+})();
+</script>
+</body>
+</html>
