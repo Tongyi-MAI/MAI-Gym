@@ -12,6 +12,10 @@
 
 MAI-Gym provides a shared infrastructure for evaluating GUI agents, collecting trajectories, and running online reinforcement learning across mobile, computer, and web environments. Framework source code will be released soon.
 
+<p align="center">
+  <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/site/assets/video/mai-gym-teaser.mp4"><img src="site/assets/video/teaser-preview.webp" width="100%" alt="MAI-Gym demo preview - click to watch the full video with sound"></a>
+</p>
+
 ## Framework
 
 <p align="center">
