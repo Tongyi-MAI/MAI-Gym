@@ -24,17 +24,17 @@ class GenerateResult:
 class HttpChatModel:
     """Small OpenAI-compatible Chat Completions client.
 
-    ``base_url`` may be either an API root such as ``http://host:8000/v1`` or
-    the full ``.../chat/completions`` endpoint. The class intentionally does
+    ``base_url`` defaults to a loopback OpenAI-compatible API and may be either
+    an API root or the full ``.../chat/completions`` endpoint. The class does
     not parse actions; the policy delegates that to the standalone parser.
     """
 
     def __init__(
         self,
-        base_url: str,
+        base_url: str = "http://127.0.0.1:8000/v1",
         model: str = "default",
         *,
-        api_key: str = "EMPTY",
+        api_key: str | None = None,
         timeout: float = 600.0,
         preserve_thinking: bool = False,
         enable_thinking: bool | None = None,
@@ -114,13 +114,13 @@ class HttpChatModel:
         )
 
     def _post_json(self, payload: dict[str, Any]) -> dict[str, Any]:
+        headers = {"Content-Type": "application/json"}
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
         request = Request(
             self.url,
             data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
-            headers={
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json",
-            },
+            headers=headers,
             method="POST",
         )
         with urlopen(request, timeout=self.timeout) as response:
@@ -150,6 +150,9 @@ class HttpChatModel:
     ) -> list[dict[str, Any]]:
         converted: list[dict[str, Any]] = []
         for message in messages:
+            message = {
+                key: value for key, value in message.items() if not key.startswith("_")
+            }
             content = message.get("content")
             if isinstance(content, list):
                 parts: list[Any] = []
