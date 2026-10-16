@@ -1,98 +1,72 @@
 <div align="center">
   <h1><img src="site/assets/mai-gym-logo.png" width="56" align="middle" alt="MAI-Gym logo"> MAI-Gym</h1>
-  <p><strong>An Open All-in-One Platform for GUI Agent Evaluation and RL Training<br>across Mobile and Computer Environments</strong></p>
-  <p>Evaluate agents. Build verifiable worlds. Train across devices.</p>
+  <p><strong>An Open All-in-One Platform for GUI Agent Evaluation and RL Training across Mobile and Computer Environments</strong></p>
   <p>
-    <a href="https://tongyi-mai.github.io/MAI-Gym/"><img src="https://img.shields.io/badge/Website-Interactive_Demos-7457D6?style=flat-square" alt="Website and interactive demos"></a>
+    <a href="https://tongyi-mai.github.io/MAI-Gym/"><img src="https://img.shields.io/badge/Website-Project_Page-7457D6?style=flat-square" alt="Project website"></a>
     <a href="https://arxiv.org/abs/2610.20939"><img src="https://img.shields.io/badge/arXiv-2610.20939-B31B1B?style=flat-square" alt="Paper on arXiv"></a>
-    <a href="https://huggingface.co/Tongyi-MAI/MAI-Gym-9B"><img src="https://img.shields.io/badge/MAI--Gym--9B-Available-FFD21E?style=flat-square&amp;logo=huggingface&amp;logoColor=000" alt="MAI-Gym-9B weights available on Hugging Face"></a>
+    <a href="https://huggingface.co/Tongyi-MAI/MAI-Gym-9B"><img src="https://img.shields.io/badge/Model-MAI--Gym--9B-FFD21E?style=flat-square&amp;logo=huggingface&amp;logoColor=000" alt="MAI-Gym-9B on Hugging Face"></a>
   </p>
+
+  [Framework](#framework) · [Main Results](#main-results) · [News](#news) · [Citation](#citation)
 </div>
 
-> [!IMPORTANT]
-> **Model weights are available.** Download **MAI-Gym-9B** from [Hugging Face](https://huggingface.co/Tongyi-MAI/MAI-Gym-9B), explore the [interactive demos](https://tongyi-mai.github.io/MAI-Gym/), and read the [paper](https://arxiv.org/abs/2610.20939). **Framework source code is coming soon.**
+MAI-Gym provides a shared infrastructure for evaluating GUI agents, collecting trajectories, and running online reinforcement learning across mobile, computer, and web environments. Framework source code will be released soon.
+
+## Framework
 
 <p align="center">
-  <video src="https://github.com/Tongyi-MAI/MAI-Gym/raw/main/site/assets/video/mai-gym-teaser.mp4" poster="https://github.com/Tongyi-MAI/MAI-Gym/raw/main/site/assets/video/teaser-poster.webp" width="100%" controls muted playsinline></video>
+  <img src="site/assets/framework-architecture.png" width="100%" alt="MAI-Gym framework architecture">
 </p>
 
-**MAI-Gym** brings evaluation, trajectory collection, and online reinforcement learning into one platform for **mobile, computer, and web agents**. The same interaction and verification pipeline carries an agent from benchmark evaluation to training at scale.
+- **One harness and one rollout path.** Evaluation, data collection, and RL training use the same agent harness, prompt construction, action parser, and interaction loop, preventing implementation drift between training and evaluation.
+- **Unified environment management.** `EnvClient` exposes a common interface for instance allocation, observation, task reset, action execution, and evaluation. Environment adapters preserve each benchmark's native initialization, actions, and verifiers.
+- **Cross-platform deployment.** The same manager serves mobile, computer, and web instances hosted on Kubernetes, Docker, physical devices, or existing endpoints. MAI-Gym has been tested with up to 20,000 concurrent environments.
+- **Reliable, elastic rollouts.** Asynchronous provisioning, warm pools, exact task resets, session leases, idempotent actions, operation deadlines, and isolated verifiers contain infrastructure failures and keep them out of the training signal.
+- **Efficient multimodal history.** Window-wise history preserves reusable prompt prefixes for KV-cache reuse while bounding recent screenshots. Sticky routing keeps each trajectory on the inference engine that holds its cache.
+- **Verifiable tasks and diagnostics.** Task-defined code verifiers and VLM judges produce rewards; persisted trajectories and the dashboard connect aggregate scores to screenshots, model outputs, actions, verifier results, and environment status.
+- **Extensible task and environment synthesis.** MAI-Gym supports resettable mocked apps, coherent cross-app worlds, execution-validated tasks, and four extension points: agent harnesses, tasks, environment adapters, and environment specifications.
+- **Online RL integration.** The trajectory buffer feeds synchronous or asynchronous training backends, with support for GRPO, DAPO, GSPO, REINFORCE++, SAO, and PPO through Slime.
 
-<p align="center">
-  <a href="https://arxiv.org/abs/2610.20939"><img src="site/assets/overview.webp" width="100%" alt="MAI-Gym overview: mobile and computer environments, parallel rollouts, agentic RL, adaptive synthesis, and benchmark results"></a>
-</p>
-<p align="center"><sub>One platform connects GUI environments, verifiable tasks, and reinforcement learning. Click the figure to read the paper.</sub></p>
+## Main results
 
-## One platform. Three workloads. Every GUI domain.
+Mobile and computer benchmark results (%). **Task OOD** denotes unseen tasks in training environments; **Env OOD** denotes unseen environments.
 
-MAI-Gym uses a shared rollout pipeline for evaluation, data collection, and online RL. Environment adapters preserve each benchmark's native actions, reset procedures, and task verifiers, while the platform handles the interaction lifecycle and records inspectable trajectories.
+| Model | Size | Access | MobileWorld GUI-only<br>Task OOD | AndroidWorld<br>Env OOD | MobileGym<br>Env OOD | OSWorld-Verified<br>Task OOD | OSWorld 2.0<br>Env OOD | MacAgentBench<br>Env OOD | MyPCBench<br>Env OOD |
+| --- | ---: | :---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| *Frontier models* | | | | | | | | | |
+| Claude Opus 4.8 | — | API | 69.2 | 75.0 | 50.7 | 83.4 | 20.3 / 54.8 | 58.4 | 62.0 |
+| GPT-5.5 | — | API | 62.4 | 74.1 | 48.1 | 78.7 | 13.9 / 47.5 | 66.7 | 47.3 |
+| Qwen3.8-Max | 2.4T-A95B | API | 77.8 | 85.3 | 61.3 | 86.1 | 19.4 / 46.7 | 74.3 | 48.6 |
+| Qwen3.8-27B | 27B | Open | 70.1 | 81.9 | 57.5 | 84.3 | 19.4 / 48.0 | 65.4 | 28.5 |
+| *GUI agent models* | | | | | | | | | |
+| GUI-Owl-1.5-8B | 8B | Open | 38.2 | 71.6 | 15.1 | 52.9 | 0.0 / 1.6 | 10.2 | 1.8 |
+| GUI-Owl-1.5-32B | 32B | Open | 43.9 | 69.8 | 20.3 | 56.5 | 0.9 / 2.5 | 17.2 | 6.3 |
+| UI-Venus-2-9B | 9B | Open | 75.2 | 80.2 | 52.7 | 70.8 | 0.0 / 7.5 | 36.2 | 6.3 |
+| SCALECUA-Qwen3.5-9B | 9B | Open | 12.8 | 47.4 | 13.5 | 68.7 | 0.0 / 2.2 | 3.9 | 1.1 |
+| Qwen-CUA | 397B-A17B | Open | — | — | — | 86.2 | 18.5 / 48.4 | 69.2 | 58.7 |
+| EvoCUA-1.5-32B | 32B | Unreleased | — | — | — | 63.2 | — | — | — |
+| CUA-GYM-35B-A3B | 35B-A3B | Unreleased | — | — | — | 62.1 | — | — | — |
+| CUA-GYM-397B-A17B | 397B-A17B | Unreleased | — | — | — | 72.6 | — | — | — |
+| *Ours* | | | | | | | | | |
+| Qwen3.5-9B (base model) | 9B | Open | 18.0 | 57.8 | 9.0 | 41.8 | 0.0 / 2.5 | 20.7 | 6.5 |
+| **MAI-Gym-9B** | **9B** | **Open** | **78.4**<br><sub>(+60.4)</sub> | **75.9**<br><sub>(+18.1)</sub> | **46.5**<br><sub>(+37.5)</sub> | **76.2**<br><sub>(+34.4)</sub> | **3.7 / 11.3**<br><sub>(+3.7 / +8.8)</sub> | **41.3**<br><sub>(+20.6)</sub> | **15.2**<br><sub>(+8.7)</sub> |
 
-| **Evaluate** | **Collect** | **Train** |
-| --- | --- | --- |
-| Run agents across **10 GUI benchmarks** through a common interface. | Record screenshots, model outputs, actions, and verifier results for diagnosis and reuse. | Learn from environment feedback through synchronous or asynchronous online rollouts. |
+Results use each benchmark's native evaluation metric. MobileGym reports partial score; OSWorld 2.0 reports binary accuracy / partial score. Parenthesized values are absolute percentage-point gains over Qwen3.5-9B. See the [paper](https://arxiv.org/abs/2610.20939) for evaluation protocols and baseline sources.
 
-| Domain | Environments |
-| --- | --- |
-| **Mobile** | MobileWorld, AndroidWorld, MobileGym, and mocked mobile apps |
-| **Computer** | OSWorld / OSWorld-Verified, OSWorld 2.0, MacAgentBench, and MyPCBench |
-| **Web** | WebArena, WebVoyager, and locally served applications |
+<a name="news"></a>
 
-The infrastructure supports **20,000 parallel environments**, with environment provisioning, warm pools, session management, and screenshot storage supporting large-scale interaction. Online RL supports **GRPO, DAPO, GSPO, REINFORCE++, SAO, and PPO** through integration with Slime.
+## 🔥 News
 
-## Turn failures into new training worlds
+<!-- Add new entries at the top, newest first. -->
+- **[2026-10]** 🚀 MAI-Gym is released with the [paper](https://arxiv.org/abs/2610.20939), [project website](https://tongyi-mai.github.io/MAI-Gym/), and [MAI-Gym-9B model weights](https://huggingface.co/Tongyi-MAI/MAI-Gym-9B). Framework source code is coming soon.
 
-GUI learning needs tasks whose initial state can be restored and whose outcomes can be checked. MAI-Gym's adaptive synthesis workflow builds coherent application worlds, creates task instructions and verifiers, and validates them through execution. Diagnosis of agent trajectories guides the next round of applications and tasks.
+<a name="citation"></a>
 
-| **49 resettable mocked apps** | **42 novel apps** | **2,000 verified tasks** |
-| :---: | :---: | :---: |
-| Repeatable environments for agent interaction | Broader application coverage for training | Tasks with execution-validated verifiers |
-
-<p align="center"><strong>Evaluate → Diagnose → Synthesize → Retrain</strong></p>
-
-Explore the [novel apps and tasks](https://tongyi-mai.github.io/MAI-Gym/#apps): interact with the apps, try a task, check completion, and watch a reference solution.
-
-## One 9B agent for mobile and computer use
-
-Trained from **Qwen3.5-9B** with mixed-domain GUI reinforcement learning, **MAI-Gym-9B** reaches **78.4% on MobileWorld** and **76.2% on OSWorld-Verified**, leading open GUI agents under 10B parameters on these benchmarks in our [paper](https://arxiv.org/abs/2610.20939).
-
-<p align="center">
-  <a href="site/assets/benchmark-results.png"><img src="site/assets/benchmark-results.png" width="100%" alt="Success rates for Qwen3.5-9B and MAI-Gym-9B across three mobile and three computer benchmarks"></a>
-</p>
-<p align="center"><sub>Success rate (%). The same 9B policy improves across all six benchmarks shown. Results from the <a href="https://tongyi-mai.github.io/MAI-Gym/#results">project evaluation</a>.</sub></p>
-
-<details>
-<summary><strong>Full benchmark results</strong></summary>
-
-Gains are absolute percentage points over Qwen3.5-9B.
-
-| Domain | Benchmark | Qwen3.5-9B (base) | MAI-Gym-9B | Gain |
-| --- | --- | ---: | ---: | ---: |
-| Mobile | MobileWorld (GUI-only) | 18.0 | **78.4** | +60.4 |
-| Mobile | AndroidWorld | 57.8 | **75.9** | +18.1 |
-| Mobile | MobileGym | 9.0 | **46.5** | +37.5 |
-| Computer | OSWorld-Verified | 41.8 | **76.2** | +34.4 |
-| Computer | MacAgentBench | 20.7 | **41.3** | +20.6 |
-| Computer | MyPCBench | 6.5 | **15.2** | +8.7 |
-
-See the [paper](https://arxiv.org/abs/2610.20939) for evaluation protocols and full results, including OSWorld 2.0.
-
-</details>
-
-## From mocked apps to real devices
-
-Training in a mocked Railway12306 app transfers to the real app on a physical phone: task success improves from **28.8% to 48.1%**, a gain of **19.3 percentage points**. This connects resettable training environments with the interfaces agents encounter on real devices.
-
-| **Explore the apps** | **Compare simulation and reality** |
-| --- | --- |
-| [Try interactive tasks and watch reference solutions →](https://tongyi-mai.github.io/MAI-Gym/#apps) | [See real-versus-mocked app comparisons →](https://tongyi-mai.github.io/MAI-Gym/#mock-vs-real) |
-
-## Citation
-
-If you find MAI-Gym useful, please kindly cite our [paper](https://arxiv.org/abs/2610.20939):
+## 📄 Citation
 
 ```bibtex
 @article{maigym2026,
-  title   = {MAI-Gym: An Open All-in-One Platform for GUI Agent Evaluation
+  title   = {{MAI-Gym}: An Open All-in-One Platform for GUI Agent Evaluation
              and RL Training across Mobile and Computer Environments},
   author  = {Panrong Tong and Quyu Kong and Pengxiang Li and Tianyu Xia and
              Hanzhang Zhou and Lei Wang and Chenglin Cai and Long Li and Long Chen and
