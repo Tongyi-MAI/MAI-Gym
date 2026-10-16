@@ -1,40 +1,67 @@
-<h1 align="center">
-  <img src="docs/assets/mai-gym-logo.png" width="48" height="48" align="middle" alt="MAI-Gym logo">
-  MAI-Gym
-</h1>
+<div align="center">
+  <img src="docs/assets/mai-gym-logo.png" width="112" alt="MAI-Gym logo">
+  <h1>MAI-Gym</h1>
+  <p><strong>An Open All-in-One Platform for GUI Agent Evaluation and RL Training<br>across Mobile and Computer Environments</strong></p>
+  <p>Evaluate agents. Build verifiable worlds. Train across devices.</p>
+  <p>
+    <a href="https://tongyi-mai.github.io/MAI-Gym/"><img src="https://img.shields.io/badge/Website-Interactive_Demos-7457D6?style=flat-square" alt="Website and interactive demos"></a>
+    <a href="https://arxiv.org/abs/2610.20939"><img src="https://img.shields.io/badge/arXiv-2610.20939-B31B1B?style=flat-square" alt="Paper on arXiv"></a>
+    <a href="https://huggingface.co/Tongyi-MAI/MAI-Gym-9B"><img src="https://img.shields.io/badge/MAI--Gym--9B-Coming_Soon-FFD21E?style=flat-square&amp;logo=huggingface&amp;logoColor=000" alt="MAI-Gym-9B checkpoint coming soon"></a>
+  </p>
+  <p><strong>MAI-UI Team · Alibaba Group</strong></p>
+</div>
+
+> [!IMPORTANT]
+> **Source code is coming soon.** This initial release presents the project overview and research results. Explore the [interactive demos](https://tongyi-mai.github.io/MAI-Gym/) and read the [paper](https://arxiv.org/abs/2610.20939). The **MAI-Gym-9B checkpoint** will be available upon release on [Hugging Face](https://huggingface.co/Tongyi-MAI/MAI-Gym-9B).
+
+**MAI-Gym** brings evaluation, trajectory collection, and online reinforcement learning into one platform for **mobile, computer, and web agents**. The same interaction and verification pipeline carries an agent from benchmark evaluation to training at scale.
 
 <p align="center">
-  <strong>An Open All-in-One Platform for GUI Agent Evaluation and RL Training<br>across Mobile and Computer Environments</strong>
+  <a href="https://arxiv.org/abs/2610.20939"><img src="docs/assets/overview.webp" width="100%" alt="MAI-Gym overview: mobile and computer environments, parallel rollouts, agentic RL, adaptive synthesis, and benchmark results"></a>
 </p>
+<p align="center"><sub>One platform connects GUI environments, verifiable tasks, and reinforcement learning. Click the figure to read the paper.</sub></p>
+
+## One platform. Three workloads. Every GUI domain.
+
+MAI-Gym uses a shared rollout pipeline for evaluation, data collection, and online RL. Environment adapters preserve each benchmark's native actions, reset procedures, and task verifiers, while the platform handles the interaction lifecycle and records inspectable trajectories.
+
+| **Evaluate** | **Collect** | **Train** |
+| --- | --- | --- |
+| Run agents across **10 GUI benchmarks** through a common interface. | Record screenshots, model outputs, actions, and verifier results for diagnosis and reuse. | Learn from environment feedback through synchronous or asynchronous online rollouts. |
+
+| Domain | Environments |
+| --- | --- |
+| **Mobile** | MobileWorld, AndroidWorld, MobileGym, and mocked mobile apps |
+| **Computer** | OSWorld / OSWorld-Verified, OSWorld 2.0, MacAgentBench, and MyPCBench |
+| **Web** | WebArena, WebVoyager, and locally served applications |
+
+The infrastructure supports **20,000 parallel environments**, with environment provisioning, warm pools, session management, and screenshot storage supporting large-scale interaction. Online RL supports **GRPO, DAPO, GSPO, REINFORCE++, SAO, and PPO** through integration with Slime.
+
+## Turn failures into new training worlds
+
+GUI learning needs tasks whose initial state can be restored and whose outcomes can be checked. MAI-Gym's adaptive synthesis workflow builds coherent application worlds, creates task instructions and verifiers, and validates them through execution. Diagnosis of agent trajectories guides the next round of applications and tasks.
+
+| **49 resettable mocked apps** | **42 novel apps** | **2,000 verified tasks** |
+| :---: | :---: | :---: |
+| Repeatable environments for agent interaction | Broader application coverage for training | Tasks with execution-validated verifiers |
+
+<p align="center"><strong>Evaluate → Diagnose → Synthesize → Retrain</strong></p>
+
+Explore the [novel apps and tasks](https://tongyi-mai.github.io/MAI-Gym/#apps): interact with the apps, try a task, check completion, and watch a reference solution.
+
+## One 9B agent for mobile and computer use
+
+Trained from **Qwen3.5-9B** with mixed-domain GUI reinforcement learning, **MAI-Gym-9B** reaches **78.4% on MobileWorld** and **76.2% on OSWorld-Verified**, leading open GUI agents under 10B parameters on these benchmarks in our [paper](https://arxiv.org/abs/2610.20939).
 
 <p align="center">
-  <a href="https://tongyi-mai.github.io/MAI-Gym/">🌐 Website &amp; Interactive Demos</a> ·
-  <a href="https://arxiv.org/abs/2610.20939">📄 Paper</a> ·
-  <a href="https://huggingface.co/Tongyi-MAI/MAI-Gym-9B">🤗 MAI-Gym-9B</a>
+  <a href="docs/assets/benchmark-results.png"><img src="docs/assets/benchmark-results.png" width="100%" alt="Success rates for Qwen3.5-9B and MAI-Gym-9B across three mobile and three computer benchmarks"></a>
 </p>
+<p align="center"><sub>Success rate (%). The same 9B policy improves across all six benchmarks shown. Results from the <a href="https://tongyi-mai.github.io/MAI-Gym/#results">project evaluation</a>.</sub></p>
 
-<p align="center"><strong>MAI-UI Team · Alibaba Group</strong></p>
+<details>
+<summary><strong>Full benchmark results</strong></summary>
 
-**MAI-Gym** unifies GUI agent evaluation, data collection, and online reinforcement learning across **mobile, computer, and web environments**. A shared rollout pipeline connects agents, interactive environments, task verifiers, and RL training, keeping agent behavior consistent across all three workloads.
-
-With MAI-Gym, we train **MAI-Gym-9B**, a unified 9B agent for mobile and computer use. It achieves **78.4% on MobileWorld** and **76.2% on OSWorld-Verified**, leading open GUI agents under 10B parameters on these benchmarks in our [paper](https://arxiv.org/abs/2610.20939).
-
-**Source code: coming soon.** This initial release shares the project overview, research results, and links to the paper and interactive demos.
-
-![MAI-Gym overview: GUI environments, evaluation, parallel rollouts, RL training, adaptive synthesis, and model results](docs/assets/overview.webp)
-
-## Highlights
-
-- **One rollout pipeline, three workloads.** Reuse the same agent harness and environment interfaces for evaluation, trajectory collection, and online RL.
-- **10 GUI benchmarks.** Evaluate across mobile, computer, and web environments through a common interface while preserving each benchmark's task setup and verification.
-- **20,000 parallel environments.** Scale interaction with environment provisioning, warm pools, session management, and screenshot storage separate from manager traffic.
-- **Adaptive app and task synthesis.** Diagnose failed trajectories, build resettable applications and coherent cross-app worlds, and generate tasks with execution-validated verifiers.
-- **A unified 9B policy.** Train across mobile and computer tasks, with transfer from a mocked train-ticketing app to its real counterpart on a physical phone.
-- **Inspectable trajectories.** Trace benchmark scores to individual runs, screenshots, model outputs, actions, and verifier results through the dashboard.
-
-## MAI-Gym-9B
-
-MAI-Gym-9B is trained from **Qwen3.5-9B** using mixed-domain GUI reinforcement learning. The table below reports success rates (%) from the [project website](https://tongyi-mai.github.io/MAI-Gym/#results); gains are absolute percentage points over the base model.
+Gains are absolute percentage points over Qwen3.5-9B.
 
 | Domain | Benchmark | Qwen3.5-9B (base) | MAI-Gym-9B | Gain |
 | --- | --- | ---: | ---: | ---: |
@@ -45,37 +72,17 @@ MAI-Gym-9B is trained from **Qwen3.5-9B** using mixed-domain GUI reinforcement l
 | Computer | MacAgentBench | 20.7 | **41.3** | +20.6 |
 | Computer | MyPCBench | 6.5 | **15.2** | +8.7 |
 
-**Simulation-to-real transfer.** RL in a mocked Railway12306 app improves task success in the real app on a physical phone from **28.8% to 48.1%**. See the [paper](https://arxiv.org/abs/2610.20939) for the evaluation protocol and full results, including OSWorld 2.0.
+See the [paper](https://arxiv.org/abs/2610.20939) for evaluation protocols and full results, including OSWorld 2.0.
 
-The **MAI-Gym-9B checkpoint will be available upon release** at [Tongyi-MAI/MAI-Gym-9B](https://huggingface.co/Tongyi-MAI/MAI-Gym-9B).
+</details>
 
-## Platform
+## From mocked apps to real devices
 
-### Shared environment interface
+Training in a mocked Railway12306 app transfers to the real app on a physical phone: task success improves from **28.8% to 48.1%**, a gain of **19.3 percentage points**. This connects resettable training environments with the interfaces agents encounter on real devices.
 
-Agents interact with environments through one lifecycle:
-
-```text
-acquire → reset → (observe → act)* → evaluate → release
-```
-
-Environment adapters retain native action spaces, reset procedures, and task verifiers. The manager handles provisioning, session ownership, task registration, reward evaluation, and trajectory recording. Deployment can use Kubernetes, Docker, or existing devices and services.
-
-| Domain | Example environments |
+| **Explore the apps** | **Compare simulation and reality** |
 | --- | --- |
-| Mobile | MobileWorld, AndroidWorld, MobileGym, mocked mobile apps |
-| Computer | OSWorld / OSWorld-Verified, OSWorld 2.0, MacAgentBench, MyPCBench |
-| Web | WebArena, WebVoyager, locally served applications |
-
-### Evaluate → diagnose → synthesize → retrain
-
-The synthesis workflow starts with a realistic world of application data, files, and cross-app relationships. It then creates task instructions, initialization logic, and code-based verifiers. Execution tests validate the setup and scoring before tasks enter the training pool. Diagnosis of successful and failed attempts guides the next round of synthesis.
-
-Our research covers **49 resettable mocked apps**, including **42 novel apps**, and **2,000 verified tasks**, alongside app and task synthesis skills. The [interactive website](https://tongyi-mai.github.io/MAI-Gym/#apps) lets you explore the novel apps, try tasks, check completion, and watch reference solutions. It also includes [real-versus-mocked app comparisons](https://tongyi-mai.github.io/MAI-Gym/#mock-vs-real).
-
-### Online reinforcement learning
-
-Rollout workers collect trajectories and verifier rewards through the same interfaces used for evaluation. The RL integration connects these trajectories to Slime, with support for synchronous and asynchronous rollout collection. The platform supports GRPO, DAPO, GSPO, REINFORCE++, SAO, and PPO.
+| [Try interactive tasks and watch reference solutions →](https://tongyi-mai.github.io/MAI-Gym/#apps) | [See real-versus-mocked app comparisons →](https://tongyi-mai.github.io/MAI-Gym/#mock-vs-real) |
 
 ## Citation
 
