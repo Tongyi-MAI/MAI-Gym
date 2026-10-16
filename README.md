@@ -13,7 +13,7 @@
 > **Model weights are available.** Download **MAI-Gym-9B** from [Hugging Face](https://huggingface.co/Tongyi-MAI/MAI-Gym-9B), explore the [interactive demos](https://tongyi-mai.github.io/MAI-Gym/), and read the [paper](https://arxiv.org/abs/2610.20939). **Framework source code is coming soon.**
 
 <p align="center">
-  <video src="https://github.com/Tongyi-MAI/MAI-Gym/raw/main/site/assets/video/mai-gym-teaser.mp4" poster="https://github.com/Tongyi-MAI/MAI-Gym/raw/main/site/assets/video/teaser-poster.webp" width="100%" controls muted playsinline></video>
+  <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/site/assets/video/mai-gym-teaser.mp4"><img src="site/assets/video/teaser-thumb.webp" width="100%" alt="Watch the MAI-Gym demo"></a>
 </p>
 
 **MAI-Gym** brings evaluation, trajectory collection, and online reinforcement learning into one platform for **mobile, computer, and web agents**. The same interaction and verification pipeline carries an agent from benchmark evaluation to training at scale.
