@@ -4,28 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Quorum (mocked GUI env)</title>
-<!--
-  ============================================================================
-  Quorum — a single-file H5 ranked-ballot app for agent research.
 
-  Same two-block contract as every environment here: script#engine is a pure,
-  DOM-free state machine on globalThis.GUI_ENGINE; script#ui renders its screen
-  tree and exposes window.__ENV__.
-
-  What is new: the answer is the fixed point of a process, not a lookup. Twenty
-  ballots are already in, grouped into six blocs, and the app runs an instant
-  runoff over them — count the first preferences, eliminate the lowest, move
-  those ballots to their next surviving choice, repeat. Yours is the twenty-
-  first ballot, and it is drawn up by ranking candidates rather than picking
-  one, so the app re-runs the whole count every time the order changes.
-
-  On these twenty ballots the last round is a dead heat, ten to ten, which
-  makes one ballot decisive. Not, however, in the way it looks: who you put
-  first is often irrelevant, because your ballot ends up wherever your later
-  preferences send it once your earlier ones are knocked out. Ranking the same
-  candidate first can elect either finalist depending on who you put second.
-  ============================================================================
--->
 <style>
 :root{
   --outer:#e3e6ee;
@@ -295,18 +274,12 @@ body.bare .n-sheet{animation:none}
 <div id="hud" class="off"></div>
 
 <script id="engine">
-/* ===========================================================================
- * ENGINE — pure, deterministic, DOM-free.
- * Every count is re-run from the ballots on every action. Elimination
- * ties break on round-one first preferences, then on the name.
- * ======================================================================== */
 (function(root){
 'use strict';
 
 var ENV_ID  = 'quorum_vote';
 var VERSION = '1.0.0';
 
-/* ------------------------------------------------------------- utilities */
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function pad2(n){ return (n < 10 ? '0' : '') + n; }
 function hhmm(m){ m = ((m % 1440) + 1440) % 1440; return pad2(Math.floor(m/60)) + ':' + pad2(m%60); }
@@ -345,7 +318,6 @@ function setPath(o, path, value){
   return o;
 }
 
-/* ------------------------------------------- screen-tree node constructors */
 function N(t, o){ o = o || {}; o.t = t; return o; }
 function txt(s, cls){ return N('text', {text:s, cls:cls || ''}); }
 function row(id, text, o){
@@ -370,7 +342,6 @@ function push(st, name, params){ st.ui.stack.push({name:name, params:params || {
 function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
 function toast(st, t){ st.ui.toast = t; }
 
-/* -------------------------------------------------------- the candidates */
 var CANDS = [
   {id:'c_bain',  name:'Morag Bain',   role:'Chair since 2019',
    blurb:'Wants the roof fund left alone and the bin store rebuilt.'},
@@ -386,7 +357,6 @@ var CANDS = [
 function candOf(id){ for (var i=0;i<CANDS.length;i++) if (CANDS[i].id === id) return CANDS[i]; return null; }
 function candName(id){ var c = candOf(id); return c ? c.name : id; }
 
-/* twenty ballots already cast, grouped so the arithmetic can be checked by eye */
 var BLOCS = [
   {id:'b1', n:6, order:['c_bain', 'c_fen',   'c_raman'], who:'Block A, the long-standing lot'},
   {id:'b2', n:3, order:['c_owusu','c_wei',   'c_raman'], who:'Courtyard group'},
@@ -397,7 +367,6 @@ var BLOCS = [
 ];
 var QUORUM = 21;
 
-/* ---------------------------------------------------------- the counting */
 function allBallots(st){
   var out = [];
   BLOCS.forEach(function(b){ out.push({n:b.n, order:b.order, mine:false}); });
@@ -417,8 +386,6 @@ function firstPrefs(ballots){
   ballots.forEach(function(b){ if (b.order.length) f[b.order[0]] += b.n; });
   return f;
 }
-/* fewest votes goes out; ties break on round-one first preferences, then on
- * the name, so the whole thing is deterministic without a coin */
 function worstOf(count, alive, first){
   var worst = null;
   alive.forEach(function(id){
@@ -466,7 +433,6 @@ function runCount(ballots){
     }
     var gone = worstOf(count, alive, first);
     rec.eliminated = gone;
-    /* where that candidate's ballots go next */
     var nextAlive = alive.filter(function(id){ return id !== gone; });
     ballots.forEach(function(b){
       var i, cur = null;
@@ -493,14 +459,12 @@ function hasQuorum(st){ return turnout(st) >= QUORUM; }
 function rankOf(st, id){ var i = st.ballot.indexOf(id); return i < 0 ? 0 : i + 1; }
 function pct(n, d){ return d > 0 ? Math.round(n * 1000 / d) / 10 : 0; }
 
-/* =========================================================== state */
 function createInitialState(seed){
   seed = seed || 0;
   return {
     meta:{env:ENV_ID, version:VERSION, seed:seed, steps:0, finished:false, answer:null},
-    ballot:[],                       /* your preferences, in order */
+    ballot:[],
     submitted:false,
-    /* the seed permutes the order the candidates are printed on the paper */
     order:shuffled(CANDS.map(function(c){ return c.id; }), seed),
     ui:{tab:'ballot', stack:[{name:'ballot', params:{}}], sheet:null, confirm:null, inputs:{},
         toast:null, round:0},
@@ -514,7 +478,6 @@ var SELECT = {
   quorum:QUORUM, route:route
 };
 
-/* =========================================================== reducer */
 function reduce(prev, action){
   var st = clone(prev), A = action || {};
   st.ui.toast = null;
@@ -562,7 +525,6 @@ function reduce(prev, action){
   }
   case 'ROUND': st.ui.round = A.n; break;
 
-  /* ---- filling the paper in ---- */
   case 'RANK': {
     if (locked(st)) break;
     var i = st.ballot.indexOf(A.id);
@@ -596,7 +558,6 @@ function reduce(prev, action){
   }
   case 'CLEAR_YES': st.ballot = []; toast(st, 'Ballot cleared'); break;
 
-  /* ---- putting it in the box ---- */
   case 'SUBMIT': {
     if (st.submitted) { toast(st, 'It is already in the box'); break; }
     if (!st.ballot.length) { toast(st, 'A blank paper cannot be counted — mark at least one'); break; }
@@ -634,7 +595,6 @@ function reduce(prev, action){
   return st;
 }
 
-/* =========================================================== screens */
 function tabbar(st){
   var items = [
     {id:'tab_ballot',   text:'Ballot',   icon:'check',  tab:'ballot'},
@@ -909,11 +869,6 @@ function screen(st){
   return rootNode;
 }
 
-/* =======================================================================
- * TRAVERSAL — element index, GUI action interface, text observation.
- * Identical in every environment here: the screen tree is the only thing
- * that differs, and all three readers below walk that same tree.
- * ==================================================================== */
 var SKIP_KEYS = {act:1, minus:1, plus:1, close:1, yes:1, params:1, meta:1, rounds:1, count:1, transfer:1, transfers:1, alive:1, order:1, cands:1, ids:1};
 
 function labelOf(n){ return n.text || n.title || n.name || n.label || n.main || ''; }
@@ -927,9 +882,6 @@ function collect(n, out){
                                             input:(n.t === 'inputrow')});
   if (n.t === 'mask' && n.close)  out.push({id:n.id, act:n.close, text:'Dismiss overlay', t:'mask'});
   for (var k in n){
-    /* a node may carry extra buttons as a pair of keys: someId holds the
-     * test-id and some holds the action. That is how steppers, sheet close
-     * buttons and per-row buttons all get into the element index. */
     if (k.length > 2 && k.slice(-2) === 'Id' && typeof n[k] === 'string'){
       var sib = n[k.slice(0, -2)];
       if (sib && typeof sib === 'object' && sib.type)
@@ -982,7 +934,6 @@ function step(st, a){
   }
 }
 
-/* ------------------------------------------------- text observation (a11y) */
 function a11y(st){
   var rootNode = screen(st), lines = [], r = route(st);
   lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
@@ -1047,8 +998,6 @@ function walkText(n, d, out, st){
     if (v && typeof v === 'object') walkText(v, line !== null ? d+1 : d, out, st);
   }
 }
-/* per-environment nodes: return a string to print, true if already printed,
- * or null to ignore */
 function walkExtra(n, d, out, st){
 
   if (n.t === 'verd'){
@@ -1090,7 +1039,6 @@ function walkExtra(n, d, out, st){
   return null;
 }
 
-/* --------------------------------------------------------- derived view */
 function derive(st){
   var p = preview(st), o = official(st);
   function counts(res){
@@ -1153,9 +1101,6 @@ root.GUI_ENGINE = ENGINE;
 </script>
 
 <script id="ui">
-/* ===========================================================================
- * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
- * ======================================================================== */
 (function(){
 'use strict';
 var E = window.GUI_ENGINE;

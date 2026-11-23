@@ -1,0 +1,24 @@
+model:
+  checkpoint: hf-model
+tasks:
+  - pool: mobileworld.jsonl
+    env_type: mobileworld
+    manager_url: http://127.0.0.1:8090
+    num_sessions: 1
+algorithm:
+  name: grpo
+  group_size: 2
+rollout:
+  rounds: 1
+  batch_size: 1
+  concurrency: 1
+  num_sessions: 1
+  max_total_length: 16384
+trainer:
+  nodes: 1
+  gpus_per_node: 4
+  parallelism: {tensor: 4, pipeline: 1, context: 1, data: 1}
+  engine_gpus: 4
+  global_batch_size: 2
+  save_interval: 1
+  output: /runs/first-run

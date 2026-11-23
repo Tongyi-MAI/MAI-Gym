@@ -4,30 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>排班 (mocked GUI env)</title>
-<!--
-  ============================================================================
-  排班 Rota — a single-file H5 shift planner for agent research.
 
-  Same two-block contract as every environment here: script#engine is a pure,
-  DOM-free state machine on globalThis.GUI_ENGINE; script#ui renders its screen
-  tree and exposes window.__ENV__.
-
-  What is new: the screen is a grid, not a list. Five days by two shifts, ten
-  cells, and the world is a constraint problem over them — every cell needs two
-  people and at least one supervisor, nobody may work both shifts in a day,
-  nobody may be rostered on a day they are unavailable, and everybody has a
-  weekly ceiling. Hours beyond a person's contract are paid at one and a half
-  times, so the legal rotas differ in price and the cheapest one is not the
-  obvious one.
-
-  The three supervisors are the scarce resource, and each is unavailable on a
-  different day, which forces almost the whole shape of the answer: the only
-  rota that is both legal and cheapest puts exactly one supervisor and one of
-  the two other staff in every single cell.
-
-  Money is integer fen and hours are integer, so every figure is exact.
-  ============================================================================
--->
 <style>
 :root{
   --outer:#e3e6ee;
@@ -313,18 +290,12 @@ body.bare .n-sheet{animation:none}
 <div id="hud" class="off"></div>
 
 <script id="engine">
-/* ===========================================================================
- * ENGINE — pure, deterministic, DOM-free.
- * 工时是整数小时，钱是整数分。覆盖、违规、工资都是每次动作后
- * 从排班表重新算出来的，没有一个数是存下来的。
- * ======================================================================== */
 (function(root){
 'use strict';
 
 var ENV_ID  = 'rota_shifts';
 var VERSION = '1.0.0';
 
-/* ------------------------------------------------------------- utilities */
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function pad2(n){ return (n < 10 ? '0' : '') + n; }
 function hhmm(m){ m = ((m % 1440) + 1440) % 1440; return pad2(Math.floor(m/60)) + ':' + pad2(m%60); }
@@ -363,7 +334,6 @@ function setPath(o, path, value){
   return o;
 }
 
-/* ------------------------------------------- screen-tree node constructors */
 function N(t, o){ o = o || {}; o.t = t; return o; }
 function txt(s, cls){ return N('text', {text:s, cls:cls || ''}); }
 function row(id, text, o){
@@ -388,7 +358,6 @@ function push(st, name, params){ st.ui.stack.push({name:name, params:params || {
 function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
 function toast(st, t){ st.ui.toast = t; }
 
-/* ------------------------------------------------------------ the shop */
 var DAYS = [
   {id:'mon', name:'周一'}, {id:'tue', name:'周二'}, {id:'wed', name:'周三'},
   {id:'thu', name:'周四'}, {id:'fri', name:'周五'}
@@ -397,7 +366,7 @@ var SHIFTS = [
   {id:'am', name:'早班', span:'08:00–16:00', hours:8},
   {id:'pm', name:'晚班', span:'16:00–24:00', hours:8}
 ];
-var NEED = 2;                          /* 每个班次都要两个人 */
+var NEED = 2;
 function dayOf(id){ for (var i=0;i<DAYS.length;i++) if (DAYS[i].id === id) return DAYS[i]; return null; }
 function shiftOf(id){ for (var i=0;i<SHIFTS.length;i++) if (SHIFTS[i].id === id) return SHIFTS[i]; return null; }
 function cellKey(d, s){ return d + '_' + s; }
@@ -442,7 +411,6 @@ function payOf(st, who){
 function billOf(st){ return sum(STAFF.map(function(p){ return payOf(st, p.id); })); }
 function totalOvertime(st){ return sum(STAFF.map(function(p){ return overtimeOf(st, p.id); })); }
 
-/* -------------------------------------------------- what is wrong with it */
 function whyNot(st, who, d, s){
   var p = staffOf(who);
   if (cellOf(st, d, s).indexOf(who) >= 0) return '已经排在这个班了';
@@ -451,7 +419,6 @@ function whyNot(st, who, d, s){
   if (hoursOf(st, who) + 8 > p.cap) return '会超过每周 ' + p.cap + ' 小时上限';
   return null;
 }
-/* 已经排好的班里，哪些是违规的 */
 function cellFaults(st, d, s){
   var out = [], list = cellOf(st, d, s);
   list.forEach(function(who){
@@ -483,7 +450,6 @@ function issues(st){
           text:cellName(d.id, s.id) + '没有带班的',
           why:'每个班至少要一个能带班的人'});
       cellFaults(st, d.id, s.id).forEach(function(f){
-        /* 连上两个班在两个格子里都会出现，只记一次 */
         if (f.kind === 'double' && s.id !== 'am') return;
         out.push({kind:f.kind, day:d.id, shift:s.id, who:f.who, sev:'bad',
           text:f.text, why:f.why});
@@ -514,10 +480,8 @@ function yuan(fen){
   return (neg ? '-' : '') + '¥' + g + '.' + (c < 10 ? '0' : '') + c;
 }
 
-/* =========================================================== state */
 function createInitialState(seed){
   seed = seed || 0;
-  /* 排好的一周，故意留了两个坑和两处违规 */
   var rota = {
     mon_am:['p_lin', 'p_wu'],   mon_pm:['p_zhao', 'p_chen'],
     tue_am:['p_lin', 'p_chen'], tue_pm:['p_zhao', 'p_chen'],
@@ -528,7 +492,6 @@ function createInitialState(seed){
   return {
     meta:{env:ENV_ID, version:VERSION, seed:seed, steps:0, finished:false, answer:null},
     rota:rota,
-    /* 种子只打乱花名册的先后，谁在册子上不会变 */
     order:shuffled(STAFF.map(function(p){ return p.id; }), seed),
     ui:{tab:'grid', stack:[{name:'grid', params:{}}], sheet:null, confirm:null, inputs:{},
         toast:null},
@@ -542,7 +505,6 @@ var SELECT = {
   cellName:cellName, days:DAYS, shifts:SHIFTS, staff:STAFF, need:NEED, route:route
 };
 
-/* =========================================================== reducer */
 function reduce(prev, action){
   var st = clone(prev), A = action || {};
   st.ui.toast = null;
@@ -579,7 +541,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- 排班 ---- */
   case 'ASSIGN': {
     var why = whyNot(st, A.who, A.day, A.shift);
     if (why) { toast(st, staffName(A.who) + '排不进去 — ' + why); break; }
@@ -634,7 +595,6 @@ function reduce(prev, action){
   return st;
 }
 
-/* =========================================================== screens */
 function tabbar(st){
   var items = [
     {id:'tab_grid',     text:'排班',  icon:'calendar', tab:'grid'},
@@ -909,11 +869,6 @@ function screen(st){
   return rootNode;
 }
 
-/* =======================================================================
- * TRAVERSAL — element index, GUI action interface, text observation.
- * Identical in every environment here: the screen tree is the only thing
- * that differs, and all three readers below walk that same tree.
- * ==================================================================== */
 var SKIP_KEYS = {act:1, minus:1, plus:1, close:1, yes:1, params:1, meta:1, grid:1, names:1, days:1, off:1, deps:1};
 
 function labelOf(n){ return n.text || n.title || n.name || n.label || n.main || ''; }
@@ -927,9 +882,6 @@ function collect(n, out){
                                             input:(n.t === 'inputrow')});
   if (n.t === 'mask' && n.close)  out.push({id:n.id, act:n.close, text:'Dismiss overlay', t:'mask'});
   for (var k in n){
-    /* a node may carry extra buttons as a pair of keys: someId holds the
-     * test-id and some holds the action. That is how steppers, sheet close
-     * buttons and per-row buttons all get into the element index. */
     if (k.length > 2 && k.slice(-2) === 'Id' && typeof n[k] === 'string'){
       var sib = n[k.slice(0, -2)];
       if (sib && typeof sib === 'object' && sib.type)
@@ -982,7 +934,6 @@ function step(st, a){
   }
 }
 
-/* ------------------------------------------------- text observation (a11y) */
 function a11y(st){
   var rootNode = screen(st), lines = [], r = route(st);
   lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
@@ -1047,8 +998,6 @@ function walkText(n, d, out, st){
     if (v && typeof v === 'object') walkText(v, line !== null ? d+1 : d, out, st);
   }
 }
-/* per-environment nodes: return a string to print, true if already printed,
- * or null to ignore */
 function walkExtra(n, d, out, st){
 
   if (n.t === 'bill'){
@@ -1088,7 +1037,6 @@ function walkExtra(n, d, out, st){
   return null;
 }
 
-/* --------------------------------------------------------- derived view */
 function derive(st){
   var hours = {}, ot = {}, pay = {}, cells = {};
   STAFF.forEach(function(p){
@@ -1145,9 +1093,6 @@ root.GUI_ENGINE = ENGINE;
 </script>
 
 <script id="ui">
-/* ===========================================================================
- * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
- * ======================================================================== */
 (function(){
 'use strict';
 var E = window.GUI_ENGINE;

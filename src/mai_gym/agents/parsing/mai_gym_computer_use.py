@@ -64,9 +64,7 @@ _XY_FUNCS = frozenset(
     }
 )
 _SCROLL_FUNCS = frozenset({"scroll", "hscroll", "vscroll"})
-_CANONICAL_FUNCS = {
-    name.lower(): name for name in (_SAFE_PYAUTOGUI_FUNCS | _SCROLL_FUNCS)
-}
+_CANONICAL_FUNCS = {name.lower(): name for name in (_SAFE_PYAUTOGUI_FUNCS | _SCROLL_FUNCS)}
 
 
 @dataclass(frozen=True)
@@ -220,7 +218,9 @@ def _parse_json_tool_call(code: str) -> dict[str, Any] | None:
     if name in {"computer.wait", "wait"}:
         return {"action_type": "wait"}
     if name in {"computer.terminate", "terminate"}:
-        status = "success" if str(merged.get("status", "success")).lower() == "success" else "failure"
+        status = (
+            "success" if str(merged.get("status", "success")).lower() == "success" else "failure"
+        )
         action: dict[str, Any] = {"action_type": "finished", "status": status}
         if isinstance(merged.get("answer"), str):
             action["answer"] = merged["answer"]
@@ -359,10 +359,14 @@ def parse_action_response(
             is_done=True,
             error=error or "no_executable_action",
         )
-    action_dict = actions[0] if len(actions) == 1 else {
-        "action_type": "action_sequence",
-        "actions": actions,
-    }
+    action_dict = (
+        actions[0]
+        if len(actions) == 1
+        else {
+            "action_type": "action_sequence",
+            "actions": actions,
+        }
+    )
     if not enable_ask_user and _contains_action(action_dict, "ask_user"):
         return ActionParseResult(
             action_dict={"action_type": "FAIL"},

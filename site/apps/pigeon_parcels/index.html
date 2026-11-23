@@ -4,27 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Pigeon (mocked GUI env)</title>
-<!--
-  ============================================================================
-  Pigeon — a single-file H5 parcel tracker for agent research.
 
-  Same two-block contract as every environment here: script#engine is a pure,
-  DOM-free state machine on globalThis.GUI_ENGINE; script#ui renders its screen
-  tree and exposes window.__ENV__.
-
-  What is new: permission. Every parcel sits at a point on its own journey, and
-  what you are allowed to do to it follows from that point and nothing else. You
-  can move a delivery address while the parcel is still at the depot and not
-  once it is on the van; you can leave safe-place instructions right up until
-  the driver sets off; you can only report something missing once it has been
-  marked delivered; and a return has fourteen days from delivery, after which
-  the button is not there to press. Every refusal names its reason, so an agent
-  can read why rather than guess.
-
-  Seven parcels are seeded at seven different points, so for any one of those
-  rules exactly some of them qualify — the work is finding which.
-  ============================================================================
--->
 <style>
 :root{
   --outer:#e3e6ee;
@@ -277,19 +257,12 @@ body.bare .n-sheet{animation:none}
 <div id="hud" class="off"></div>
 
 <script id="engine">
-/* ===========================================================================
- * ENGINE — pure, deterministic, DOM-free.
- * The world is a set of small state machines. Every action asks a rule
- * whether it is allowed for that parcel right now, and a refusal carries
- * the reason with it.
- * ======================================================================== */
 (function(root){
 'use strict';
 
 var ENV_ID  = 'pigeon_parcels';
 var VERSION = '1.0.0';
 
-/* ------------------------------------------------------------- utilities */
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function pad2(n){ return (n < 10 ? '0' : '') + n; }
 function hhmm(m){ m = ((m % 1440) + 1440) % 1440; return pad2(Math.floor(m/60)) + ':' + pad2(m%60); }
@@ -328,7 +301,6 @@ function setPath(o, path, value){
   return o;
 }
 
-/* ------------------------------------------- screen-tree node constructors */
 function N(t, o){ o = o || {}; o.t = t; return o; }
 function txt(s, cls){ return N('text', {text:s, cls:cls || ''}); }
 function row(id, text, o){
@@ -356,7 +328,6 @@ function toast(st, t){ st.ui.toast = t; }
 var TODAY = 'Tuesday 14 May';
 var TODAY_N = 14;
 
-/* the journey every parcel walks, in order */
 var STAGES = [
   {id:'created',   label:'Label created',     note:'The sender has printed a label'},
   {id:'collected', label:'Collected',         note:'Picked up from the sender'},
@@ -376,10 +347,6 @@ function stageLabel(id){
   return i < 0 ? id : STAGES[i].label;
 }
 
-/* ---------------------------------------------------------------- rules */
-/* Every rule is a function of where the parcel is, and every refusal says why.
- * This is the whole world model: the buttons are the same on every parcel
- * page, and the parcel decides which of them do anything. */
 var RULES = {
   reschedule: function(p){
     if (p.stage === 'failed') return {ok:true};
@@ -554,14 +521,11 @@ function findByTrack(st, q){
 }
 function openReturns(st){ return st.returns; }
 
-/* =========================================================== state */
 function createInitialState(seed){
   seed = seed || 0;
   return {
     meta:{env:ENV_ID, version:VERSION, seed:seed, steps:0, finished:false, answer:null,
           today:TODAY, todayN:TODAY_N},
-    /* the seed permutes the order things are listed in — the same parcels and
-     * the same pickup points, in a different order on the screen */
     parcels:shuffled(clone(PARCELS0), seed),
     points:shuffled(POINTS.map(function(p){ return p.id; }), seed),
     returns:[],
@@ -580,7 +544,6 @@ var SELECT = {
   reasonOf:reasonOf, route:route
 };
 
-/* =========================================================== reducer */
 function refuse(st, res){ toast(st, res.why); }
 
 function reduce(prev, action){
@@ -619,10 +582,7 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- the four things you can ask of a parcel ---- */
   case 'ASK': {
-    /* one entry point for every parcel action: check the rule, then either open
-     * the right screen or say why not */
     var p = parcelOf(st, A.id);
     if (!p) break;
     var res = may(st, p, A.what);
@@ -648,7 +608,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- rescheduling ---- */
   case 'SLOT_DAY': st.draft.day = A.id; break;
   case 'SLOT_WINDOW': st.draft.window = A.id; break;
   case 'SLOT_CONFIRM': {
@@ -676,7 +635,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- address, safe place, collection point ---- */
   case 'SET_ADDRESS': {
     var p5 = parcelOf(st, A.id);
     if (!p5) break;
@@ -715,7 +673,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- returns ---- */
   case 'RET_REASON': st.draft.reason = A.id; st.ui.sheet = null; break;
   case 'RET_CONFIRM': {
     var p8 = parcelOf(st, A.id);
@@ -744,7 +701,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- odds and ends ---- */
   case 'FOLLOW': {
     var p9 = parcelOf(st, A.id);
     if (!p9) break;
@@ -763,7 +719,6 @@ function reduce(prev, action){
   return st;
 }
 
-/* =========================================================== screens */
 function tabbar(st){
   var items = [
     {id:'tab_parcels', text:'Parcels', icon:'box',    tab:'parcels'},
@@ -1079,7 +1034,6 @@ function scrSettings(st){
   ]});
 }
 
-/* ---------------------------------------------------------------- sheets */
 function sheetSafe(st){
   var id = st.ui.sheet.id, p = parcelOf(st, id);
   return sheet('safe_sheet', 'Where should the driver leave it?', [
@@ -1147,11 +1101,6 @@ function screen(st){
   return rootNode;
 }
 
-/* =======================================================================
- * TRAVERSAL — element index, GUI action interface, text observation.
- * Identical in every environment here: the screen tree is the only thing
- * that differs, and all three readers below walk that same tree.
- * ==================================================================== */
 var SKIP_KEYS = {act:1, minus:1, plus:1, close:1, yes:1, params:1, meta:1, tags:1, progress:1, scans:1};
 
 function labelOf(n){ return n.text || n.title || n.name || n.label || n.main || ''; }
@@ -1165,9 +1114,6 @@ function collect(n, out){
                                             input:(n.t === 'inputrow')});
   if (n.t === 'mask' && n.close)  out.push({id:n.id, act:n.close, text:'Dismiss overlay', t:'mask'});
   for (var k in n){
-    /* a node may carry extra buttons as a pair of keys: someId holds the
-     * test-id and some holds the action. That is how steppers, sheet close
-     * buttons and per-row buttons all get into the element index. */
     if (k.length > 2 && k.slice(-2) === 'Id' && typeof n[k] === 'string'){
       var sib = n[k.slice(0, -2)];
       if (sib && typeof sib === 'object' && sib.type)
@@ -1220,7 +1166,6 @@ function step(st, a){
   }
 }
 
-/* ------------------------------------------------- text observation (a11y) */
 function a11y(st){
   var rootNode = screen(st), lines = [], r = route(st);
   lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
@@ -1286,8 +1231,6 @@ function walkText(n, d, out, st){
     if (v && typeof v === 'object') walkText(v, line !== null ? d+1 : d, out, st);
   }
 }
-/* per-environment nodes: return a string to print, true if already printed,
- * or null to ignore */
 function walkExtra(n, d, out, st){
 
   if (n.t === 'pcard'){
@@ -1305,7 +1248,6 @@ function walkExtra(n, d, out, st){
   return null;
 }
 
-/* --------------------------------------------------------- derived view */
 function derive(st){
   var stages = {}, where = {}, safes = {}, slots = {}, follows = {};
   st.parcels.forEach(function(p){
@@ -1372,9 +1314,6 @@ root.GUI_ENGINE = ENGINE;
 </script>
 
 <script id="ui">
-/* ===========================================================================
- * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
- * ======================================================================== */
 (function(){
 'use strict';
 var E = window.GUI_ENGINE;

@@ -1,0 +1,290 @@
+{
+  "env": "pitchside_league",
+  "note": "Golden action sequences replayed by CI.",
+  "solutions": {
+    "T01_settings": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_highlightFollowed"
+      },
+      {
+        "action": "tap",
+        "id": "set_notifyResults"
+      }
+    ],
+    "T02_query_leader": [
+      {
+        "action": "finish",
+        "answer": "Larkfield Town, on 10 points"
+      }
+    ],
+    "T03_follow": [
+      {
+        "action": "tap",
+        "id": "row_t_iron"
+      },
+      {
+        "action": "tap",
+        "id": "follow"
+      }
+    ],
+    "T04_predict_one": [
+      {
+        "action": "tap",
+        "id": "tab_fixtures"
+      },
+      {
+        "action": "tap",
+        "id": "pick_f_3_away"
+      }
+    ],
+    "T05_query_gap": [
+      {
+        "action": "finish",
+        "answer": "1"
+      }
+    ],
+    "T06_whatif": [
+      {
+        "action": "tap",
+        "id": "tab_fixtures"
+      },
+      {
+        "action": "tap",
+        "id": "pick_f_1_home"
+      },
+      {
+        "action": "tap",
+        "id": "see_predicted"
+      }
+    ],
+    "T07_clear": [
+      {
+        "action": "tap",
+        "id": "tab_fixtures"
+      },
+      {
+        "action": "tap",
+        "id": "pick_f_1_draw"
+      },
+      {
+        "action": "tap",
+        "id": "pick_f_2_home"
+      },
+      {
+        "action": "tap",
+        "id": "tab_table"
+      },
+      {
+        "action": "tap",
+        "id": "clear_predictions"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      }
+    ],
+    "T08_query_gd": [
+      {
+        "action": "finish",
+        "answer": "5"
+      }
+    ],
+    "T09_team_page": [
+      {
+        "action": "tap",
+        "id": "row_t_quay"
+      }
+    ],
+    "T10_flagship": [
+      {
+        "action": "tap",
+        "id": "tab_fixtures"
+      },
+      {
+        "action": "tap",
+        "id": "pick_f_3_away"
+      },
+      {
+        "action": "tap",
+        "id": "pick_f_1_draw"
+      },
+      {
+        "action": "tap",
+        "id": "see_predicted"
+      }
+    ],
+    "T11_query_position": [
+      {
+        "action": "finish",
+        "answer": "4"
+      }
+    ],
+    "T12_predict_all": [
+      {
+        "action": "tap",
+        "id": "tab_fixtures"
+      },
+      {
+        "action": "tap",
+        "id": "pick_f_1_home"
+      },
+      {
+        "action": "tap",
+        "id": "pick_f_2_home"
+      },
+      {
+        "action": "tap",
+        "id": "pick_f_3_home"
+      },
+      {
+        "action": "tap",
+        "id": "pick_f_4_home"
+      }
+    ],
+    "T13_unfollow": [
+      {
+        "action": "tap",
+        "id": "row_t_marsh"
+      },
+      {
+        "action": "tap",
+        "id": "follow"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "row_t_bell"
+      },
+      {
+        "action": "tap",
+        "id": "follow"
+      }
+    ],
+    "T14_two_views": [
+      {
+        "action": "tap",
+        "id": "tab_fixtures"
+      },
+      {
+        "action": "tap",
+        "id": "pick_f_1_draw"
+      },
+      {
+        "action": "tap",
+        "id": "tab_table"
+      },
+      {
+        "action": "tap",
+        "id": "view_pred"
+      }
+    ],
+    "T15_query_scorer": [
+      {
+        "action": "finish",
+        "answer": "Larkfield Town"
+      }
+    ],
+    "T16_swing": [
+      {
+        "action": "tap",
+        "id": "tab_fixtures"
+      },
+      {
+        "action": "tap",
+        "id": "pick_f_4_home"
+      },
+      {
+        "action": "tap",
+        "id": "pick_f_2_away"
+      }
+    ],
+    "T17_undo_one": [
+      {
+        "action": "tap",
+        "id": "tab_fixtures"
+      },
+      {
+        "action": "tap",
+        "id": "pick_f_1_away"
+      },
+      {
+        "action": "tap",
+        "id": "pick_f_2_away"
+      },
+      {
+        "action": "tap",
+        "id": "pick_f_3_away"
+      },
+      {
+        "action": "tap",
+        "id": "pick_f_4_away"
+      },
+      {
+        "action": "tap",
+        "id": "clear_f_1"
+      }
+    ],
+    "T18_team_form": [
+      {
+        "action": "tap",
+        "id": "tab_teams"
+      },
+      {
+        "action": "tap",
+        "id": "club_t_mill"
+      },
+      {
+        "action": "finish",
+        "answer": "3"
+      }
+    ],
+    "T19_top_two": [
+      {
+        "action": "tap",
+        "id": "tab_fixtures"
+      },
+      {
+        "action": "tap",
+        "id": "pick_f_3_away"
+      },
+      {
+        "action": "tap",
+        "id": "pick_f_1_away"
+      },
+      {
+        "action": "tap",
+        "id": "see_predicted"
+      }
+    ],
+    "T20_follow_leader": [
+      {
+        "action": "tap",
+        "id": "row_t_fen"
+      },
+      {
+        "action": "tap",
+        "id": "follow"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "row_t_marsh"
+      },
+      {
+        "action": "tap",
+        "id": "follow"
+      }
+    ]
+  }
+}

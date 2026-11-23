@@ -4,27 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Saffron (mocked GUI env)</title>
-<!--
-  ============================================================================
-  Saffron — a single-file H5 recipe and shopping app for agent research.
 
-  Same two-block contract as every environment here: script#engine is a pure,
-  DOM-free state machine on globalThis.GUI_ENGINE; script#ui renders its screen
-  tree and exposes window.__ENV__.
-
-  What is new: quantities that move. Every ingredient is written for a base
-  number of servings, and changing the servings rescales all of them —
-  rounding to whole grams, quarter spoons and half onions, because half a
-  clove of garlic is a real thing and half a gram of it is not. The shopping
-  list is where that arithmetic becomes visible: add two recipes that both
-  want onions and you get one line with the total, not two lines to add up in
-  your head. Turn pantry staples off and the salt and the olive oil stop
-  appearing at all.
-
-  Everything is an integer in thousandths of the display unit, so 1.5 tbsp is
-  1500 and two recipes' worth of it is exactly 3000.
-  ============================================================================
--->
 <style>
 :root{
   --bg:#fbf7f0; --card:#fff; --line:#ece4d8; --line2:#ddd2c1;
@@ -141,7 +121,6 @@ body.bare .n-sheet{animation:none}
 .n-radio.on:after{content:"";position:absolute;left:7px;top:4px;width:5px;height:9px;
   border:2px solid #fff;border-top:0;border-left:0;transform:rotate(42deg)}
 
-/* ---------------- recipe cards & plates ---------------- */
 .plate{display:block;border-radius:var(--r);overflow:hidden;background:#f3ece1}
 .rcard{margin:10px 16px;border-radius:var(--r);overflow:hidden;background:var(--card);border:1px solid var(--line);
   cursor:pointer;box-shadow:var(--shadow)}
@@ -245,23 +224,14 @@ body.bare .n-sheet{animation:none}
 <div id="hud" class="off"></div>
 
 <script id="engine">
-/* ===========================================================================
- * ENGINE — pure, deterministic, DOM-free.
- *
- * Every quantity is an integer in thousandths of its display unit: 1.5 tbsp
- * is 1500 and two lots of it are exactly 3000. Scaling a recipe multiplies
- * by servings, divides by the base, and snaps to something you can actually
- * measure — whole grams, quarter spoons, half onions.
- * ======================================================================== */
 (function(root){
 'use strict';
 
 var ENV_ID  = 'saffron_recipes';
 var VERSION = '1.0.0';
-var CLOCK0  = 1025;                    /* 17:05 */
-var K = 1000;                          /* one whole unit */
+var CLOCK0  = 1025;
+var K = 1000;
 
-/* ------------------------------------------------------------- utilities */
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function pad2(n){ return (n < 10 ? '0' : '') + n; }
 function hhmm(m){ m = ((m % 1440) + 1440) % 1440; return pad2(Math.floor(m/60)) + ':' + pad2(m%60); }
@@ -294,7 +264,6 @@ function setPath(o, path, value){
   return o;
 }
 
-/* ----------------------------------------------------------- quantities */
 var UNITS = {
   g:     {label:'g',      snap:1000, space:''},
   ml:    {label:'ml',     snap:1000, space:''},
@@ -305,7 +274,6 @@ var UNITS = {
   pinch: {label:'pinch',  snap:1000, space:' '}
 };
 function unitOf(u){ return UNITS[u] || UNITS.g; }
-/* a quantity you can actually measure: whole grams, quarter spoons, half onions */
 function snapQty(q, unit){
   var s = unitOf(unit).snap;
   var v = Math.round(q / s) * s;
@@ -327,9 +295,6 @@ function fmtQty(q, unit){
   return fmtNumber(q) + u.space + u.label;
 }
 
-/* ===========================================================================
- * THE LARDER
- * ======================================================================== */
 var AISLES = [
   {id:'produce', label:'Fruit and veg'},
   {id:'meat',    label:'Meat and fish'},
@@ -487,9 +452,6 @@ function tagLabel(t){
        : t === 'quick' ? 'Under 30 min' : t === 'batch' ? 'Batch cooks well' : t;
 }
 
-/* ===========================================================================
- * STATE
- * ======================================================================== */
 var DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 
 function createInitialState(seed){
@@ -498,7 +460,6 @@ function createInitialState(seed){
     meta:{env:ENV_ID, version:VERSION, seed:seed, clock:CLOCK0, steps:0, finished:false, answer:null},
     ui:{tab:'recipes', stack:[{name:'home', params:{}}], sheet:null, confirm:null,
         inputs:{}, toast:null, collection:'all'},
-    /* the seed permutes the order the shelf offers recipes in, never which ones */
     shelf:shuffled(RECIPES.map(function(r){ return r.id; }), seed),
     servingsFor:{},
     saved:['r_dal'],
@@ -524,7 +485,6 @@ function lineOf(st, ingId){
   for (var i=0;i<st.list.length;i++) if (st.list[i].ing === ingId) return st.list[i];
   return null;
 }
-/* the ingredients of one recipe at a given number of servings */
 function scaledIngredients(st, id, servings){
   var r = recipe(id);
   if (!r) return [];
@@ -565,7 +525,6 @@ function matchesCollection(st, r, col){
 }
 function sortRecipes(st, ids){
   var a = ids.slice();
-  /* 'shelf' is the order the app suggests them in, which is what a seed varies */
   if (st.settings.sort === 'shelf') return a;
   if (st.settings.sort === 'time')
     a.sort(function(p, q){ return recipe(p).minutes - recipe(q).minutes ||
@@ -583,9 +542,6 @@ var SELECT = {
   clockStr:function(st){ return hhmm(st.meta ? st.meta.clock : st); }
 };
 
-/* ===========================================================================
- * REDUCER
- * ======================================================================== */
 function reduce(prev, action){
   var st = clone(prev), A = action || {};
   st.ui.toast = null;
@@ -596,7 +552,6 @@ function reduce(prev, action){
   case 'NOOP': break;
   case 'FINISH': st.meta.finished = true; st.meta.answer = A.answer === undefined ? null : A.answer; break;
 
-  /* ---- navigation ---- */
   case 'NAV': push(st, A.to, A.params); break;
   case 'BACK':
     if (st.ui.sheet) st.ui.sheet = null;
@@ -633,7 +588,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- recipes ---- */
   case 'SERV_STEP': {
     var cur = servingsOf(st, A.id);
     st.servingsFor[A.id] = Math.max(1, Math.min(12, cur + A.delta));
@@ -649,7 +603,6 @@ function reduce(prev, action){
     }
     break;
 
-  /* ---- the shopping list ---- */
   case 'ADD_TO_LIST': {
     var s = servingsOf(st, A.id);
     var r2 = addRecipeToList(st, A.id, s);
@@ -687,7 +640,6 @@ function reduce(prev, action){
     break;
   case 'CLEAR_ALL_YES': st.list = []; toast(st, 'Shopping list emptied'); break;
 
-  /* ---- the week ---- */
   case 'PLAN_SET': {
     var d = st.ui.sheet && st.ui.sheet.day;
     if (d === null || d === undefined) break;
@@ -716,7 +668,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- cooking ---- */
   case 'COOK_START':
     st.cook = {recipe:A.id, step:0};
     push(st, 'cook', {});
@@ -740,7 +691,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- settings ---- */
   case 'SET_TOGGLE': st.settings[A.key] = !st.settings[A.key]; break;
   case 'SET_SORT': st.settings.sort = A.sort; break;
   case 'SET_DSERV':
@@ -752,9 +702,6 @@ function reduce(prev, action){
   return st;
 }
 
-/* ===========================================================================
- * SCREEN TREE
- * ======================================================================== */
 function N(t, o){ o = o || {}; o.t = t; return o; }
 function txt(s, cls){ return N('text', {text:s, cls:cls || ''}); }
 function row(id, text, o){
@@ -791,13 +738,11 @@ function recipeCard(st, id) {
     act:{type:'NAV', to:'recipe', params:{id:id}}});
 }
 
-/* ----------------------------------------------------------------- home */
 function scrHome(st){
   var col = st.ui.collection;
   var ids = sortRecipes(st, st.shelf).filter(function(id){
     return matchesCollection(st, recipe(id), col);
   });
-  /* not shelf[0], or the featured plate and the first card would be the same picture twice */
   var featured = st.shelf[3], fr = recipe(featured);
   var body = [
     N('hero', {id:'hero_recipe', kicker:'Tonight', title:fr.name, sub:fr.blurb,
@@ -824,7 +769,6 @@ function scrHome(st){
   ]});
 }
 
-/* --------------------------------------------------------------- search */
 function scrSearch(st){
   var q = String(st.ui.inputs.q_recipe || '').trim().toLowerCase();
   var on = {veg:!!st.ui.inputs.f_veg, vegan:!!st.ui.inputs.f_vegan,
@@ -867,7 +811,6 @@ function scrSearch(st){
   ]});
 }
 
-/* --------------------------------------------------------------- recipe */
 function scrRecipe(st, params){
   var r = recipe(params.id);
   if (!r) return scrHome(st);
@@ -910,7 +853,6 @@ function scrRecipe(st, params){
   ]});
 }
 
-/* ----------------------------------------------------------------- cook */
 function scrCook(st){
   var c = st.cook;
   if (!c) return scrHome(st);
@@ -928,7 +870,6 @@ function scrCook(st){
   ]});
 }
 
-/* ----------------------------------------------------------------- list */
 function scrList(st){
   var groups = listByAisle(st);
   var ticked = st.list.filter(function(l){ return l.checked; }).length;
@@ -961,7 +902,6 @@ function scrList(st){
   ]});
 }
 
-/* ----------------------------------------------------------------- week */
 function scrPlan(st){
   var planned = plannedDays(st);
   return N('screen', {id:'scr_plan', name:'plan', c:[
@@ -988,7 +928,6 @@ function scrPlan(st){
   ]});
 }
 
-/* ---------------------------------------------------------------- saved */
 function scrSaved(st){
   var body = [N('sec', {text:'Saved recipes', side:st.saved.length + ''})];
   if (st.saved.length) st.saved.forEach(function(id){ body.push(recipeCard(st, id)); });
@@ -1012,7 +951,6 @@ function scrSaved(st){
   ]});
 }
 
-/* ------------------------------------------------------------- settings */
 function scrSettings(st){
   function sw(id, text, key, sub){
     return row(id, text, {sub:sub, arrow:false,
@@ -1054,7 +992,6 @@ function scrSettings(st){
   ]});
 }
 
-/* --------------------------------------------------------------- sheets */
 function sheetPlanPick(st){
   var day = st.ui.sheet.day;
   return N('sheet', {id:'pick_sheet', title:'What are you cooking on ' + DAYS[day] + '?',
@@ -1089,9 +1026,6 @@ function screen(st){
   return rootNode;
 }
 
-/* =======================================================================
- * TRAVERSAL — element index, GUI action interface, text observation
- * ==================================================================== */
 var SKIP_KEYS = {act:1, minus:1, plus:1, close:1, yes:1, params:1, meta:1, palette:1, ings:1, steps:1};
 
 function labelOf(n){ return n.text || n.title || n.name || n.label || ''; }
@@ -1155,7 +1089,6 @@ function step(st, a){
   }
 }
 
-/* ------------------------------------------------- text observation (a11y) */
 function a11y(st){
   var rootNode = screen(st), lines = [], r = route(st);
   lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
@@ -1241,7 +1174,6 @@ function walkText(n, d, out, st){
   }
 }
 
-/* --------------------------------------------------------- derived view */
 function derive(st){
   var qty = {}, unitsOut = {}, fromOut = {}, checked = {};
   st.list.forEach(function(l){
@@ -1303,11 +1235,6 @@ root.GUI_ENGINE     = ENGINE;
 </script>
 
 <script id="ui">
-/* ===========================================================================
- * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
- * The food illustrations are generated from each recipe's palette and id, so
- * there is not one image file in this environment.
- * ======================================================================== */
 (function(){
 'use strict';
 var E = window.GUI_ENGINE;
@@ -1345,7 +1272,6 @@ function hashOf(s){
   for (var i=0;i<s.length;i++){ h ^= s.charCodeAt(i); h = (h * 16777619) >>> 0; }
   return h;
 }
-/* a plate of food, drawn from the recipe's own palette and id */
 function plateSvg(palette, seed, h){
   var W = 300, H = h || 160, cx = W/2, cy = H/2 + 2;
   var R = Math.min(W, H) * 0.36;

@@ -4,30 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Maps (mocked GUI env)</title>
-<!--
-  ============================================================================
-  Maps — a single-file H5 stock navigation app for agent research.
 
-  Same two-block contract as every environment here: script#engine is a pure,
-  DOM-free state machine on globalThis.GUI_ENGINE; script#ui renders its screen
-  tree and exposes window.__ENV__.
-
-  What is new: a journey has no length. Each route has a free-flowing time and
-  a sensitivity to traffic, and the traffic multiplier is a function of the
-  hour you set off in — so the same road is 24 minutes at eleven and 52 at
-  eight, and which of the three roads is fastest changes with the clock. At
-  eight in the morning the longest route by eleven kilometres is the quickest
-  one; by mid-morning it is the slowest.
-
-  That makes «leave by» a search rather than a subtraction. Arriving by 08:30
-  is not «08:30 minus the journey time», because the journey time you look up
-  is the one for the hour you have not chosen yet. Departing at 07:50 works;
-  departing at 08:00 does not, and the gap between them is far more than ten
-  minutes of driving.
-
-  Everything is integer minutes, integer metres and integer pence.
-  ============================================================================
--->
 <style>
 :root{
   --outer:#e3e6ee;
@@ -287,18 +264,12 @@ body.bare .n-sheet{animation:none}
 <div id="hud" class="off"></div>
 
 <script id="engine">
-/* ===========================================================================
- * ENGINE — pure, deterministic, DOM-free.
- * 用时 = 空跑时间 × 出发整点的拥堵倍率，向上取整。
- * 所以「最晚几点走」是搜出来的，不是减出来的。
- * ======================================================================== */
 (function(root){
 'use strict';
 
 var ENV_ID  = 'compass_maps';
 var VERSION = '1.0.0';
 
-/* ------------------------------------------------------------- utilities */
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function pad2(n){ return (n < 10 ? '0' : '') + n; }
 function hhmm(m){ m = ((m % 1440) + 1440) % 1440; return pad2(Math.floor(m/60)) + ':' + pad2(m%60); }
@@ -337,7 +308,6 @@ function setPath(o, path, value){
   return o;
 }
 
-/* ------------------------------------------- screen-tree node constructors */
 function N(t, o){ o = o || {}; o.t = t; return o; }
 function txt(s, cls){ return N('text', {text:s, cls:cls || ''}); }
 function row(id, text, o){
@@ -362,8 +332,6 @@ function push(st, name, params){ st.ui.stack.push({name:name, params:params || {
 function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
 function toast(st, t){ st.ui.toast = t; }
 
-/* ---------------------------------------------------------- 时间与拥堵
- * 拥堵倍率按出发的整点查表，单位是百分比。 */
 var H0 = 5, H1 = 23;
 var TRAFFIC = {
   high:  [100,115,165,215,175,130,115,110,110,112,120,135,165,200,160,125,110,105,100],
@@ -387,7 +355,6 @@ function mins(n){
 }
 function money(p){ return '£' + Math.floor(p / 100) + '.' + (p % 100 < 10 ? '0' : '') + (p % 100); }
 
-/* ---------------------------------------------------------- 路线与方式 */
 var ROUTES = [
   {id:'r_motor', name:'A38 motorway', mode:'drive', km:224, base:24, sens:'high',
    toll:2500, note:'Two junctions, but it is the first thing to seize up.'},
@@ -408,7 +375,6 @@ var MODES = [
   {id:'bike', name:'Cycle'}, {id:'walk', name:'Walk'}
 ];
 
-/* 一条路线在某个出发时刻要走多久 */
 function waitFor(r, depart){
   if (r.mode !== 'transit') return 0;
   var since = ((depart - r.offset) % r.every + r.every) % r.every;
@@ -420,7 +386,6 @@ function travel(r, depart){
   return r.base;
 }
 function arrival(r, depart){ return depart + travel(r, depart); }
-/* 钱：过路费 + 油 0.6/km + 停车（前半小时免费，之后每小时 £1.80） */
 function cost(st, r, depart){
   if (r.mode === 'drive'){
     var fuel = r.km * 6;
@@ -442,7 +407,6 @@ function bestAt(st, depart, mode){
   });
   return best;
 }
-/* 「最晚几点出发」——因为用时取决于出发的钟点，只能一格一格试 */
 function latestDeparture(st, arriveBy, mode){
   var best = null;
   for (var d = 5 * 60; d <= arriveBy; d += 5){
@@ -458,7 +422,6 @@ function lateBy(st){ return Math.max(0, arrival(routeOf(st.route), st.depart) - 
 var STEPS = [];
 for (var _d = 6 * 60; _d <= 11 * 60; _d += 10) STEPS.push(_d);
 
-/* =========================================================== state */
 function createInitialState(seed){
   seed = seed || 0;
   return {
@@ -468,7 +431,6 @@ function createInitialState(seed){
     depart:8 * 60,
     arriveBy:9 * 60,
     parkHours:8,
-    /* 种子只打乱常用出发时刻的排列 */
     order:shuffled([7 * 60, 7 * 60 + 30, 8 * 60, 8 * 60 + 30, 9 * 60], seed)
             .map(function(x){ return '' + x; }),
     ui:{tab:'route', stack:[{name:'route', params:{}}], sheet:null, confirm:null,
@@ -483,7 +445,6 @@ var SELECT = {
   routes:ROUTES, modes:MODES, steps:STEPS, route:route
 };
 
-/* =========================================================== reducer */
 function reduce(prev, action){
   var st = clone(prev), A = action || {};
   st.ui.toast = null;
@@ -616,7 +577,6 @@ function reduce(prev, action){
   return st;
 }
 
-/* =========================================================== screens */
 function tabbar(st){
   var items = [
     {id:'tab_route',    text:'Routes',  icon:'map',   tab:'route'},
@@ -858,11 +818,6 @@ function screen(st){
   return rootNode;
 }
 
-/* =======================================================================
- * TRAVERSAL — element index, GUI action interface, text observation.
- * Identical in every environment here: the screen tree is the only thing
- * that differs, and all three readers below walk that same tree.
- * ==================================================================== */
 var SKIP_KEYS = {act:1, minus:1, plus:1, close:1, yes:1, params:1, meta:1, grid:1, deps:1};
 
 function labelOf(n){ return n.text || n.title || n.name || n.label || n.main || ''; }
@@ -876,9 +831,6 @@ function collect(n, out){
                                             input:(n.t === 'inputrow')});
   if (n.t === 'mask' && n.close)  out.push({id:n.id, act:n.close, text:'Dismiss overlay', t:'mask'});
   for (var k in n){
-    /* a node may carry extra buttons as a pair of keys: someId holds the
-     * test-id and some holds the action. That is how steppers, sheet close
-     * buttons and per-row buttons all get into the element index. */
     if (k.length > 2 && k.slice(-2) === 'Id' && typeof n[k] === 'string'){
       var sib = n[k.slice(0, -2)];
       if (sib && typeof sib === 'object' && sib.type)
@@ -931,7 +883,6 @@ function step(st, a){
   }
 }
 
-/* ------------------------------------------------- text observation (a11y) */
 function a11y(st){
   var rootNode = screen(st), lines = [], r = route(st);
   lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
@@ -996,8 +947,6 @@ function walkText(n, d, out, st){
     if (v && typeof v === 'object') walkText(v, line !== null ? d+1 : d, out, st);
   }
 }
-/* per-environment nodes: return a string to print, true if already printed,
- * or null to ignore */
 function walkExtra(n, d, out, st){
 
   if (n.t === 'map'){ out.push(ind(d) + '[地图] ' + n.alt); return true; }
@@ -1025,7 +974,6 @@ function walkExtra(n, d, out, st){
   return null;
 }
 
-/* --------------------------------------------------------- derived view */
 function derive(st){
   var r = routeOf(st.route);
   var times = {}, arrives = {}, costs = {};
@@ -1088,9 +1036,6 @@ root.GUI_ENGINE = ENGINE;
 </script>
 
 <script id="ui">
-/* ===========================================================================
- * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
- * ======================================================================== */
 (function(){
 'use strict';
 var E = window.GUI_ENGINE;

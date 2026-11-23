@@ -4,39 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Sam's phone (mocked GUI env)</title>
-<!--
-  ============================================================================
-  Sam's phone — 张三的手机。把这个目录里另外四十个环境装进一台手机里。
 
-  Same two-block contract as every environment here: script#engine is a pure,
-  DOM-free state machine on globalThis.GUI_ENGINE; script#ui renders its screen
-  tree and exposes window.__ENV__.
-
-  图标清单是构建时从 envs/*/manifest.json 读出来的，所以主屏上永远正好是那四十个
-  环境，一个不多一个不少。每个图标点进去是这台手机对那个 app 的看法——今天用了多久、
-  占多少地方、后台耗多少电、有几条未读——底下有一个真的链接指向那个环境本身，
-  在浏览器里点下去就真的打开了它。那个链接故意没有 test-id，所以它对智能体不可见，
-  只对人可见。
-
-  这台手机自己的世界是两套横跨所有 app 的算法：
-
-  一是**电量能不能撑到闹钟响**。耗电速率 = 系统底噪 + 所有开着后台刷新的 app 之和，
-  剩余时间 = 电量 ÷ 速率。现在 23%、周四 22:47、闹钟 06:40，按当前速率 02:51 就没电。
-  低电量模式把整体降到 58%，但光开它只能撑到 05:47 —— 还差五十来分钟。开了低电量之后
-  只需要再关掉一个 app 的后台刷新就够，而且那个 app 只有一个选得对；不开低电量的话，
-  至少要关掉六个。
-
-  二是**通知到底吵不吵得到他**。二十七条待处理通知，专注模式按「哪些 app、哪些人、
-  是否时效性」三条规则放行，剩下的静音。关掉后台刷新和关掉通知是两件不同的事，
-  这台手机把这一点摆在明面上。
-
-  用这台手机的人是张三（Sam Zhang），三十三岁，在 Meridian Labs 上海办公室做产品，
-  住 Rowan Street，公司在 Kestrel Wharf——这正是 compass_maps 里那条通勤路线。
-  他爱人叫王倩，手机号紧挨着他自己的；今晚信息里那条一百四十八个字符的行程草稿就是
-  写给她的。闹钟、天气、剩余存储、短信套餐这些数字也都是从对应的环境里搬过来的，
-  不是另编的一套。
-  ============================================================================
--->
 <style>
 :root{
   --outer:#05070a;
@@ -244,7 +212,6 @@ body.bare .n-sheet{animation:none}
 .lk-b.low{background:var(--warn-s);color:var(--warn)}
 .lk-b.dead{background:var(--bad-s);color:var(--bad)}
 
-/* the one text field in this environment is the home-screen search box */
 .n-input{background:transparent;border-bottom:none;padding:2px 16px 6px}
 .n-input .i-label{flex:0 0 auto;font-size:12px;color:var(--muted);order:2;display:none}
 .n-input input{background:rgba(255,255,255,.15);border:.5px solid rgba(255,255,255,.24);
@@ -375,18 +342,12 @@ body.bare .n-sheet{animation:none}
 <div id="hud" class="off"></div>
 
 <script id="engine">
-/* ===========================================================================
- * ENGINE — pure, deterministic, DOM-free.
- * 电量、通知放行、图标位置全是从同一张 app 表算出来的。表本身是构建时
- * 从每个环境自己的 manifest 读出来的，所以主屏上就是这个目录里那四十个环境。
- * ======================================================================== */
 (function(root){
 'use strict';
 
 var ENV_ID  = 'sam_phone';
 var VERSION = '1.0.0';
 
-/* ------------------------------------------------------------- utilities */
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function pad2(n){ return (n < 10 ? '0' : '') + n; }
 function hhmm(m){ m = ((m % 1440) + 1440) % 1440; return pad2(Math.floor(m/60)) + ':' + pad2(m%60); }
@@ -425,7 +386,6 @@ function setPath(o, path, value){
   return o;
 }
 
-/* ------------------------------------------- screen-tree node constructors */
 function N(t, o){ o = o || {}; o.t = t; return o; }
 function txt(s, cls){ return N('text', {text:s, cls:cls || ''}); }
 function row(id, text, o){
@@ -450,15 +410,13 @@ function push(st, name, params){ st.ui.stack.push({name:name, params:params || {
 function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
 function toast(st, t){ st.ui.toast = t; }
 
-/* ---------------------------------------------------------- 这台手机
- * 时钟和 nightjar_clock 是同一个夜晚：周四 22:47，下一个闹钟周五 06:40。 */
 var NOW = 22 * 60 + 47;
-var ALARM = 24 * 60 + 6 * 60 + 40;        /* 明天 06:40，用「从今天 00:00 起」的分钟表示 */
-var TO_ALARM = ALARM - NOW;               /* 473 分钟 */
-var BATTERY_CP = 2300;                    /* 23.00%，单位百分之一 */
-var BASAL_CP = 110;                       /* 系统底噪 1.10 %/时 */
-var LOW_POWER_PCT = 58;                   /* 低电量模式把整体降到 58% */
-var STORAGE_FREE_MB = 2403;               /* 和 harbour_files 一致 */
+var ALARM = 24 * 60 + 6 * 60 + 40;
+var TO_ALARM = ALARM - NOW;
+var BATTERY_CP = 2300;
+var BASAL_CP = 110;
+var LOW_POWER_PCT = 58;
+var STORAGE_FREE_MB = 2403;
 var STORAGE_TOTAL_MB = 32768;
 
 function mins(n){
@@ -526,8 +484,6 @@ var FOLDERS = [
 ];
 function folderOf(id){ for (var i=0;i<FOLDERS.length;i++) if (FOLDERS[i].id === id) return FOLDERS[i]; return null; }
 var PAGES = ['p1', 'p2'];
-/* 图标的颜色不是编出来的：每一块方砖用的就是它点进去之后那个环境自己的
- * --accent，构建时从那份 index.html 里读出来的。 */
 function colourOf(id){ var a = null;
   for (var i=0;i<APPS.length;i++) if (APPS[i].id === id) a = APPS[i];
   return a ? a.brand : '#8e8e93';
@@ -551,8 +507,6 @@ function placeName(st, where){
   return f ? '「' + f.name + '」文件夹（' + (f.page === 'p1' ? '第一页' : '第二页') + '）' : where;
 }
 
-/* ------------------------------------------------------------ 电量
- * 速率 = 底噪 + 所有开着后台刷新的 app 之和；低电量模式整体乘 58%。 */
 function rawRate(st){
   var n = BASAL_CP;
   st.apps.forEach(function(a){ if (a.bg) n += a.drain; });
@@ -569,7 +523,6 @@ function minutesLeft(st){
 function diesAt(st){ return NOW + minutesLeft(st); }
 function survives(st){ return minutesLeft(st) >= TO_ALARM; }
 function shortBy(st){ return Math.max(0, TO_ALARM - minutesLeft(st)); }
-/* 撑到闹钟需要的速率上限 */
 function rateNeeded(){ return Math.floor(BATTERY_CP * 60 / TO_ALARM); }
 function bgApps(st){
   return st.apps.filter(function(a){ return a.bg && a.drain > 0; })
@@ -581,7 +534,6 @@ function appStorage(st){
 }
 function screenToday(st){ return sum(st.apps.map(function(a){ return a.used; })); }
 
-/* ------------------------------------------------------------ 专注模式 */
 var FOCUS = [
   {id:'none',  name:'关闭', people:[], urgent:true,
    note:'什么都放行——只要那个 app 自己的通知开关是开的。'},
@@ -601,8 +553,6 @@ function notifOf(st, id){
   for (var i=0;i<st.notifs.length;i++) if (st.notifs[i].id === id) return st.notifs[i];
   return null;
 }
-/* 一条通知能不能吵到他：app 的通知开关关了就直接没有；
- * 否则看专注模式放不放行。 */
 function allowedApps(st, fid){ return st.allow[fid] || []; }
 function delivers(st, n){
   var a = appOf(st, n.app);
@@ -623,7 +573,6 @@ function whySilent(st, n){
 }
 function unreadTotal(st){ return sum(st.apps.map(function(a){ return a.unread; })); }
 
-/* ------------------------------------------------------------ 机主 */
 var OWNER = {
   name:'张三', en:'Sam Zhang', age:33,
   line:'138 0013 8001',
@@ -656,7 +605,6 @@ var OWNER = {
   ]
 };
 
-/* =========================================================== state */
 function createInitialState(seed){
   seed = seed || 0;
   var notifs = [
@@ -684,7 +632,6 @@ function createInitialState(seed){
     lowPower:false,
     openFolder:null,
     query:'',
-    /* 种子只打乱主屏上小组件的排列，装着哪些组件不会变 */
     order:shuffled(['w_battery', 'w_weather', 'w_screen', 'w_next'], seed),
     ui:{tab:'home', stack:[{name:'home', params:{}}], sheet:null, confirm:null,
         inputs:{}, toast:null},
@@ -702,7 +649,6 @@ var SELECT = {
   now:NOW, alarm:ALARM, toAlarm:TO_ALARM, route:route
 };
 
-/* =========================================================== reducer */
 function reduce(prev, action){
   var st = clone(prev), A = action || {};
   st.ui.toast = null;
@@ -745,7 +691,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- 主屏 ---- */
   case 'PAGE': st.page = A.id; st.openFolder = null; break;
   case 'OPEN_FOLDER': st.openFolder = A.id; break;
   case 'CLOSE_FOLDER': st.openFolder = null; break;
@@ -769,7 +714,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- 电量 ---- */
   case 'TOGGLE_BG': {
     var a2 = appOf(st, A.id);
     if (!a2) break;
@@ -802,7 +746,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- 通知 ---- */
   case 'SET_FOCUS': {
     st.focus = A.id;
     toast(st, focusOf(A.id).name + '：' + delivered(st).length + ' 条会响，'
@@ -851,7 +794,6 @@ function reduce(prev, action){
   return st;
 }
 
-/* =========================================================== screens */
 function iconNode(st, a, prefix){
   return N('icon', {id:prefix + a.id, act:{type:'OPEN_APP', id:a.id}, name:a.short,
     brand:a.brand, glyph:a.glyph,
@@ -1157,11 +1099,6 @@ function screen(st){
   return N('screen', {t:'screen', c:out, route:r.name});
 }
 
-/* =======================================================================
- * TRAVERSAL — element index, GUI action interface, text observation.
- * Identical in every environment here: the screen tree is the only thing
- * that differs, and all three readers below walk that same tree.
- * ==================================================================== */
 var SKIP_KEYS = {act:1, minus:1, plus:1, close:1, yes:1, params:1, meta:1, dismiss:1, toggle:1, tiles:1, lines:1, allow:1, place:1};
 
 function labelOf(n){ return n.text || n.title || n.name || n.label || n.main || ''; }
@@ -1175,9 +1112,6 @@ function collect(n, out){
                                             input:(n.t === 'inputrow')});
   if (n.t === 'mask' && n.close)  out.push({id:n.id, act:n.close, text:'Dismiss overlay', t:'mask'});
   for (var k in n){
-    /* a node may carry extra buttons as a pair of keys: someId holds the
-     * test-id and some holds the action. That is how steppers, sheet close
-     * buttons and per-row buttons all get into the element index. */
     if (k.length > 2 && k.slice(-2) === 'Id' && typeof n[k] === 'string'){
       var sib = n[k.slice(0, -2)];
       if (sib && typeof sib === 'object' && sib.type)
@@ -1230,7 +1164,6 @@ function step(st, a){
   }
 }
 
-/* ------------------------------------------------- text observation (a11y) */
 function a11y(st){
   var rootNode = screen(st), lines = [], r = route(st);
   lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
@@ -1296,8 +1229,6 @@ function walkText(n, d, out, st){
     if (v && typeof v === 'object') walkText(v, line !== null ? d+1 : d, out, st);
   }
 }
-/* per-environment nodes: return a string to print, true if already printed,
- * or null to ignore */
 function walkExtra(n, d, out, st){
 
   if (n.t === 'hs') return null;
@@ -1354,7 +1285,6 @@ function walkExtra(n, d, out, st){
   return null;
 }
 
-/* =========================================================== derived */
 function derive(st){
   var d = delivered(st), s = silenced(st), place = {};
   st.apps.forEach(function(a){ place[a.id] = a.where; });
@@ -1419,9 +1349,6 @@ root.GUI_ENGINE = ENGINE;
 </script>
 
 <script id="ui">
-/* ===========================================================================
- * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
- * ======================================================================== */
 (function(){
 'use strict';
 var E = window.GUI_ENGINE;

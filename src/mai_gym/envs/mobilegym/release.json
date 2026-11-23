@@ -1,0 +1,12 @@
+{
+  "label": "official-5fbd3f3",
+  "source_repository": "Purewhiter/mobilegym",
+  "source_revision": "5fbd3f34be0e9780ae4b1e9d5089963ddbd05d38",
+  "task_manifest": "bench_env/splits/test.txt",
+  "task_manifest_sha256": "a3d485015d480f4f1ebbd12dbbf02c25c0aa667d1afcf5f6fa35f0263a82c567",
+  "data_release": "data-v0.1.0",
+  "data_asset": "mobilegym-data-v0.1.0.tar.gz",
+  "data_asset_url": "https://github.com/Purewhiter/mobilegym/releases/download/data-v0.1.0/mobilegym-data-v0.1.0.tar.gz",
+  "data_asset_bytes": 1952615278,
+  "data_asset_sha256": "933a8499c71450f135eda70f9107af72b56b42181fc62de76ed1aa4c513a603c"
+}

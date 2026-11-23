@@ -1,0 +1,18 @@
+--- a/torch_memory_saver/hooks/mode_preload.py
++++ b/torch_memory_saver/hooks/mode_preload.py
+@@ -28,7 +28,14 @@
+ 
+     current_preload = os.environ.get("LD_PRELOAD", "")
+ 
+-    new_preload = f"{lib_path}:{current_preload}" if current_preload else lib_path
++    # A child can already inherit this hook from its parent. Keep one copy
++    # when contexts or process launches are nested, preserving other preloads.
++    lib_realpath = os.path.realpath(lib_path)
++    other_preloads = [
++        path for path in current_preload.split(":")
++        if path and os.path.realpath(path) != lib_realpath
++    ]
++    new_preload = ":".join([lib_path, *other_preloads])
+ 
+     with change_env("LD_PRELOAD", new_preload):
+         yield

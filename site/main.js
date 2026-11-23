@@ -1,4 +1,3 @@
-/* MAI-Gym project page. Plain JS, no dependencies; data comes from assets/data.js. */
 (function () {
   'use strict';
   const D = window.SITE_DATA;
@@ -6,10 +5,9 @@
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const store = {
     get(key, fallback) { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch { return fallback; } },
-    set(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* private mode */ } },
+    set(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch {   } },
   };
 
-  /* ------------------------------------------------------------ header */
   const menu = $('#menu-toggle'), nav = $('#site-nav');
   menu.addEventListener('click', () => {
     const open = nav.classList.toggle('open');
@@ -17,7 +15,6 @@
   });
   nav.addEventListener('click', e => { if (e.target.closest('a')) { nav.classList.remove('open'); menu.setAttribute('aria-expanded', false); } });
 
-  /* ------------------------------------------------------------ zoom dialog */
   const zoomDialog = $('#zoom-dialog');
   function zoom(src, title) {
     $('#zoom-img').src = src;
@@ -32,7 +29,6 @@
     if (z) zoom(z.dataset.zoom, z.dataset.zoomTitle || '');
   });
 
-  /* ------------------------------------------------------------ page chrome */
   const header = $('#site-header');
   const darkSections = [...document.querySelectorAll('.hero, .board-section, .reel-section, .site-footer')];
   let chromeQueued = false;
@@ -42,7 +38,6 @@
     header.classList.toggle('on-dark', !day && darkSections.some(s => { const r = s.getBoundingClientRect(); return r.top <= y && r.bottom >= y; }));
   }
 
-  // Day / night theme. The choice was applied before first paint by the inline script in <head>.
   const themeBtn = $('#theme-toggle');
   function applyTheme(theme) {
     document.documentElement.dataset.theme = theme;
@@ -55,7 +50,7 @@
   }
   themeBtn.addEventListener('click', () => {
     const next = document.documentElement.dataset.theme === 'day' ? 'night' : 'day';
-    try { localStorage.setItem('maigym.theme', next); } catch (e) { /* private mode: the choice lasts this visit */ }
+    try { localStorage.setItem('maigym.theme', next); } catch (e) {   }
     applyTheme(next);
   });
   applyTheme(document.documentElement.dataset.theme === 'day' ? 'day' : 'night');
@@ -80,7 +75,6 @@
   document.querySelectorAll('.reveal').forEach(el => revealer.observe(el));
   if (!reduceMotion) document.querySelectorAll('.hero [data-count]').forEach(countUp);
 
-  /* ------------------------------------------------------------ mock vs real */
   const mockApps = [...D.comparisons, { ...D.mockOnly, mockOnly: true, pairs: D.mockOnly.shots.map(s => ({ screen: s.screen, mock: s.mock, task: s.task })) }];
   const compare = { app: 0, screen: 0, pos: 50 };
   const view = $('#compare-view'), mockList = $('#mock-list'), mockSide = $('#mock-side');
@@ -131,7 +125,6 @@
   });
   renderCompare();
   setPos(50);
-  // A gentle sweep the first time the phone scrolls into view, so the slider reads as interactive.
   if (!reduceMotion) {
     const sweep = new IntersectionObserver(es => {
       if (!es[0].isIntersecting) return;
@@ -146,9 +139,6 @@
     sweep.observe(view);
   }
 
-  /* ------------------------------------------------------------ demo video */
-  // The file is only fetched once someone asks for it: the <video> is preload="none"
-  // and the source is loaded on the first open.
   const vdlg = $('#video-dialog'), vid = $('#demo-video');
   if (vdlg && vid) {
     const openVideo = () => {
@@ -164,10 +154,6 @@
     vdlg.addEventListener('close', () => { vid.pause(); document.body.classList.remove('is-modal-open'); });
   }
 
-  /* ------------------------------------------------------------ cover wall */
-  // A slow wall of the environments the gym actually runs — phones and desktops —
-  // set back in perspective behind the title. Decorative: aria-hidden, and the
-  // animation stops under reduce-motion.
   const wall = $('#cover-wall');
   if (wall && D.apps.length) {
     const DESKS = ['d0', 'd3', 'd4', 'd6', 'd7', 'd9', 'd10', 'd11'];
@@ -179,13 +165,12 @@
       col.className = 'wall-col';
       col.style.setProperty('--d', `${96 + c * 19}s`);
       col.style.setProperty('--o', `${c % 2 ? '-' : ''}${6 + c * 4}%`);
-      // every column mixes both platforms, so the wall reads as mobile + computer
       const tiles = [];
       for (let i = 0; i < 6; i++) {
         tiles.push({ src: phones[(c * 5 + i * 3) % phones.length], kind: 'phone' });
         if (i % 2 === 1) tiles.push({ src: desks[(c * 2 + i) % desks.length], kind: 'desk' });
       }
-      for (let k = 0; k < 2; k++) {          // twice through, so the loop has no seam
+      for (let k = 0; k < 2; k++) {
         tiles.forEach(t => {
           const im = document.createElement('img');
           im.src = t.src;
@@ -200,7 +185,6 @@
     }
   }
 
-  /* ------------------------------------------------------------ reel */
   function reelCard(app) {
     const b = document.createElement('button');
     b.type = 'button';
@@ -216,8 +200,6 @@
       const set = document.createElement('div');
       set.className = 'reel-set';
       apps.forEach(a => set.appendChild(reelCard(a)));
-      // The copy keeps the strip seamless, and the reverse row shows it most of the time,
-      // so it stays clickable: hidden from assistive tech and out of the tab order instead.
       if (k) {
         set.setAttribute('aria-hidden', 'true');
         [...set.children].forEach(b => { b.tabIndex = -1; });
@@ -234,7 +216,6 @@
     if (card) Player.open(card.dataset.app);
   });
 
-  /* ------------------------------------------------------------ app player */
   const Player = (() => {
     const dialog = $('#player-dialog'), frame = $('#player-frame'), tapLayer = $('#tap-layer');
     const cache = {};
@@ -268,7 +249,7 @@
         const t0 = performance.now();
         (function check() {
           let ready = false;
-          try { ready = frame.contentWindow.__ENV_READY__ === true; } catch { /* cross-origin */ }
+          try { ready = frame.contentWindow.__ENV_READY__ === true; } catch {   }
           if (ready || performance.now() - t0 > 8000) resolve(ready);
           else setTimeout(check, 60);
         })();
@@ -321,12 +302,12 @@
         try {
           const st = e.getState();
           $('#meta-steps').textContent = `${st.meta.steps} step${st.meta.steps === 1 ? '' : 's'}${task ? ` / ${task.max_steps} max` : ''}`;
-        } catch { /* app still booting */ }
+        } catch {   }
       }, 400);
     }
 
     const needsAnswer = t => t.goal.some(g => g.source === 'answer');
-    const LEVEL = { L1: 'Easy', L2: 'Medium', L3: 'Hard' };   // the paper's three difficulty levels
+    const LEVEL = { L1: 'Easy', L2: 'Medium', L3: 'Hard' };
 
     function renderActive(verdict) {
       const box = $('#active-task');
@@ -431,7 +412,7 @@
           const input = $('#answer-input');
           if (input) input.value = a.answer;
         }
-        try { env().step(a); } catch { /* keep replaying */ }
+        try { env().step(a); } catch {   }
         await sleep(650);
       }
       if (playing !== token) return;
@@ -474,11 +455,9 @@
     return { open };
   })();
 
-  /* ------------------------------------------------------------ overview */
   $('#overview-img').src = D.figures.overview.src;
   $('#overview-img').dataset.zoom = D.figures.overview.src;
   $('#overview-img').dataset.zoomTitle = 'Overview of MAI-Gym';
-  // The dashboard answers three questions (paper, Dashboard paragraph); parts follow its figure caption.
   const DASH = [
     { key: 'dash_trajectory', label: 'Trajectory', q: 'Where did an attempt go wrong?',
       d: 'Each screenshot lines up with the model\'s output and the action it took, next to the verifier\'s result.',
@@ -509,7 +488,6 @@
   $('#dash-thumbs').addEventListener('click', e => { const b = e.target.closest('[data-k]'); if (b) showDash(b.dataset.k); });
   showDash(DASH[0].key);
 
-  /* ------------------------------------------------------------ citation */
   const bib = $('#citation-code').textContent;
   $('#copy-citation').addEventListener('click', async e => {
     try { await navigator.clipboard.writeText(bib); e.target.textContent = 'Copied'; }
@@ -524,7 +502,6 @@
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   });
 
-  /* ------------------------------------------------------------ deep links */
   function openFromHash() {
     const m = location.hash.match(/^#play\/([\w-]+)(?:\/([\w-]+))?/);
     if (m) Player.open(m[1], m[2]);

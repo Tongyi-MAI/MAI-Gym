@@ -4,30 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Files (mocked GUI env)</title>
-<!--
-  ============================================================================
-  Files — a single-file H5 stock file manager for agent research.
 
-  Same two-block contract as every environment here: script#engine is a pure,
-  DOM-free state machine on globalThis.GUI_ENGINE; script#ui renders its screen
-  tree and exposes window.__ENV__.
-
-  What is new: every size on screen is a roll-up. A folder has no size of its
-  own — it is the sum of everything beneath it, recomputed on every action, so
-  moving one folder subtracts its whole subtree from one ancestor chain and
-  adds it to another.
-
-  And there are two volumes. Moving inside a volume changes nothing at all:
-  the bar does not budge, because the bytes are still on the same disc. Moving
-  across volumes changes both bars. Copying changes only the destination.
-  Deleting is the only thing that reduces the total. That distinction is the
-  environment: internal storage is down to 2.35 GB free, eight gigabytes have
-  to come off it, and the largest single folder is 8.1 GB — ninety-two
-  megabytes short of doing it on its own.
-
-  Sizes are integer megabytes, so every figure is exact.
-  ============================================================================
--->
 <style>
 :root{
   --outer:#e3e6ee;
@@ -301,18 +278,12 @@ body.bare .n-sheet{animation:none}
 <div id="hud" class="off"></div>
 
 <script id="engine">
-/* ===========================================================================
- * ENGINE — pure, deterministic, DOM-free.
- * Sizes are integer megabytes. A folder's size is the sum of its subtree,
- * recomputed on every action; nothing is cached.
- * ======================================================================== */
 (function(root){
 'use strict';
 
 var ENV_ID  = 'harbour_files';
 var VERSION = '1.0.0';
 
-/* ------------------------------------------------------------- utilities */
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function pad2(n){ return (n < 10 ? '0' : '') + n; }
 function hhmm(m){ m = ((m % 1440) + 1440) % 1440; return pad2(Math.floor(m/60)) + ':' + pad2(m%60); }
@@ -351,7 +322,6 @@ function setPath(o, path, value){
   return o;
 }
 
-/* ------------------------------------------- screen-tree node constructors */
 function N(t, o){ o = o || {}; o.t = t; return o; }
 function txt(s, cls){ return N('text', {text:s, cls:cls || ''}); }
 function row(id, text, o){
@@ -376,8 +346,6 @@ function push(st, name, params){ st.ui.stack.push({name:name, params:params || {
 function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
 function toast(st, t){ st.ui.toast = t; }
 
-/* -------------------------------------------------------------- 卷与树
- * 大小一律是整数 MB。文件夹自己没有大小，它的大小是底下所有东西的和。 */
 var VOLS = [
   {id:'vol_int', name:'Internal storage', cap:32768},
   {id:'vol_sd',  name:'SD card',          cap:32768}
@@ -398,7 +366,6 @@ function childrenOf(st, id){
       return a.name < b.name ? -1 : 1;
     });
 }
-/* 递归求和：每一次动作之后重新算，一个都不存 */
 function sizeOf(st, id){
   var n = nodeOf(st, id);
   if (!n) return 0;
@@ -442,7 +409,6 @@ function pathText(st, id){
   return volOf(volumeOfNode(st, id)).name + '/'
          + pathOf(st, id).map(function(n){ return n.name; }).join('/');
 }
-/* 不能把一个目录搬进它自己或它的子孙里 */
 function isInside(st, node, maybeAncestor){
   var n = nodeOf(st, node), guard = 0;
   while (n && guard++ < 40){
@@ -456,7 +422,6 @@ function isLocked(st, id){
   for (var i = 0; i < p.length; i++) if (p[i].locked) return true;
   return false;
 }
-/* 同一个哈希出现在几个地方 = 重复文件 */
 function duplicates(st){
   var byHash = {};
   st.nodes.forEach(function(n){
@@ -474,7 +439,6 @@ function duplicates(st){
   return out;
 }
 function wasted(st){ return sum(duplicates(st).map(function(d){ return d.waste; })); }
-/* 能搬走的东西：不在锁住的目录里，而且是当前卷的直接子项之一 */
 function movable(st, volId){
   return st.nodes.filter(function(n){
     return n.parent === volId && !n.locked;
@@ -501,7 +465,6 @@ function byType(st, volId){
   return out;
 }
 
-/* =========================================================== state */
 function D(id, name, parent, locked){
   return {id:id, name:name, parent:parent, dir:true, size:0, locked:!!locked, kind:'dir'};
 }
@@ -558,7 +521,6 @@ function createInitialState(seed){
     cwd:'vol_int',
     selected:[],
     copies:0, moves:0, deletes:0,
-    /* 种子只打乱「快速入口」的排列 */
     order:shuffled(['d_dcim', 'd_dl', 'd_music', 'd_wa', 'd_doc'], seed),
     ui:{tab:'browse', stack:[{name:'browse', params:{}}], sheet:null, confirm:null,
         inputs:{}, toast:null},
@@ -573,7 +535,6 @@ var SELECT = {
   byType:byType, isLocked:isLocked, mb:mb, vols:VOLS, route:route
 };
 
-/* =========================================================== reducer */
 function reduce(prev, action){
   var st = clone(prev), A = action || {};
   st.ui.toast = null;
@@ -615,7 +576,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- 浏览 ---- */
   case 'CD': {
     st.cwd = A.id;
     st.selected = [];
@@ -633,7 +593,6 @@ function reduce(prev, action){
   }
   case 'CLEAR_SEL': st.selected = []; break;
 
-  /* ---- 移动 / 复制 / 删除 ---- */
   case 'MOVE_TO': {
     if (!st.selected.length) { toast(st, '先选点东西'); break; }
     var dest = A.dest;
@@ -681,7 +640,6 @@ function reduce(prev, action){
       clone2.id = src.id + '_c' + (++n);
       clone2.parent = dest2;
       st.nodes.push(clone2);
-      /* 目录要连着底下的东西一起复制 */
       if (src.dir){
         var stack = [{from:src.id, to:clone2.id}];
         while (stack.length){
@@ -755,7 +713,6 @@ function reduce(prev, action){
   return st;
 }
 
-/* =========================================================== screens */
 function tabbar(st){
   var items = [
     {id:'tab_browse',   text:'Browse',  icon:'folder', tab:'browse'},
@@ -966,11 +923,6 @@ function screen(st){
   return rootNode;
 }
 
-/* =======================================================================
- * TRAVERSAL — element index, GUI action interface, text observation.
- * Identical in every environment here: the screen tree is the only thing
- * that differs, and all three readers below walk that same tree.
- * ==================================================================== */
 var SKIP_KEYS = {act:1, minus:1, plus:1, close:1, yes:1, params:1, meta:1, deps:1};
 
 function labelOf(n){ return n.text || n.title || n.name || n.label || n.main || ''; }
@@ -984,9 +936,6 @@ function collect(n, out){
                                             input:(n.t === 'inputrow')});
   if (n.t === 'mask' && n.close)  out.push({id:n.id, act:n.close, text:'Dismiss overlay', t:'mask'});
   for (var k in n){
-    /* a node may carry extra buttons as a pair of keys: someId holds the
-     * test-id and some holds the action. That is how steppers, sheet close
-     * buttons and per-row buttons all get into the element index. */
     if (k.length > 2 && k.slice(-2) === 'Id' && typeof n[k] === 'string'){
       var sib = n[k.slice(0, -2)];
       if (sib && typeof sib === 'object' && sib.type)
@@ -1039,7 +988,6 @@ function step(st, a){
   }
 }
 
-/* ------------------------------------------------- text observation (a11y) */
 function a11y(st){
   var rootNode = screen(st), lines = [], r = route(st);
   lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
@@ -1104,8 +1052,6 @@ function walkText(n, d, out, st){
     if (v && typeof v === 'object') walkText(v, line !== null ? d+1 : d, out, st);
   }
 }
-/* per-environment nodes: return a string to print, true if already printed,
- * or null to ignore */
 function walkExtra(n, d, out, st){
 
   if (n.t === 'vol'){
@@ -1141,7 +1087,6 @@ function walkExtra(n, d, out, st){
   return null;
 }
 
-/* --------------------------------------------------------- derived view */
 function derive(st){
   var folders = {};
   st.nodes.filter(function(n){ return n.dir; }).forEach(function(n){
@@ -1199,9 +1144,6 @@ root.GUI_ENGINE = ENGINE;
 </script>
 
 <script id="ui">
-/* ===========================================================================
- * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
- * ======================================================================== */
 (function(){
 'use strict';
 var E = window.GUI_ENGINE;

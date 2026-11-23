@@ -4,29 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>计算器 (mocked GUI env)</title>
-<!--
-  ============================================================================
-  Calculator — a single-file H5 stock calculator for agent research.
 
-  Same two-block contract as every environment here: script#engine is a pure,
-  DOM-free state machine on globalThis.GUI_ENGINE; script#ui renders its screen
-  tree and exposes window.__ENV__.
-
-  What is new: the world is a parser. Keys go into a token list, the token
-  list is reduced with real operator precedence, and the number on the display
-  is whatever that reduction produces — there is no stored answer anywhere.
-
-  And it carries the quirk every phone calculator actually has, which is that
-  the percent key does not mean one thing. After + or − it means "that percent
-  of what is on the left", so 50 + 10 % is 55. After × or ÷ it means "divide
-  by a hundred", so 50 × 10 % is 5. Same key, same digits, two different
-  answers, and no way to tell which you are getting except by knowing the rule.
-
-  Everything is IEEE doubles formatted to ten significant figures and then
-  trimmed, which is exactly what the hardware does and is byte-identical in
-  both backends.
-  ============================================================================
--->
 <style>
 :root{
   --outer:#05070a;
@@ -285,18 +263,12 @@ body.bare .n-sheet{animation:none}
 <div id="hud" class="off"></div>
 
 <script id="engine">
-/* ===========================================================================
- * ENGINE — pure, deterministic, DOM-free.
- * 按键进记号表，记号表按真的优先级归约，屏幕上的数就是归约的结果。
- * 百分号的含义取决于它前面挂的是加减还是乘除。
- * ======================================================================== */
 (function(root){
 'use strict';
 
 var ENV_ID  = 'slate_calc';
 var VERSION = '1.0.0';
 
-/* ------------------------------------------------------------- utilities */
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function pad2(n){ return (n < 10 ? '0' : '') + n; }
 function hhmm(m){ m = ((m % 1440) + 1440) % 1440; return pad2(Math.floor(m/60)) + ':' + pad2(m%60); }
@@ -335,7 +307,6 @@ function setPath(o, path, value){
   return o;
 }
 
-/* ------------------------------------------- screen-tree node constructors */
 function N(t, o){ o = o || {}; o.t = t; return o; }
 function txt(s, cls){ return N('text', {text:s, cls:cls || ''}); }
 function row(id, text, o){
@@ -360,9 +331,6 @@ function push(st, name, params){ st.ui.stack.push({name:name, params:params || {
 function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
 function toast(st, t){ st.ui.toast = t; }
 
-/* ------------------------------------------------------------ 显示与格式
- * 内部是 IEEE double，显示按十位有效数字截断再去掉尾零——手机计算器就是这么干的，
- * 而且两个后端跑出来逐字节相同。 */
 function fmt(x){
   if (typeof x !== 'number' || x !== x) return 'Not a number';
   if (!isFinite(x)) return x > 0 ? 'Infinity' : '-Infinity';
@@ -391,8 +359,6 @@ function group(s){
   return (neg ? '-' : '') + out + tail;
 }
 
-/* ------------------------------------------------------------ 求值
- * 真的按优先级来：先把 × ÷ 归约掉，再算 + −。 */
 var PREC = {'+':1, '-':1, '×':2, '÷':2};
 function apply(a, op, b){
   if (op === '+') return a + b;
@@ -418,7 +384,6 @@ function evaluate(tokens){
   }
   return nums[0];
 }
-/* 百分号要看它前面挂的是哪个运算符：加减是「左边的百分之几」，乘除只是除以一百 */
 function leftOfLastOp(tokens){
   if (tokens.length < 2) return 0;
   return evaluate(tokens.slice(0, tokens.length - 1));
@@ -441,7 +406,6 @@ function displayValue(st){
 }
 function displayText(st){ return group(displayValue(st)); }
 
-/* ------------------------------------------------------------ 单位换算 */
 function U(id, name, f, note){ return {id:id, name:name, f:f, note:note || ''}; }
 var CATS = [
   {id:'len', name:'长度 Length', base:'米', units:[
@@ -490,21 +454,19 @@ function convertAll(st){
   });
 }
 
-/* =========================================================== state */
 function createInitialState(seed){
   seed = seed || 0;
   return {
     meta:{env:ENV_ID, version:VERSION, seed:seed, steps:0, finished:false, answer:null},
-    tokens:[],            /* 已经确定的记号：数字和运算符交替 */
-    entry:'',             /* 正在输入的那个数；null 表示屏幕上是个结果 */
-    shown:0,              /* entry 为 null 时屏幕上的值 */
-    lastOp:null,          /* 连按等号用 */
+    tokens:[],
+    entry:'',
+    shown:0,
+    lastOp:null,
     lastArg:0,
     memory:0,
     history:[],
     error:null,
     conv:{cat:'len', unit:'m', value:1},
-    /* 种子只打乱换算里几个常用起点的排列 */
     order:shuffled(['len', 'mass', 'data', 'temp'], seed),
     ui:{tab:'calc', stack:[{name:'calc', params:{}}], sheet:null, confirm:null, inputs:{},
         toast:null},
@@ -517,7 +479,6 @@ var SELECT = {
   toBase:toBase, fromBase:fromBase, cats:CATS, route:route
 };
 
-/* =========================================================== reducer */
 function reduce(prev, action){
   var st = clone(prev), A = action || {};
   st.ui.toast = null;
@@ -564,7 +525,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- 键盘 ---- */
   case 'DIGIT': {
     if (st.error){ st.error = null; st.tokens = []; st.shown = 0; st.entry = ''; }
     if (st.entry === null){ st.entry = ''; if (!st.tokens.length) st.shown = 0; }
@@ -601,7 +561,6 @@ function reduce(prev, action){
   case 'OP': {
     if (st.error) break;
     commitEntry(st);
-    /* 连着按两个运算符：后一个换掉前一个 */
     if (st.tokens.length && typeof st.tokens[st.tokens.length - 1] === 'string')
       st.tokens[st.tokens.length - 1] = A.op;
     else st.tokens.push(A.op);
@@ -633,7 +592,6 @@ function reduce(prev, action){
   case 'EQ': {
     if (st.error) break;
     if (st.entry === null && st.lastOp && !st.tokens.length){
-      /* 连按等号：把上一次的运算再来一遍 */
       var before = st.shown;
       st.shown = apply(st.shown, st.lastOp, st.lastArg);
       push_history(st, group(fmt(before)) + ' ' + st.lastOp + ' ' + group(fmt(st.lastArg)),
@@ -644,7 +602,6 @@ function reduce(prev, action){
     commitEntry(st);
     if (st.tokens.length && typeof st.tokens[st.tokens.length - 1] === 'string')
       st.tokens.pop();
-    /* 记住最后一次运算，供连按等号用 */
     if (st.tokens.length >= 3){
       st.lastOp = st.tokens[st.tokens.length - 2];
       st.lastArg = st.tokens[st.tokens.length - 1];
@@ -661,7 +618,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- 内存 ---- */
   case 'MEM': {
     var cur = st.entry !== null ? entryValue(st) : st.shown;
     if (A.k === 'c'){ st.memory = 0; toast(st, '内存已清空'); }
@@ -676,7 +632,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- 纸带 ---- */
   case 'TAPE_USE': {
     var h = st.history[A.i];
     if (!h) break;
@@ -691,7 +646,6 @@ function reduce(prev, action){
     break;
   case 'TAPE_CLEAR_YES': st.history = []; toast(st, '历史已清空'); break;
 
-  /* ---- 换算 ---- */
   case 'CONV_CAT': {
     st.conv.cat = A.id;
     st.conv.unit = catOf(A.id).units[0].id;
@@ -732,7 +686,6 @@ function reduce(prev, action){
   return st;
 }
 
-/* =========================================================== screens */
 function tabbar(st){
   var items = [
     {id:'tab_calc',     text:'计算', icon:'calc',   tab:'calc'},
@@ -920,11 +873,6 @@ function screen(st){
   return rootNode;
 }
 
-/* =======================================================================
- * TRAVERSAL — element index, GUI action interface, text observation.
- * Identical in every environment here: the screen tree is the only thing
- * that differs, and all three readers below walk that same tree.
- * ==================================================================== */
 var SKIP_KEYS = {act:1, minus:1, plus:1, close:1, yes:1, params:1, meta:1, tokens:1, units:1, deps:1};
 
 function labelOf(n){ return n.text || n.title || n.name || n.label || n.main || ''; }
@@ -938,9 +886,6 @@ function collect(n, out){
                                             input:(n.t === 'inputrow')});
   if (n.t === 'mask' && n.close)  out.push({id:n.id, act:n.close, text:'Dismiss overlay', t:'mask'});
   for (var k in n){
-    /* a node may carry extra buttons as a pair of keys: someId holds the
-     * test-id and some holds the action. That is how steppers, sheet close
-     * buttons and per-row buttons all get into the element index. */
     if (k.length > 2 && k.slice(-2) === 'Id' && typeof n[k] === 'string'){
       var sib = n[k.slice(0, -2)];
       if (sib && typeof sib === 'object' && sib.type)
@@ -993,7 +938,6 @@ function step(st, a){
   }
 }
 
-/* ------------------------------------------------- text observation (a11y) */
 function a11y(st){
   var rootNode = screen(st), lines = [], r = route(st);
   lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
@@ -1058,8 +1002,6 @@ function walkText(n, d, out, st){
     if (v && typeof v === 'object') walkText(v, line !== null ? d+1 : d, out, st);
   }
 }
-/* per-environment nodes: return a string to print, true if already printed,
- * or null to ignore */
 function walkExtra(n, d, out, st){
 
   if (n.t === 'disp'){
@@ -1101,7 +1043,6 @@ function walkExtra(n, d, out, st){
   return null;
 }
 
-/* --------------------------------------------------------- derived view */
 function derive(st){
   var conv = {};
   convertAll(st).forEach(function(r){ conv[r.id] = fmt(r.v); });
@@ -1151,9 +1092,6 @@ root.GUI_ENGINE = ENGINE;
 </script>
 
 <script id="ui">
-/* ===========================================================================
- * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
- * ======================================================================== */
 (function(){
 'use strict';
 var E = window.GUI_ENGINE;

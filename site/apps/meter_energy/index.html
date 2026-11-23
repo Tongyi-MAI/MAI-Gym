@@ -4,32 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>抄表 (mocked GUI env)</title>
-<!--
-  ============================================================================
-  抄表 Meter — a single-file H5 utility app for agent research.
 
-  Same two-block contract as every environment here: script#engine is a pure,
-  DOM-free state machine on globalThis.GUI_ENGINE; script#ui renders its screen
-  tree and exposes window.__ENV__.
-
-  What is new: nothing is entered as a quantity. You type meter readings, and
-  every number the app shows is a difference — this month's reading minus last
-  month's — run through a tariff that is not a rate but a staircase, and not a
-  monthly staircase either. The electricity tier is decided by the running
-  total for the year, so a month that starts in the first band can finish in
-  the second, and that month's units are billed at two different prices.
-
-  The seeded year sits 140 units below the first boundary, so almost any real
-  month crosses it. On top of that sits a peak/off-peak option that adds to
-  every peak unit and takes the same off every off-peak one, which is worth
-  taking exactly when more than half your use is off-peak — and here it is
-  not. The prepaid balance then decides whether that choice costs you a
-  top-up, and top-ups only come in fifties.
-
-  Readings are integers, rates are integers in ten-thousandths of a yuan, and
-  money is integer fen, so every figure is exact.
-  ============================================================================
--->
 <style>
 :root{
   --outer:#e3e6ee;
@@ -312,18 +287,12 @@ body.bare .n-sheet{animation:none}
 <div id="hud" class="off"></div>
 
 <script id="engine">
-/* ===========================================================================
- * ENGINE — pure, deterministic, DOM-free.
- * 读数和用量是整数，单价是整数（万分之一元），钱是整数分。
- * 电的阶梯按年度累计走，所以一个月可能跨两个价。
- * ======================================================================== */
 (function(root){
 'use strict';
 
 var ENV_ID  = 'meter_energy';
 var VERSION = '1.0.0';
 
-/* ------------------------------------------------------------- utilities */
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function pad2(n){ return (n < 10 ? '0' : '') + n; }
 function hhmm(m){ m = ((m % 1440) + 1440) % 1440; return pad2(Math.floor(m/60)) + ':' + pad2(m%60); }
@@ -362,7 +331,6 @@ function setPath(o, path, value){
   return o;
 }
 
-/* ------------------------------------------- screen-tree node constructors */
 function N(t, o){ o = o || {}; o.t = t; return o; }
 function txt(s, cls){ return N('text', {text:s, cls:cls || ''}); }
 function row(id, text, o){
@@ -387,14 +355,12 @@ function push(st, name, params){ st.ui.stack.push({name:name, params:params || {
 function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
 function toast(st, t){ st.ui.toast = t; }
 
-/* ------------------------------------------------------------- 费率
- * 单价单位是「万分之一元」，读数和用量都是整数，所以一分钱都不会飘 */
 var ELEC_TIERS = [
   {upto:2520,     rate:5583, name:'第一档'},
   {upto:4800,     rate:6083, name:'第二档'},
   {upto:Infinity, rate:8583, name:'第三档'}
 ];
-var PEAK_ADJ = 3000;               /* 峰时每度加 0.30 元，谷时每度减 0.30 元 */
+var PEAK_ADJ = 3000;
 var WATER_TIERS = [
   {upto:17,       rate:28000, name:'第一档'},
   {upto:27,       rate:37000, name:'第二档'},
@@ -414,7 +380,6 @@ var METERS = [
 function meterOf(id){ for (var i=0;i<METERS.length;i++) if (METERS[i].id === id) return METERS[i]; return null; }
 function fieldKey(m, f){ return m + '_' + f; }
 
-/* 阶梯是按「一段一段吃掉」算的，起点是年度累计 */
 function tierSplit(tiers, before, used){
   var out = [], from = before, left = used;
   for (var i = 0; i < tiers.length && left > 0; i++){
@@ -457,7 +422,6 @@ function allRead(st){
   return ok;
 }
 
-/* ------------------------------------------------------------- 账单 */
 function elecBill(st){
   var used = elecUsed(st);
   if (used === null) return null;
@@ -478,7 +442,6 @@ function gasBill(st){
   if (used === null) return null;
   return {used:used, total:used * GAS_RATE};
 }
-/* 万分之一元 -> 分，四舍五入到分 */
 function toFen(w){ return Math.round(w / 100); }
 function billTotal(st){
   var e = elecBill(st), w = waterBill(st), g = gasBill(st);
@@ -501,7 +464,6 @@ function yuan(fen){
   return (neg ? '-' : '') + '¥' + g + '.' + (c < 10 ? '0' : '') + c;
 }
 function priceText(w){ return (w / 10000).toFixed(4) + ' 元'; }
-/* 读数合法性 */
 function checkReading(m, f, v){
   if (v === null) return '还没抄';
   var last = lastOf(m, f);
@@ -514,16 +476,14 @@ var HISTORY = [
   {m:'5月', e:228}, {m:'6月', e:290}, {m:'7月', e:268}, {m:'8月', e:247}
 ];
 
-/* =========================================================== state */
 function createInitialState(seed){
   seed = seed || 0;
   return {
     meta:{env:ENV_ID, version:VERSION, seed:seed, steps:0, finished:false, answer:null},
-    readings:{},              /* 'm_elec_peak' -> 整数读数 */
-    yearToDate:2380,          /* 今年到上月为止的用电量，离第一档上限只剩 140 度 */
-    balance:25000,            /* 预存余额 250.00 元 */
+    readings:{},
+    yearToDate:2380,
+    balance:25000,
     toppedUp:0,
-    /* 种子只打乱表的排列顺序 */
     order:shuffled(METERS.map(function(m){ return m.id; }), seed),
     ui:{tab:'read', stack:[{name:'read', params:{}}], sheet:null, confirm:null,
         inputs:{}, toast:null},
@@ -539,7 +499,6 @@ var SELECT = {
   history:HISTORY, route:route
 };
 
-/* =========================================================== reducer */
 function reduce(prev, action){
   var st = clone(prev), A = action || {};
   st.ui.toast = null;
@@ -575,7 +534,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- 抄表 ---- */
   case 'SET_INPUT': {
     st.ui.inputs[A.field] = A.value;
     if (A.meter){
@@ -615,7 +573,6 @@ function reduce(prev, action){
     toast(st, '读数已清空');
     break;
 
-  /* ---- 充值 ---- */
   case 'TOPUP': {
     if (TOPUPS.indexOf(A.n) < 0) break;
     st.balance += A.n;
@@ -642,7 +599,6 @@ function reduce(prev, action){
   return st;
 }
 
-/* =========================================================== screens */
 function tabbar(st){
   var items = [
     {id:'tab_read',     text:'抄表', icon:'edit',  tab:'read'},
@@ -902,11 +858,6 @@ function screen(st){
   return rootNode;
 }
 
-/* =======================================================================
- * TRAVERSAL — element index, GUI action interface, text observation.
- * Identical in every environment here: the screen tree is the only thing
- * that differs, and all three readers below walk that same tree.
- * ==================================================================== */
 var SKIP_KEYS = {act:1, minus:1, plus:1, close:1, yes:1, params:1, meta:1, split:1, segs:1, bars:1, grid:1, fields:1, deps:1};
 
 function labelOf(n){ return n.text || n.title || n.name || n.label || n.main || ''; }
@@ -920,9 +871,6 @@ function collect(n, out){
                                             input:(n.t === 'inputrow')});
   if (n.t === 'mask' && n.close)  out.push({id:n.id, act:n.close, text:'Dismiss overlay', t:'mask'});
   for (var k in n){
-    /* a node may carry extra buttons as a pair of keys: someId holds the
-     * test-id and some holds the action. That is how steppers, sheet close
-     * buttons and per-row buttons all get into the element index. */
     if (k.length > 2 && k.slice(-2) === 'Id' && typeof n[k] === 'string'){
       var sib = n[k.slice(0, -2)];
       if (sib && typeof sib === 'object' && sib.type)
@@ -975,7 +923,6 @@ function step(st, a){
   }
 }
 
-/* ------------------------------------------------- text observation (a11y) */
 function a11y(st){
   var rootNode = screen(st), lines = [], r = route(st);
   lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
@@ -1040,8 +987,6 @@ function walkText(n, d, out, st){
     if (v && typeof v === 'object') walkText(v, line !== null ? d+1 : d, out, st);
   }
 }
-/* per-environment nodes: return a string to print, true if already printed,
- * or null to ignore */
 function walkExtra(n, d, out, st){
 
   if (n.t === 'big'){
@@ -1080,7 +1025,6 @@ function walkExtra(n, d, out, st){
   return null;
 }
 
-/* --------------------------------------------------------- derived view */
 function derive(st){
   var e = elecBill(st), w = waterBill(st), g = gasBill(st);
   var reads = {};
@@ -1141,9 +1085,6 @@ root.GUI_ENGINE = ENGINE;
 </script>
 
 <script id="ui">
-/* ===========================================================================
- * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
- * ======================================================================== */
 (function(){
 'use strict';
 var E = window.GUI_ENGINE;

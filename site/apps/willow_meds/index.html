@@ -4,25 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Willow (mocked GUI env)</title>
-<!--
-  ============================================================================
-  Willow — a single-file H5 medicine tracker for agent research.
 
-  Same two-block contract as every environment here: script#engine is a pure,
-  DOM-free state machine on globalThis.GUI_ENGINE; script#ui renders its screen
-  tree and exposes window.__ENV__.
-
-  What is new: subtraction with consequences. Each medicine has a number of
-  tablets left and a schedule, and those two facts produce a third — how many
-  days before it runs out. Marking a dose taken takes a tablet off the count
-  and moves that date closer; skipping one leaves the count alone and dents the
-  adherence figure instead. Ordering a repeat adds a whole pack. Nothing here
-  is a stored 'days left' field: it is the division, every time.
-
-  Six medicines are seeded at deliberately different depths, so 'which one runs
-  out first' has an answer you have to work out rather than read.
-  ============================================================================
--->
 <style>
 :root{
   --outer:#e3e6ee;
@@ -277,18 +259,12 @@ body.bare .n-sheet{animation:none}
 <div id="hud" class="off"></div>
 
 <script id="engine">
-/* ===========================================================================
- * ENGINE — pure, deterministic, DOM-free.
- * Days left is not stored. It is the tablets left divided by the daily
- * dose, rounded down, recomputed after every action that touches either.
- * ======================================================================== */
 (function(root){
 'use strict';
 
 var ENV_ID  = 'willow_meds';
 var VERSION = '1.0.0';
 
-/* ------------------------------------------------------------- utilities */
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function pad2(n){ return (n < 10 ? '0' : '') + n; }
 function hhmm(m){ m = ((m % 1440) + 1440) % 1440; return pad2(Math.floor(m/60)) + ':' + pad2(m%60); }
@@ -327,7 +303,6 @@ function setPath(o, path, value){
   return o;
 }
 
-/* ------------------------------------------- screen-tree node constructors */
 function N(t, o){ o = o || {}; o.t = t; return o; }
 function txt(s, cls){ return N('text', {text:s, cls:cls || ''}); }
 function row(id, text, o){
@@ -353,7 +328,7 @@ function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
 function toast(st, t){ st.ui.toast = t; }
 
 var TODAY = 'Tuesday';
-var NOW = 495;                       /* 08:15 */
+var NOW = 495;
 
 var SLOTS = [
   {id:'morning', label:'Morning', at:480, icon:'sun'},
@@ -384,7 +359,6 @@ function medOf(st, id){ for (var i=0;i<st.meds.length;i++) if (st.meds[i].id ===
 function scheduled(st){ return st.meds.filter(function(m){ return m.times.length > 0; }); }
 function asNeeded(st){ return st.meds.filter(function(m){ return m.times.length === 0; }); }
 
-/* the three numbers the whole app hangs on */
 function dailyDose(m){ return m.times.length * m.perDose; }
 function daysLeft(m){
   var d = dailyDose(m);
@@ -441,7 +415,6 @@ function adherence(st){
   hist.forEach(function(h){ t += h.taken; d += h.due; });
   return d ? Math.round(t * 100 / d) : 0;
 }
-/* one seeded interaction, so 'read the warning' is a real task */
 var CAUTIONS = [
   {a:'m_levo', b:'m_vitd',
    text:'Leave four hours between Levothyroxine and Vitamin D. Taken together, less of the '
@@ -457,13 +430,11 @@ function cautionClash(st, slotId){
   return CAUTIONS.filter(function(c){ return due.indexOf(c.a) >= 0 && due.indexOf(c.b) >= 0; });
 }
 
-/* =========================================================== state */
 function createInitialState(seed){
   seed = seed || 0;
   return {
     meta:{env:ENV_ID, version:VERSION, seed:seed, steps:0, finished:false, answer:null,
           today:TODAY, now:NOW},
-    /* the seed permutes the order the cabinet is listed in */
     meds:shuffled(clone(MEDS0), seed),
     today:{},
     history:[{day:'Wednesday', taken:5, due:5}, {day:'Thursday', taken:4, due:5},
@@ -482,7 +453,6 @@ var SELECT = {
   cautionClash:cautionClash, slotOf:slotOf, route:route
 };
 
-/* =========================================================== reducer */
 function setMark(st, medId, slotId, value){
   if (!st.today[medId]) st.today[medId] = {};
   st.today[medId][slotId] = value;
@@ -523,7 +493,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- doses ---- */
   case 'TAKE': {
     var m = medOf(st, A.id);
     if (!m) break;
@@ -572,7 +541,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- stock ---- */
   case 'ORDER': {
     var m5 = medOf(st, A.id);
     if (!m5) break;
@@ -610,7 +578,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- the schedule ---- */
   case 'TOGGLE_TIME': {
     var m7 = medOf(st, A.id);
     if (!m7) break;
@@ -626,7 +593,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- settings ---- */
   case 'SET_WARN': st.settings.warnDays = clamp(st.settings.warnDays + A.delta, 3, 30); break;
   case 'SET_TOGGLE': st.settings[A.key] = !st.settings[A.key]; break;
 
@@ -635,7 +601,6 @@ function reduce(prev, action){
   return st;
 }
 
-/* =========================================================== screens */
 function tabbar(st){
   var items = [
     {id:'tab_today',   text:'Today',   icon:'check',  tab:'today'},
@@ -674,8 +639,6 @@ function scrToday(st){
       takeAllId:'take_all_' + s.id, takeAll:{type:'TAKE_SLOT', slot:s.id},
       c:due.map(function(m){
         var mark = markOf(st, m.id, s.id);
-        /* only the buttons that are actually drawn go on the node, or the
-         * headless index would offer a button the screen does not have */
         var node = {id:'dose_' + m.id + '_' + s.id, name:m.name + ' ' + m.strength,
           sub:mark === 'taken' ? 'taken · ' + m.stock + ' left'
              : (mark === 'skipped' ? 'skipped · ' + m.stock + ' left'
@@ -881,11 +844,6 @@ function screen(st){
   return rootNode;
 }
 
-/* =======================================================================
- * TRAVERSAL — element index, GUI action interface, text observation.
- * Identical in every environment here: the screen tree is the only thing
- * that differs, and all three readers below walk that same tree.
- * ==================================================================== */
 var SKIP_KEYS = {act:1, minus:1, plus:1, close:1, yes:1, params:1, meta:1, take:1, skip:1, undo:1, takeAll:1, days:1, times:1};
 
 function labelOf(n){ return n.text || n.title || n.name || n.label || n.main || ''; }
@@ -899,9 +857,6 @@ function collect(n, out){
                                             input:(n.t === 'inputrow')});
   if (n.t === 'mask' && n.close)  out.push({id:n.id, act:n.close, text:'Dismiss overlay', t:'mask'});
   for (var k in n){
-    /* a node may carry extra buttons as a pair of keys: someId holds the
-     * test-id and some holds the action. That is how steppers, sheet close
-     * buttons and per-row buttons all get into the element index. */
     if (k.length > 2 && k.slice(-2) === 'Id' && typeof n[k] === 'string'){
       var sib = n[k.slice(0, -2)];
       if (sib && typeof sib === 'object' && sib.type)
@@ -954,7 +909,6 @@ function step(st, a){
   }
 }
 
-/* ------------------------------------------------- text observation (a11y) */
 function a11y(st){
   var rootNode = screen(st), lines = [], r = route(st);
   lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
@@ -1022,8 +976,6 @@ function walkText(n, d, out, st){
     if (v && typeof v === 'object') walkText(v, line !== null ? d+1 : d, out, st);
   }
 }
-/* per-environment nodes: return a string to print, true if already printed,
- * or null to ignore */
 function walkExtra(n, d, out, st){
 
   if (n.t === 'slot'){
@@ -1047,7 +999,6 @@ function walkExtra(n, d, out, st){
   return null;
 }
 
-/* --------------------------------------------------------- derived view */
 function derive(st){
   var stock = {}, days = {}, times = {}, ordered = {};
   st.meds.forEach(function(m){
@@ -1107,9 +1058,6 @@ root.GUI_ENGINE = ENGINE;
 </script>
 
 <script id="ui">
-/* ===========================================================================
- * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
- * ======================================================================== */
 (function(){
 'use strict';
 var E = window.GUI_ENGINE;

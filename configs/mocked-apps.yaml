@@ -1,0 +1,23 @@
+benchmarks:
+  mocked-apps:
+    tasks: [kestrel_bank/T01_freeze]
+    num_envs: 1
+
+devices:
+  - name: mocked-apps
+    env_type: mocked-apps
+    device_type: web
+    infra_type: local
+    max_sessions: 1
+    sessions_per_backend: 1
+    launch:
+      port: 6811
+      command: >-
+        exec python -m mai_gym.envs.webenv --host 127.0.0.1 --port {port}
+        --static-dir resources/novel-apps --task-suites-dir resources/novel-apps
+        --entry-page kestrel_bank/index.html?bare=1
+        --viewport-width 390 --viewport-height 844 --device-scale-factor 1
+
+manager:
+  host: 127.0.0.1
+  port: 8092

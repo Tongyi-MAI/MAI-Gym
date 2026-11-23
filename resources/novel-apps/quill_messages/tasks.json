@@ -1,0 +1,949 @@
+{
+  "env": "quill_messages",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_settings",
+      "name": "两个开关",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "settings"
+      ],
+      "instruction": "在设置里关掉「显示分段面板」和「送达报告」。「拦截未知号码」别动。",
+      "goal": [
+        {
+          "name": "分段面板关了",
+          "path": "derived.settings.showSegments",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "送达报告关了",
+          "path": "derived.settings.deliveryReport",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "拦截未知号码没动",
+          "path": "derived.settings.blockUnknown",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "一条都没发",
+          "path": "derived.usedSegments",
+          "op": "eq",
+          "value": 198
+        }
+      ]
+    },
+    {
+      "id": "T02_plan",
+      "name": "问一句：套餐用了多少",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "这个月短信套餐已用了多少段，套餐总额度是多少段？ 请按提问顺序只回答数值，用分号分隔。",
+      "goal": [
+        {
+          "name": "一条都没发",
+          "path": "derived.usedSegments",
+          "op": "eq",
+          "value": 198
+        },
+        {
+          "name": "All requested quantities",
+          "source": "answer",
+          "op": "eq",
+          "value": [
+            198,
+            200
+          ],
+          "extract": "numbers"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T03_unread",
+      "name": "问一句：几条未读",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "现在有几条未读短信？ 只回答所问的数值，不要列出其它数字。",
+      "goal": [
+        {
+          "name": "还没点开",
+          "path": "derived.unread",
+          "op": "eq",
+          "value": 3
+        },
+        {
+          "name": "Requested numeric answer",
+          "source": "answer",
+          "op": "eq",
+          "value": 3,
+          "extract": "single_number"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T04_draft",
+      "name": "问一句：草稿多少段",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "query",
+        "navigate"
+      ],
+      "instruction": "打开王倩那条会话，里面存着一条草稿。它现在是几段？用的什么编码？多少个字符？",
+      "goal": [
+        {
+          "name": "打开了王倩",
+          "path": "derived.routeId",
+          "op": "eq",
+          "value": "t_wang"
+        },
+        {
+          "name": "1 段",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![\\d-])1(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "GSM-7",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?i)GSM",
+          "weight": 3
+        },
+        {
+          "name": "148 个字符",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![\\d.,+-])148(?:[.,]0+)?(?!\\d|[.,]\\d)",
+          "weight": 3
+        },
+        {
+          "name": "草稿没改",
+          "path": "derived.draftSegments.王倩",
+          "op": "eq",
+          "value": 1
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T05_blocked",
+      "name": "问一句：谁被拦了",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "拦截名单里是哪个号码？请给出完整号码。",
+      "goal": [
+        {
+          "name": "没有改拦截",
+          "path": "derived.blockedCount",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "Answer matches requested facts",
+          "source": "answer",
+          "op": "regex",
+          "value": "^\\s*400\\s*8888\\s*6666\\s*$"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T06_blocked_send",
+      "name": "给被拦的号码发短信",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "refusal"
+      ],
+      "instruction": "打开 400 8888 6666 那条会话，随便写点什么试着发出去，把应用的说法讲给我听。",
+      "goal": [
+        {
+          "name": "一条都没发出去",
+          "path": "derived.usedSegments",
+          "op": "eq",
+          "value": 198
+        },
+        {
+          "name": "它还是被拦着的",
+          "path": "derived.blockedCount",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "在拦截名单里发不出去",
+          "source": "answer",
+          "op": "regex",
+          "value": "(拦截|发不出|不能|黑名单)",
+          "weight": 3
+        },
+        {
+          "name": "Required: accepted_events[?action.action=tap][?action.id=send_now]",
+          "source": "trajectory",
+          "path": "accepted_events[?action.action=tap][?action.id=send_now]",
+          "op": "len_gte",
+          "value": 1
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T07_one_char",
+      "name": "加一个汉字试试",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "encoding"
+      ],
+      "instruction": "在王倩的草稿后面加一个「谢」字，然后告诉我段数、编码和要多花多少钱。",
+      "goal": [
+        {
+          "name": "现在是 3 段",
+          "path": "derived.draftSegments.王倩",
+          "op": "eq",
+          "value": 3
+        },
+        {
+          "name": "转成了 UCS-2",
+          "path": "derived.draftEncoding.王倩",
+          "op": "eq",
+          "value": "UCS-2"
+        },
+        {
+          "name": "要多花一毛五",
+          "path": "derived.currentCostFen",
+          "op": "eq",
+          "value": 15
+        },
+        {
+          "name": "3 段",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![\\d.,+-])3(?:[.,]0+)?(?!\\d|[.,]\\d)",
+          "weight": 3
+        },
+        {
+          "name": "UCS-2",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?i)UCS",
+          "weight": 3
+        },
+        {
+          "name": "多花 0.15 元",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![\\d.,+-])(?:0?[.,]15)(?!\\d|[.,]\\d)",
+          "weight": 3
+        },
+        {
+          "name": "derived.drafts.王倩",
+          "path": "derived.drafts.王倩",
+          "op": "eq",
+          "value": "Flight CA1837 dep PVG 08:25 arr PEK 11:05 gate C21 seat 32A conf ABCDEF. Car will meet you at door 3. Call me when you land, I will be up late tonig谢"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T08_undo_char",
+      "name": "加错了再改回来",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 22,
+      "tags": [
+        "encoding",
+        "undo"
+      ],
+      "instruction": "先在王倩的草稿后面加一个「谢」字，看它变成三段；把这个字删掉；再改成加一个句点。最后草稿应该还是一段。",
+      "goal": [
+        {
+          "name": "回到 1 段",
+          "path": "derived.draftSegments.王倩",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "回到 GSM-7",
+          "path": "derived.draftEncoding.王倩",
+          "op": "eq",
+          "value": "GSM-7"
+        },
+        {
+          "name": "变成 149 个字符",
+          "path": "derived.draftLength.王倩",
+          "op": "eq",
+          "value": 149
+        },
+        {
+          "name": "汉字已经不在了",
+          "path": "derived.drafts.王倩",
+          "op": "not_contains",
+          "value": "谢"
+        },
+        {
+          "name": "没发出去",
+          "path": "derived.usedSegments",
+          "op": "eq",
+          "value": 198
+        },
+        {
+          "name": "derived.drafts.王倩",
+          "path": "derived.drafts.王倩",
+          "op": "eq",
+          "value": "Flight CA1837 dep PVG 08:25 arr PEK 11:05 gate C21 seat 32A conf ABCDEF. Car will meet you at door 3. Call me when you land, I will be up late tonig."
+        }
+      ]
+    },
+    {
+      "id": "T09_english",
+      "name": "改用英文道谢",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "encoding"
+      ],
+      "instruction": "在王倩的草稿后面加上「 Thanks」（一个空格和六个英文字母），然后说说段数变了没有。",
+      "goal": [
+        {
+          "name": "还是 1 段",
+          "path": "derived.draftSegments.王倩",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "还是 GSM-7",
+          "path": "derived.draftEncoding.王倩",
+          "op": "eq",
+          "value": "GSM-7"
+        },
+        {
+          "name": "变成 155 个字符",
+          "path": "derived.draftLength.王倩",
+          "op": "eq",
+          "value": 155
+        },
+        {
+          "name": "还是 1 段",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![\\d-])1(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "没多花钱",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:(没|不|零|0))(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "derived.drafts.王倩",
+          "path": "derived.drafts.王倩",
+          "op": "eq",
+          "value": "Flight CA1837 dep PVG 08:25 arr PEK 11:05 gate C21 seat 32A conf ABCDEF. Car will meet you at door 3. Call me when you land, I will be up late tonig Thanks"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T10_emoji",
+      "name": "加一个表情",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "encoding"
+      ],
+      "instruction": "在王倩的草稿后面加一个👍，说说它算几个字符、整条变成几段。",
+      "goal": [
+        {
+          "name": "变成 3 段",
+          "path": "derived.draftSegments.王倩",
+          "op": "eq",
+          "value": 3
+        },
+        {
+          "name": "字符数是 150",
+          "path": "derived.draftLength.王倩",
+          "op": "eq",
+          "value": 150
+        },
+        {
+          "name": "表情算两个",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?:两|二|(?<![\\d.+-])2(?!\\d|[.,]\\d))\\s*(?:个)?\\s*(?:UTF-16\\s*)?(?:码元|code units|字符)",
+          "weight": 3
+        },
+        {
+          "name": "3 段",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![\\d.,+-])3(?:[.,]0+)?(?!\\d|[.,]\\d)",
+          "weight": 3
+        },
+        {
+          "name": "derived.drafts.王倩",
+          "path": "derived.drafts.王倩",
+          "op": "eq",
+          "value": "Flight CA1837 dep PVG 08:25 arr PEK 11:05 gate C21 seat 32A conf ABCDEF. Car will meet you at door 3. Call me when you land, I will be up late tonig👍"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T11_tidy_up",
+      "name": "收拾一下收件箱",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "multi-step"
+      ],
+      "instruction": "把所有会话都标成已读，再把 400 8888 6666 从拦截名单里放出来。",
+      "goal": [
+        {
+          "name": "没有未读了",
+          "path": "derived.unread",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "拦截名单空了",
+          "path": "derived.blockedCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "一条都没发",
+          "path": "derived.usedSegments",
+          "op": "eq",
+          "value": 198
+        },
+        {
+          "name": "草稿没动",
+          "path": "derived.draftSegments.王倩",
+          "op": "eq",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "T12_scheduled",
+      "name": "问一句：定时的那两条",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "query",
+        "arithmetic"
+      ],
+      "instruction": "两条定时短信合计多少段？都发出后本月累计会用多少段？先不要发送。 请按提问顺序只回答数值，用分号分隔。",
+      "goal": [
+        {
+          "name": "还没发",
+          "path": "derived.usedSegments",
+          "op": "eq",
+          "value": 198
+        },
+        {
+          "name": "还是两条排着",
+          "path": "derived.scheduledCount",
+          "op": "eq",
+          "value": 2
+        },
+        {
+          "name": "All requested quantities",
+          "source": "answer",
+          "op": "eq",
+          "value": [
+            2,
+            200
+          ],
+          "extract": "numbers"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T13_schedule",
+      "name": "把草稿定到明早发",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "schedule"
+      ],
+      "instruction": "把王倩那条草稿定到明早 07:30 再发，别现在发。",
+      "goal": [
+        {
+          "name": "排队的变成三条",
+          "path": "derived.scheduledCount",
+          "op": "eq",
+          "value": 3
+        },
+        {
+          "name": "草稿被拿走了",
+          "path": "derived.draftSegments.王倩",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "还是没扣段数",
+          "path": "derived.usedSegments",
+          "op": "eq",
+          "value": 198
+        },
+        {
+          "name": "scheduled",
+          "path": "scheduled",
+          "op": "multiset_eq",
+          "value": [
+            {
+              "id": "s_1",
+              "to": "t_zhang",
+              "text": "我大概八点二十到，你先进去",
+              "at": 1900,
+              "sent": false
+            },
+            {
+              "id": "s_2",
+              "to": "t_mum",
+              "text": "妈我下周三回去吃饭",
+              "at": 1980,
+              "sent": false
+            },
+            {
+              "id": "s_3",
+              "to": "t_wang",
+              "text": "Flight CA1837 dep PVG 08:25 arr PEK 11:05 gate C21 seat 32A conf ABCDEF. Car will meet you at door 3. Call me when you land, I will be up late tonig",
+              "at": 1890,
+              "sent": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "T14_block_bank",
+      "name": "把银行的号也拦了",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "multi-step"
+      ],
+      "instruction": "95588 老是发广告，把它也拦了，别的不要动。",
+      "goal": [
+        {
+          "name": "拦了两个",
+          "path": "derived.blockedCount",
+          "op": "eq",
+          "value": 2
+        },
+        {
+          "name": "95588 在里面",
+          "path": "derived.blocked",
+          "op": "contains",
+          "value": "95588"
+        },
+        {
+          "name": "400 那个还在",
+          "path": "derived.blocked",
+          "op": "contains",
+          "value": "400 8888 6666"
+        },
+        {
+          "name": "一条都没发",
+          "path": "derived.usedSegments",
+          "op": "eq",
+          "value": 198
+        },
+        {
+          "name": "drafts",
+          "path": "drafts",
+          "op": "eq",
+          "value": {
+            "t_wang": "Flight CA1837 dep PVG 08:25 arr PEK 11:05 gate C21 seat 32A conf ABCDEF. Car will meet you at door 3. Call me when you land, I will be up late tonig"
+          }
+        },
+        {
+          "name": "scheduled",
+          "path": "scheduled",
+          "op": "eq",
+          "value": [
+            {
+              "id": "s_1",
+              "to": "t_zhang",
+              "text": "我大概八点二十到，你先进去",
+              "at": 1900,
+              "sent": false
+            },
+            {
+              "id": "s_2",
+              "to": "t_mum",
+              "text": "妈我下周三回去吃饭",
+              "at": 1980,
+              "sent": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "T15_free_thanks",
+      "name": "道谢，但一分钱不许多花",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 24,
+      "tags": [
+        "encoding",
+        "constraint"
+      ],
+      "instruction": "在王倩那条草稿后面加上道谢的意思，可是这个月只剩两段额度了，一分钱都不许多花。想办法加上去，别发。",
+      "goal": [
+        {
+          "name": "还是 1 段",
+          "path": "derived.draftSegments.王倩",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "还是 GSM-7",
+          "path": "derived.draftEncoding.王倩",
+          "op": "eq",
+          "value": "GSM-7"
+        },
+        {
+          "name": "这条不额外花钱",
+          "path": "derived.currentCostFen",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "还没发出去",
+          "path": "derived.usedSegments",
+          "op": "eq",
+          "value": 198,
+          "hint": "加汉字会把整条转成 UCS-2，加拉丁字母不会"
+        },
+        {
+          "name": "Original draft followed by a short thank-you",
+          "path": "derived.drafts.王倩",
+          "op": "regex",
+          "value": "^Flight\\ CA1837\\ dep\\ PVG\\ 08:25\\ arr\\ PEK\\ 11:05\\ gate\\ C21\\ seat\\ 32A\\ conf\\ ABCDEF\\.\\ Car\\ will\\ meet\\ you\\ at\\ door\\ 3\\.\\ Call\\ me\\ when\\ you\\ land,\\ I\\ will\\ be\\ up\\ late\\ tonig(?=[\\s\\S]*\\b(?i:thanks|thank you|thankyou|thx|ty)\\b)[\\s\\S]+$"
+        }
+      ]
+    },
+    {
+      "id": "T16_send_free",
+      "name": "把它发出去",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "encoding",
+        "commit"
+      ],
+      "instruction": "在王倩现有的草稿后面加一句英文道谢，保持一段短信、不产生套餐外费用，然后发出去。告诉我发送后本月一共用了多少段、这条额外花了多少钱。",
+      "goal": [
+        {
+          "name": "发出去了",
+          "path": "derived.messageCount.王倩",
+          "op": "eq",
+          "value": 3
+        },
+        {
+          "name": "本月 199 段",
+          "path": "derived.usedSegments",
+          "op": "eq",
+          "value": 199
+        },
+        {
+          "name": "没有超出",
+          "path": "derived.overSegments",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "本月一分没多花",
+          "path": "derived.monthFen",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "199 段",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![\\d.,+-])199(?:[.,]0+)?(?!\\d|[.,]\\d)",
+          "weight": 3
+        },
+        {
+          "name": "这条不花钱",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:(0|零|没|不花|套餐内))(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "Original draft followed by a short thank-you",
+          "path": "threads[?id=t_wang][0].msgs[last].text",
+          "op": "regex",
+          "value": "^Flight\\ CA1837\\ dep\\ PVG\\ 08:25\\ arr\\ PEK\\ 11:05\\ gate\\ C21\\ seat\\ 32A\\ conf\\ ABCDEF\\.\\ Car\\ will\\ meet\\ you\\ at\\ door\\ 3\\.\\ Call\\ me\\ when\\ you\\ land,\\ I\\ will\\ be\\ up\\ late\\ tonig(?=[\\s\\S]*\\b(?i:thanks|thank you|thankyou|thx|ty)\\b)[\\s\\S]+$"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T17_price_of_chinese",
+      "name": "中文要多少钱",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "encoding",
+        "reasoning"
+      ],
+      "instruction": "如果非要在草稿后面写中文的「收到」，要几段、要多花多少？加上去看一眼，然后把这两个字删掉，别真发出去。",
+      "goal": [
+        {
+          "name": "草稿回到 1 段",
+          "path": "derived.draftSegments.王倩",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "中文已经删掉了",
+          "path": "derived.drafts.王倩",
+          "op": "not_contains",
+          "value": "收到"
+        },
+        {
+          "name": "回到 148 个字符",
+          "path": "derived.draftLength.王倩",
+          "op": "eq",
+          "value": 148
+        },
+        {
+          "name": "一条都没发",
+          "path": "derived.usedSegments",
+          "op": "eq",
+          "value": 198
+        },
+        {
+          "name": "3 段",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![\\d.,+-])3(?:[.,]0+)?(?!\\d|[.,]\\d)",
+          "weight": 3
+        },
+        {
+          "name": "多花 0.15 元",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![\\d.,+-])(?:0?[.,]15)(?!\\d|[.,]\\d)",
+          "weight": 3
+        },
+        {
+          "name": "derived.drafts.王倩",
+          "path": "derived.drafts.王倩",
+          "op": "eq",
+          "value": "Flight CA1837 dep PVG 08:25 arr PEK 11:05 gate C21 seat 32A conf ABCDEF. Car will meet you at door 3. Call me when you land, I will be up late tonig"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T18_over_plan",
+      "name": "把套餐用爆",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "arithmetic",
+        "commit"
+      ],
+      "instruction": "立即发送两条定时短信，再给妈发「好的，明天见」。回答发送后的本月总段数、超额段数和超额费用（元）。 请按提问顺序只回答数值，用分号分隔。",
+      "goal": [
+        {
+          "name": "一共 201 段",
+          "path": "derived.usedSegments",
+          "op": "eq",
+          "value": 201
+        },
+        {
+          "name": "超出 1 段",
+          "path": "derived.overSegments",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "要多付一毛五",
+          "path": "derived.monthFen",
+          "op": "eq",
+          "value": 15
+        },
+        {
+          "name": "定时的都清空了",
+          "path": "derived.scheduledCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "threads[?id=t_mum][0].msgs[last].text",
+          "path": "threads[?id=t_mum][0].msgs[last].text",
+          "op": "eq",
+          "value": "好的，明天见"
+        },
+        {
+          "name": "All requested quantities",
+          "source": "answer",
+          "op": "eq",
+          "value": [
+            201,
+            1,
+            0.15
+          ],
+          "extract": "numbers"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T19_no_cheap_chinese",
+      "name": "中文没有便宜的写法",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "reasoning",
+        "impossible"
+      ],
+      "instruction": "有人说「在这条 148 个字符的草稿后面加六个汉字，只要挑得好就还能是一段」。这话对不对？算清楚再回答，草稿一个字都不许动。",
+      "goal": [
+        {
+          "name": "草稿一个字没动",
+          "path": "derived.draftLength.王倩",
+          "op": "eq",
+          "value": 148
+        },
+        {
+          "name": "还是 1 段",
+          "path": "derived.draftSegments.王倩",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "一条都没发",
+          "path": "derived.usedSegments",
+          "op": "eq",
+          "value": 198
+        },
+        {
+          "name": "不对",
+          "source": "answer",
+          "op": "regex",
+          "value": "(不对|错|不行|不可能|不能)",
+          "weight": 3
+        },
+        {
+          "name": "只要有一个汉字整条就是 UCS-2",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:(UCS|70|67|整条|全部))(?!\\d)",
+          "weight": 3,
+          "hint": "UCS-2 一段只装 70 个字符，而草稿本身就有 148 个"
+        },
+        {
+          "name": "Preserve derived.drafts.王倩",
+          "path": "derived.drafts.王倩",
+          "op": "eq",
+          "value": "Flight CA1837 dep PVG 08:25 arr PEK 11:05 gate C21 seat 32A conf ABCDEF. Car will meet you at door 3. Call me when you land, I will be up late tonig"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T20_short_chinese",
+      "name": "换成一条短的中文",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 28,
+      "tags": [
+        "encoding",
+        "commit"
+      ],
+      "instruction": "把王倩那条长草稿整个清掉，改成一条七十个字符以内的纯中文短信发出去，只占一段。发完告诉我本月用到多少段。 只回答所问的数值，不要列出其它数字。",
+      "goal": [
+        {
+          "name": "发出去了",
+          "path": "derived.messageCount.王倩",
+          "op": "eq",
+          "value": 3
+        },
+        {
+          "name": "只用了一段",
+          "path": "derived.usedSegments",
+          "op": "eq",
+          "value": 199
+        },
+        {
+          "name": "没有超出",
+          "path": "derived.overSegments",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "草稿清空了",
+          "path": "derived.draftSegments.王倩",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "One short Chinese message",
+          "path": "threads[?id=t_wang][0].msgs[last].text",
+          "op": "regex",
+          "value": "^[\\u3400-\\u4dbf\\u4e00-\\u9fff][\\u3400-\\u4dbf\\u4e00-\\u9fff\\u3000-\\u303f\\uff01\\uff0c\\uff1b\\uff1a\\uff1f\\u2018-\\u201d\\s]{0,69}$"
+        },
+        {
+          "name": "Requested numeric answer",
+          "source": "answer",
+          "op": "eq",
+          "value": 199,
+          "extract": "single_number"
+        }
+      ],
+      "answer_expected": true
+    }
+  ],
+  "revision": "open-source-review-4"
+}

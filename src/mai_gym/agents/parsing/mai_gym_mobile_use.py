@@ -16,6 +16,7 @@ _VALID_ACTIONS = frozenset(
         "type",
         "open",
         "drag",
+        "swipe",
         "system_button",
         "wait",
         "ask_user",
@@ -80,11 +81,22 @@ def convert_action(
             "x": x,
             "y": y,
         }
-    if action == "drag":
-        start_x, start_y = _scaled_point(arguments.get("start_coordinate", [0, 0]), width, height)
+    if action == "swipe" and "end_coordinate" not in arguments:
+        direction = str(arguments.get("direction", "")).lower()
+        if direction not in {"up", "down", "left", "right"}:
+            raise ValueError("swipe requires end_coordinate or a direction")
+        swipe: dict[str, Any] = {"action_type": "swipe", "direction": direction}
+        if "coordinate" in arguments:
+            swipe["x"], swipe["y"] = _scaled_point(arguments["coordinate"], width, height)
+        return swipe
+    if action in ("drag", "swipe"):
+        start = arguments.get("start_coordinate", arguments.get("coordinate"))
+        if start is None and action == "swipe":
+            raise ValueError("swipe requires start_coordinate or coordinate")
+        start_x, start_y = _scaled_point(start if start is not None else [0, 0], width, height)
         end_x, end_y = _scaled_point(arguments.get("end_coordinate", [0, 0]), width, height)
         return {
-            "action_type": "drag",
+            "action_type": action,
             "start_x": start_x,
             "start_y": start_y,
             "end_x": end_x,
@@ -132,7 +144,6 @@ def parse_action_response(
     original_image_width: int | None = None,
     original_image_height: int | None = None,
 ) -> ActionParseResult:
-    """Parse one MAI-UI response into a deployment-agnostic action dictionary."""
 
     try:
         tool_match = _TOOL_CALL_RE.search(text.strip())
@@ -169,8 +180,6 @@ def parse_action_response(
 
 
 class MAIGymMobileUseActionParser:
-    """Small object interface for deployments that prefer an injectable parser."""
-
     def parse(
         self,
         text: str,

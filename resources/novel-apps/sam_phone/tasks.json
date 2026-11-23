@@ -1,0 +1,3141 @@
+{
+  "env": "sam_phone",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_most_unread",
+      "name": "未读最多的那个",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "tags": [
+        "home",
+        "read"
+      ],
+      "instruction": "哪个 app 的未读最多？把它打开。",
+      "goal": [
+        {
+          "name": "打开了邮件",
+          "path": "derived.appOpen",
+          "op": "eq",
+          "value": "marlin_mail"
+        },
+        {
+          "name": "在 app 详情页",
+          "path": "derived.route",
+          "op": "eq",
+          "value": "app"
+        }
+      ]
+    },
+    {
+      "id": "T02_low_power",
+      "name": "先把低电量模式打开",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "tags": [
+        "battery",
+        "settings"
+      ],
+      "instruction": "把低电量模式打开。别的什么都不要动。",
+      "goal": [
+        {
+          "name": "低电量模式开了",
+          "path": "derived.lowPower",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "没顺手关掉谁的后台",
+          "path": "derived.bgOnCount",
+          "op": "eq",
+          "value": 15
+        },
+        {
+          "name": "通知没动",
+          "path": "derived.notifCount",
+          "op": "eq",
+          "value": 13
+        },
+        {
+          "name": "apps[?id=quill_messages][0].notify",
+          "path": "apps[?id=quill_messages][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=covey_contacts][0].notify",
+          "path": "apps[?id=covey_contacts][0].notify",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "apps[?id=lumen_camera][0].notify",
+          "path": "apps[?id=lumen_camera][0].notify",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "apps[?id=compass_maps][0].notify",
+          "path": "apps[?id=compass_maps][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=nightjar_clock][0].notify",
+          "path": "apps[?id=nightjar_clock][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=cirrus_weather][0].notify",
+          "path": "apps[?id=cirrus_weather][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=slate_calc][0].notify",
+          "path": "apps[?id=slate_calc][0].notify",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "apps[?id=umber_photos][0].notify",
+          "path": "apps[?id=umber_photos][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=marlin_mail][0].notify",
+          "path": "apps[?id=marlin_mail][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=sonora_music][0].notify",
+          "path": "apps[?id=sonora_music][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=squirrel_eats][0].notify",
+          "path": "apps[?id=squirrel_eats][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=harbour_files][0].notify",
+          "path": "apps[?id=harbour_files][0].notify",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "apps[?id=kestrel_bank][0].notify",
+          "path": "apps[?id=kestrel_bank][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=bastion_loan][0].notify",
+          "path": "apps[?id=bastion_loan][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=anvil_remit][0].notify",
+          "path": "apps[?id=anvil_remit][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=tally_split][0].notify",
+          "path": "apps[?id=tally_split][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=cinder_vault][0].notify",
+          "path": "apps[?id=cinder_vault][0].notify",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "apps[?id=hearth_home][0].notify",
+          "path": "apps[?id=hearth_home][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=sable_privacy][0].notify",
+          "path": "apps[?id=sable_privacy][0].notify",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "apps[?id=tideline_screen][0].notify",
+          "path": "apps[?id=tideline_screen][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=trellis_build][0].notify",
+          "path": "apps[?id=trellis_build][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=rota_shifts][0].notify",
+          "path": "apps[?id=rota_shifts][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=quorum_vote][0].notify",
+          "path": "apps[?id=quorum_vote][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=pitchside_league][0].notify",
+          "path": "apps[?id=pitchside_league][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=saffron_recipes][0].notify",
+          "path": "apps[?id=saffron_recipes][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=levain_bake][0].notify",
+          "path": "apps[?id=levain_bake][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=willow_meds][0].notify",
+          "path": "apps[?id=willow_meds][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=meter_energy][0].notify",
+          "path": "apps[?id=meter_energy][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=kitbag_pack][0].notify",
+          "path": "apps[?id=kitbag_pack][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=larkline_transit][0].notify",
+          "path": "apps[?id=larkline_transit][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=roost_stays][0].notify",
+          "path": "apps[?id=roost_stays][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=pigeon_parcels][0].notify",
+          "path": "apps[?id=pigeon_parcels][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=aperture_cinema][0].notify",
+          "path": "apps[?id=aperture_cinema][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=larkspur_fest][0].notify",
+          "path": "apps[?id=larkspur_fest][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=gavel_auction][0].notify",
+          "path": "apps[?id=gavel_auction][0].notify",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "apps[?id=grid_puzzle][0].notify",
+          "path": "apps[?id=grid_puzzle][0].notify",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "apps[?id=foxglove_reader][0].notify",
+          "path": "apps[?id=foxglove_reader][0].notify",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "apps[?id=pipit_lessons][0].notify",
+          "path": "apps[?id=pipit_lessons][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=ironwood_gym][0].notify",
+          "path": "apps[?id=ironwood_gym][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=bench_workshop][0].notify",
+          "path": "apps[?id=bench_workshop][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "focus",
+          "path": "focus",
+          "op": "eq",
+          "value": "none"
+        },
+        {
+          "name": "allow",
+          "path": "allow",
+          "op": "eq",
+          "value": {
+            "none": [],
+            "work": [
+              "marlin_mail",
+              "rota_shifts",
+              "trellis_build"
+            ],
+            "sleep": [],
+            "dnd": []
+          }
+        },
+        {
+          "name": "settings",
+          "path": "settings",
+          "op": "eq",
+          "value": {
+            "showBadges": true,
+            "wallpaperDim": false,
+            "handoff": true
+          }
+        },
+        {
+          "name": "notifs",
+          "path": "notifs",
+          "op": "eq",
+          "value": [
+            {
+              "id": "n_01",
+              "app": "quill_messages",
+              "who": "王倩",
+              "text": "行李收好了吗，别忘了充电器",
+              "at": 1272,
+              "urgent": false
+            },
+            {
+              "id": "n_02",
+              "app": "quill_messages",
+              "who": "张伟",
+              "text": "明天的会改到十点了",
+              "at": 1143,
+              "urgent": false
+            },
+            {
+              "id": "n_03",
+              "app": "quill_messages",
+              "who": "张伟",
+              "text": "会议室换成 B 座 12 层",
+              "at": 1144,
+              "urgent": false
+            },
+            {
+              "id": "n_04",
+              "app": "marlin_mail",
+              "who": null,
+              "text": "本周迭代评审材料（4 封）",
+              "at": 1240,
+              "urgent": false
+            },
+            {
+              "id": "n_05",
+              "app": "kestrel_bank",
+              "who": null,
+              "text": "尾号 4412 支出 128.00 元",
+              "at": 1207,
+              "urgent": true
+            },
+            {
+              "id": "n_06",
+              "app": "cirrus_weather",
+              "who": null,
+              "text": "明早 07–09 有雨，4.2 毫米",
+              "at": 1290,
+              "urgent": true
+            },
+            {
+              "id": "n_07",
+              "app": "sonora_music",
+              "who": null,
+              "text": "你关注的播客更新了两集",
+              "at": 1135,
+              "urgent": false
+            },
+            {
+              "id": "n_08",
+              "app": "pigeon_parcels",
+              "who": null,
+              "text": "两个包裹明天派送",
+              "at": 1040,
+              "urgent": false
+            },
+            {
+              "id": "n_09",
+              "app": "willow_meds",
+              "who": null,
+              "text": "该吃今晚这一次了",
+              "at": 1320,
+              "urgent": true
+            },
+            {
+              "id": "n_10",
+              "app": "rota_shifts",
+              "who": null,
+              "text": "下周排班表有人换班",
+              "at": 1004,
+              "urgent": false
+            },
+            {
+              "id": "n_11",
+              "app": "gavel_auction",
+              "who": null,
+              "text": "你关注的那件还有 2 小时结束",
+              "at": 1310,
+              "urgent": false
+            },
+            {
+              "id": "n_12",
+              "app": "pipit_lessons",
+              "who": null,
+              "text": "今天的复习还没做",
+              "at": 1200,
+              "urgent": false
+            },
+            {
+              "id": "n_13",
+              "app": "squirrel_eats",
+              "who": null,
+              "text": "常点的那家在做活动",
+              "at": 1110,
+              "urgent": false
+            }
+          ]
+        },
+        {
+          "name": "apps",
+          "path": "apps",
+          "op": "eq",
+          "value": [
+            {
+              "id": "quill_messages",
+              "short": "信息",
+              "title": "信息",
+              "glyph": "chat",
+              "brand": "#0a84ff",
+              "where": "dock",
+              "drain": 25,
+              "mb": 480,
+              "used": 22,
+              "unread": 3,
+              "notify": true,
+              "bg": true
+            },
+            {
+              "id": "covey_contacts",
+              "short": "通讯录",
+              "title": "通讯录",
+              "glyph": "user",
+              "brand": "#007aff",
+              "where": "dock",
+              "drain": 5,
+              "mb": 90,
+              "used": 4,
+              "unread": 0,
+              "notify": false,
+              "bg": true
+            },
+            {
+              "id": "lumen_camera",
+              "short": "相机",
+              "title": "Camera",
+              "glyph": "camera",
+              "brand": "#ffd60a",
+              "where": "dock",
+              "drain": 0,
+              "mb": 2140,
+              "used": 11,
+              "unread": 0,
+              "notify": false,
+              "bg": false
+            },
+            {
+              "id": "compass_maps",
+              "short": "地图",
+              "title": "Maps",
+              "glyph": "pin",
+              "brand": "#1b6ac9",
+              "where": "dock",
+              "drain": 60,
+              "mb": 980,
+              "used": 16,
+              "unread": 0,
+              "notify": true,
+              "bg": true
+            },
+            {
+              "id": "nightjar_clock",
+              "short": "时钟",
+              "title": "时钟",
+              "glyph": "clock",
+              "brand": "#ff9f0a",
+              "where": "p1",
+              "drain": 5,
+              "mb": 40,
+              "used": 3,
+              "unread": 0,
+              "notify": true,
+              "bg": true
+            },
+            {
+              "id": "cirrus_weather",
+              "short": "天气",
+              "title": "天气",
+              "glyph": "sun",
+              "brand": "#5ac8fa",
+              "where": "p1",
+              "drain": 35,
+              "mb": 120,
+              "used": 6,
+              "unread": 1,
+              "notify": true,
+              "bg": true
+            },
+            {
+              "id": "slate_calc",
+              "short": "计算器",
+              "title": "计算器",
+              "glyph": "calc",
+              "brand": "#ff9f0a",
+              "where": "p1",
+              "drain": 0,
+              "mb": 20,
+              "used": 2,
+              "unread": 0,
+              "notify": false,
+              "bg": false
+            },
+            {
+              "id": "umber_photos",
+              "short": "相册",
+              "title": "Umber",
+              "glyph": "image",
+              "brand": "#e0a35c",
+              "where": "p1",
+              "drain": 45,
+              "mb": 4820,
+              "used": 19,
+              "unread": 0,
+              "notify": true,
+              "bg": true
+            },
+            {
+              "id": "marlin_mail",
+              "short": "邮件",
+              "title": "Marlin Mail",
+              "glyph": "mail",
+              "brand": "#1f6feb",
+              "where": "p1",
+              "drain": 40,
+              "mb": 610,
+              "used": 31,
+              "unread": 4,
+              "notify": true,
+              "bg": true
+            },
+            {
+              "id": "sonora_music",
+              "short": "音乐",
+              "title": "Sonora",
+              "glyph": "music",
+              "brand": "#c084fc",
+              "where": "p1",
+              "drain": 70,
+              "mb": 1960,
+              "used": 74,
+              "unread": 2,
+              "notify": true,
+              "bg": true
+            },
+            {
+              "id": "squirrel_eats",
+              "short": "外卖",
+              "title": "松鼠外卖 · Squirrel Eats",
+              "glyph": "bag",
+              "brand": "#ff6b35",
+              "where": "p1",
+              "drain": 20,
+              "mb": 310,
+              "used": 13,
+              "unread": 0,
+              "notify": true,
+              "bg": true
+            },
+            {
+              "id": "harbour_files",
+              "short": "文件",
+              "title": "Files",
+              "glyph": "folder",
+              "brand": "#1a73e8",
+              "where": "p1",
+              "drain": 15,
+              "mb": 70,
+              "used": 5,
+              "unread": 0,
+              "notify": false,
+              "bg": true
+            },
+            {
+              "id": "kestrel_bank",
+              "short": "银行",
+              "title": "Kestrel",
+              "glyph": "bank",
+              "brand": "#1d63d1",
+              "where": "p2",
+              "drain": 10,
+              "mb": 260,
+              "used": 9,
+              "unread": 1,
+              "notify": true,
+              "bg": true
+            },
+            {
+              "id": "bastion_loan",
+              "short": "还款",
+              "title": "Bastion",
+              "glyph": "card",
+              "brand": "#4c3bcf",
+              "where": "p2",
+              "drain": 0,
+              "mb": 110,
+              "used": 4,
+              "unread": 0,
+              "notify": true,
+              "bg": false
+            },
+            {
+              "id": "anvil_remit",
+              "short": "汇款",
+              "title": "Anvil",
+              "glyph": "swap",
+              "brand": "#a8321e",
+              "where": "p2",
+              "drain": 0,
+              "mb": 140,
+              "used": 3,
+              "unread": 0,
+              "notify": true,
+              "bg": false
+            },
+            {
+              "id": "tally_split",
+              "short": "分账",
+              "title": "Tally",
+              "glyph": "split",
+              "brand": "#4f46e5",
+              "where": "p2",
+              "drain": 0,
+              "mb": 95,
+              "used": 6,
+              "unread": 0,
+              "notify": true,
+              "bg": false
+            },
+            {
+              "id": "cinder_vault",
+              "short": "密码",
+              "title": "Cinder",
+              "glyph": "key",
+              "brand": "#e2704a",
+              "where": "p2",
+              "drain": 0,
+              "mb": 60,
+              "used": 2,
+              "unread": 0,
+              "notify": false,
+              "bg": false
+            },
+            {
+              "id": "hearth_home",
+              "short": "家",
+              "title": "Hearth · Home",
+              "glyph": "home",
+              "brand": "#f0a24b",
+              "where": "p2",
+              "drain": 30,
+              "mb": 180,
+              "used": 8,
+              "unread": 0,
+              "notify": true,
+              "bg": true
+            },
+            {
+              "id": "sable_privacy",
+              "short": "隐私",
+              "title": "Privacy",
+              "glyph": "shield",
+              "brand": "#007aff",
+              "where": "p2",
+              "drain": 0,
+              "mb": 30,
+              "used": 1,
+              "unread": 0,
+              "notify": false,
+              "bg": false
+            },
+            {
+              "id": "tideline_screen",
+              "short": "屏幕时间",
+              "title": "屏幕使用时间",
+              "glyph": "hourglass",
+              "brand": "#5856d6",
+              "where": "p2",
+              "drain": 0,
+              "mb": 25,
+              "used": 2,
+              "unread": 0,
+              "notify": true,
+              "bg": false
+            },
+            {
+              "id": "trellis_build",
+              "short": "装修",
+              "title": "Trellis",
+              "glyph": "hammer",
+              "brand": "#38bdf8",
+              "where": "f_work",
+              "drain": 0,
+              "mb": 150,
+              "used": 7,
+              "unread": 0,
+              "notify": true,
+              "bg": false
+            },
+            {
+              "id": "rota_shifts",
+              "short": "排班",
+              "title": "排班",
+              "glyph": "cal",
+              "brand": "#0f766e",
+              "where": "f_work",
+              "drain": 0,
+              "mb": 80,
+              "used": 12,
+              "unread": 1,
+              "notify": true,
+              "bg": false
+            },
+            {
+              "id": "quorum_vote",
+              "short": "业委会",
+              "title": "Quorum",
+              "glyph": "ballot",
+              "brand": "#c8102e",
+              "where": "f_work",
+              "drain": 0,
+              "mb": 35,
+              "used": 1,
+              "unread": 0,
+              "notify": true,
+              "bg": false
+            },
+            {
+              "id": "pitchside_league",
+              "short": "联赛",
+              "title": "Pitchside",
+              "glyph": "football",
+              "brand": "#146b45",
+              "where": "f_work",
+              "drain": 0,
+              "mb": 90,
+              "used": 5,
+              "unread": 0,
+              "notify": true,
+              "bg": false
+            },
+            {
+              "id": "saffron_recipes",
+              "short": "菜谱",
+              "title": "Saffron",
+              "glyph": "chef",
+              "brand": "#1f6f4a",
+              "where": "f_life",
+              "drain": 0,
+              "mb": 420,
+              "used": 14,
+              "unread": 0,
+              "notify": true,
+              "bg": false
+            },
+            {
+              "id": "levain_bake",
+              "short": "烘焙",
+              "title": "Levain",
+              "glyph": "wheat",
+              "brand": "#e0a33c",
+              "where": "f_life",
+              "drain": 0,
+              "mb": 70,
+              "used": 9,
+              "unread": 0,
+              "notify": true,
+              "bg": false
+            },
+            {
+              "id": "willow_meds",
+              "short": "用药",
+              "title": "Willow",
+              "glyph": "pill",
+              "brand": "#2b7f8f",
+              "where": "f_life",
+              "drain": 0,
+              "mb": 45,
+              "used": 3,
+              "unread": 1,
+              "notify": true,
+              "bg": false
+            },
+            {
+              "id": "meter_energy",
+              "short": "抄表",
+              "title": "抄表",
+              "glyph": "bolt",
+              "brand": "#1668c8",
+              "where": "f_life",
+              "drain": 0,
+              "mb": 55,
+              "used": 4,
+              "unread": 0,
+              "notify": true,
+              "bg": false
+            },
+            {
+              "id": "kitbag_pack",
+              "short": "行李",
+              "title": "Kitbag",
+              "glyph": "suitcase",
+              "brand": "#3c6e47",
+              "where": "f_life",
+              "drain": 0,
+              "mb": 65,
+              "used": 18,
+              "unread": 0,
+              "notify": true,
+              "bg": false
+            },
+            {
+              "id": "larkline_transit",
+              "short": "公交",
+              "title": "Larkline",
+              "glyph": "bus",
+              "brand": "#0f766e",
+              "where": "f_out",
+              "drain": 25,
+              "mb": 210,
+              "used": 7,
+              "unread": 0,
+              "notify": true,
+              "bg": true
+            },
+            {
+              "id": "roost_stays",
+              "short": "订房",
+              "title": "Roost · Stays",
+              "glyph": "bed",
+              "brand": "#2f6f5e",
+              "where": "f_out",
+              "drain": 0,
+              "mb": 380,
+              "used": 11,
+              "unread": 0,
+              "notify": true,
+              "bg": false
+            },
+            {
+              "id": "pigeon_parcels",
+              "short": "快递",
+              "title": "Pigeon",
+              "glyph": "box",
+              "brand": "#b0442c",
+              "where": "f_out",
+              "drain": 20,
+              "mb": 130,
+              "used": 6,
+              "unread": 2,
+              "notify": true,
+              "bg": true
+            },
+            {
+              "id": "aperture_cinema",
+              "short": "电影",
+              "title": "Aperture Cinema",
+              "glyph": "film",
+              "brand": "#f5c451",
+              "where": "f_play",
+              "drain": 0,
+              "mb": 290,
+              "used": 8,
+              "unread": 0,
+              "notify": true,
+              "bg": false
+            },
+            {
+              "id": "larkspur_fest",
+              "short": "音乐节",
+              "title": "Larkspur",
+              "glyph": "ticket",
+              "brand": "#e8b04b",
+              "where": "f_play",
+              "drain": 0,
+              "mb": 160,
+              "used": 4,
+              "unread": 0,
+              "notify": true,
+              "bg": false
+            },
+            {
+              "id": "gavel_auction",
+              "short": "拍卖",
+              "title": "Gavel",
+              "glyph": "gavel",
+              "brand": "#1f4d3d",
+              "where": "f_play",
+              "drain": 0,
+              "mb": 120,
+              "used": 6,
+              "unread": 1,
+              "notify": false,
+              "bg": false
+            },
+            {
+              "id": "grid_puzzle",
+              "short": "数独",
+              "title": "数独",
+              "glyph": "grid9",
+              "brand": "#1b58a6",
+              "where": "f_play",
+              "drain": 0,
+              "mb": 40,
+              "used": 21,
+              "unread": 0,
+              "notify": false,
+              "bg": false
+            },
+            {
+              "id": "foxglove_reader",
+              "short": "阅读",
+              "title": "Foxglove",
+              "glyph": "book",
+              "brand": "#8a5a2b",
+              "where": "f_play",
+              "drain": 0,
+              "mb": 760,
+              "used": 27,
+              "unread": 0,
+              "notify": false,
+              "bg": false
+            },
+            {
+              "id": "pipit_lessons",
+              "short": "语言课",
+              "title": "Pipit",
+              "glyph": "cap",
+              "brand": "#3f9d54",
+              "where": "f_play",
+              "drain": 0,
+              "mb": 340,
+              "used": 16,
+              "unread": 1,
+              "notify": true,
+              "bg": false
+            },
+            {
+              "id": "ironwood_gym",
+              "short": "健身",
+              "title": "Ironwood",
+              "glyph": "dumbbell",
+              "brand": "#c9f24a",
+              "where": "f_play",
+              "drain": 50,
+              "mb": 230,
+              "used": 23,
+              "unread": 0,
+              "notify": true,
+              "bg": true
+            },
+            {
+              "id": "bench_workshop",
+              "short": "木工",
+              "title": "Bench",
+              "glyph": "saw",
+              "brand": "#8a5a1e",
+              "where": "f_play",
+              "drain": 0,
+              "mb": 85,
+              "used": 3,
+              "unread": 0,
+              "notify": true,
+              "bg": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "T03_sleep_focus",
+      "name": "切到睡眠",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "tags": [
+        "notifications"
+      ],
+      "instruction": "他要睡了。把专注模式切到「睡眠」。",
+      "goal": [
+        {
+          "name": "睡眠模式",
+          "path": "derived.focus",
+          "op": "eq",
+          "value": "sleep"
+        },
+        {
+          "name": "一条通知都没清掉",
+          "path": "derived.notifCount",
+          "op": "eq",
+          "value": 13
+        }
+      ]
+    },
+    {
+      "id": "T04_owner",
+      "name": "问一句：谁是紧急联系人",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 8,
+      "tags": [
+        "query",
+        "read-only",
+        "owner"
+      ],
+      "instruction": "这台手机的机主是谁？紧急联系人中，标注为配偶的那位叫什么？",
+      "goal": [
+        {
+          "name": "张三",
+          "source": "answer",
+          "op": "contains",
+          "value": "张三"
+        },
+        {
+          "name": "王倩",
+          "source": "answer",
+          "op": "contains",
+          "value": "王倩"
+        },
+        {
+          "name": "爱人",
+          "source": "answer",
+          "op": "regex",
+          "value": "爱人|妻子|老婆|太太"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T05_bg_off_all",
+      "name": "全关",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "battery"
+      ],
+      "instruction": "把所有 app 的后台刷新一次性全关掉。通知别动。",
+      "goal": [
+        {
+          "name": "没有 app 在后台跑了",
+          "path": "derived.bgOnCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "没顺手开低电量",
+          "path": "derived.lowPower",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "通知还在",
+          "path": "derived.notifCount",
+          "op": "eq",
+          "value": 13
+        },
+        {
+          "name": "apps[?id=quill_messages][0].notify",
+          "path": "apps[?id=quill_messages][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=covey_contacts][0].notify",
+          "path": "apps[?id=covey_contacts][0].notify",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "apps[?id=lumen_camera][0].notify",
+          "path": "apps[?id=lumen_camera][0].notify",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "apps[?id=compass_maps][0].notify",
+          "path": "apps[?id=compass_maps][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=nightjar_clock][0].notify",
+          "path": "apps[?id=nightjar_clock][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=cirrus_weather][0].notify",
+          "path": "apps[?id=cirrus_weather][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=slate_calc][0].notify",
+          "path": "apps[?id=slate_calc][0].notify",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "apps[?id=umber_photos][0].notify",
+          "path": "apps[?id=umber_photos][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=marlin_mail][0].notify",
+          "path": "apps[?id=marlin_mail][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=sonora_music][0].notify",
+          "path": "apps[?id=sonora_music][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=squirrel_eats][0].notify",
+          "path": "apps[?id=squirrel_eats][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=harbour_files][0].notify",
+          "path": "apps[?id=harbour_files][0].notify",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "apps[?id=kestrel_bank][0].notify",
+          "path": "apps[?id=kestrel_bank][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=bastion_loan][0].notify",
+          "path": "apps[?id=bastion_loan][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=anvil_remit][0].notify",
+          "path": "apps[?id=anvil_remit][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=tally_split][0].notify",
+          "path": "apps[?id=tally_split][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=cinder_vault][0].notify",
+          "path": "apps[?id=cinder_vault][0].notify",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "apps[?id=hearth_home][0].notify",
+          "path": "apps[?id=hearth_home][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=sable_privacy][0].notify",
+          "path": "apps[?id=sable_privacy][0].notify",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "apps[?id=tideline_screen][0].notify",
+          "path": "apps[?id=tideline_screen][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=trellis_build][0].notify",
+          "path": "apps[?id=trellis_build][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=rota_shifts][0].notify",
+          "path": "apps[?id=rota_shifts][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=quorum_vote][0].notify",
+          "path": "apps[?id=quorum_vote][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=pitchside_league][0].notify",
+          "path": "apps[?id=pitchside_league][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=saffron_recipes][0].notify",
+          "path": "apps[?id=saffron_recipes][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=levain_bake][0].notify",
+          "path": "apps[?id=levain_bake][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=willow_meds][0].notify",
+          "path": "apps[?id=willow_meds][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=meter_energy][0].notify",
+          "path": "apps[?id=meter_energy][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=kitbag_pack][0].notify",
+          "path": "apps[?id=kitbag_pack][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=larkline_transit][0].notify",
+          "path": "apps[?id=larkline_transit][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=roost_stays][0].notify",
+          "path": "apps[?id=roost_stays][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=pigeon_parcels][0].notify",
+          "path": "apps[?id=pigeon_parcels][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=aperture_cinema][0].notify",
+          "path": "apps[?id=aperture_cinema][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=larkspur_fest][0].notify",
+          "path": "apps[?id=larkspur_fest][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=gavel_auction][0].notify",
+          "path": "apps[?id=gavel_auction][0].notify",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "apps[?id=grid_puzzle][0].notify",
+          "path": "apps[?id=grid_puzzle][0].notify",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "apps[?id=foxglove_reader][0].notify",
+          "path": "apps[?id=foxglove_reader][0].notify",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "apps[?id=pipit_lessons][0].notify",
+          "path": "apps[?id=pipit_lessons][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=ironwood_gym][0].notify",
+          "path": "apps[?id=ironwood_gym][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=bench_workshop][0].notify",
+          "path": "apps[?id=bench_workshop][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "notifs",
+          "path": "notifs",
+          "op": "eq",
+          "value": [
+            {
+              "id": "n_01",
+              "app": "quill_messages",
+              "who": "王倩",
+              "text": "行李收好了吗，别忘了充电器",
+              "at": 1272,
+              "urgent": false
+            },
+            {
+              "id": "n_02",
+              "app": "quill_messages",
+              "who": "张伟",
+              "text": "明天的会改到十点了",
+              "at": 1143,
+              "urgent": false
+            },
+            {
+              "id": "n_03",
+              "app": "quill_messages",
+              "who": "张伟",
+              "text": "会议室换成 B 座 12 层",
+              "at": 1144,
+              "urgent": false
+            },
+            {
+              "id": "n_04",
+              "app": "marlin_mail",
+              "who": null,
+              "text": "本周迭代评审材料（4 封）",
+              "at": 1240,
+              "urgent": false
+            },
+            {
+              "id": "n_05",
+              "app": "kestrel_bank",
+              "who": null,
+              "text": "尾号 4412 支出 128.00 元",
+              "at": 1207,
+              "urgent": true
+            },
+            {
+              "id": "n_06",
+              "app": "cirrus_weather",
+              "who": null,
+              "text": "明早 07–09 有雨，4.2 毫米",
+              "at": 1290,
+              "urgent": true
+            },
+            {
+              "id": "n_07",
+              "app": "sonora_music",
+              "who": null,
+              "text": "你关注的播客更新了两集",
+              "at": 1135,
+              "urgent": false
+            },
+            {
+              "id": "n_08",
+              "app": "pigeon_parcels",
+              "who": null,
+              "text": "两个包裹明天派送",
+              "at": 1040,
+              "urgent": false
+            },
+            {
+              "id": "n_09",
+              "app": "willow_meds",
+              "who": null,
+              "text": "该吃今晚这一次了",
+              "at": 1320,
+              "urgent": true
+            },
+            {
+              "id": "n_10",
+              "app": "rota_shifts",
+              "who": null,
+              "text": "下周排班表有人换班",
+              "at": 1004,
+              "urgent": false
+            },
+            {
+              "id": "n_11",
+              "app": "gavel_auction",
+              "who": null,
+              "text": "你关注的那件还有 2 小时结束",
+              "at": 1310,
+              "urgent": false
+            },
+            {
+              "id": "n_12",
+              "app": "pipit_lessons",
+              "who": null,
+              "text": "今天的复习还没做",
+              "at": 1200,
+              "urgent": false
+            },
+            {
+              "id": "n_13",
+              "app": "squirrel_eats",
+              "who": null,
+              "text": "常点的那家在做活动",
+              "at": 1110,
+              "urgent": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "T06_screen_today",
+      "name": "问一句：今天一共用了多久",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "query",
+        "read-only",
+        "usage"
+      ],
+      "instruction": "把所有 app 的用时加起来，今天一共用了多少屏幕时间？只回答几小时几分钟。",
+      "goal": [
+        {
+          "name": "Answer matches requested facts",
+          "source": "answer",
+          "op": "regex",
+          "value": "^\\s*7\\s*小时\\s*26\\s*分钟[。.!！]?\\s*$"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T07_dies",
+      "name": "问一句：几点没电",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "query",
+        "read-only",
+        "battery"
+      ],
+      "instruction": "什么都不改的话，电池预计几点耗尽？比明早 06:40 的闹钟早多少？请按“耗尽时间；几小时几分钟”的格式回答。",
+      "goal": [
+        {
+          "name": "什么都没改",
+          "path": "derived.rateCp",
+          "op": "eq",
+          "value": 565
+        },
+        {
+          "name": "Answer matches requested facts",
+          "source": "answer",
+          "op": "regex",
+          "value": "^\\s*0?2:51\\s*[;；]\\s*3\\s*小时\\s*49\\s*分钟[。.!！]?\\s*$"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T08_low_only",
+      "name": "只开低电量够不够",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "battery",
+        "query"
+      ],
+      "instruction": "先把低电量模式打开，然后回答：光靠它，电量撑得到 06:40 的闹钟吗？撑到几点？差多少？",
+      "goal": [
+        {
+          "name": "低电量模式开了",
+          "path": "derived.lowPower",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "确实撑不到",
+          "path": "derived.survivesToAlarm",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "不够",
+          "source": "answer",
+          "op": "regex",
+          "value": "不够|不行|撑不到|还差|差了"
+        },
+        {
+          "name": "05:47",
+          "source": "answer",
+          "op": "regex",
+          "value": "0?5[:.]?47"
+        },
+        {
+          "name": "差 53 分钟",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![\\d.,+-])53(?:[.,]0+)?(?!\\d|[.,]\\d)"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T09_move_sudoku",
+      "name": "把数独挪到第一页",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "home",
+        "layout"
+      ],
+      "instruction": "「数独」现在埋在第二页的「消遣」文件夹里。把它挪到第一页去，别的 app 都留在原地。",
+      "goal": [
+        {
+          "name": "数独在第一页",
+          "path": "derived.place.grid_puzzle",
+          "op": "eq",
+          "value": "p1"
+        },
+        {
+          "name": "阅读还在消遣里",
+          "path": "derived.place.foxglove_reader",
+          "op": "eq",
+          "value": "f_play"
+        },
+        {
+          "name": "文件夹关上了",
+          "path": "derived.openFolder",
+          "op": "eq",
+          "value": ""
+        },
+        {
+          "name": "Preserve derived.place",
+          "path": "derived.place",
+          "op": "eq",
+          "value": {
+            "quill_messages": "dock",
+            "covey_contacts": "dock",
+            "lumen_camera": "dock",
+            "compass_maps": "dock",
+            "nightjar_clock": "p1",
+            "cirrus_weather": "p1",
+            "slate_calc": "p1",
+            "umber_photos": "p1",
+            "marlin_mail": "p1",
+            "sonora_music": "p1",
+            "squirrel_eats": "p1",
+            "harbour_files": "p1",
+            "kestrel_bank": "p2",
+            "bastion_loan": "p2",
+            "anvil_remit": "p2",
+            "tally_split": "p2",
+            "cinder_vault": "p2",
+            "hearth_home": "p2",
+            "sable_privacy": "p2",
+            "tideline_screen": "p2",
+            "trellis_build": "f_work",
+            "rota_shifts": "f_work",
+            "quorum_vote": "f_work",
+            "pitchside_league": "f_work",
+            "saffron_recipes": "f_life",
+            "levain_bake": "f_life",
+            "willow_meds": "f_life",
+            "meter_energy": "f_life",
+            "kitbag_pack": "f_life",
+            "larkline_transit": "f_out",
+            "roost_stays": "f_out",
+            "pigeon_parcels": "f_out",
+            "aperture_cinema": "f_play",
+            "larkspur_fest": "f_play",
+            "gavel_auction": "f_play",
+            "grid_puzzle": "p1",
+            "foxglove_reader": "f_play",
+            "pipit_lessons": "f_play",
+            "ironwood_gym": "f_play",
+            "bench_workshop": "f_play"
+          }
+        }
+      ]
+    },
+    {
+      "id": "T10_dock_swap",
+      "name": "换 Dock",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "home",
+        "layout"
+      ],
+      "instruction": "他想把「银行」放进 Dock。Dock 只放得下四个，所以先把「相机」挪到第二页，再把银行放进去。",
+      "goal": [
+        {
+          "name": "银行进了 Dock",
+          "path": "derived.dock",
+          "op": "contains",
+          "value": "kestrel_bank"
+        },
+        {
+          "name": "相机出了 Dock",
+          "path": "derived.dock",
+          "op": "not_contains",
+          "value": "lumen_camera"
+        },
+        {
+          "name": "相机在第二页",
+          "path": "derived.place.lumen_camera",
+          "op": "eq",
+          "value": "p2"
+        },
+        {
+          "name": "Dock 还是四个",
+          "path": "derived.dockCount",
+          "op": "eq",
+          "value": 4
+        }
+      ]
+    },
+    {
+      "id": "T11_sleep_count",
+      "name": "睡眠模式下几条会响",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "notifications",
+        "query"
+      ],
+      "instruction": "切到「睡眠」，然后告诉我：通知中心这些，今晚还有几条会把他吵醒？ 只回答所问的数值，不要列出其它数字。",
+      "goal": [
+        {
+          "name": "睡眠模式",
+          "path": "derived.focus",
+          "op": "eq",
+          "value": "sleep"
+        },
+        {
+          "name": "确实是 4 条",
+          "path": "derived.deliveredCount",
+          "op": "eq",
+          "value": 4
+        },
+        {
+          "name": "Requested numeric answer",
+          "source": "answer",
+          "op": "eq",
+          "value": 4,
+          "extract": "single_number"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T12_work_count",
+      "name": "工作模式下几条会响",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "notifications",
+        "query"
+      ],
+      "instruction": "切到「工作」，然后告诉我这十三条里有几条会响。 只回答所问的数值，不要列出其它数字。",
+      "goal": [
+        {
+          "name": "工作模式",
+          "path": "derived.focus",
+          "op": "eq",
+          "value": "work"
+        },
+        {
+          "name": "确实是 7 条",
+          "path": "derived.deliveredCount",
+          "op": "eq",
+          "value": 7
+        },
+        {
+          "name": "Requested numeric answer",
+          "source": "answer",
+          "op": "eq",
+          "value": 7,
+          "extract": "single_number"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T13_gavel_why",
+      "name": "问一句：拍卖那条为什么永远不响",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "notifications",
+        "query"
+      ],
+      "instruction": "「拍卖」那条通知，不管切到哪个专注模式都不会响。为什么？（别去改它，只告诉我原因。）",
+      "goal": [
+        {
+          "name": "说到通知开关关着",
+          "source": "answer",
+          "op": "regex",
+          "value": "(通知.{0,10}关|关.{0,10}通知)"
+        },
+        {
+          "name": "提到拍卖",
+          "source": "answer",
+          "op": "contains",
+          "value": "拍卖"
+        },
+        {
+          "name": "没有去把它打开",
+          "path": "derived.notifyOffIds",
+          "op": "contains",
+          "value": "gavel_auction"
+        },
+        {
+          "name": "专注模式也没动",
+          "path": "derived.focus",
+          "op": "eq",
+          "value": "none"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T14_allow_zhangwei",
+      "name": "让张伟的消息穿过睡眠模式",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "notifications"
+      ],
+      "instruction": "睡眠模式下王倩的消息能响，但张伟那两条被拦住了。用最少的改动让张伟的消息今晚也能响——别去动别的模式的放行名单。",
+      "goal": [
+        {
+          "name": "睡眠模式",
+          "path": "derived.focus",
+          "op": "eq",
+          "value": "sleep"
+        },
+        {
+          "name": "睡眠只放行了信息",
+          "path": "derived.allowSleep",
+          "op": "set_eq",
+          "value": [
+            "quill_messages"
+          ]
+        },
+        {
+          "name": "现在 6 条会响",
+          "path": "derived.deliveredCount",
+          "op": "eq",
+          "value": 6
+        },
+        {
+          "name": "工作模式的名单没动",
+          "path": "derived.allowWork",
+          "op": "set_eq",
+          "value": [
+            "marlin_mail",
+            "rota_shifts",
+            "trellis_build"
+          ]
+        },
+        {
+          "name": "derived.allowDnd",
+          "path": "derived.allowDnd",
+          "op": "eq",
+          "value": []
+        },
+        {
+          "name": "allow.none",
+          "path": "allow.none",
+          "op": "eq",
+          "value": []
+        }
+      ]
+    },
+    {
+      "id": "T15_mute_and_clear",
+      "name": "先闭嘴，再清空",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "notifications"
+      ],
+      "instruction": "「音乐」老是推播客更新，把它的通知彻底关掉；然后把通知中心清空。它的后台刷新先留着别动。",
+      "goal": [
+        {
+          "name": "音乐的通知关了",
+          "path": "derived.notifyOffIds",
+          "op": "contains",
+          "value": "sonora_music"
+        },
+        {
+          "name": "通知中心空了",
+          "path": "derived.notifCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "音乐还在后台跑",
+          "path": "derived.bgOnIds",
+          "op": "contains",
+          "value": "sonora_music"
+        },
+        {
+          "name": "后台一个都没关",
+          "path": "derived.bgOnCount",
+          "op": "eq",
+          "value": 15
+        }
+      ]
+    },
+    {
+      "id": "T16_survive_min",
+      "name": "低电量 + 关一个",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "battery",
+        "planning"
+      ],
+      "instruction": "他明早 06:40 必须被闹钟叫醒。打开低电量模式，再关掉尽可能少的 app 的后台刷新，让电撑到闹钟响。多关一个都不行。",
+      "goal": [
+        {
+          "name": "低电量模式开了",
+          "path": "derived.lowPower",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "撑得到闹钟",
+          "path": "derived.survivesToAlarm",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "只关了一个",
+          "path": "derived.bgOnCount",
+          "op": "eq",
+          "value": 14
+        },
+        {
+          "name": "通知没动",
+          "path": "derived.notifCount",
+          "op": "eq",
+          "value": 13
+        },
+        {
+          "name": "apps[?id=quill_messages][0].notify",
+          "path": "apps[?id=quill_messages][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=covey_contacts][0].notify",
+          "path": "apps[?id=covey_contacts][0].notify",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "apps[?id=lumen_camera][0].notify",
+          "path": "apps[?id=lumen_camera][0].notify",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "apps[?id=compass_maps][0].notify",
+          "path": "apps[?id=compass_maps][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=nightjar_clock][0].notify",
+          "path": "apps[?id=nightjar_clock][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=cirrus_weather][0].notify",
+          "path": "apps[?id=cirrus_weather][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=slate_calc][0].notify",
+          "path": "apps[?id=slate_calc][0].notify",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "apps[?id=umber_photos][0].notify",
+          "path": "apps[?id=umber_photos][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=marlin_mail][0].notify",
+          "path": "apps[?id=marlin_mail][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=sonora_music][0].notify",
+          "path": "apps[?id=sonora_music][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=squirrel_eats][0].notify",
+          "path": "apps[?id=squirrel_eats][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=harbour_files][0].notify",
+          "path": "apps[?id=harbour_files][0].notify",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "apps[?id=kestrel_bank][0].notify",
+          "path": "apps[?id=kestrel_bank][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=bastion_loan][0].notify",
+          "path": "apps[?id=bastion_loan][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=anvil_remit][0].notify",
+          "path": "apps[?id=anvil_remit][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=tally_split][0].notify",
+          "path": "apps[?id=tally_split][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=cinder_vault][0].notify",
+          "path": "apps[?id=cinder_vault][0].notify",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "apps[?id=hearth_home][0].notify",
+          "path": "apps[?id=hearth_home][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=sable_privacy][0].notify",
+          "path": "apps[?id=sable_privacy][0].notify",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "apps[?id=tideline_screen][0].notify",
+          "path": "apps[?id=tideline_screen][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=trellis_build][0].notify",
+          "path": "apps[?id=trellis_build][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=rota_shifts][0].notify",
+          "path": "apps[?id=rota_shifts][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=quorum_vote][0].notify",
+          "path": "apps[?id=quorum_vote][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=pitchside_league][0].notify",
+          "path": "apps[?id=pitchside_league][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=saffron_recipes][0].notify",
+          "path": "apps[?id=saffron_recipes][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=levain_bake][0].notify",
+          "path": "apps[?id=levain_bake][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=willow_meds][0].notify",
+          "path": "apps[?id=willow_meds][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=meter_energy][0].notify",
+          "path": "apps[?id=meter_energy][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=kitbag_pack][0].notify",
+          "path": "apps[?id=kitbag_pack][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=larkline_transit][0].notify",
+          "path": "apps[?id=larkline_transit][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=roost_stays][0].notify",
+          "path": "apps[?id=roost_stays][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=pigeon_parcels][0].notify",
+          "path": "apps[?id=pigeon_parcels][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=aperture_cinema][0].notify",
+          "path": "apps[?id=aperture_cinema][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=larkspur_fest][0].notify",
+          "path": "apps[?id=larkspur_fest][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=gavel_auction][0].notify",
+          "path": "apps[?id=gavel_auction][0].notify",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "apps[?id=grid_puzzle][0].notify",
+          "path": "apps[?id=grid_puzzle][0].notify",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "apps[?id=foxglove_reader][0].notify",
+          "path": "apps[?id=foxglove_reader][0].notify",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "apps[?id=pipit_lessons][0].notify",
+          "path": "apps[?id=pipit_lessons][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=ironwood_gym][0].notify",
+          "path": "apps[?id=ironwood_gym][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "apps[?id=bench_workshop][0].notify",
+          "path": "apps[?id=bench_workshop][0].notify",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "notifs",
+          "path": "notifs",
+          "op": "eq",
+          "value": [
+            {
+              "id": "n_01",
+              "app": "quill_messages",
+              "who": "王倩",
+              "text": "行李收好了吗，别忘了充电器",
+              "at": 1272,
+              "urgent": false
+            },
+            {
+              "id": "n_02",
+              "app": "quill_messages",
+              "who": "张伟",
+              "text": "明天的会改到十点了",
+              "at": 1143,
+              "urgent": false
+            },
+            {
+              "id": "n_03",
+              "app": "quill_messages",
+              "who": "张伟",
+              "text": "会议室换成 B 座 12 层",
+              "at": 1144,
+              "urgent": false
+            },
+            {
+              "id": "n_04",
+              "app": "marlin_mail",
+              "who": null,
+              "text": "本周迭代评审材料（4 封）",
+              "at": 1240,
+              "urgent": false
+            },
+            {
+              "id": "n_05",
+              "app": "kestrel_bank",
+              "who": null,
+              "text": "尾号 4412 支出 128.00 元",
+              "at": 1207,
+              "urgent": true
+            },
+            {
+              "id": "n_06",
+              "app": "cirrus_weather",
+              "who": null,
+              "text": "明早 07–09 有雨，4.2 毫米",
+              "at": 1290,
+              "urgent": true
+            },
+            {
+              "id": "n_07",
+              "app": "sonora_music",
+              "who": null,
+              "text": "你关注的播客更新了两集",
+              "at": 1135,
+              "urgent": false
+            },
+            {
+              "id": "n_08",
+              "app": "pigeon_parcels",
+              "who": null,
+              "text": "两个包裹明天派送",
+              "at": 1040,
+              "urgent": false
+            },
+            {
+              "id": "n_09",
+              "app": "willow_meds",
+              "who": null,
+              "text": "该吃今晚这一次了",
+              "at": 1320,
+              "urgent": true
+            },
+            {
+              "id": "n_10",
+              "app": "rota_shifts",
+              "who": null,
+              "text": "下周排班表有人换班",
+              "at": 1004,
+              "urgent": false
+            },
+            {
+              "id": "n_11",
+              "app": "gavel_auction",
+              "who": null,
+              "text": "你关注的那件还有 2 小时结束",
+              "at": 1310,
+              "urgent": false
+            },
+            {
+              "id": "n_12",
+              "app": "pipit_lessons",
+              "who": null,
+              "text": "今天的复习还没做",
+              "at": 1200,
+              "urgent": false
+            },
+            {
+              "id": "n_13",
+              "app": "squirrel_eats",
+              "who": null,
+              "text": "常点的那家在做活动",
+              "at": 1110,
+              "urgent": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "T17_count_without_low",
+      "name": "问一句：不开低电量要关几个",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "battery",
+        "query",
+        "read-only"
+      ],
+      "instruction": "假设他不肯开低电量模式。光靠关后台刷新，至少要关掉几个 app 才能撑到 06:40？只回答数字，什么都别改。",
+      "goal": [
+        {
+          "name": "6 个",
+          "source": "answer",
+          "op": "eq",
+          "value": 6,
+          "extract": "single_number"
+        },
+        {
+          "name": "没开低电量",
+          "path": "derived.lowPower",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "一个都没真去关",
+          "path": "derived.bgOnCount",
+          "op": "eq",
+          "value": 15
+        },
+        {
+          "name": "Required: apps",
+          "path": "apps",
+          "op": "multiset_eq",
+          "value": [
+            {
+              "id": "quill_messages",
+              "short": "信息",
+              "title": "信息",
+              "glyph": "chat",
+              "brand": "#0a84ff",
+              "where": "dock",
+              "drain": 25,
+              "mb": 480,
+              "used": 22,
+              "unread": 3,
+              "notify": true,
+              "bg": true
+            },
+            {
+              "id": "covey_contacts",
+              "short": "通讯录",
+              "title": "通讯录",
+              "glyph": "user",
+              "brand": "#007aff",
+              "where": "dock",
+              "drain": 5,
+              "mb": 90,
+              "used": 4,
+              "unread": 0,
+              "notify": false,
+              "bg": true
+            },
+            {
+              "id": "lumen_camera",
+              "short": "相机",
+              "title": "Camera",
+              "glyph": "camera",
+              "brand": "#ffd60a",
+              "where": "dock",
+              "drain": 0,
+              "mb": 2140,
+              "used": 11,
+              "unread": 0,
+              "notify": false,
+              "bg": false
+            },
+            {
+              "id": "compass_maps",
+              "short": "地图",
+              "title": "Maps",
+              "glyph": "pin",
+              "brand": "#1b6ac9",
+              "where": "dock",
+              "drain": 60,
+              "mb": 980,
+              "used": 16,
+              "unread": 0,
+              "notify": true,
+              "bg": true
+            },
+            {
+              "id": "nightjar_clock",
+              "short": "时钟",
+              "title": "时钟",
+              "glyph": "clock",
+              "brand": "#ff9f0a",
+              "where": "p1",
+              "drain": 5,
+              "mb": 40,
+              "used": 3,
+              "unread": 0,
+              "notify": true,
+              "bg": true
+            },
+            {
+              "id": "cirrus_weather",
+              "short": "天气",
+              "title": "天气",
+              "glyph": "sun",
+              "brand": "#5ac8fa",
+              "where": "p1",
+              "drain": 35,
+              "mb": 120,
+              "used": 6,
+              "unread": 1,
+              "notify": true,
+              "bg": true
+            },
+            {
+              "id": "slate_calc",
+              "short": "计算器",
+              "title": "计算器",
+              "glyph": "calc",
+              "brand": "#ff9f0a",
+              "where": "p1",
+              "drain": 0,
+              "mb": 20,
+              "used": 2,
+              "unread": 0,
+              "notify": false,
+              "bg": false
+            },
+            {
+              "id": "umber_photos",
+              "short": "相册",
+              "title": "Umber",
+              "glyph": "image",
+              "brand": "#e0a35c",
+              "where": "p1",
+              "drain": 45,
+              "mb": 4820,
+              "used": 19,
+              "unread": 0,
+              "notify": true,
+              "bg": true
+            },
+            {
+              "id": "marlin_mail",
+              "short": "邮件",
+              "title": "Marlin Mail",
+              "glyph": "mail",
+              "brand": "#1f6feb",
+              "where": "p1",
+              "drain": 40,
+              "mb": 610,
+              "used": 31,
+              "unread": 4,
+              "notify": true,
+              "bg": true
+            },
+            {
+              "id": "sonora_music",
+              "short": "音乐",
+              "title": "Sonora",
+              "glyph": "music",
+              "brand": "#c084fc",
+              "where": "p1",
+              "drain": 70,
+              "mb": 1960,
+              "used": 74,
+              "unread": 2,
+              "notify": true,
+              "bg": true
+            },
+            {
+              "id": "squirrel_eats",
+              "short": "外卖",
+              "title": "松鼠外卖 · Squirrel Eats",
+              "glyph": "bag",
+              "brand": "#ff6b35",
+              "where": "p1",
+              "drain": 20,
+              "mb": 310,
+              "used": 13,
+              "unread": 0,
+              "notify": true,
+              "bg": true
+            },
+            {
+              "id": "harbour_files",
+              "short": "文件",
+              "title": "Files",
+              "glyph": "folder",
+              "brand": "#1a73e8",
+              "where": "p1",
+              "drain": 15,
+              "mb": 70,
+              "used": 5,
+              "unread": 0,
+              "notify": false,
+              "bg": true
+            },
+            {
+              "id": "kestrel_bank",
+              "short": "银行",
+              "title": "Kestrel",
+              "glyph": "bank",
+              "brand": "#1d63d1",
+              "where": "p2",
+              "drain": 10,
+              "mb": 260,
+              "used": 9,
+              "unread": 1,
+              "notify": true,
+              "bg": true
+            },
+            {
+              "id": "bastion_loan",
+              "short": "还款",
+              "title": "Bastion",
+              "glyph": "card",
+              "brand": "#4c3bcf",
+              "where": "p2",
+              "drain": 0,
+              "mb": 110,
+              "used": 4,
+              "unread": 0,
+              "notify": true,
+              "bg": false
+            },
+            {
+              "id": "anvil_remit",
+              "short": "汇款",
+              "title": "Anvil",
+              "glyph": "swap",
+              "brand": "#a8321e",
+              "where": "p2",
+              "drain": 0,
+              "mb": 140,
+              "used": 3,
+              "unread": 0,
+              "notify": true,
+              "bg": false
+            },
+            {
+              "id": "tally_split",
+              "short": "分账",
+              "title": "Tally",
+              "glyph": "split",
+              "brand": "#4f46e5",
+              "where": "p2",
+              "drain": 0,
+              "mb": 95,
+              "used": 6,
+              "unread": 0,
+              "notify": true,
+              "bg": false
+            },
+            {
+              "id": "cinder_vault",
+              "short": "密码",
+              "title": "Cinder",
+              "glyph": "key",
+              "brand": "#e2704a",
+              "where": "p2",
+              "drain": 0,
+              "mb": 60,
+              "used": 2,
+              "unread": 0,
+              "notify": false,
+              "bg": false
+            },
+            {
+              "id": "hearth_home",
+              "short": "家",
+              "title": "Hearth · Home",
+              "glyph": "home",
+              "brand": "#f0a24b",
+              "where": "p2",
+              "drain": 30,
+              "mb": 180,
+              "used": 8,
+              "unread": 0,
+              "notify": true,
+              "bg": true
+            },
+            {
+              "id": "sable_privacy",
+              "short": "隐私",
+              "title": "Privacy",
+              "glyph": "shield",
+              "brand": "#007aff",
+              "where": "p2",
+              "drain": 0,
+              "mb": 30,
+              "used": 1,
+              "unread": 0,
+              "notify": false,
+              "bg": false
+            },
+            {
+              "id": "tideline_screen",
+              "short": "屏幕时间",
+              "title": "屏幕使用时间",
+              "glyph": "hourglass",
+              "brand": "#5856d6",
+              "where": "p2",
+              "drain": 0,
+              "mb": 25,
+              "used": 2,
+              "unread": 0,
+              "notify": true,
+              "bg": false
+            },
+            {
+              "id": "trellis_build",
+              "short": "装修",
+              "title": "Trellis",
+              "glyph": "hammer",
+              "brand": "#38bdf8",
+              "where": "f_work",
+              "drain": 0,
+              "mb": 150,
+              "used": 7,
+              "unread": 0,
+              "notify": true,
+              "bg": false
+            },
+            {
+              "id": "rota_shifts",
+              "short": "排班",
+              "title": "排班",
+              "glyph": "cal",
+              "brand": "#0f766e",
+              "where": "f_work",
+              "drain": 0,
+              "mb": 80,
+              "used": 12,
+              "unread": 1,
+              "notify": true,
+              "bg": false
+            },
+            {
+              "id": "quorum_vote",
+              "short": "业委会",
+              "title": "Quorum",
+              "glyph": "ballot",
+              "brand": "#c8102e",
+              "where": "f_work",
+              "drain": 0,
+              "mb": 35,
+              "used": 1,
+              "unread": 0,
+              "notify": true,
+              "bg": false
+            },
+            {
+              "id": "pitchside_league",
+              "short": "联赛",
+              "title": "Pitchside",
+              "glyph": "football",
+              "brand": "#146b45",
+              "where": "f_work",
+              "drain": 0,
+              "mb": 90,
+              "used": 5,
+              "unread": 0,
+              "notify": true,
+              "bg": false
+            },
+            {
+              "id": "saffron_recipes",
+              "short": "菜谱",
+              "title": "Saffron",
+              "glyph": "chef",
+              "brand": "#1f6f4a",
+              "where": "f_life",
+              "drain": 0,
+              "mb": 420,
+              "used": 14,
+              "unread": 0,
+              "notify": true,
+              "bg": false
+            },
+            {
+              "id": "levain_bake",
+              "short": "烘焙",
+              "title": "Levain",
+              "glyph": "wheat",
+              "brand": "#e0a33c",
+              "where": "f_life",
+              "drain": 0,
+              "mb": 70,
+              "used": 9,
+              "unread": 0,
+              "notify": true,
+              "bg": false
+            },
+            {
+              "id": "willow_meds",
+              "short": "用药",
+              "title": "Willow",
+              "glyph": "pill",
+              "brand": "#2b7f8f",
+              "where": "f_life",
+              "drain": 0,
+              "mb": 45,
+              "used": 3,
+              "unread": 1,
+              "notify": true,
+              "bg": false
+            },
+            {
+              "id": "meter_energy",
+              "short": "抄表",
+              "title": "抄表",
+              "glyph": "bolt",
+              "brand": "#1668c8",
+              "where": "f_life",
+              "drain": 0,
+              "mb": 55,
+              "used": 4,
+              "unread": 0,
+              "notify": true,
+              "bg": false
+            },
+            {
+              "id": "kitbag_pack",
+              "short": "行李",
+              "title": "Kitbag",
+              "glyph": "suitcase",
+              "brand": "#3c6e47",
+              "where": "f_life",
+              "drain": 0,
+              "mb": 65,
+              "used": 18,
+              "unread": 0,
+              "notify": true,
+              "bg": false
+            },
+            {
+              "id": "larkline_transit",
+              "short": "公交",
+              "title": "Larkline",
+              "glyph": "bus",
+              "brand": "#0f766e",
+              "where": "f_out",
+              "drain": 25,
+              "mb": 210,
+              "used": 7,
+              "unread": 0,
+              "notify": true,
+              "bg": true
+            },
+            {
+              "id": "roost_stays",
+              "short": "订房",
+              "title": "Roost · Stays",
+              "glyph": "bed",
+              "brand": "#2f6f5e",
+              "where": "f_out",
+              "drain": 0,
+              "mb": 380,
+              "used": 11,
+              "unread": 0,
+              "notify": true,
+              "bg": false
+            },
+            {
+              "id": "pigeon_parcels",
+              "short": "快递",
+              "title": "Pigeon",
+              "glyph": "box",
+              "brand": "#b0442c",
+              "where": "f_out",
+              "drain": 20,
+              "mb": 130,
+              "used": 6,
+              "unread": 2,
+              "notify": true,
+              "bg": true
+            },
+            {
+              "id": "aperture_cinema",
+              "short": "电影",
+              "title": "Aperture Cinema",
+              "glyph": "film",
+              "brand": "#f5c451",
+              "where": "f_play",
+              "drain": 0,
+              "mb": 290,
+              "used": 8,
+              "unread": 0,
+              "notify": true,
+              "bg": false
+            },
+            {
+              "id": "larkspur_fest",
+              "short": "音乐节",
+              "title": "Larkspur",
+              "glyph": "ticket",
+              "brand": "#e8b04b",
+              "where": "f_play",
+              "drain": 0,
+              "mb": 160,
+              "used": 4,
+              "unread": 0,
+              "notify": true,
+              "bg": false
+            },
+            {
+              "id": "gavel_auction",
+              "short": "拍卖",
+              "title": "Gavel",
+              "glyph": "gavel",
+              "brand": "#1f4d3d",
+              "where": "f_play",
+              "drain": 0,
+              "mb": 120,
+              "used": 6,
+              "unread": 1,
+              "notify": false,
+              "bg": false
+            },
+            {
+              "id": "grid_puzzle",
+              "short": "数独",
+              "title": "数独",
+              "glyph": "grid9",
+              "brand": "#1b58a6",
+              "where": "f_play",
+              "drain": 0,
+              "mb": 40,
+              "used": 21,
+              "unread": 0,
+              "notify": false,
+              "bg": false
+            },
+            {
+              "id": "foxglove_reader",
+              "short": "阅读",
+              "title": "Foxglove",
+              "glyph": "book",
+              "brand": "#8a5a2b",
+              "where": "f_play",
+              "drain": 0,
+              "mb": 760,
+              "used": 27,
+              "unread": 0,
+              "notify": false,
+              "bg": false
+            },
+            {
+              "id": "pipit_lessons",
+              "short": "语言课",
+              "title": "Pipit",
+              "glyph": "cap",
+              "brand": "#3f9d54",
+              "where": "f_play",
+              "drain": 0,
+              "mb": 340,
+              "used": 16,
+              "unread": 1,
+              "notify": true,
+              "bg": false
+            },
+            {
+              "id": "ironwood_gym",
+              "short": "健身",
+              "title": "Ironwood",
+              "glyph": "dumbbell",
+              "brand": "#c9f24a",
+              "where": "f_play",
+              "drain": 50,
+              "mb": 230,
+              "used": 23,
+              "unread": 0,
+              "notify": true,
+              "bg": true
+            },
+            {
+              "id": "bench_workshop",
+              "short": "木工",
+              "title": "Bench",
+              "glyph": "saw",
+              "brand": "#8a5a1e",
+              "where": "f_play",
+              "drain": 0,
+              "mb": 85,
+              "used": 3,
+              "unread": 0,
+              "notify": true,
+              "bg": false
+            }
+          ]
+        },
+        {
+          "name": "Required: notifs",
+          "path": "notifs",
+          "op": "multiset_eq",
+          "value": [
+            {
+              "id": "n_01",
+              "app": "quill_messages",
+              "who": "王倩",
+              "text": "行李收好了吗，别忘了充电器",
+              "at": 1272,
+              "urgent": false
+            },
+            {
+              "id": "n_02",
+              "app": "quill_messages",
+              "who": "张伟",
+              "text": "明天的会改到十点了",
+              "at": 1143,
+              "urgent": false
+            },
+            {
+              "id": "n_03",
+              "app": "quill_messages",
+              "who": "张伟",
+              "text": "会议室换成 B 座 12 层",
+              "at": 1144,
+              "urgent": false
+            },
+            {
+              "id": "n_04",
+              "app": "marlin_mail",
+              "who": null,
+              "text": "本周迭代评审材料（4 封）",
+              "at": 1240,
+              "urgent": false
+            },
+            {
+              "id": "n_05",
+              "app": "kestrel_bank",
+              "who": null,
+              "text": "尾号 4412 支出 128.00 元",
+              "at": 1207,
+              "urgent": true
+            },
+            {
+              "id": "n_06",
+              "app": "cirrus_weather",
+              "who": null,
+              "text": "明早 07–09 有雨，4.2 毫米",
+              "at": 1290,
+              "urgent": true
+            },
+            {
+              "id": "n_07",
+              "app": "sonora_music",
+              "who": null,
+              "text": "你关注的播客更新了两集",
+              "at": 1135,
+              "urgent": false
+            },
+            {
+              "id": "n_08",
+              "app": "pigeon_parcels",
+              "who": null,
+              "text": "两个包裹明天派送",
+              "at": 1040,
+              "urgent": false
+            },
+            {
+              "id": "n_09",
+              "app": "willow_meds",
+              "who": null,
+              "text": "该吃今晚这一次了",
+              "at": 1320,
+              "urgent": true
+            },
+            {
+              "id": "n_10",
+              "app": "rota_shifts",
+              "who": null,
+              "text": "下周排班表有人换班",
+              "at": 1004,
+              "urgent": false
+            },
+            {
+              "id": "n_11",
+              "app": "gavel_auction",
+              "who": null,
+              "text": "你关注的那件还有 2 小时结束",
+              "at": 1310,
+              "urgent": false
+            },
+            {
+              "id": "n_12",
+              "app": "pipit_lessons",
+              "who": null,
+              "text": "今天的复习还没做",
+              "at": 1200,
+              "urgent": false
+            },
+            {
+              "id": "n_13",
+              "app": "squirrel_eats",
+              "who": null,
+              "text": "常点的那家在做活动",
+              "at": 1110,
+              "urgent": false
+            }
+          ]
+        },
+        {
+          "name": "Required: focus",
+          "path": "focus",
+          "op": "eq",
+          "value": "none"
+        },
+        {
+          "name": "Required: allow",
+          "path": "allow",
+          "op": "eq",
+          "value": {
+            "none": [],
+            "work": [
+              "marlin_mail",
+              "rota_shifts",
+              "trellis_build"
+            ],
+            "sleep": [],
+            "dnd": []
+          }
+        },
+        {
+          "name": "Required: lowPower",
+          "path": "lowPower",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Required: settings",
+          "path": "settings",
+          "op": "eq",
+          "value": {
+            "showBadges": true,
+            "wallpaperDim": false,
+            "handoff": true
+          }
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T18_do_without_low",
+      "name": "不开低电量，硬关",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "battery",
+        "planning"
+      ],
+      "instruction": "别开低电量模式。只靠关后台刷新，把电撑到 06:40，而且关掉的 app 个数要最少。",
+      "goal": [
+        {
+          "name": "没开低电量",
+          "path": "derived.lowPower",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "撑得到闹钟",
+          "path": "derived.survivesToAlarm",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "正好关了六个",
+          "path": "derived.bgOnCount",
+          "op": "eq",
+          "value": 9
+        },
+        {
+          "name": "通知没动",
+          "path": "derived.notifCount",
+          "op": "eq",
+          "value": 13
+        }
+      ]
+    },
+    {
+      "id": "T19_compass_saving",
+      "name": "地图关掉能多撑多久",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "battery",
+        "query"
+      ],
+      "instruction": "把「地图」的后台刷新关掉（低电量模式别开），然后告诉我这一下多撑了多少分钟、没电时间推到了几点。",
+      "goal": [
+        {
+          "name": "地图的后台关了",
+          "path": "derived.bgOnIds",
+          "op": "not_contains",
+          "value": "compass_maps"
+        },
+        {
+          "name": "只动了这一个",
+          "path": "derived.bgOnCount",
+          "op": "eq",
+          "value": 14
+        },
+        {
+          "name": "没开低电量",
+          "path": "derived.lowPower",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "多 29 分钟",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![\\d.,+-])29(?:[.,]0+)?(?!\\d|[.,]\\d)"
+        },
+        {
+          "name": "03:20",
+          "source": "answer",
+          "op": "regex",
+          "value": "0?3[:.]?20"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T20_night",
+      "name": "把今晚安排明白",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "battery",
+        "notifications",
+        "planning"
+      ],
+      "instruction": "把他这一晚安排明白：电要撑到 06:40 的闹钟（开低电量模式，再关掉尽量少的 app 后台），睡觉时只想被家里人和真正紧急的事吵醒。都办完之后，告诉我今晚还有几条通知会响。 只回答所问的数值，不要列出其它数字。",
+      "goal": [
+        {
+          "name": "低电量模式开了",
+          "path": "derived.lowPower",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "撑得到闹钟",
+          "path": "derived.survivesToAlarm",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "只关了一个后台",
+          "path": "derived.bgOnCount",
+          "op": "eq",
+          "value": 14
+        },
+        {
+          "name": "睡眠模式",
+          "path": "derived.focus",
+          "op": "eq",
+          "value": "sleep"
+        },
+        {
+          "name": "确实是 4 条",
+          "path": "derived.deliveredCount",
+          "op": "eq",
+          "value": 4
+        },
+        {
+          "name": "Requested numeric answer",
+          "source": "answer",
+          "op": "eq",
+          "value": 4,
+          "extract": "single_number"
+        }
+      ],
+      "answer_expected": true
+    }
+  ],
+  "revision": "open-source-review-4"
+}

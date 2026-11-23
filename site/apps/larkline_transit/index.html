@@ -4,31 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Larkline (mocked GUI env)</title>
-<!--
-  ============================================================================
-  Larkline — a single-file H5 city transit app for agent research.
 
-  Same two-block contract as every environment here: script#engine is a pure,
-  DOM-free state machine on globalThis.GUI_ENGINE; script#ui renders its screen
-  tree and exposes window.__ENV__.
-
-  What is new: nothing here is a catalogue. There is no list of journeys to
-  scroll — there is a timetable (four lines, a first departure and a headway
-  each), and every journey on screen is *computed* by a planner that walks it:
-  direct services first, then one-change itineraries through an interchange
-  with a four-minute connection. Change the departure time by five minutes and
-  a different set of trains comes back. Turn on step-free routing and every
-  option through Aldergate disappears, because Aldergate has no lift. The line
-  status page is not decoration either: the Amber line's delay is added to the
-  arrival of any leg that uses it, and the suspended Coral segment removes the
-  journeys that would have crossed it.
-
-  The world clock is deliberately frozen at 14:26. Everything on screen is a
-  function of the timetable and the plan time, never of how many steps an agent
-  has taken to get there, so two agents that reach the same screen by different
-  routes read exactly the same departures.
-  ============================================================================
--->
 <style>
 :root{
   --bg:#f3f5f8; --card:#fff; --line:#e4e8ef; --line2:#d7dce6;
@@ -147,7 +123,6 @@ body.bare .n-sheet{animation:none}
 .n-radio.on:after{content:"";position:absolute;left:7px;top:4px;width:5px;height:9px;
   border:2px solid #fff;border-top:0;border-left:0;transform:rotate(42deg)}
 
-/* ---------------- the plan card ---------------- */
 .plancard{margin:12px 16px;background:var(--card);border-radius:var(--r);border:1px solid var(--line);
   box-shadow:var(--shadow);position:relative;overflow:hidden}
 .plancard .pc-row{display:flex;align-items:center;gap:12px;padding:15px 16px;cursor:pointer;min-height:60px}
@@ -170,7 +145,6 @@ body.bare .n-sheet{animation:none}
   align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto}
 .timerow .st:active{background:#e2e7ef}
 
-/* ---------------- journeys ---------------- */
 .jcard{margin:9px 16px;background:var(--card);border-radius:var(--r);border:1px solid var(--line);
   padding:14px 15px;cursor:pointer;box-shadow:var(--shadow)}
 .jcard:active{background:#f6f8fb}
@@ -198,7 +172,6 @@ body.bare .n-sheet{animation:none}
 .tag.bad{background:#fdecec;color:var(--bad)}
 .tag.acc{background:var(--accent-s);color:var(--accent)}
 
-/* ---------------- leg timeline ---------------- */
 .legs{margin:10px 16px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:6px 0}
 .leg{display:flex;gap:13px;padding:0 16px}
 .leg .lg-rail{flex:0 0 14px;display:flex;flex-direction:column;align-items:center;padding-top:5px}
@@ -214,7 +187,6 @@ body.bare .n-sheet{animation:none}
 .leg .lg-info{margin:7px 0 0 54px;font-size:12.5px;color:var(--ink2);line-height:1.6}
 .leg .lg-info .pf{font-weight:700;color:var(--ink)}
 
-/* ---------------- departure board ---------------- */
 .board{margin:10px 16px;border-radius:var(--r);overflow:hidden;background:#0f1725;border:1px solid #1d2739}
 .board .bd-hd{display:flex;justify-content:space-between;padding:11px 15px;color:#8fa0bd;font-size:11.5px;
   font-weight:700;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid #1d2739}
@@ -231,7 +203,6 @@ body.bare .n-sheet{animation:none}
 .bdrow .bd-status.late{color:#f0b45a}
 .bdrow .bd-status.gone{color:#8b98af}
 
-/* ---------------- fares & tickets ---------------- */
 .fare{margin:12px 16px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px}
 .fare .fa-k{display:flex;justify-content:space-between;font-size:13.5px;color:var(--ink2);padding:5px 0}
 .fare .fa-k b{color:var(--ink);font-weight:650;font-variant-numeric:tabular-nums}
@@ -309,26 +280,17 @@ body.bare .n-sheet{animation:none}
 <div id="hud" class="off"></div>
 
 <script id="engine">
-/* ===========================================================================
- * ENGINE — pure, deterministic, DOM-free.
- *
- * Times are integers: minutes since midnight. Money is integers: pence.
- * The whole timetable is four line definitions; every departure on every
- * screen is arithmetic on (first departure + k x headway + offset along the
- * line), so nothing is stored and nothing can drift.
- * ======================================================================== */
 (function(root){
 'use strict';
 
 var ENV_ID  = 'larkline_transit';
 var VERSION = '1.0.0';
-var NOW     = 866;               /* 14:26, frozen: see the note in the head */
-var SERVICE_START = 300;         /* 05:00 */
-var SERVICE_END   = 1430;        /* 23:50 — last departure from any stop */
-var TRANSFER  = 4;               /* minutes allowed to change trains */
-var PEAK_END  = 570;             /* 09:30 */
+var NOW     = 866;
+var SERVICE_START = 300;
+var SERVICE_END   = 1430;
+var TRANSFER  = 4;
+var PEAK_END  = 570;
 
-/* ------------------------------------------------------------- utilities */
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function pad2(n){ return (n < 10 ? '0' : '') + n; }
 function hhmm(m){ m = ((m % 1440) + 1440) % 1440; return pad2(Math.floor(m/60)) + ':' + pad2(m%60); }
@@ -378,9 +340,6 @@ function setPath(o, path, value){
   return o;
 }
 
-/* ===========================================================================
- * THE NETWORK
- * ======================================================================== */
 var STATIONS = [
   {id:'lk', name:'Larkfield Central', zone:1, stepFree:true,  toilets:true,  bikes:true,
    note:'Main interchange. Blue and Green lines, 6 platforms.'},
@@ -402,8 +361,6 @@ var STATIONS = [
    note:'Green line terminus on the ridge.'}
 ];
 
-/* stops: in the outbound direction. hops[i] = minutes from stops[i] to stops[i+1].
- * first / rfirst are the first departure of the day from each end. */
 var LINES = [
   {id:'blue',  name:'Blue line',  colour:'blue',
    stops:['lk','qy','ag','hn'], hops:[4,5,9],  first:364, headway:10, rfirst:369, rheadway:10},
@@ -415,8 +372,6 @@ var LINES = [
    stops:['qy','cs','bp'],      hops:[8,9],    first:362, headway:20, rfirst:372, rheadway:20}
 ];
 
-/* Live status. A delay is added to the arrival of any leg on that line; a
- * suspension removes every journey that would ride across the named hop. */
 var STATUS0 = [
   {line:'blue',  state:'good',      delay:0, text:'A good service on the whole line.'},
   {line:'green', state:'good',      delay:0, text:'A good service on the whole line.'},
@@ -460,9 +415,6 @@ function priceOf(type, band, peak){
   return base + (peak ? (PEAK_EXTRA[type] || 0) : 0);
 }
 
-/* ===========================================================================
- * THE TIMETABLE — everything below is arithmetic on the four line definitions
- * ======================================================================== */
 var PLATFORMS = {
   lk:{blue:[1,2], green:[3,4]},
   qy:{blue:[1,2], coral:[3,3]},
@@ -484,11 +436,9 @@ function firstDep(line, dir){ return dir ? line.rfirst : line.first; }
 function headwayOf(line, dir){ return dir ? line.rheadway : line.headway; }
 function offsetAt(line, dir, idx){ return sum(dirHops(line, dir).slice(0, idx)); }
 
-/* every departure from a stop is first + k*headway + offset, so the k-th one
- * after a given minute is a division, not a search */
 function departuresFrom(line, dir, stnId, after, count){
   var stops = dirStops(line, dir), i = stops.indexOf(stnId);
-  if (i < 0 || i === stops.length - 1) return [];        /* the terminus has none this way */
+  if (i < 0 || i === stops.length - 1) return [];
   var t0 = firstDep(line, dir) + offsetAt(line, dir, i);
   var h  = headwayOf(line, dir);
   var k  = Math.max(0, Math.ceil((after - t0) / h));
@@ -537,7 +487,6 @@ function makeOption(legs){
   return o;
 }
 
-/* Direct services first, then one change through any station both legs touch. */
 function rawOptions(st, from, to, after, count){
   var out = [];
   count = count || 3;
@@ -582,12 +531,10 @@ function sortOptions(list, how){
     if (how === 'fastest')  return p.mins - q.mins    || p.arr - q.arr || p.dep - q.dep;
     if (how === 'changes')  return p.changes - q.changes || p.arr - q.arr || p.dep - q.dep;
     if (how === 'latest')   return q.dep - p.dep      || p.arr - q.arr;
-    return p.arr - q.arr || q.dep - p.dep || p.changes - q.changes;   /* earliest arrival */
+    return p.arr - q.arr || q.dep - p.dep || p.changes - q.changes;
   });
   return a;
 }
-/* "Step-free" here means the change happens somewhere with a lift, which is
- * what the filter says on screen; it never removes a direct train. */
 function stepFreeOk(o){ return !o.change || station(o.change).stepFree; }
 
 function planOptions(st){
@@ -605,8 +552,6 @@ function planOptions(st){
   return sortOptions(list, p.sort).slice(0, 5);
 }
 
-/* The board is the same arithmetic read the other way round: every departure
- * from one station, whatever line it is on. */
 function lastReachable(st, line, dir, i){
   var stops = dirStops(line, dir);
   for (var q = i; q < stops.length - 1; q++)
@@ -646,9 +591,6 @@ function serviceCalls(st, lineId, dir, depFromStation, stnId){
   return out;
 }
 
-/* ===========================================================================
- * STATE
- * ======================================================================== */
 function createInitialState(seed){
   seed = seed || 0;
   return {
@@ -658,7 +600,6 @@ function createInitialState(seed){
     selected:null,
     saved:[{id:'sv_1', from:'lk', to:'hn', label:'Larkfield Central to Harbour North'},
            {id:'sv_2', from:'mb', to:'lk', label:'Mossbank to Larkfield Central'}],
-    /* the seed permutes the order of the favourites and nothing else: same stations, same journeys */
     favourites:shuffled(['lk','qy','mb','hn'], seed),
     boardStation:'lk',
     tickets:[{id:'tk_1', type:'single', band:'z12', peak:true, price:360, status:'expired',
@@ -687,9 +628,6 @@ var SELECT = {
   typeLabel:typeLabel, planReady:planReady, isFav:isFav, rawOptions:rawOptions
 };
 
-/* ===========================================================================
- * REDUCER
- * ======================================================================== */
 function reduce(prev, action){
   var st = clone(prev), A = action || {};
   st.ui.toast = null;
@@ -700,7 +638,6 @@ function reduce(prev, action){
   case 'NOOP': break;
   case 'FINISH': st.meta.finished = true; st.meta.answer = A.answer === undefined ? null : A.answer; break;
 
-  /* ---- navigation ---- */
   case 'NAV': push(st, A.to, A.params); break;
   case 'BACK':
     if (st.ui.sheet) st.ui.sheet = null;
@@ -726,13 +663,11 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- planning ---- */
   case 'PICK_OPEN': st.ui.inputs.q_station = ''; push(st, 'picker', {field:A.field}); break;
   case 'PICK_STATION': {
     var f = (route(st).params || {}).field;
     if (f === 'from' || f === 'to') {
       if (st.plan[f === 'from' ? 'to' : 'from'] === A.id) {
-        /* choosing the other end swaps rather than making an impossible journey */
         st.plan[f === 'from' ? 'to' : 'from'] = st.plan[f];
       }
       st.plan[f] = A.id;
@@ -748,7 +683,6 @@ function reduce(prev, action){
   }
   case 'PLAN_MODE': st.plan.mode = A.mode; break;
   case 'TIME_STEP': {
-    /* the first tap snaps onto the five-minute grid, then it moves in fives */
     var t = Math.round((st.plan.time + A.delta) / 5) * 5;
     st.plan.time = ((t % 1440) + 1440) % 1440;
     break;
@@ -770,7 +704,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- saved journeys and favourites ---- */
   case 'SAVE_JOURNEY': {
     var from = st.plan.from, to = st.plan.to;
     if (!from || !to) { toast(st, 'Nothing to save'); break; }
@@ -808,7 +741,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- the board ---- */
   case 'BOARD_STATION': st.boardStation = A.id; break;
   case 'BOARD_OPEN':
     st.boardStation = A.id || st.boardStation;
@@ -832,10 +764,7 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- tickets ---- */
   case 'BUY_OPEN':
-    /* a journey can suggest the zones and the fare period; the type stays the
-     * user's own choice, and A.type is the action name, not a payload */
     if (A.band) st.draft.band = A.band;
     if (A.peak !== undefined) st.draft.peak = !!A.peak;
     push(st, 'tickets', {});
@@ -875,7 +804,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- settings ---- */
   case 'SET_SETTING': st.settings[A.key] = !st.settings[A.key]; break;
 
   default: break;
@@ -883,10 +811,6 @@ function reduce(prev, action){
   return st;
 }
 
-/* ===========================================================================
- * SCREEN TREE — one declarative tree, read by the renderer, the hit-tester
- * and the text observation alike.
- * ======================================================================== */
 function N(t, o){ o = o || {}; o.t = t; return o; }
 function txt(s, cls){ return N('text', {text:s, cls:cls || ''}); }
 function row(id, text, o){
@@ -916,7 +840,6 @@ function disruptions(st){
   return st.status.filter(function(s){ return s.state !== 'good'; });
 }
 
-/* --------------------------------------------------------------- plan */
 function scrPlan(st){
   var d = disruptions(st), p = st.plan;
   var body = [];
@@ -968,7 +891,6 @@ function scrPlan(st){
   ]});
 }
 
-/* ------------------------------------------------------------- picker */
 function scrPicker(st, params){
   var q = String(st.ui.inputs.q_station || '').trim().toLowerCase();
   var field = params.field || 'from';
@@ -1006,7 +928,6 @@ function scrPicker(st, params){
   ]});
 }
 
-/* ------------------------------------------------------------ results */
 function scrResults(st){
   var p = st.plan, opts = planOptions(st);
   var body = [
@@ -1050,7 +971,6 @@ function scrResults(st){
   ]});
 }
 
-/* ------------------------------------------------------------ journey */
 function scrJourney(st){
   var o = st.selected;
   if (!o) return scrPlan(st);
@@ -1095,7 +1015,6 @@ function scrJourney(st){
   ]});
 }
 
-/* -------------------------------------------------------------- board */
 function scrBoard(st){
   var deps = boardFor(st, st.boardStation, 8), s = station(st.boardStation);
   return N('screen', {id:'scr_board', name:'board', c:[
@@ -1124,7 +1043,6 @@ function scrBoard(st){
   ]});
 }
 
-/* ------------------------------------------------------------ service */
 function scrService(st, params){
   var calls = serviceCalls(st, params.line, params.dir, params.dep, params.from);
   var l = lineOf(params.line), stat = statusOf(st, params.line);
@@ -1150,7 +1068,6 @@ function scrService(st, params){
   ]});
 }
 
-/* ------------------------------------------------------------- wallet */
 function scrWallet(st){
   var live = st.tickets.filter(function(t){ return t.status !== 'expired'; });
   var body = [
@@ -1180,7 +1097,6 @@ function scrWallet(st){
   ]});
 }
 
-/* ---------------------------------------------------------- buy sheet */
 function scrTickets(st){
   var d = st.draft, base = priceOf(d.type, d.band, false), extra = draftPrice(st) - base;
   var rows = [{k:typeLabel(d.type) + ', ' + bandLabel(d.band), v:money(base)}];
@@ -1216,7 +1132,6 @@ function scrTickets(st){
   ]});
 }
 
-/* ------------------------------------------------------------- ticket */
 function scrTicket(st, params){
   var t = ticketOf(st, params.id);
   if (!t) return scrWallet(st);
@@ -1251,7 +1166,6 @@ function scrTicket(st, params){
   ]});
 }
 
-/* ------------------------------------------------------------- alerts */
 function scrAlerts(st){
   return N('screen', {id:'scr_alerts', name:'alerts', c:[
     appbar('Line status'),
@@ -1295,7 +1209,6 @@ function scrAlert(st, params){
   ]});
 }
 
-/* ------------------------------------------------------------ station */
 function scrStation(st, params){
   var s = station(params.id);
   if (!s) return scrPlan(st);
@@ -1327,7 +1240,6 @@ function scrStation(st, params){
   ]});
 }
 
-/* ----------------------------------------------------------- settings */
 function scrSettings(st){
   function sw(id, text, key, sub){
     return row(id, text, {sub:sub, arrow:false,
@@ -1382,9 +1294,6 @@ function screen(st){
   return rootNode;
 }
 
-/* =======================================================================
- * TRAVERSAL — element index, GUI action interface, text observation
- * ==================================================================== */
 var SKIP_KEYS = {act:1, minus:1, plus:1, close:1, yes:1, params:1, meta:1, calls:1, seg:1};
 
 function labelOf(n){ return n.text || n.title || n.name || n.label || n.value || ''; }
@@ -1448,7 +1357,6 @@ function step(st, a){
   }
 }
 
-/* ------------------------------------------------- text observation (a11y) */
 function a11y(st){
   var rootNode = screen(st), lines = [], r = route(st), p = st.plan;
   lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
@@ -1550,7 +1458,6 @@ function walkText(n, d, out, st){
   }
 }
 
-/* --------------------------------------------------------- derived view */
 function optView(o){
   if (!o) return null;
   return {depart:hhmm(o.dep), arrive:hhmm(o.arr), minutes:o.mins, changes:o.changes,
@@ -1621,9 +1528,6 @@ root.GUI_ENGINE      = ENGINE;
 </script>
 
 <script id="ui">
-/* ===========================================================================
- * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
- * ======================================================================== */
 (function(){
 'use strict';
 var E = window.GUI_ENGINE;

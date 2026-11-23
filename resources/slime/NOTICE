@@ -1,0 +1,49 @@
+resources/slime/slime/utils/seqlen_balancing.py
+
+Copied from https://github.com/volcengine/verl/blob/468adf22c43b744348051fccd7a5d830c6c3c36a/verl/utils/seqlen_balancing.py
+Copyright 2024 Bytedance Ltd. and/or its affiliates
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+resources/slime/slime/rollout/rm_hub/math_dapo_utils.py
+
+Copyright 2024 Bytedance Ltd. and/or its affiliates
+Copyright 2022 EleutherAI and the HuggingFace Inc. team. All rights reserved.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+Adapted from https://github.com/EleutherAI/lm-evaluation-harness/blob/main/lm_eval/tasks/hendrycks_math/utils.py
+
+resources/slime/slime_plugins/mbridge/mimo.py
+
+Copyright (c) 2025, NVIDIA CORPORATION. All rights reserved.
+
+TileLang-derived kernels
+
+resources/slime/slime_plugins/models/glm5/ops/tilelang_indexer_bwd.py
+resources/slime/slime_plugins/models/glm5/ops/tilelang_indexer_fwd.py
+Adapted from https://github.com/tile-ai/tilelang/tree/4956b5835fa554af6c03d4a6289cad44bf310869
+
+resources/slime/slime_plugins/models/glm5/ops/tilelang_sparse_mla_fwd.py
+Adapted from https://github.com/tile-ai/tilelang/tree/e666d2d3cc483829c57618c9ebf2e4f4ada0819d
+
+Copyright (c) Tile-AI.
+The complete upstream MIT license is preserved in third_party/tilelang/LICENSE.

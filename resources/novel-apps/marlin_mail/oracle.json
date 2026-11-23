@@ -1,0 +1,417 @@
+{
+  "env": "marlin_mail",
+  "note": "Golden action sequences replayed by CI.",
+  "solutions": {
+    "T01_star_contract": [
+      {
+        "action": "tap",
+        "id": "star_m_07"
+      }
+    ],
+    "T02_settings": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_signature"
+      },
+      {
+        "action": "tap",
+        "id": "set_autoArchiveNews"
+      }
+    ],
+    "T03_report_spam": [
+      {
+        "action": "tap",
+        "id": "msg_m_14"
+      },
+      {
+        "action": "tap",
+        "id": "msg_spam"
+      }
+    ],
+    "T04_archive_newsletters": [
+      {
+        "action": "tap",
+        "id": "start_select"
+      },
+      {
+        "action": "tap",
+        "id": "sel_m_06"
+      },
+      {
+        "action": "tap",
+        "id": "sel_m_13"
+      },
+      {
+        "action": "tap",
+        "id": "bulk_archive"
+      }
+    ],
+    "T05_mark_all_read": [
+      {
+        "action": "tap",
+        "id": "start_select"
+      },
+      {
+        "action": "tap",
+        "id": "sel_all"
+      },
+      {
+        "action": "tap",
+        "id": "bulk_read"
+      }
+    ],
+    "T06_query_attachments": [
+      {
+        "action": "tap",
+        "id": "open_search"
+      },
+      {
+        "action": "type",
+        "id": "search_input",
+        "text": "has:attachment"
+      },
+      {
+        "action": "tap",
+        "id": "search_go"
+      },
+      {
+        "action": "finish",
+        "answer": "2"
+      }
+    ],
+    "T07_query_sender": [
+      {
+        "action": "tap",
+        "id": "open_search"
+      },
+      {
+        "action": "type",
+        "id": "search_input",
+        "text": "staging deploy"
+      },
+      {
+        "action": "tap",
+        "id": "search_go"
+      },
+      {
+        "action": "finish",
+        "answer": "Daniel Okafor"
+      }
+    ],
+    "T08_compose": [
+      {
+        "action": "tap",
+        "id": "compose_fab"
+      },
+      {
+        "action": "type",
+        "id": "c_to",
+        "text": "tomas@northwind.io"
+      },
+      {
+        "action": "type",
+        "id": "c_subject",
+        "text": "Friday works"
+      },
+      {
+        "action": "type",
+        "id": "c_body",
+        "text": "See you at 12:30."
+      },
+      {
+        "action": "tap",
+        "id": "compose_send_btn"
+      }
+    ],
+    "T09_reply": [
+      {
+        "action": "tap",
+        "id": "msg_m_01"
+      },
+      {
+        "action": "tap",
+        "id": "msg_reply"
+      },
+      {
+        "action": "type",
+        "id": "c_body",
+        "text": "Slides 4 to 9 ready."
+      },
+      {
+        "action": "tap",
+        "id": "compose_send_btn"
+      }
+    ],
+    "T10_add_label": [
+      {
+        "action": "tap",
+        "id": "msg_m_04"
+      },
+      {
+        "action": "tap",
+        "id": "msg_label"
+      },
+      {
+        "action": "tap",
+        "id": "pick_receipts"
+      },
+      {
+        "action": "tap",
+        "id": "labels_done"
+      }
+    ],
+    "T11_snooze": [
+      {
+        "action": "tap",
+        "id": "msg_m_10"
+      },
+      {
+        "action": "tap",
+        "id": "msg_snooze"
+      },
+      {
+        "action": "tap",
+        "id": "snooze_week"
+      }
+    ],
+    "T12_undo_archive": [
+      {
+        "action": "tap",
+        "id": "msg_m_03"
+      },
+      {
+        "action": "tap",
+        "id": "msg_archive"
+      },
+      {
+        "action": "tap",
+        "id": "toast_undo"
+      }
+    ],
+    "T13_new_label": [
+      {
+        "action": "tap",
+        "id": "tab_labels"
+      },
+      {
+        "action": "tap",
+        "id": "label_add"
+      },
+      {
+        "action": "type",
+        "id": "label_name",
+        "text": "Invoices"
+      },
+      {
+        "action": "tap",
+        "id": "label_create"
+      },
+      {
+        "action": "tap",
+        "id": "tab_inbox"
+      },
+      {
+        "action": "tap",
+        "id": "start_select"
+      },
+      {
+        "action": "tap",
+        "id": "sel_m_02"
+      },
+      {
+        "action": "tap",
+        "id": "sel_m_12"
+      },
+      {
+        "action": "tap",
+        "id": "bulk_label"
+      },
+      {
+        "action": "tap",
+        "id": "pick_lb_1"
+      },
+      {
+        "action": "tap",
+        "id": "labels_done"
+      }
+    ],
+    "T14_empty_trash": [
+      {
+        "action": "tap",
+        "id": "tab_folders"
+      },
+      {
+        "action": "tap",
+        "id": "folder_trash"
+      },
+      {
+        "action": "tap",
+        "id": "empty_trash"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      }
+    ],
+    "T15_triage_flagship": [
+      {
+        "action": "tap",
+        "id": "start_select"
+      },
+      {
+        "action": "tap",
+        "id": "sel_m_06"
+      },
+      {
+        "action": "tap",
+        "id": "sel_m_13"
+      },
+      {
+        "action": "tap",
+        "id": "bulk_archive"
+      },
+      {
+        "action": "tap",
+        "id": "msg_m_14"
+      },
+      {
+        "action": "tap",
+        "id": "msg_spam"
+      },
+      {
+        "action": "tap",
+        "id": "msg_m_10"
+      },
+      {
+        "action": "tap",
+        "id": "msg_snooze"
+      },
+      {
+        "action": "tap",
+        "id": "snooze_tomorrow"
+      },
+      {
+        "action": "tap",
+        "id": "star_m_07"
+      },
+      {
+        "action": "tap",
+        "id": "start_select"
+      },
+      {
+        "action": "tap",
+        "id": "sel_all"
+      },
+      {
+        "action": "tap",
+        "id": "bulk_read"
+      }
+    ],
+    "T16_unread_filter": [
+      {
+        "action": "tap",
+        "id": "filter_unread"
+      },
+      {
+        "action": "finish",
+        "answer": "7"
+      }
+    ],
+    "T17_move_keep_star": [
+      {
+        "action": "tap",
+        "id": "msg_m_05"
+      },
+      {
+        "action": "tap",
+        "id": "msg_move"
+      },
+      {
+        "action": "tap",
+        "id": "move_archive"
+      }
+    ],
+    "T18_query_top_label": [
+      {
+        "action": "tap",
+        "id": "tab_labels"
+      },
+      {
+        "action": "finish",
+        "answer": "Work"
+      }
+    ],
+    "T19_star_then_archive": [
+      {
+        "action": "tap",
+        "id": "star_m_02"
+      },
+      {
+        "action": "tap",
+        "id": "star_m_08"
+      },
+      {
+        "action": "tap",
+        "id": "star_m_12"
+      },
+      {
+        "action": "tap",
+        "id": "start_select"
+      },
+      {
+        "action": "tap",
+        "id": "sel_m_02"
+      },
+      {
+        "action": "tap",
+        "id": "sel_m_08"
+      },
+      {
+        "action": "tap",
+        "id": "sel_m_12"
+      },
+      {
+        "action": "tap",
+        "id": "bulk_archive"
+      }
+    ],
+    "T20_inbox_budget": [
+      {
+        "action": "tap",
+        "id": "start_select"
+      },
+      {
+        "action": "tap",
+        "id": "sel_m_02"
+      },
+      {
+        "action": "tap",
+        "id": "sel_m_06"
+      },
+      {
+        "action": "tap",
+        "id": "sel_m_10"
+      },
+      {
+        "action": "tap",
+        "id": "sel_m_12"
+      },
+      {
+        "action": "tap",
+        "id": "sel_m_13"
+      },
+      {
+        "action": "tap",
+        "id": "sel_m_14"
+      },
+      {
+        "action": "tap",
+        "id": "bulk_archive"
+      }
+    ]
+  }
+}

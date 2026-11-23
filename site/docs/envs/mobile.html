@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Overview of MobileWorld, AndroidWorld, and MobileGym: task scope, Android/mobile runtimes, verification protocols, and MAI-Gym-9B results.">
+  <link rel="canonical" href="https://tongyi-mai.github.io/MAI-Gym/docs/envs/mobile.html">
+  <meta property="og:site_name" content="MAI-Gym Docs">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Mobile Benchmarks — MAI-Gym Docs">
+  <meta property="og:description" content="Overview of MobileWorld, AndroidWorld, and MobileGym: task scope, Android/mobile runtimes, verification protocols, and MAI-Gym-9B results.">
+  <meta property="og:url" content="https://tongyi-mai.github.io/MAI-Gym/docs/envs/mobile.html">
+  <meta property="og:image" content="https://tongyi-mai.github.io/MAI-Gym/assets/figs/overview.webp">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Mobile Benchmarks — MAI-Gym Docs">
+  <meta name="twitter:description" content="Overview of MobileWorld, AndroidWorld, and MobileGym: task scope, Android/mobile runtimes, verification protocols, and MAI-Gym-9B results.">
+  <meta name="twitter:image" content="https://tongyi-mai.github.io/MAI-Gym/assets/figs/overview.webp">
+  <title>Mobile Benchmarks — MAI-Gym Docs</title>
+  <link rel="icon" type="image/png" href="../../assets/favicon.png">
+  <script>
+    (function () {
+      var t;
+      try { t = localStorage.getItem('maigym.theme'); } catch (e) {}
+      document.documentElement.dataset.theme = t === 'day' ? 'day' : 'night';
+    })();
+  </script>
+  <link rel="preload" href="../../assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="../assets/docs.css">
+  <script>
+    window.MAIGYM_DOCS = {
+      root: "../",
+      rawMd: "../raw/envs/mobile.md",
+      slug: "envs/mobile.html"
+    };
+  </script>
+  <script src="../assets/docs.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#doc-content">Skip to main content</a>
+
+  <header class="topbar" id="topbar">
+    <div class="topbar-row">
+      <div class="topbar-left">
+        <button class="mobile-nav-btn" id="mobile-nav-btn" type="button" aria-label="Toggle navigation" aria-expanded="false">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 5.5h14M3 10h14M3 14.5h14"/></svg>
+        </button>
+        <a class="brand" href="../index.html" aria-label="MAI-Gym Documentation home">
+          <img src="../../assets/mark.svg" width="26" height="26" alt="">
+          <span class="brand-name">MAI-<span>Gym</span></span>
+          <span class="brand-pill">Docs</span>
+        </a>
+      </div>
+
+      <button class="search-trigger" id="search-trigger" type="button" aria-label="Search documentation">
+        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="5.2"/><path d="m12 12 3.6 3.6"/></svg>
+        <span>Search docs...</span>
+        <kbd>⌘K</kbd>
+      </button>
+
+      <div class="topbar-right">
+        <a class="top-link" href="../../index.html">Project Page</a>
+        <a class="top-link" href="https://arxiv.org/abs/2610.20939" target="_blank" rel="noopener noreferrer">Paper</a>
+        <a class="top-link" href="https://huggingface.co/Tongyi-MAI/MAI-Gym-9B" target="_blank" rel="noopener noreferrer">Model</a>
+        <a class="repo-chip" href="https://github.com/Tongyi-MAI/MAI-Gym" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+          <span>Tongyi-MAI/MAI-Gym</span>
+        </a>
+        <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle color theme" title="Switch light / dark theme">
+          <svg class="i-sun" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="3.6" fill="currentColor"/><path d="M10 1.8v2.1M10 16.1v2.1M1.8 10h2.1M16.1 10h2.1M4.2 4.2l1.5 1.5M14.3 14.3l1.5 1.5M4.2 15.8l1.5-1.5M14.3 5.7l1.5-1.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <svg class="i-moon" viewBox="0 0 20 20" aria-hidden="true"><path d="M16.2 12.6A6.8 6.8 0 0 1 7.4 3.8a6.8 6.8 0 1 0 8.8 8.8z" fill="currentColor"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="drawer-backdrop" id="drawer-backdrop" hidden></div>
+
+  <div class="doc-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Documentation navigation">
+      <div class="side-group"><p class="side-heading">Overview</p><ul><li><a class="side-link" href="../index.html">Quickstart</a></li><li><a class="side-link" href="../concepts.html">Platform &amp; Core Concepts</a></li><li><a class="side-link" href="../mai-gym-9b.html">MAI-Gym-9B</a></li><li><a class="side-link" href="../dashboard.html">Trajectory Dashboard</a></li></ul></div><div class="side-group"><p class="side-heading">User Guide</p><ul><li><a class="side-link" href="../evaluation.html">Evaluation Guide</a></li><li><a class="side-link" href="../training.html">Online RL Training</a></li><li><a class="side-link" href="../rollout.html">Rollout CLI</a></li><li><a class="side-link" href="../kubernetes.html">Kubernetes Fleets</a></li></ul></div><div class="side-group"><p class="side-heading">Benchmarks &amp; Environments</p><ul><li><a class="side-link" href="../environments.html">Benchmarks Overview</a></li><li><a class="side-link" href="../mocked-apps.html">Mocked Apps</a></li><li><a class="side-link active" aria-current="page" href="mobile.html">Mobile Benchmarks</a></li><li><a class="side-link" href="computer.html">Computer Benchmarks</a></li><li><a class="side-link" href="web.html">Web Benchmarks</a></li></ul></div><div class="side-group"><p class="side-heading">Customization</p><ul><li><a class="side-link" href="../extending.html">Extending MAI-Gym</a></li><li><a class="side-link" href="../coding-agents.html">Coding-Agent Setup</a></li><li><a class="side-link" href="../development.html">Development &amp; Layout</a></li><li><a class="side-link" href="../licensing.html">Licensing &amp; Notices</a></li></ul></div>
+    </aside>
+
+    <main class="doc-main" id="doc-content">
+      <article class="doc-article">
+        <header class="page-header">
+          <div class="page-eyebrow">Benchmarks &amp; Environments</div>
+          <div class="page-title-row">
+            <h1>Mobile Benchmarks</h1>
+            <button type="button" class="copy-page-btn" id="copy-page-btn" title="Copy page as Markdown">
+              <svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+              <svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>Copy page</span>
+            </button>
+          </div>
+          <p class="page-lead">Overview of MobileWorld, AndroidWorld, and MobileGym: task scope, Android/mobile runtimes, verification protocols, and MAI-Gym-9B results.</p>
+        </header>
+
+        <div class="prose">
+          <p>MAI-Gym evaluates mobile GUI agents across three standard Android and mobile-viewport benchmarks—<strong>MobileWorld</strong>, <strong>AndroidWorld</strong>, and <strong>MobileGym</strong>—spanning both in-distribution/task-OOD Android container suites and out-of-distribution mobile environments. All three run through MAI-Gym&#x27;s shared mobile touch harness (<code>click</code>, <code>double_click</code>, <code>long_press</code>, <code>drag</code>/<code>swipe</code>, <code>type</code>, <code>open</code>, <code>system_button</code>, <code>wait</code>, <code>terminate</code>).</p>
+<div class="callout callout-tip" role="note"><div class="callout-title"><span class="callout-dot" aria-hidden="true"></span>Tip</div><div class="callout-body"><p>Looking for detailed host checklists, immutable profile lock JSONs, or coding-agent bring-up prompts? Each benchmark below links directly to its full setup skill under <a href="https://github.com/Tongyi-MAI/MAI-Gym/tree/main/skills/envs" target="_blank" rel="noopener noreferrer"><code>skills/envs/</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a> and <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/skills/envs.md" target="_blank" rel="noopener noreferrer"><code>skills/envs.md</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a>.</p></div></div>
+<hr>
+<h2 id="mobileworld">MobileWorld<a class="heading-link" href="#mobileworld" aria-label="Link to MobileWorld">#</a></h2>
+<p><strong>MobileWorld</strong> (<a href="https://github.com/Tongyi-MAI/MobileWorld" target="_blank" rel="noopener noreferrer">upstream repository<svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a>) is a realistic Android benchmark featuring rich multi-app mobile tasks (alarms, messaging, notes, email, calendar, shopping, and system utilities) backed by deterministic state initialization and native evaluators. In MAI-Gym, <strong>MobileWorld (GUI-only)</strong> serves as the primary mobile evaluation suite and scales seamlessly from a single local Docker/KVM container to <strong>20,000+ concurrent ReDroid pods</strong> on Kubernetes.</p>
+<div class="table-wrap"><table><thead><tr><th style="text-align:left">Property</th><th style="text-align:left">Value</th></tr></thead><tbody><tr><td style="text-align:left"><strong>CLI ID (<code>--benchmarks</code>)</strong></td><td style="text-align:left"><code>mobileworld</code></td></tr><tr><td style="text-align:left"><strong>Tasks &amp; Scope</strong></td><td style="text-align:left">117 GUI-only tasks across everyday Android applications</td></tr><tr><td style="text-align:left"><strong>Step Budget</strong></td><td style="text-align:left">100 interaction steps</td></tr><tr><td style="text-align:left"><strong>Verification &amp; Metric</strong></td><td style="text-align:left">Native programmatic state verifier · <code>success_rate</code></td></tr><tr><td style="text-align:left"><strong>Runtime Stack</strong></td><td style="text-align:left">Containerized Android emulator (Docker/KVM locally) or ReDroid on Kubernetes</td></tr><tr><td style="text-align:left"><strong>MAI-Gym-9B Result</strong></td><td style="text-align:left"><strong>78.4%</strong> <em>(+60.4 over Qwen3.5-9B base · Task OOD)</em></td></tr></tbody></table></div>
+<h3 id="running-in-mai-gym">Running in MAI-Gym<a class="heading-link" href="#running-in-mai-gym" aria-label="Link to Running in MAI-Gym">#</a></h3>
+<p>Start a MobileWorld backend (see <a href="../index.html#prepare-a-mobileworld-environment">Quickstart</a> or <a href="../kubernetes.html">Kubernetes Fleets</a>), point <code>mobileworld.yaml</code> at its URL, and evaluate:</p>
+<div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"><span class="tok-cmd">uv</span> run mai-gym eval <span class="tok-flag">--config</span> <span class="tok-string">&quot;<span class="tok-var">$HOME</span>/mai-gym-eval/eval.yaml&quot;</span> \
+  <span class="tok-flag">--benchmarks</span> mobileworld <span class="tok-flag">--trials</span> 1</code></pre></div>
+<ul><li><strong>Host requirements:</strong> Linux <code>x86_64</code> with Docker, KVM, and disk space for Android snapshots (or a remote Kubernetes pool).</li><li><strong>Detailed setup &amp; agent skill:</strong> <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/skills/envs/mobileworld.md" target="_blank" rel="noopener noreferrer"><code>skills/envs/mobileworld.md</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a> · <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/src/mai_gym/envs/mobileworld/release.json" target="_blank" rel="noopener noreferrer"><code>release.json</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a></li></ul>
+<hr>
+<h2 id="androidworld">AndroidWorld<a class="heading-link" href="#androidworld" aria-label="Link to AndroidWorld">#</a></h2>
+<p><strong>AndroidWorld</strong> (<a href="https://github.com/google-research/android_world" target="_blank" rel="noopener noreferrer">upstream repository<svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a>) is a widely adopted dynamic Android benchmark built on Google&#x27;s Android Emulator (Pixel 6, API 33 AVD). Tasks are procedurally parameterized with seeds across 20 real Android applications (Contacts, Clock, Calendar, Files, Markor, OsmAnd, Simple Draw, Expense trackers, etc.) and verified programmatically by inspecting live Android SQLite databases, files, and device state. In MAI-Gym, AndroidWorld evaluates <strong>Environment OOD</strong> generalization from MobileWorld/OSWorld training to an unseen Android stack.</p>
+<div class="table-wrap"><table><thead><tr><th style="text-align:left">Property</th><th style="text-align:left">Value</th></tr></thead><tbody><tr><td style="text-align:left"><strong>CLI ID (<code>--benchmarks</code>)</strong></td><td style="text-align:left"><code>androidworld</code></td></tr><tr><td style="text-align:left"><strong>Tasks &amp; Scope</strong></td><td style="text-align:left">116 seeded Android tasks across 20 real apps</td></tr><tr><td style="text-align:left"><strong>Step Budget</strong></td><td style="text-align:left">Task-dependent (derived from AndroidWorld&#x27;s native complexity allocator)</td></tr><tr><td style="text-align:left"><strong>Verification &amp; Metric</strong></td><td style="text-align:left">Native programmatic state verifier (<code>is_successful</code>) · <code>success_rate</code></td></tr><tr><td style="text-align:left"><strong>Runtime Stack</strong></td><td style="text-align:left">Pixel 6 API-33 AVD via Android Emulator (<code>adb</code> + gRPC/console ports, KVM)</td></tr><tr><td style="text-align:left"><strong>MAI-Gym-9B Result</strong></td><td style="text-align:left"><strong>75.9%</strong> <em>(+18.1 over Qwen3.5-9B base · Env OOD)</em></td></tr></tbody></table></div>
+<h3 id="running-in-mai-gym-1">Running in MAI-Gym<a class="heading-link" href="#running-in-mai-gym-1" aria-label="Link to Running in MAI-Gym">#</a></h3>
+<p>Configure an isolated AndroidWorld worker pointing at your pinned AVD and task manifest, then run:</p>
+<div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"><span class="tok-cmd">uv</span> run mai-gym eval <span class="tok-flag">--config</span> /opt/profiles/eval.yaml \
+  <span class="tok-flag">--benchmarks</span> androidworld <span class="tok-flag">--trials</span> 1</code></pre></div>
+<ul><li><strong>Host requirements:</strong> Linux <code>x86_64</code> with KVM, Android SDK/emulator, Pixel 6 API-33 AVD, <code>adb</code>, and dedicated console/gRPC ports.</li><li><strong>Detailed setup &amp; agent skill:</strong> <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/skills/envs/androidworld.md" target="_blank" rel="noopener noreferrer"><code>skills/envs/androidworld.md</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a> · <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/src/mai_gym/envs/androidworld/release.json" target="_blank" rel="noopener noreferrer"><code>release.json</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a></li></ul>
+<hr>
+<h2 id="mobilegym">MobileGym<a class="heading-link" href="#mobilegym" aria-label="Link to MobileGym">#</a></h2>
+<p><strong>MobileGym</strong> (<a href="https://github.com/Purewhiter/mobilegym" target="_blank" rel="noopener noreferrer">upstream repository<svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a>) is a browser-hosted suite of high-fidelity simulated Chinese mobile apps (<strong>Bench256</strong>) running inside Playwright Chromium at a native mobile viewport (<strong>360×800 logical</strong>, <strong>3× DPR → 1080×2400 screenshots</strong>). Because it requires no Android VM or KVM, MobileGym offers lightweight parallel execution while testing rich bilingual/Chinese UI grounding, multi-step workflows, and partial-credit state progression.</p>
+<div class="table-wrap"><table><thead><tr><th style="text-align:left">Property</th><th style="text-align:left">Value</th></tr></thead><tbody><tr><td style="text-align:left"><strong>CLI ID (<code>--benchmarks</code>)</strong></td><td style="text-align:left"><code>mobilegym</code></td></tr><tr><td style="text-align:left"><strong>Tasks &amp; Scope</strong></td><td style="text-align:left">256 tasks (<code>Bench256</code>) across simulated mobile apps with companion media assets</td></tr><tr><td style="text-align:left"><strong>Step Budget</strong></td><td style="text-align:left">100 interaction steps</td></tr><tr><td style="text-align:left"><strong>Verification &amp; Metric</strong></td><td style="text-align:left">Native programmatic state verifier · <code>partial_score</code> <em>(reports both binary &amp; partial)</em></td></tr><tr><td style="text-align:left"><strong>Runtime Stack</strong></td><td style="text-align:left">Playwright Chromium + Node-built static frontend (no KVM required; CJK fonts needed)</td></tr><tr><td style="text-align:left"><strong>MAI-Gym-9B Result</strong></td><td style="text-align:left"><strong>46.5%</strong> <em>(+37.5 over Qwen3.5-9B base · Env OOD)</em></td></tr></tbody></table></div>
+<h3 id="running-in-mai-gym-2">Running in MAI-Gym<a class="heading-link" href="#running-in-mai-gym-2" aria-label="Link to Running in MAI-Gym">#</a></h3>
+<p><code>mai-gym eval</code> automatically configures the native mobile touch policy (supporting tap, long press, inertial swipe, drag, text input, app launch, and system buttons) for MobileGym:</p>
+<div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"><span class="tok-cmd">uv</span> run mai-gym eval <span class="tok-flag">--config</span> /opt/profiles/eval.yaml \
+  <span class="tok-flag">--benchmarks</span> mobilegym <span class="tok-flag">--trials</span> 1</code></pre></div>
+<ul><li><strong>Host requirements:</strong> Node 22+, Python 3.12+, Playwright Chromium, CJK fonts (e.g., <code>fonts-noto-cjk</code>), and companion media assets.</li><li><strong>Detailed setup &amp; agent skill:</strong> <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/skills/envs/mobilegym.md" target="_blank" rel="noopener noreferrer"><code>skills/envs/mobilegym.md</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a> · <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/src/mai_gym/envs/mobilegym/release.json" target="_blank" rel="noopener noreferrer"><code>release.json</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a></li></ul>
+<hr>
+<h2 id="next-steps">Next Steps<a class="heading-link" href="#next-steps" aria-label="Link to Next Steps">#</a></h2>
+<ul><li>Try browser-based mobile-sized Mocked Apps without any external setup: <a href="../mocked-apps.html">Mocked Apps</a></li><li>Compare across all benchmarks: <a href="../environments.html">Benchmarks Overview</a></li><li>Explore desktop suites: <a href="computer.html">Computer Benchmarks</a></li></ul>
+        </div>
+
+        <nav class="pagination" aria-label="Pagination">
+          <a class="pag-link prev" href="../mocked-apps.html"><span class="pag-label">Previous</span><span class="pag-title">&larr; Mocked Apps</span></a>
+          <a class="pag-link next" href="computer.html"><span class="pag-label">Next</span><span class="pag-title">Computer Benchmarks &rarr;</span></a>
+        </nav>
+
+        <footer class="doc-footer">
+          <div class="doc-footer-links">
+            <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/site/docs/raw/envs/mobile.md" target="_blank" rel="noopener noreferrer">Edit this page on GitHub &nearr;</a>
+            <a href="https://github.com/Tongyi-MAI/MAI-Gym/issues/new?title=Docs:%20Mobile Benchmarks" target="_blank" rel="noopener noreferrer">Raise a docs issue &nearr;</a>
+            <a href="../llms.txt">llms.txt</a>
+          </div>
+          <p class="doc-footer-meta">MAI-Gym · MIT License · Tongyi-MAI</p>
+        </footer>
+      </article>
+    </main>
+
+    <aside class="toc-rail" aria-label="On this page">
+      <div class="toc-inner">
+        <p class="toc-title">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M2.5 4h11M2.5 8h7M2.5 12h11"/></svg>
+          On this page
+        </p>
+        <ul class="toc-list" id="toc-list"><li><a class="toc-link" href="#mobileworld">MobileWorld</a></li><li><a class="toc-link toc-h3" href="#running-in-mai-gym">Running in MAI-Gym</a></li><li><a class="toc-link" href="#androidworld">AndroidWorld</a></li><li><a class="toc-link toc-h3" href="#running-in-mai-gym-1">Running in MAI-Gym</a></li><li><a class="toc-link" href="#mobilegym">MobileGym</a></li><li><a class="toc-link toc-h3" href="#running-in-mai-gym-2">Running in MAI-Gym</a></li><li><a class="toc-link" href="#next-steps">Next Steps</a></li></ul>
+        <div class="toc-actions">
+          <a href="#top" class="toc-action-link" id="back-to-top">&uarr; Back to top</a>
+          <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/site/docs/raw/envs/mobile.md" class="toc-action-link" target="_blank" rel="noopener noreferrer">View Markdown &nearr;</a>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <dialog class="search-dialog" id="search-dialog" aria-label="Search documentation">
+    <div class="search-box">
+      <div class="search-input-row">
+        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="5.2"/><path d="m12 12 3.6 3.6"/></svg>
+        <input id="search-input" type="search" placeholder="Search documentation, CLI flags, benchmarks..." autocomplete="off" spellcheck="false">
+        <button type="button" class="search-esc" id="search-close">ESC</button>
+      </div>
+      <div class="search-results" id="search-results" role="listbox"></div>
+      <div class="search-foot">
+        <span><kbd>&uarr;</kbd><kbd>&darr;</kbd> navigate</span>
+        <span><kbd>Enter</kbd> open</span>
+        <span><kbd>Esc</kbd> close</span>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="img-dialog" id="img-dialog" aria-label="Image preview">
+    <button type="button" class="img-dialog-close" id="img-dialog-close" aria-label="Close preview">&times;</button>
+    <img id="img-dialog-src" alt="">
+  </dialog>
+</body>
+</html>

@@ -1,0 +1,375 @@
+{
+  "env": "pigeon_parcels",
+  "note": "Golden action sequences replayed by CI.",
+  "solutions": {
+    "T01_settings": [
+      {
+        "action": "tap",
+        "id": "open_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_notifyOut"
+      },
+      {
+        "action": "tap",
+        "id": "set_photoProof"
+      }
+    ],
+    "T02_query_van": [
+      {
+        "action": "finish",
+        "answer": "The barbell collar pair from Ironwood, 13:00 – 15:00 today"
+      }
+    ],
+    "T03_follow": [
+      {
+        "action": "tap",
+        "id": "pk_card_pk_5"
+      },
+      {
+        "action": "tap",
+        "id": "follow"
+      }
+    ],
+    "T04_rebook": [
+      {
+        "action": "tap",
+        "id": "pk_card_pk_4"
+      },
+      {
+        "action": "tap",
+        "id": "do_reschedule"
+      },
+      {
+        "action": "tap",
+        "id": "day_d_16"
+      },
+      {
+        "action": "tap",
+        "id": "win_w_am"
+      },
+      {
+        "action": "tap",
+        "id": "slot_confirm"
+      }
+    ],
+    "T05_divert_near": [
+      {
+        "action": "tap",
+        "id": "pk_card_pk_2"
+      },
+      {
+        "action": "tap",
+        "id": "do_collect"
+      },
+      {
+        "action": "tap",
+        "id": "point_cp_lark"
+      }
+    ],
+    "T06_safe_place": [
+      {
+        "action": "tap",
+        "id": "pk_card_pk_3"
+      },
+      {
+        "action": "tap",
+        "id": "do_safe"
+      },
+      {
+        "action": "tap",
+        "id": "safe_sp_shed"
+      }
+    ],
+    "T07_refused": [
+      {
+        "action": "tap",
+        "id": "pk_card_pk_1"
+      },
+      {
+        "action": "tap",
+        "id": "do_address"
+      },
+      {
+        "action": "finish",
+        "answer": "It is already out for delivery — the address is fixed once the van is loaded."
+      }
+    ],
+    "T08_return": [
+      {
+        "action": "tap",
+        "id": "tab_returns"
+      },
+      {
+        "action": "tap",
+        "id": "back_pk_5"
+      },
+      {
+        "action": "tap",
+        "id": "ret_reason"
+      },
+      {
+        "action": "tap",
+        "id": "reason_r_size"
+      },
+      {
+        "action": "tap",
+        "id": "ret_confirm"
+      }
+    ],
+    "T09_query_window": [
+      {
+        "action": "tap",
+        "id": "tab_returns"
+      },
+      {
+        "action": "finish",
+        "answer": "11"
+      }
+    ],
+    "T10_query_expired": [
+      {
+        "action": "tap",
+        "id": "tab_returns"
+      },
+      {
+        "action": "tap",
+        "id": "back_pk_6"
+      },
+      {
+        "action": "finish",
+        "answer": "6"
+      }
+    ],
+    "T11_address": [
+      {
+        "action": "tap",
+        "id": "pk_card_pk_2"
+      },
+      {
+        "action": "tap",
+        "id": "do_address"
+      },
+      {
+        "action": "tap",
+        "id": "addr_ad_work"
+      }
+    ],
+    "T12_query_locker": [
+      {
+        "action": "tap",
+        "id": "pk_card_pk_2"
+      },
+      {
+        "action": "tap",
+        "id": "do_collect"
+      },
+      {
+        "action": "finish",
+        "answer": "The Quay Street Locker — it is open all hours but every locker is full"
+      }
+    ],
+    "T13_missing": [
+      {
+        "action": "tap",
+        "id": "pk_card_pk_4"
+      },
+      {
+        "action": "tap",
+        "id": "do_missing"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      }
+    ],
+    "T14_flagship": [
+      {
+        "action": "tap",
+        "id": "pk_card_pk_4"
+      },
+      {
+        "action": "tap",
+        "id": "do_reschedule"
+      },
+      {
+        "action": "tap",
+        "id": "day_d_18"
+      },
+      {
+        "action": "tap",
+        "id": "win_w_eve"
+      },
+      {
+        "action": "tap",
+        "id": "slot_confirm"
+      },
+      {
+        "action": "tap",
+        "id": "do_address"
+      },
+      {
+        "action": "tap",
+        "id": "addr_ad_mum"
+      },
+      {
+        "action": "tap",
+        "id": "do_safe"
+      },
+      {
+        "action": "tap",
+        "id": "safe_sp_nbr"
+      }
+    ],
+    "T15_cancel_slot": [
+      {
+        "action": "tap",
+        "id": "pk_card_pk_4"
+      },
+      {
+        "action": "tap",
+        "id": "do_reschedule"
+      },
+      {
+        "action": "tap",
+        "id": "day_d_17"
+      },
+      {
+        "action": "tap",
+        "id": "win_w_pm"
+      },
+      {
+        "action": "tap",
+        "id": "slot_confirm"
+      },
+      {
+        "action": "tap",
+        "id": "cancel_slot"
+      }
+    ],
+    "T16_defaults": [
+      {
+        "action": "tap",
+        "id": "tab_me"
+      },
+      {
+        "action": "tap",
+        "id": "def_safe"
+      },
+      {
+        "action": "tap",
+        "id": "defsafe_sp_porch"
+      },
+      {
+        "action": "tap",
+        "id": "def_point"
+      },
+      {
+        "action": "tap",
+        "id": "defpoint_cp_bell"
+      }
+    ],
+    "T17_return_to_pref": [
+      {
+        "action": "tap",
+        "id": "tab_me"
+      },
+      {
+        "action": "tap",
+        "id": "def_point"
+      },
+      {
+        "action": "tap",
+        "id": "defpoint_cp_bell"
+      },
+      {
+        "action": "tap",
+        "id": "tab_returns"
+      },
+      {
+        "action": "tap",
+        "id": "back_pk_5"
+      },
+      {
+        "action": "tap",
+        "id": "ret_reason"
+      },
+      {
+        "action": "tap",
+        "id": "reason_r_faulty"
+      },
+      {
+        "action": "tap",
+        "id": "ret_confirm"
+      }
+    ],
+    "T18_track": [
+      {
+        "action": "tap",
+        "id": "tab_track"
+      },
+      {
+        "action": "type",
+        "id": "q_track",
+        "text": "7742"
+      },
+      {
+        "action": "tap",
+        "id": "found_pk_4"
+      }
+    ],
+    "T19_collect_anyhow": [
+      {
+        "action": "tap",
+        "id": "pk_card_pk_4"
+      },
+      {
+        "action": "tap",
+        "id": "do_collect"
+      },
+      {
+        "action": "tap",
+        "id": "point_cp_mill"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "pk_card_pk_2"
+      },
+      {
+        "action": "tap",
+        "id": "do_collect"
+      },
+      {
+        "action": "tap",
+        "id": "point_cp_lark"
+      }
+    ],
+    "T20_unfollow_two": [
+      {
+        "action": "tap",
+        "id": "pk_card_pk_1"
+      },
+      {
+        "action": "tap",
+        "id": "follow"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "pk_card_pk_2"
+      },
+      {
+        "action": "tap",
+        "id": "follow"
+      }
+    ]
+  }
+}

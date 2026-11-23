@@ -1,0 +1,13 @@
+devices: []
+agent:
+  type: mai_gym_mobile_use
+  model_name: example-model
+  base_url: http://127.0.0.1:8000/v1
+  api_key: env/OPENAI_API_KEY
+  max_steps: 20
+rollout:
+  manager_url: http://127.0.0.1:8090
+  env_type: mobileworld
+  num_envs: 1
+  evaluation_mode: built_in
+  screenshot_transport: inline

@@ -4,20 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Marlin Mail (mocked GUI env)</title>
-<!--
-  ============================================================================
-  Marlin Mail — a single-file H5 email client for agent research.
 
-  Same two-block contract as every environment here (script#engine is a pure,
-  DOM-free state machine exported as globalThis.GUI_ENGINE; script#ui renders
-  engine.screen(state) and exposes __ENV__).
-
-  What is new here: the core loop is triage, not purchase. That brings
-  multi-select with a bulk action bar, folders vs labels (a message lives in
-  one folder but carries many labels), read/unread state, snoozing, a compose
-  form with three fields, and search with field operators (from: / has:).
-  ============================================================================
--->
 <style>
 :root{
   --bg:#f4f6f9; --card:#fff; --line:#e7ecf2; --line2:#dde5ee;
@@ -54,7 +41,6 @@ body.bare .n-sheet{animation:none}
 
 #app{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;position:relative}
 
-/* ---------------- chrome ---------------- */
 .n-appbar{flex:0 0 auto;min-height:52px;display:flex;align-items:center;gap:8px;padding:6px 10px;
   background:var(--card);border-bottom:1px solid var(--line);z-index:20}
 .n-appbar.select{background:var(--accent-s);border-bottom-color:#cbdffb}
@@ -70,7 +56,6 @@ body.bare .n-sheet{animation:none}
 .n-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding-bottom:10px}
 .n-scroll::-webkit-scrollbar{width:0}
 
-/* ---------------- type ---------------- */
 .n-text{padding:2px 16px;color:var(--ink2)}
 .n-text.h1{font:700 24px/1.2 -apple-system,sans-serif;color:var(--ink);padding:14px 16px 4px;letter-spacing:-.5px}
 .n-text.h2{font:650 17px/1.3 -apple-system,sans-serif;color:var(--ink);padding:14px 16px 4px}
@@ -82,7 +67,6 @@ body.bare .n-sheet{animation:none}
 .n-space{height:14px}
 .n-divider{height:1px;background:var(--line);margin:6px 0}
 
-/* ---------------- message row ---------------- */
 .msg{display:flex;gap:12px;padding:12px 14px;background:var(--card);border-bottom:1px solid var(--line);
   cursor:pointer;align-items:flex-start}
 .msg:active{background:#f6f9fd}
@@ -110,7 +94,6 @@ body.bare .n-sheet{animation:none}
 .chip .cd{width:7px;height:7px;border-radius:50%}
 .chip.attach{background:#f0f3f7;color:var(--muted)}
 
-/* ---------------- rows / cards ---------------- */
 .n-card{background:var(--card);border-radius:var(--r);margin:10px 16px;overflow:hidden;
   border:1px solid var(--line)}
 .n-card.pad{padding:14px}
@@ -183,7 +166,6 @@ body.bare .n-sheet{animation:none}
 .n-check.on:after{content:"";position:absolute;left:7px;top:3.5px;width:5px;height:10px;
   border:2px solid #fff;border-top:0;border-left:0;transform:rotate(42deg)}
 
-/* ---------------- bulk action bar ---------------- */
 .bulkbar{flex:0 0 auto;background:var(--card);border-top:1px solid var(--line);display:flex;
   padding:8px 6px calc(10px + env(safe-area-inset-bottom));z-index:30;box-shadow:0 -4px 18px rgba(19,26,36,.07)}
 .bulkbar .bb{flex:1 1 0;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 2px;
@@ -205,7 +187,6 @@ body.bare .n-sheet{animation:none}
   box-shadow:0 6px 20px rgba(31,111,235,.4)}
 .fab:active{filter:brightness(.94)}
 
-/* ---------------- message detail ---------------- */
 .mhead{padding:16px 16px 12px;background:var(--card);border-bottom:1px solid var(--line)}
 .mhead .mh-subj{font:700 20px/1.3 -apple-system,sans-serif;letter-spacing:-.3px}
 .mhead .mh-labels{margin-top:10px;display:flex;gap:6px;flex-wrap:wrap}
@@ -273,16 +254,12 @@ body.bare .n-sheet{animation:none}
 <div id="hud" class="off"></div>
 
 <script id="engine">
-/* ===========================================================================
- * ENGINE — pure, deterministic, DOM-free.
- * ======================================================================== */
 (function (root) {
 'use strict';
 
 var VERSION = '1.0.0';
 var ENV_ID  = 'marlin_mail';
 
-/* ------------------------------------------------------------- catalog */
 var FOLDERS = [
   {key:'inbox',   name:'Inbox',    icon:'inbox',   real:true},
   {key:'starred', name:'Starred',  icon:'star',    real:false},
@@ -400,7 +377,6 @@ var SNOOZE_OPTIONS = [
 
 var CATALOG = {folders:FOLDERS, labels:LABELS, messages:MESSAGES, snooze:SNOOZE_OPTIONS};
 
-/* ------------------------------------------------------------- helpers */
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function msg(id){ for (var i=0;i<MESSAGES.length;i++) if (MESSAGES[i].id===id) return MESSAGES[i]; return null; }
 function label(k){ for (var i=0;i<LABELS.length;i++) if (LABELS[i].key===k) return LABELS[i]; return null; }
@@ -434,7 +410,6 @@ function setPath(obj, path, value){
   return obj;
 }
 
-/* --------------------------------------------------------- world clock */
 var CLOCK0 = {h:8, mi:12, s:0};
 var SECONDS_PER_STEP = 4;
 function tick(c, n){
@@ -445,7 +420,6 @@ function tick(c, n){
 }
 function clockStr(c){ return (c.h<10?'0':'')+c.h+':'+(c.mi<10?'0':'')+c.mi; }
 
-/* ------------------------------------------------------ initial state */
 function M(folder, read, starred, labels){
   return {folder:folder, read:!!read, starred:!!starred, labels:labels||[], snoozed:null};
 }
@@ -489,7 +463,6 @@ function createInitialState(seed){
   };
 }
 
-/* ------------------------------------------------------------ selectors */
 function allLabels(st){ return LABELS.concat(st.extraLabels || []); }
 function labelOf(st, k){
   var all = allLabels(st);
@@ -526,7 +499,6 @@ function listFor(st, key){
   if (st.ui.unreadOnly) ids = ids.filter(function(id){ return !st.mail[id].read; });
   return shuffled(ids, st.meta.seed);
 }
-/* search understands `from:name` and `has:attachment` alongside plain words */
 function searchIds(st){
   var q = st.ui.query.trim().toLowerCase();
   if (!q) return [];
@@ -552,12 +524,10 @@ var SELECT = { inFolder:inFolder, unreadCount:unreadCount, labelCount:labelCount
                searchIds:searchIds, messageOf:messageOf, mstate:mstate, allLabels:allLabels,
                labelOf:labelOf, selected:selected, route:route, clockStr:clockStr, hashHue:hashHue };
 
-/* ------------------------------------------------------------- reducer */
 function push(st, name, params){ st.ui.stack.push({name:name, params:params||{}}); st.ui.sheet=null; }
 function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
 function toast(st, t, undo){ st.ui.toast = {text:t, undo:undo || null}; }
 function targets(st, id){
-  /* a bulk action applies to the selection when one is active, else to one message */
   if (st.ui.select.on && st.ui.select.ids.length) return st.ui.select.ids.slice();
   return id ? [id] : [];
 }
@@ -587,7 +557,6 @@ function reduce(prev, action){
     st.ui.sheet = null; st.ui.confirm = null; clearSelect(st);
     break;
 
-  /* ---- search & filters ---- */
   case 'SET_INPUT': st.ui.inputs[A.field] = A.value; break;
   case 'SUBMIT_SEARCH':
     st.ui.query = String(st.ui.inputs.search || '').trim();
@@ -596,7 +565,6 @@ function reduce(prev, action){
   case 'CLEAR_SEARCH': st.ui.query=''; st.ui.inputs.search=''; toast(st, 'Search cleared'); break;
   case 'TOGGLE_UNREAD_ONLY': st.ui.unreadOnly = !st.ui.unreadOnly; break;
 
-  /* ---- selection ---- */
   case 'SELECT_START':
     st.ui.select = {on:true, ids: A.id ? [A.id] : []};
     break;
@@ -609,7 +577,6 @@ function reduce(prev, action){
   case 'SELECT_ALL': st.ui.select = {on:true, ids: listFor(st, A.folder || 'inbox').slice()}; break;
   case 'SELECT_NONE': clearSelect(st); break;
 
-  /* ---- per-message and bulk operations ---- */
   case 'OPEN_MSG': {
     if (st.ui.select.on) { var j = st.ui.select.ids.indexOf(A.id);
       if (j >= 0) st.ui.select.ids.splice(j, 1); else st.ui.select.ids.push(A.id);
@@ -688,7 +655,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- compose ---- */
   case 'COMPOSE_NEW':
     st.compose = {to:'', subject:'', body:''};
     st.ui.inputs.c_to = ''; st.ui.inputs.c_subject = ''; st.ui.inputs.c_body = '';
@@ -724,7 +690,6 @@ function reduce(prev, action){
     pop(st); toast(st, 'Draft discarded');
     break;
 
-  /* ---- labels ---- */
   case 'LABEL_NEW':
     st.ui.inputs.label_name = '';
     push(st, 'labelNew', {});
@@ -739,7 +704,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- overlays & settings ---- */
   case 'OPEN_SHEET':  st.ui.sheet = {type:A.sheet, id:A.id || null}; break;
   case 'CLOSE_SHEET': st.ui.sheet = null; break;
   case 'CONFIRM_NO':  st.ui.confirm = null; break;
@@ -771,9 +735,6 @@ function reduce(prev, action){
   return st;
 }
 
-/* =======================================================================
- * SCREEN TREE
- * ==================================================================== */
 function N(t, o){ o = o || {}; o.t = t; return o; }
 function appbar(title, o){
   o = o || {};
@@ -1077,7 +1038,6 @@ function scrSettings(st){
   ]});
 }
 
-/* ------------------------------------------------------------ overlays */
 function sheetLabels(st){
   var id = st.ui.sheet.id;
   var ids = id ? [id] : st.ui.select.ids;
@@ -1142,9 +1102,6 @@ function screen(st){
   return rootNode;
 }
 
-/* =======================================================================
- * TRAVERSAL — element index, GUI action interface, text observation
- * ==================================================================== */
 var SKIP_KEYS = {act:1, selAct:1, starAct:1, go:1, close:1, clear:1, undo:1, yes:1,
                  params:1, meta:1, attachments:1};
 
@@ -1175,7 +1132,6 @@ function elements(st){
   var masks = (rootNode.c||[]).filter(function(n){ return n.t === 'mask'; });
   var out = [];
   collect(masks.length ? masks[masks.length-1] : rootNode, out);
-  /* a toast lives outside the modal layer and stays reachable */
   if (masks.length) (rootNode.c||[]).forEach(function(n){ if (n.t === 'toast') collect(n, out); });
   return out;
 }
@@ -1214,7 +1170,6 @@ function step(st, a){
   }
 }
 
-/* ------------------------------------------------- text observation (a11y) */
 function a11y(st){
   var rootNode = screen(st), lines = [], r = route(st);
   lines.push('# Screen route=' + r.name + (r.params && (r.params.id || r.params.key)
@@ -1313,7 +1268,6 @@ function walkText(n, d, out, st){
   }
 }
 
-/* --------------------------------------------------------- derived view */
 function idsToSubjects(st, ids){
   return ids.map(function(id){ var m = messageOf(st, id); return m ? m.subject : id; }).sort();
 }
@@ -1349,7 +1303,6 @@ function applyPatch(st, patch){
   return st;
 }
 
-/* ------------------------------------------------------------------ export */
 var ENGINE = {
   ENV_ID: ENV_ID, VERSION: VERSION, CATALOG: CATALOG,
   createInitialState: createInitialState,
@@ -1366,9 +1319,6 @@ root.GUI_ENGINE    = ENGINE;
 </script>
 
 <script id="ui">
-/* ===========================================================================
- * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
- * ======================================================================== */
 (function(){
 'use strict';
 var E = window.GUI_ENGINE;

@@ -1,0 +1,8 @@
+{
+  "label": "official-dce0468",
+  "source_repository": "web-arena-x/webarena",
+  "source_revision": "dce04686a56253aefba7b18a4fa0937cf1dc987b",
+  "task_manifest": "config_files/test.raw.json",
+  "task_manifest_sha256": "7b50386fd69163dbc05d615d834df4c6ed2c35596e97a1b10d17451c02537652",
+  "required_additional_assets": ["immutable site images", "baseline databases", "authentication state", "browser binary"]
+}

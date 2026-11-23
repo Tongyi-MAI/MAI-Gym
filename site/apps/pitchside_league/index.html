@@ -4,25 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Pitchside (mocked GUI env)</title>
-<!--
-  ============================================================================
-  Pitchside — a single-file H5 league app for agent research.
 
-  Same two-block contract as every environment here: script#engine is a pure,
-  DOM-free state machine on globalThis.GUI_ENGINE; script#ui renders its screen
-  tree and exposes window.__ENV__.
-
-  What is new: two tables over one set of facts. The real table is not stored —
-  it is folded out of the results every time it is read: three for a win, one
-  for a draw, then goal difference, then goals scored, then the name. The
-  second table is the same fold with your predictions for the coming round
-  mixed in, so you can see what a result would do to the standings without
-  anything actually having happened. Clearing the predictions puts it back.
-
-  That makes 'predict a set of results that puts Fenwold top' a task with an
-  answer you can work out and the app can check.
-  ============================================================================
--->
 <style>
 :root{
   --outer:#e3e6ee;
@@ -273,18 +255,12 @@ body.bare .n-sheet{animation:none}
 <div id="hud" class="off"></div>
 
 <script id="engine">
-/* ===========================================================================
- * ENGINE — pure, deterministic, DOM-free.
- * The table is not data. It is folded out of the result list on every read,
- * and the what-if table is the same fold with the predictions added.
- * ======================================================================== */
 (function(root){
 'use strict';
 
 var ENV_ID  = 'pitchside_league';
 var VERSION = '1.0.0';
 
-/* ------------------------------------------------------------- utilities */
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function pad2(n){ return (n < 10 ? '0' : '') + n; }
 function hhmm(m){ m = ((m % 1440) + 1440) % 1440; return pad2(Math.floor(m/60)) + ':' + pad2(m%60); }
@@ -323,7 +299,6 @@ function setPath(o, path, value){
   return o;
 }
 
-/* ------------------------------------------- screen-tree node constructors */
 function N(t, o){ o = o || {}; o.t = t; return o; }
 function txt(s, cls){ return N('text', {text:s, cls:cls || ''}); }
 function row(id, text, o){
@@ -365,7 +340,6 @@ function teamName(id){ var t = teamOf(id); return t ? t.name : '?'; }
 function M(round, home, away, hg, ag){
   return {round:round, home:home, away:away, hg:hg, ag:ag};
 }
-/* fourteen matches played, two rounds still to come */
 var RESULTS = [
   M(1, 't_lark', 't_fen',   2, 1), M(1, 't_quay', 't_mill', 0, 0),
   M(1, 't_bell', 't_marsh', 1, 3), M(1, 't_iron', 't_pipit',2, 2),
@@ -384,7 +358,6 @@ var FIXTURES = [
 ];
 function fixtureOf(id){ for (var i=0;i<FIXTURES.length;i++) if (FIXTURES[i].id === id) return FIXTURES[i]; return null; }
 
-/* the fold: a table is not stored, it is worked out of the results */
 function blankRow(t){
   return {id:t.id, name:t.name, short:t.short, hue:t.hue, p:0, w:0, d:0, l:0, gf:0, ga:0,
           gd:0, pts:0, form:[]};
@@ -410,7 +383,6 @@ function buildTable(matches){
   return list;
 }
 function realTable(){ return buildTable(RESULTS); }
-/* predictions are matches too — the same fold, with the guesses mixed in */
 function predictedMatches(st){
   var extra = [];
   FIXTURES.forEach(function(f){
@@ -431,7 +403,6 @@ function matchesOf(id){
   return RESULTS.filter(function(m){ return m.home === id || m.away === id; });
 }
 function scorerBoard(){
-  /* goals are a property of the results, so the chart is a fold as well */
   var out = {};
   TEAMS.forEach(function(t){ out[t.id] = 0; });
   RESULTS.forEach(function(m){ out[m.home] += m.hg; out[m.away] += m.ag; });
@@ -445,13 +416,11 @@ var PICKS = [
 ];
 function pickOf(id){ for (var i=0;i<PICKS.length;i++) if (PICKS[i].id === id) return PICKS[i]; return null; }
 
-/* =========================================================== state */
 function createInitialState(seed){
   seed = seed || 0;
   return {
     meta:{env:ENV_ID, version:VERSION, seed:seed, steps:0, finished:false, answer:null},
     predictions:{},
-    /* the seed permutes the order the followed clubs are listed in */
     following:shuffled(['t_lark', 't_fen', 't_marsh'], seed),
     ui:{tab:'table', stack:[{name:'table', params:{}}], sheet:null, confirm:null, inputs:{},
         toast:null, showPredicted:false, round:5},
@@ -465,7 +434,6 @@ var SELECT = {
   matchesOf:matchesOf, scorerBoard:scorerBoard, fixtureOf:fixtureOf, pickOf:pickOf, route:route
 };
 
-/* =========================================================== reducer */
 function reduce(prev, action){
   var st = clone(prev), A = action || {};
   st.ui.toast = null;
@@ -500,7 +468,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- predictions ---- */
   case 'PREDICT': {
     var f = fixtureOf(A.id), p = pickOf(A.pick);
     if (!f || !p) break;
@@ -534,7 +501,6 @@ function reduce(prev, action){
     st.ui.showPredicted = !st.ui.showPredicted;
     break;
 
-  /* ---- following ---- */
   case 'FOLLOW': {
     if (st.following.indexOf(A.id) >= 0) {
       st.following = st.following.filter(function(x){ return x !== A.id; });
@@ -546,7 +512,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- settings ---- */
   case 'SET_TOGGLE': st.settings[A.key] = !st.settings[A.key]; break;
 
   default: break;
@@ -554,7 +519,6 @@ function reduce(prev, action){
   return st;
 }
 
-/* =========================================================== screens */
 function tabbar(st){
   var items = [
     {id:'tab_table',    text:'Table',    icon:'list',   tab:'table'},
@@ -782,11 +746,6 @@ function screen(st){
   return rootNode;
 }
 
-/* =======================================================================
- * TRAVERSAL — element index, GUI action interface, text observation.
- * Identical in every environment here: the screen tree is the only thing
- * that differs, and all three readers below walk that same tree.
- * ==================================================================== */
 var SKIP_KEYS = {act:1, minus:1, plus:1, close:1, yes:1, params:1, meta:1, form:1};
 
 function labelOf(n){ return n.text || n.title || n.name || n.label || n.main || ''; }
@@ -800,9 +759,6 @@ function collect(n, out){
                                             input:(n.t === 'inputrow')});
   if (n.t === 'mask' && n.close)  out.push({id:n.id, act:n.close, text:'Dismiss overlay', t:'mask'});
   for (var k in n){
-    /* a node may carry extra buttons as a pair of keys: someId holds the
-     * test-id and some holds the action. That is how steppers, sheet close
-     * buttons and per-row buttons all get into the element index. */
     if (k.length > 2 && k.slice(-2) === 'Id' && typeof n[k] === 'string'){
       var sib = n[k.slice(0, -2)];
       if (sib && typeof sib === 'object' && sib.type)
@@ -855,7 +811,6 @@ function step(st, a){
   }
 }
 
-/* ------------------------------------------------- text observation (a11y) */
 function a11y(st){
   var rootNode = screen(st), lines = [], r = route(st);
   lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
@@ -922,8 +877,6 @@ function walkText(n, d, out, st){
     if (v && typeof v === 'object') walkText(v, line !== null ? d+1 : d, out, st);
   }
 }
-/* per-environment nodes: return a string to print, true if already printed,
- * or null to ignore */
 function walkExtra(n, d, out, st){
 
   if (n.t === 'tbl'){
@@ -945,7 +898,6 @@ function walkExtra(n, d, out, st){
   return null;
 }
 
-/* --------------------------------------------------------- derived view */
 function derive(st){
   var real = realTable(), pred = predictedTable(st);
   var pos = {}, pts = {}, gd = {}, ppos = {}, ppts = {};
@@ -1000,9 +952,6 @@ root.GUI_ENGINE = ENGINE;
 </script>
 
 <script id="ui">
-/* ===========================================================================
- * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
- * ======================================================================== */
 (function(){
 'use strict';
 var E = window.GUI_ENGINE;

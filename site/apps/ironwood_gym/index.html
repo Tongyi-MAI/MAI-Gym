@@ -4,27 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Ironwood (mocked GUI env)</title>
-<!--
-  ============================================================================
-  Ironwood — a single-file H5 strength-training log for agent research.
 
-  Same two-block contract as every environment here: script#engine is a pure,
-  DOM-free state machine on globalThis.GUI_ENGINE; script#ui renders its screen
-  tree and exposes window.__ENV__.
-
-  What is new: a session that is *running*. Most of these environments are
-  browse-and-commit; this one has a live workout with an exercise you are on, a
-  set you are about to log, and a duration that grows out of what you actually
-  did — forty-five seconds a set plus whatever rest you took — never out of how
-  many taps it took to get there.
-
-  Every mass is an integer in grams, so kilos and pounds are two views of one
-  number and switching units cannot lose a gram. Volume is sets x reps x mass,
-  a personal best is the heaviest completed set ever logged for a lift, and the
-  plate calculator is honest greedy arithmetic on a 20 kg bar. Nothing on any
-  screen is stored prose about numbers: it is the numbers.
-  ============================================================================
--->
 <style>
 :root{
   --bg:#0d1014; --card:#161a21; --card2:#1d222b; --line:#242a35; --line2:#2f3745;
@@ -137,7 +117,6 @@ body.bare .n-sheet{animation:none}
 .n-radio.on:after{content:"";position:absolute;left:7px;top:4px;width:5px;height:9px;
   border:2px solid #111;border-top:0;border-left:0;transform:rotate(42deg)}
 
-/* ---------------- hero + rings ---------------- */
 .hero{margin:6px 16px 4px;padding:20px;border-radius:var(--r);background:
   radial-gradient(120% 130% at 100% 0%,#20301a 0%,#161a21 58%);border:1px solid var(--line)}
 .hero .he-k{font-size:11.5px;letter-spacing:1.3px;text-transform:uppercase;color:var(--accent);font-weight:800}
@@ -167,7 +146,6 @@ body.bare .n-sheet{animation:none}
 .bars .bs-hd b{font:800 19px/1 var(--disp);letter-spacing:-.5px}
 .bars .bs-hd span{font-size:11.5px;color:var(--muted)}
 
-/* ---------------- live session ---------------- */
 .now{margin:8px 16px;padding:18px;border-radius:var(--r);background:var(--card);border:1px solid var(--line2)}
 .now .nw-k{font-size:11px;letter-spacing:1.3px;text-transform:uppercase;color:var(--accent);font-weight:800}
 .now .nw-n{font:800 24px/1.15 var(--disp);margin-top:8px;letter-spacing:-.6px}
@@ -260,27 +238,18 @@ body.bare .n-sheet{animation:none}
 <div id="hud" class="off"></div>
 
 <script id="engine">
-/* ===========================================================================
- * ENGINE — pure, deterministic, DOM-free.
- *
- * Every mass is an integer in GRAMS. Kilos and pounds are two renderings of
- * the same integer, so switching units is a display change and never a data
- * change. Volume is the sum of mass x reps over completed sets. Duration is
- * the sum of what you did: SET_SECONDS per logged set plus the rest you took.
- * ======================================================================== */
 (function(root){
 'use strict';
 
 var ENV_ID  = 'ironwood_gym';
 var VERSION = '1.0.0';
-var CLOCK0  = 1120;          /* 18:40, the time the app was opened */
-var SET_SECONDS = 45;        /* how long a working set is counted as taking */
-var BAR_G   = 20000;         /* an Olympic bar */
+var CLOCK0  = 1120;
+var SET_SECONDS = 45;
+var BAR_G   = 20000;
 var PLATES  = [25000, 20000, 15000, 10000, 5000, 2500, 1250];
-var STEP_G  = 2500;          /* the weight stepper moves in 2.5 kg */
+var STEP_G  = 2500;
 var TODAY   = 'Thursday';
 
-/* ------------------------------------------------------------- utilities */
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function pad2(n){ return (n < 10 ? '0' : '') + n; }
 function hhmm(m){ m = ((m % 1440) + 1440) % 1440; return pad2(Math.floor(m/60)) + ':' + pad2(m%60); }
@@ -314,8 +283,6 @@ function setPath(o, path, value){
   return o;
 }
 
-/* --------------------------------------------------------------- units */
-/* grams -> tenths of a kilo / tenths of a pound, in integers only */
 function kgTenths(g){ return Math.round(g / 100); }
 function lbTenths(g){ return Math.round(g * 22046 / 1000000); }
 function fmtTenths(t){
@@ -328,12 +295,10 @@ function mass(g, units){
 }
 function massNum(g, units){ return fmtTenths(units === 'lb' ? lbTenths(g) : kgTenths(g)); }
 function volumeText(g, units){
-  /* volume gets big, so it is shown in whole units */
   var n = units === 'lb' ? Math.round(lbTenths(g) / 10) : Math.round(kgTenths(g) / 10);
   var s = String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   return s + ' ' + (units === 'lb' ? 'lb' : 'kg');
 }
-/* greedy plate maths on one side of the bar */
 function plateBreakdown(g){
   if (g <= BAR_G) return null;
   var side = (g - BAR_G) / 2, out = [], rest = side;
@@ -345,9 +310,6 @@ function plateBreakdown(g){
   return rest === 0 ? out : null;
 }
 
-/* ===========================================================================
- * THE CATALOGUE
- * ======================================================================== */
 var GROUPS = [
   {id:'legs',      label:'Legs'},
   {id:'chest',     label:'Chest'},
@@ -418,9 +380,6 @@ function routine(st, id){
 }
 function groupLabel(id){ for (var i=0;i<GROUPS.length;i++) if (GROUPS[i].id === id) return GROUPS[i].label; return id; }
 
-/* ===========================================================================
- * THE LOG — six sessions of history, and the arithmetic that reads them
- * ======================================================================== */
 function E(ex, w, reps){
   return {ex:ex, sets:reps.map(function(r){ return {w:w, r:r}; })};
 }
@@ -445,7 +404,6 @@ var HISTORY0 = [
     E('ex_press', 160000, [12,12,12]), E('ex_plank', 0, [45,45,45])]}
 ];
 
-/* a set only counts towards volume if it moved a mass */
 function setVolume(s){ return s.w * s.r; }
 function entryVolume(e){ return sum(e.sets.map(setVolume)); }
 function sessionVolume(s){ return sum((s.entries || []).map(entryVolume)); }
@@ -459,8 +417,6 @@ function weekVolume(st, week){
 function weekSessions(st, week){
   return st.history.filter(function(s){ return s.week === week; }).length;
 }
-/* the heaviest completed set ever logged for a lift; for bodyweight work the
- * mass is zero everywhere, so the tie-break on reps is what actually ranks */
 function bestSet(st, exId){
   var best = null;
   st.history.forEach(function(s){
@@ -485,7 +441,6 @@ function lastTimeOn(st, exId){
 function isPB(st, exId, w, r){
   var b = bestSet(st, exId);
   if (b && !(w > b.w || (w === b.w && r > b.r))) return false;
-  /* the second identical set of the day is not a second personal best */
   var live = st.session ? st.session.entries.filter(function(e){ return e.ex === exId; })[0] : null;
   if (live) {
     for (var i = 0; i < live.sets.length; i++){
@@ -504,9 +459,6 @@ function allPBs(st){
   return out;
 }
 
-/* ===========================================================================
- * STATE
- * ======================================================================== */
 function createInitialState(seed){
   seed = seed || 0;
   return {
@@ -515,7 +467,6 @@ function createInitialState(seed){
     routines:clone(ROUTINES),
     history:clone(HISTORY0),
     session:null,
-    /* the seed permutes which order the library offers equally valid lifts in */
     libraryOrder:shuffled(EXERCISES.map(function(e){ return e.id; }), seed),
     settings:{units:'kg', restSeconds:90, weeklyTarget:3, plateHelper:true, notifyRest:true}
   };
@@ -537,9 +488,6 @@ var SELECT = {
   clockStr:function(st){ return hhmm(st.meta ? st.meta.clock : st); }
 };
 
-/* ===========================================================================
- * REDUCER
- * ======================================================================== */
 function reduce(prev, action){
   var st = clone(prev), A = action || {};
   st.ui.toast = null;
@@ -550,7 +498,6 @@ function reduce(prev, action){
   case 'NOOP': break;
   case 'FINISH': st.meta.finished = true; st.meta.answer = A.answer === undefined ? null : A.answer; break;
 
-  /* ---- navigation ---- */
   case 'NAV': push(st, A.to, A.params); break;
   case 'BACK':
     if (st.ui.sheet) st.ui.sheet = null;
@@ -577,7 +524,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- routines ---- */
   case 'ROUTINE_ADD_EX': {
     var rt = routine(st, A.routine);
     if (!rt) break;
@@ -610,7 +556,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- the live session ---- */
   case 'SESSION_START': {
     if (st.session) { toast(st, 'A workout is already running'); break; }
     var rt4 = routine(st, A.routine);
@@ -705,7 +650,6 @@ function reduce(prev, action){
     toast(st, 'Workout discarded');
     break;
 
-  /* ---- settings ---- */
   case 'SET_UNITS': st.settings.units = A.units; break;
   case 'SET_REST':  st.settings.restSeconds = A.seconds; break;
   case 'SET_TARGET':
@@ -718,9 +662,6 @@ function reduce(prev, action){
   return st;
 }
 
-/* ===========================================================================
- * SCREEN TREE
- * ======================================================================== */
 function N(t, o){ o = o || {}; o.t = t; return o; }
 function txt(s, cls){ return N('text', {text:s, cls:cls || ''}); }
 function row(id, text, o){
@@ -753,7 +694,6 @@ function setLine(st, s, i, exId){
     val:s.pb ? 'PB' : '', pb:!!s.pb});
 }
 
-/* ---------------------------------------------------------------- today */
 function scrToday(st){
   var u = units(st), done = weekSessions(st, 0), target = st.settings.weeklyTarget;
   var today = st.routines.filter(function(r){ return r.day === TODAY; })[0] || st.routines[0];
@@ -816,7 +756,6 @@ function weekBars(st){
     alt:vals.map(function(v){ return volumeText(v, u); })});
 }
 
-/* ------------------------------------------------------------- routines */
 function scrRoutines(st){
   var u = units(st);
   return N('screen', {id:'scr_routines', name:'routines', c:[
@@ -871,7 +810,6 @@ function scrRoutine(st, params){
   ]});
 }
 
-/* -------------------------------------------------------------- library */
 function scrLibrary(st, params){
   var q = String(st.ui.inputs.q_ex || '').trim().toLowerCase();
   var grp = st.ui.inputs.lib_group || 'all';
@@ -911,7 +849,6 @@ function scrLibrary(st, params){
   ]});
 }
 
-/* ------------------------------------------------------------- exercise */
 function scrExercise(st, params){
   var e = exercise(params.id), u = units(st);
   if (!e) return scrRoutines(st);
@@ -942,7 +879,6 @@ function scrExercise(st, params){
   ]});
 }
 
-/* ---------------------------------------------------------- the session */
 function scrSession(st){
   var s = st.session, u = units(st);
   if (!s) return scrToday(st);
@@ -1040,7 +976,6 @@ function scrSummary(st){
   ]});
 }
 
-/* -------------------------------------------------------------- history */
 function scrHistory(st){
   var u = units(st);
   var weeks = [{w:0, label:'This week'}, {w:1, label:'Last week'}, {w:2, label:'Two weeks ago'}];
@@ -1088,7 +1023,6 @@ function scrSessionDetail(st, params){
   ]});
 }
 
-/* ------------------------------------------------------------- progress */
 function scrProgress(st){
   var u = units(st);
   var total = sum(st.history.map(sessionVolume));
@@ -1117,7 +1051,6 @@ function scrProgress(st){
   ]});
 }
 
-/* ------------------------------------------------------------- settings */
 function scrSettings(st){
   function sw(id, text, key, sub){
     return row(id, text, {sub:sub, arrow:false,
@@ -1156,7 +1089,6 @@ function scrSettings(st){
   ]});
 }
 
-/* --------------------------------------------------------------- sheets */
 function sheetRoutinePick(st){
   var exId = st.ui.sheet.id;
   return N('sheet', {id:'pick_sheet', title:'Add ' + exName(exId) + ' to', closeId:'pick_close',
@@ -1190,9 +1122,6 @@ function screen(st){
   return rootNode;
 }
 
-/* =======================================================================
- * TRAVERSAL — element index, GUI action interface, text observation
- * ==================================================================== */
 var SKIP_KEYS = {act:1, minus:1, plus:1, close:1, yes:1, params:1, meta:1, target:1, ring:1};
 
 function labelOf(n){ return n.text || n.title || n.name || n.label || n.main || ''; }
@@ -1256,7 +1185,6 @@ function step(st, a){
   }
 }
 
-/* ------------------------------------------------- text observation (a11y) */
 function a11y(st){
   var rootNode = screen(st), lines = [], r = route(st), u = units(st);
   lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
@@ -1343,7 +1271,6 @@ function walkText(n, d, out, st){
   }
 }
 
-/* --------------------------------------------------------- derived view */
 function derive(st){
   var u = units(st);
   var pbs = {}, pbReps = {};
@@ -1410,9 +1337,6 @@ root.GUI_ENGINE      = ENGINE;
 </script>
 
 <script id="ui">
-/* ===========================================================================
- * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
- * ======================================================================== */
 (function(){
 'use strict';
 var E = window.GUI_ENGINE;

@@ -4,31 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>通讯录 (mocked GUI env)</title>
-<!--
-  ============================================================================
-  Contacts — a single-file H5 stock address book for agent research.
 
-  Same two-block contract as every environment here: script#engine is a pure,
-  DOM-free state machine on globalThis.GUI_ENGINE; script#ui renders its screen
-  tree and exposes window.__ENV__.
-
-  What is new: the duplicates are not a stored list. Every pair of cards is
-  compared on every action — numbers normalised to E.164 first, so 07700
-  900123 and +44 7700 900123 are the same number and 0800 and +44 800 are the
-  same helpline — and what comes back is a set of suggestions with a reason
-  attached to each.
-
-  Merging is where it gets interesting. Phones, emails and groups union
-  together and need no decision. Company, birthday and the name itself are
-  single-valued, so when the two cards disagree the merge cannot proceed until
-  something is chosen, field by field. And one of the four suggestions is a
-  false positive: two different people who happen to share a name, whose only
-  evidence is that name. Merging them destroys a real contact, and the app
-  will let you.
-
-  Everything is integer counts and normalised strings, so it reproduces.
-  ============================================================================
--->
 <style>
 :root{
   --outer:#e3e6ee;
@@ -292,18 +268,12 @@ body.bare .n-sheet{animation:none}
 <div id="hud" class="off"></div>
 
 <script id="engine">
-/* ===========================================================================
- * ENGINE — pure, deterministic, DOM-free.
- * 号码先规范化成 E.164 再比：默认国家 +44，前导 0 换成 +44。
- * 重复建议每一步都重算，合并时多值字段取并集、单值字段必须挑。
- * ======================================================================== */
 (function(root){
 'use strict';
 
 var ENV_ID  = 'covey_contacts';
 var VERSION = '1.0.0';
 
-/* ------------------------------------------------------------- utilities */
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function pad2(n){ return (n < 10 ? '0' : '') + n; }
 function hhmm(m){ m = ((m % 1440) + 1440) % 1440; return pad2(Math.floor(m/60)) + ':' + pad2(m%60); }
@@ -342,7 +312,6 @@ function setPath(o, path, value){
   return o;
 }
 
-/* ------------------------------------------- screen-tree node constructors */
 function N(t, o){ o = o || {}; o.t = t; return o; }
 function txt(s, cls){ return N('text', {text:s, cls:cls || ''}); }
 function row(id, text, o){
@@ -367,9 +336,6 @@ function push(st, name, params){ st.ui.stack.push({name:name, params:params || {
 function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
 function toast(st, t){ st.ui.toast = t; }
 
-/* ------------------------------------------------------- 号码规范化
- * 默认国家是英国（+44）。去掉空格括号连字符，前导 0 换成 +44，
- * 这样 07700 900123 和 +44 7700 900123 是同一个号。 */
 var HOME_CC = '+44';
 function normPhone(p){
   var s = ('' + p).replace(/[^0-9+]/g, '');
@@ -381,7 +347,6 @@ function prettyPhone(p){ return p; }
 function normEmail(e){ return ('' + e).toLowerCase().trim(); }
 function normName(n){ return ('' + n).toLowerCase().replace(/\s+/g, ' ').trim(); }
 
-/* ------------------------------------------------------------ 联系人 */
 function C(id, name, phones, emails, company, birthday, source, groups, fav, blocked){
   return {id:id, name:name, phones:phones || [], emails:emails || [], company:company || '',
           birthday:birthday || '', source:source, groups:groups || [],
@@ -408,7 +373,6 @@ function subtitleOf(c){
   return c.company || '没有号码也没有邮箱';
 }
 
-/* ------------------------------------------------- 重复检测（每次现算） */
 function sharedPhone(a, b){
   var out = [];
   a.phones.forEach(function(p){
@@ -455,7 +419,6 @@ function suggestions(st){
 }
 function strongCount(st){ return suggestions(st).filter(function(s){ return s.strong; }).length; }
 
-/* --------------------------------------------------------------- 合并 */
 var SINGLE = [
   {id:'name',     label:'名字'},
   {id:'company',  label:'公司'},
@@ -521,7 +484,6 @@ function groupCount(st, gid){
   return st.people.filter(function(c){ return c.groups.indexOf(gid) >= 0; }).length;
 }
 
-/* =========================================================== state */
 function createInitialState(seed){
   seed = seed || 0;
   var people = [
@@ -553,8 +515,7 @@ function createInitialState(seed){
     people:people,
     dismissed:[],
     merged:0,
-    merge:null,              /* {a, b, pick:{}} */
-    /* 种子只打乱群组筛选条的排列 */
+    merge:null,
     order:shuffled(['all', 'g_work', 'g_family', 'g_clients', 'fav'], seed),
     filter:'all',
     ui:{tab:'people', stack:[{name:'people', params:{}}], sheet:null, confirm:null,
@@ -570,7 +531,6 @@ var SELECT = {
   initials:initials, groups:GROUPS, single:SINGLE, route:route
 };
 
-/* =========================================================== reducer */
 function reduce(prev, action){
   var st = clone(prev), A = action || {};
   st.ui.toast = null;
@@ -608,7 +568,6 @@ function reduce(prev, action){
   }
   case 'FILTER': st.filter = A.id; break;
 
-  /* ---- 合并 ---- */
   case 'MERGE_OPEN': {
     var a = personOf(st, A.a), b = personOf(st, A.b);
     if (!a || !b) break;
@@ -658,7 +617,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- 单张卡 ---- */
   case 'TOGGLE_FAV': {
     var c = personOf(st, A.id);
     if (!c) break;
@@ -703,7 +661,6 @@ function reduce(prev, action){
   return st;
 }
 
-/* =========================================================== screens */
 function tabbar(st){
   var items = [
     {id:'tab_people',   text:'联系人', icon:'user',  tab:'people'},
@@ -963,11 +920,6 @@ function screen(st){
   return rootNode;
 }
 
-/* =======================================================================
- * TRAVERSAL — element index, GUI action interface, text observation.
- * Identical in every environment here: the screen tree is the only thing
- * that differs, and all three readers below walk that same tree.
- * ==================================================================== */
 var SKIP_KEYS = {act:1, minus:1, plus:1, close:1, yes:1, params:1, meta:1, phones:1, emails:1, deps:1};
 
 function labelOf(n){ return n.text || n.title || n.name || n.label || n.main || ''; }
@@ -981,9 +933,6 @@ function collect(n, out){
                                             input:(n.t === 'inputrow')});
   if (n.t === 'mask' && n.close)  out.push({id:n.id, act:n.close, text:'Dismiss overlay', t:'mask'});
   for (var k in n){
-    /* a node may carry extra buttons as a pair of keys: someId holds the
-     * test-id and some holds the action. That is how steppers, sheet close
-     * buttons and per-row buttons all get into the element index. */
     if (k.length > 2 && k.slice(-2) === 'Id' && typeof n[k] === 'string'){
       var sib = n[k.slice(0, -2)];
       if (sib && typeof sib === 'object' && sib.type)
@@ -1036,7 +985,6 @@ function step(st, a){
   }
 }
 
-/* ------------------------------------------------- text observation (a11y) */
 function a11y(st){
   var rootNode = screen(st), lines = [], r = route(st);
   lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
@@ -1101,8 +1049,6 @@ function walkText(n, d, out, st){
     if (v && typeof v === 'object') walkText(v, line !== null ? d+1 : d, out, st);
   }
 }
-/* per-environment nodes: return a string to print, true if already printed,
- * or null to ignore */
 function walkExtra(n, d, out, st){
 
   if (n.t === 'ctc'){
@@ -1135,7 +1081,6 @@ function walkExtra(n, d, out, st){
   return null;
 }
 
-/* --------------------------------------------------------- derived view */
 function derive(st){
   var sugg = suggestions(st);
   var p = mergePreview(st);
@@ -1206,9 +1151,6 @@ root.GUI_ENGINE = ENGINE;
 </script>
 
 <script id="ui">
-/* ===========================================================================
- * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
- * ======================================================================== */
 (function(){
 'use strict';
 var E = window.GUI_ENGINE;

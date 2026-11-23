@@ -4,28 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Bench (mocked GUI env)</title>
-<!--
-  ============================================================================
-  Bench — a single-file H5 workshop planner for agent research.
 
-  Same two-block contract as every environment here: script#engine is a pure,
-  DOM-free state machine on globalThis.GUI_ENGINE; script#ui renders its screen
-  tree and exposes window.__ENV__.
-
-  What is new: the numbers come from a recursion. A production plan is two
-  quantities, and everything else — how much of each raw part it needs, what
-  is short, what that costs to put right, how many more you could make — is a
-  bill of materials expanded down through a sub-assembly and netted against
-  what is already on the shelf.
-
-  Two things stop it being arithmetic you can do in your head. The leg
-  assembly is shared by both products and there are six already built, so the
-  cheap ones run out partway through and the rest have to be made from raw
-  stock, which pulls in screws that the products also want. And nothing is
-  sold singly: dowels come in twenty-fives and screws in hundreds, so being
-  one short and being twenty-four short cost exactly the same.
-  ============================================================================
--->
 <style>
 :root{
   --outer:#e3e6ee;
@@ -292,18 +271,12 @@ body.bare .n-sheet{animation:none}
 <div id="hud" class="off"></div>
 
 <script id="engine">
-/* ===========================================================================
- * ENGINE — pure, deterministic, DOM-free.
- * Every quantity is a whole number of pieces and money is integer pence.
- * Requirements are exploded from the bill of materials on every action.
- * ======================================================================== */
 (function(root){
 'use strict';
 
 var ENV_ID  = 'bench_workshop';
 var VERSION = '1.0.0';
 
-/* ------------------------------------------------------------- utilities */
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function pad2(n){ return (n < 10 ? '0' : '') + n; }
 function hhmm(m){ m = ((m % 1440) + 1440) % 1440; return pad2(Math.floor(m/60)) + ':' + pad2(m%60); }
@@ -342,7 +315,6 @@ function setPath(o, path, value){
   return o;
 }
 
-/* ------------------------------------------- screen-tree node constructors */
 function N(t, o){ o = o || {}; o.t = t; return o; }
 function txt(s, cls){ return N('text', {text:s, cls:cls || ''}); }
 function row(id, text, o){
@@ -367,8 +339,6 @@ function push(st, name, params){ st.ui.stack.push({name:name, params:params || {
 function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
 function toast(st, t){ st.ui.toast = t; }
 
-/* -------------------------------------------------------------- the shelf
- * everything is a whole number of pieces; money is integer fen */
 function RAW(id, name, stock, pack, price, unit){
   return {id:id, name:name, kind:'raw', stock:stock, pack:pack, price:price, unit:unit};
 }
@@ -379,7 +349,6 @@ var PARTS = [
   RAW('r_dowel', 'Dowel',        50, 25,   1500, 'dowels'),
   RAW('r_screw', 'M8 screw',    200, 100,  2400, 'screws')
 ];
-/* one sub-assembly, and six of them are already made up */
 var ASSY = {
   id:'a_leg', name:'Leg assembly', kind:'assy', stock:6,
   bom:[{id:'r_stock', n:1}, {id:'r_dowel', n:2}, {id:'r_screw', n:4}],
@@ -403,11 +372,7 @@ function stockOf(st, id){
   return partOf(id).stock + (st.bought[id] || 0) * partOf(id).pack;
 }
 
-/* ------------------------------------------------------------ expanding it
- * legs come off the rack first, then get built, and building them eats
- * screws the products also want — which is the whole point */
 function explode(st, plan){
-  /* 「net off stock」关掉就按毛需求算：架子上现成的腿一律不算 */
   var legsWanted = 0, raw = {};
   PARTS.forEach(function(p){ raw[p.id] = 0; });
   PRODUCTS.forEach(function(pr){
@@ -431,7 +396,6 @@ function shortages(st, plan){
   return out;
 }
 function feasible(st, plan){ return shortages(st, plan).length === 0; }
-/* how many more of one product the shelf would still carry */
 function headroom(st, plan, prodId){
   var n = 0, p = clone(plan);
   while (n < 200) {
@@ -446,7 +410,6 @@ function maxAlone(st, prodId){
   PRODUCTS.forEach(function(pr){ p[pr.id] = 0; });
   return headroom(st, p, prodId);
 }
-/* what it costs to close the gaps, in whole packs */
 function packsNeeded(st, plan){
   return shortages(st, plan).map(function(s){
     var p = partOf(s.id);
@@ -460,7 +423,6 @@ function basketCost(st){
   return sum(PARTS.map(function(p){ return (st.bought[p.id] || 0) * p.price; }));
 }
 function bindingPart(st, plan){
-  /* the part that stops you adding one more of whichever product you make most of */
   var lead = PRODUCTS[0].id, best = -1;
   PRODUCTS.forEach(function(pr){ if ((plan[pr.id] || 0) > best) { best = plan[pr.id] || 0; lead = pr.id; } });
   var p = clone(plan);
@@ -480,17 +442,14 @@ function yuan(fen){
   return (neg ? '-' : '') + '£' + g + '.' + (c < 10 ? '0' : '') + c;
 }
 
-/* =========================================================== state */
 function createInitialState(seed){
   seed = seed || 0;
   return {
     meta:{env:ENV_ID, version:VERSION, seed:seed, steps:0, finished:false, answer:null},
-    /* an order that does not quite fit on the shelf */
     plan:{p_bench:6, p_table:3},
-    bought:{},                         /* raw part id -> whole packs ordered */
-    /* the seed permutes the order the shelf is listed in */
+    bought:{},
     order:shuffled(PARTS.map(function(p){ return p.id; }), seed),
-    open:{p_bench:true},               /* which tree nodes are expanded */
+    open:{p_bench:true},
     ui:{tab:'plan', stack:[{name:'plan', params:{}}], sheet:null, confirm:null, inputs:{},
         toast:null},
     settings:{showPacks:true, netOffStock:true, warnShort:true}
@@ -503,7 +462,6 @@ var SELECT = {
   parts:PARTS, assy:ASSY, products:PRODUCTS, route:route
 };
 
-/* =========================================================== reducer */
 function reduce(prev, action){
   var st = clone(prev), A = action || {};
   st.ui.toast = null;
@@ -541,7 +499,6 @@ function reduce(prev, action){
   }
   case 'TOGGLE_NODE': st.open[A.key] = !st.open[A.key]; break;
 
-  /* ---- the plan ---- */
   case 'PLAN': {
     var pr = prodOf(A.id);
     if (!pr) break;
@@ -561,7 +518,6 @@ function reduce(prev, action){
     break;
   }
   case 'MAX_OUT': {
-    /* fill up on one product without disturbing the other */
     var add = headroom(st, st.plan, A.id);
     if (!add) { toast(st, 'No room for another ' + prodOf(A.id).name.toLowerCase()); break; }
     st.plan[A.id] = (st.plan[A.id] || 0) + add;
@@ -577,7 +533,6 @@ function reduce(prev, action){
     toast(st, 'Plan emptied');
     break;
 
-  /* ---- buying ---- */
   case 'BUY': {
     var p = partOf(A.id);
     if (!p || p.kind !== 'raw') break;
@@ -609,7 +564,6 @@ function reduce(prev, action){
   return st;
 }
 
-/* =========================================================== screens */
 function tabbar(st){
   var items = [
     {id:'tab_plan',     text:'Plan',   icon:'hammer', tab:'plan'},
@@ -685,7 +639,6 @@ function scrPlan(st){
   ]});
 }
 
-/* the tree is built here so the picture and the text say the same thing */
 function treeRows(st){
   var rows = [], e = explode(st, st.plan);
   PRODUCTS.forEach(function(pr){
@@ -896,11 +849,6 @@ function screen(st){
   return rootNode;
 }
 
-/* =======================================================================
- * TRAVERSAL — element index, GUI action interface, text observation.
- * Identical in every environment here: the screen tree is the only thing
- * that differs, and all three readers below walk that same tree.
- * ==================================================================== */
 var SKIP_KEYS = {act:1, minus:1, plus:1, max:1, close:1, yes:1, params:1, meta:1, bom:1, raw:1, deps:1};
 
 function labelOf(n){ return n.text || n.title || n.name || n.label || n.main || ''; }
@@ -914,9 +862,6 @@ function collect(n, out){
                                             input:(n.t === 'inputrow')});
   if (n.t === 'mask' && n.close)  out.push({id:n.id, act:n.close, text:'Dismiss overlay', t:'mask'});
   for (var k in n){
-    /* a node may carry extra buttons as a pair of keys: someId holds the
-     * test-id and some holds the action. That is how steppers, sheet close
-     * buttons and per-row buttons all get into the element index. */
     if (k.length > 2 && k.slice(-2) === 'Id' && typeof n[k] === 'string'){
       var sib = n[k.slice(0, -2)];
       if (sib && typeof sib === 'object' && sib.type)
@@ -969,7 +914,6 @@ function step(st, a){
   }
 }
 
-/* ------------------------------------------------- text observation (a11y) */
 function a11y(st){
   var rootNode = screen(st), lines = [], r = route(st);
   lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
@@ -1034,8 +978,6 @@ function walkText(n, d, out, st){
     if (v && typeof v === 'object') walkText(v, line !== null ? d+1 : d, out, st);
   }
 }
-/* per-environment nodes: return a string to print, true if already printed,
- * or null to ignore */
 function walkExtra(n, d, out, st){
 
   if (n.t === 'state'){
@@ -1071,7 +1013,6 @@ function walkExtra(n, d, out, st){
   return null;
 }
 
-/* --------------------------------------------------------- derived view */
 function derive(st){
   var e = explode(st, st.plan);
   var need = {}, have = {}, short = {}, bought = {};
@@ -1133,9 +1074,6 @@ root.GUI_ENGINE = ENGINE;
 </script>
 
 <script id="ui">
-/* ===========================================================================
- * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
- * ======================================================================== */
 (function(){
 'use strict';
 var E = window.GUI_ENGINE;

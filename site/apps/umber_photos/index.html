@@ -4,27 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Umber (mocked GUI env)</title>
-<!--
-  ============================================================================
-  Umber — a single-file H5 photo library for agent research.
 
-  Same two-block contract as every environment here: script#engine is a pure,
-  DOM-free state machine on globalThis.GUI_ENGINE; script#ui renders its screen
-  tree and exposes window.__ENV__.
-
-  What is new: an edit is a thing that happened, not a value that was set. Each
-  photo carries an ordered stack of adjustments, and what you see is that stack
-  folded down — three taps of exposure are three entries, so undo takes one of
-  them back rather than everything. Reset empties the stack and the original is
-  still there underneath, because nothing was ever written over. The stack can
-  also be copied whole from one photo to another, which is the fastest way to
-  make twelve holiday pictures look like they belong together.
-
-  Every picture is generated from its own palette and id — there is not one
-  image file in this environment — and the fold is applied to it as real CSS,
-  so an agent looking at pixels sees the edit it just made.
-  ============================================================================
--->
 <style>
 :root{
   --outer:#05070a;
@@ -294,18 +274,12 @@ body.bare .n-sheet{animation:none}
 <div id="hud" class="off"></div>
 
 <script id="engine">
-/* ===========================================================================
- * ENGINE — pure, deterministic, DOM-free.
- * A photo is its original plus an ordered stack of adjustments. What you
- * see is the fold of that stack; undo pops one entry; reset empties it.
- * ======================================================================== */
 (function(root){
 'use strict';
 
 var ENV_ID  = 'umber_photos';
 var VERSION = '1.0.0';
 
-/* ------------------------------------------------------------- utilities */
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function pad2(n){ return (n < 10 ? '0' : '') + n; }
 function hhmm(m){ m = ((m % 1440) + 1440) % 1440; return pad2(Math.floor(m/60)) + ':' + pad2(m%60); }
@@ -344,7 +318,6 @@ function setPath(o, path, value){
   return o;
 }
 
-/* ------------------------------------------- screen-tree node constructors */
 function N(t, o){ o = o || {}; o.t = t; return o; }
 function txt(s, cls){ return N('text', {text:s, cls:cls || ''}); }
 function row(id, text, o){
@@ -369,7 +342,6 @@ function push(st, name, params){ st.ui.stack.push({name:name, params:params || {
 function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
 function toast(st, t){ st.ui.toast = t; }
 
-/* ------------------------------------------------------------- the world */
 var ADJUSTS = [
   {id:'exposure',   label:'Exposure',   lo:-5, hi:5},
   {id:'contrast',   label:'Contrast',   lo:-5, hi:5},
@@ -393,7 +365,6 @@ function adjustOf(id){ for (var i=0;i<ADJUSTS.length;i++) if (ADJUSTS[i].id===id
 function filterOf(id){ for (var i=0;i<FILTERS.length;i++) if (FILTERS[i].id===id) return FILTERS[i]; return FILTERS[0]; }
 function cropOf(id){ for (var i=0;i<CROPS.length;i++) if (CROPS[i].id===id) return CROPS[i]; return CROPS[0]; }
 
-/* the fold: an ordered stack of things that happened, read down into one look */
 function foldEdits(edits){
   var f = {exposure:0, contrast:0, warmth:0, saturation:0, filter:'none', crop:'original'};
   (edits || []).forEach(function(e){
@@ -455,12 +426,10 @@ function visibleLibrary(st){
 function selCount(st){ return st.ui.sel.length; }
 function isSel(st, id){ return st.ui.sel.indexOf(id) >= 0; }
 
-/* =========================================================== state */
 function createInitialState(seed){
   seed = seed || 0;
   return {
     meta:{env:ENV_ID, version:VERSION, seed:seed, steps:0, finished:false, answer:null},
-    /* the seed permutes the order the roll is laid out in — same photos */
     photos:shuffled(clone(PHOTOS0), seed),
     albums:clone(ALBUMS0),
     clipboard:null,
@@ -477,7 +446,6 @@ var SELECT = {
   selCount:selCount, isSel:isSel
 };
 
-/* =========================================================== reducer */
 function reduce(prev, action){
   var st = clone(prev), A = action || {};
   st.ui.toast = null;
@@ -516,7 +484,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- browsing ---- */
   case 'FILTER': st.ui.filter = A.id; break;
   case 'GO_UNSORTED':
     st.ui.filter = 'unsorted'; st.ui.tab = 'library';
@@ -535,7 +502,6 @@ function reduce(prev, action){
   }
   case 'SELECT_ALL': st.ui.sel = visibleLibrary(st).map(function(p){ return p.id; }); break;
 
-  /* ---- the edit stack ---- */
   case 'TOOL': st.ui.tool = A.id; break;
   case 'ADJUST': {
     var p = photoOf(st, A.id);
@@ -615,7 +581,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- library housekeeping ---- */
   case 'FAV': {
     var p9 = photoOf(st, A.id);
     if (!p9) break;
@@ -679,7 +644,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- settings ---- */
   case 'SET_COLS': st.settings.cols = A.n; break;
   case 'SET_TOGGLE': st.settings[A.key] = !st.settings[A.key]; break;
 
@@ -688,7 +652,6 @@ function reduce(prev, action){
   return st;
 }
 
-/* =========================================================== screens */
 function tabbar(st){
   var items = [
     {id:'tab_library',    text:'Library',    icon:'image',  tab:'library'},
@@ -980,11 +943,6 @@ function screen(st){
   return rootNode;
 }
 
-/* =======================================================================
- * TRAVERSAL — element index, GUI action interface, text observation.
- * Identical in every environment here: the screen tree is the only thing
- * that differs, and all three readers below walk that same tree.
- * ==================================================================== */
 var SKIP_KEYS = {act:1, minus:1, plus:1, close:1, yes:1, params:1, meta:1, palette:1, look:1, edits:1};
 
 function labelOf(n){ return n.text || n.title || n.name || n.label || n.main || ''; }
@@ -998,9 +956,6 @@ function collect(n, out){
                                             input:(n.t === 'inputrow')});
   if (n.t === 'mask' && n.close)  out.push({id:n.id, act:n.close, text:'Dismiss overlay', t:'mask'});
   for (var k in n){
-    /* a node may carry extra buttons as a pair of keys: someId holds the
-     * test-id and some holds the action. That is how steppers, sheet close
-     * buttons and per-row buttons all get into the element index. */
     if (k.length > 2 && k.slice(-2) === 'Id' && typeof n[k] === 'string'){
       var sib = n[k.slice(0, -2)];
       if (sib && typeof sib === 'object' && sib.type)
@@ -1053,7 +1008,6 @@ function step(st, a){
   }
 }
 
-/* ------------------------------------------------- text observation (a11y) */
 function a11y(st){
   var rootNode = screen(st), lines = [], r = route(st);
   lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
@@ -1121,8 +1075,6 @@ function walkText(n, d, out, st){
     if (v && typeof v === 'object') walkText(v, line !== null ? d+1 : d, out, st);
   }
 }
-/* per-environment nodes: return a string to print, true if already printed,
- * or null to ignore */
 function walkExtra(n, d, out, st){
 
   if (n.t === 'cell'){
@@ -1158,7 +1110,6 @@ function walkExtra(n, d, out, st){
   return null;
 }
 
-/* --------------------------------------------------------- derived view */
 function derive(st){
   var looks = {}, counts = {}, albums = {}, albumCounts = {};
   livePhotos(st).forEach(function(p){
@@ -1215,9 +1166,6 @@ root.GUI_ENGINE = ENGINE;
 </script>
 
 <script id="ui">
-/* ===========================================================================
- * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
- * ======================================================================== */
 (function(){
 'use strict';
 var E = window.GUI_ENGINE;
@@ -1259,7 +1207,6 @@ function icon(name, size, cls){
     'stroke-linecap="round" stroke-linejoin="round">' + d + '</svg></span>';
 }
 
-/* --------- the photographs, generated from a palette and an id --------- */
 function hashOf(s){
   var h = 2166136261;
   for (var i=0;i<s.length;i++){ h ^= s.charCodeAt(i); h = (h * 16777619) >>> 0; }
@@ -1330,7 +1277,6 @@ function photoSvg(kind, palette, seed){
   }
   return o + '</svg>';
 }
-/* the fold, expressed as the browser's own filter stack */
 function cssFilter(f){
   var out = 'brightness(' + (1 + f.exposure * 0.075).toFixed(3) + ') contrast('
           + (1 + f.contrast * 0.08).toFixed(3) + ') saturate('

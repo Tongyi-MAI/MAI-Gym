@@ -1,0 +1,13 @@
+{
+  "label": "official-65632d1",
+  "source_repository": "JetAstra/MacAgentBench",
+  "source_revision": "65632d1479bfb3aa1d2d3e292628f94d1743808f",
+  "task_inventory": "batch_run.get_all_tasks",
+  "vm_repository": "JetLM/OpenClaw-macOS",
+  "vm_revision": "0d2418fcb57ddc6eaa9e94cdadd2d6bcd985637d",
+  "vm_disk": "mac_hdd_ng.img",
+  "vm_disk_sha256": "d7cf6ff993eff06c5654ca68ac80af17bce8842bc042302d103b5878b8df2958",
+  "base_system": "BaseSystem.img",
+  "base_system_sha256": "0ba0a4e7bdd59545cf1aa5be1e1d4702103244b22c4ef8959acc2ebf9cd2e6db",
+  "docker_image": "numbmelon/docker-osx-evalkit-auto@sha256:32707413f015085be0ed6402c774d4d9ded10013b555b7b40494c1f1d4678cdf"
+}

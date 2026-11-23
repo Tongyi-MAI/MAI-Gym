@@ -4,29 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Privacy (mocked GUI env)</title>
-<!--
-  ============================================================================
-  Privacy — a single-file H5 stock permissions screen for agent research.
 
-  Same two-block contract as every environment here: script#engine is a pure,
-  DOM-free state machine on globalThis.GUI_ENGINE; script#ui renders its screen
-  tree and exposes window.__ENV__.
-
-  What is new: a permission is not a checkbox, it is an edge in a graph. Every
-  app declares named features and which permissions each one needs, so
-  revoking something does not print a warning — it names the three things that
-  stop working. Some permissions depend on others: precise location is
-  meaningless without location and is dropped with it, and «always» location
-  quietly degrades to «while using» the moment background refresh goes off.
-
-  The headline number is not a score, it is a query: how many apps can find
-  out where you are while you are not looking at them. Three can. Getting that
-  to nought without losing turn-by-turn navigation or your running route means
-  understanding which feature actually needs «always» and which only ever
-  needed «while using» — and two of the six things you would lose are not
-  worth keeping anyway.
-  ============================================================================
--->
 <style>
 :root{
   --outer:#e3e6ee;
@@ -292,18 +270,12 @@ body.bare .n-sheet{animation:none}
 <div id="hud" class="off"></div>
 
 <script id="engine">
-/* ===========================================================================
- * ENGINE — pure, deterministic, DOM-free.
- * 权限是图里的边：每个 App 都写明哪些功能靠哪些权限。
- * 精确位置依赖位置，「Always」依赖后台刷新，撤谁坏什么都是现算的。
- * ======================================================================== */
 (function(root){
 'use strict';
 
 var ENV_ID  = 'sable_privacy';
 var VERSION = '1.0.0';
 
-/* ------------------------------------------------------------- utilities */
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function pad2(n){ return (n < 10 ? '0' : '') + n; }
 function hhmm(m){ m = ((m % 1440) + 1440) % 1440; return pad2(Math.floor(m/60)) + ':' + pad2(m%60); }
@@ -342,7 +314,6 @@ function setPath(o, path, value){
   return o;
 }
 
-/* ------------------------------------------- screen-tree node constructors */
 function N(t, o){ o = o || {}; o.t = t; return o; }
 function txt(s, cls){ return N('text', {text:s, cls:cls || ''}); }
 function row(id, text, o){
@@ -367,7 +338,6 @@ function push(st, name, params){ st.ui.stack.push({name:name, params:params || {
 function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
 function toast(st, t){ st.ui.toast = t; }
 
-/* ------------------------------------------------------------- 权限 */
 var PERMS = [
   {id:'p_loc',   name:'Location',        kind:'level', risk:3,
    levels:['Never', 'While using', 'Always']},
@@ -429,15 +399,12 @@ var APPS = [
 ];
 function appOf(id){ for (var i=0;i<APPS.length;i++) if (APPS[i].id === id) return APPS[i]; return null; }
 
-/* ------------------------------------------------------------- 当前授权 */
 function grant(st, appId, permId){
   var g = st.grants[appId] || {};
   var v = g[permId];
   if (v === undefined) return permOf(permId).kind === 'level' ? 0 : false;
   return v;
 }
-/* 位置「始终」在后台刷新关掉之后自动降级成「使用期间」；
- * 精确位置在位置关掉之后自动失效。 */
 function effective(st, appId, permId){
   var v = grant(st, appId, permId);
   if (permId === 'p_loc' && v === 2 && !grant(st, appId, 'p_bg')) return 1;
@@ -477,7 +444,6 @@ function brokenCount(st){
 }
 function totalFeatures(){ return sum(APPS.map(function(a){ return a.feats.length; })); }
 
-/* 这个页面的头条数字：有几个 App 能在你没看它的时候知道你在哪 */
 function backgroundLocation(st){
   return APPS.filter(function(a){
     return effective(st, a.id, 'p_loc') === 2 && grant(st, a.id, 'p_bg');
@@ -502,7 +468,6 @@ function riskScore(st){
   return n;
 }
 
-/* =========================================================== state */
 function createInitialState(seed){
   seed = seed || 0;
   var grants = {};
@@ -510,7 +475,6 @@ function createInitialState(seed){
   return {
     meta:{env:ENV_ID, version:VERSION, seed:seed, steps:0, finished:false, answer:null},
     grants:grants,
-    /* 种子只打乱权限快捷条的排列 */
     order:shuffled(PERMS.map(function(p){ return p.id; }), seed),
     perm:'p_loc',
     ui:{tab:'overview', stack:[{name:'overview', params:{}}], sheet:null, confirm:null,
@@ -526,7 +490,6 @@ var SELECT = {
   riskScore:riskScore, apps:APPS, perms:PERMS, route:route
 };
 
-/* =========================================================== reducer */
 function reduce(prev, action){
   var st = clone(prev), A = action || {};
   st.ui.toast = null;
@@ -575,7 +538,6 @@ function reduce(prev, action){
   }
   case 'PICK_PERM': st.perm = A.id; break;
 
-  /* ---- 改授权 ---- */
   case 'SET_LEVEL': {
     var a = appOf(A.app);
     if (!a) break;
@@ -646,7 +608,6 @@ function reduce(prev, action){
   return st;
 }
 
-/* =========================================================== screens */
 function tabbar(st){
   var items = [
     {id:'tab_overview', text:'Overview', icon:'shield', tab:'overview'},
@@ -887,11 +848,6 @@ function screen(st){
   return rootNode;
 }
 
-/* =======================================================================
- * TRAVERSAL — element index, GUI action interface, text observation.
- * Identical in every environment here: the screen tree is the only thing
- * that differs, and all three readers below walk that same tree.
- * ==================================================================== */
 var SKIP_KEYS = {act:1, minus:1, plus:1, close:1, yes:1, params:1, meta:1, grid:1, cells:1, cols:1, needs:1, feats:1, grants:1, levels:1, deps:1};
 
 function labelOf(n){ return n.text || n.title || n.name || n.label || n.main || ''; }
@@ -905,9 +861,6 @@ function collect(n, out){
                                             input:(n.t === 'inputrow')});
   if (n.t === 'mask' && n.close)  out.push({id:n.id, act:n.close, text:'Dismiss overlay', t:'mask'});
   for (var k in n){
-    /* a node may carry extra buttons as a pair of keys: someId holds the
-     * test-id and some holds the action. That is how steppers, sheet close
-     * buttons and per-row buttons all get into the element index. */
     if (k.length > 2 && k.slice(-2) === 'Id' && typeof n[k] === 'string'){
       var sib = n[k.slice(0, -2)];
       if (sib && typeof sib === 'object' && sib.type)
@@ -960,7 +913,6 @@ function step(st, a){
   }
 }
 
-/* ------------------------------------------------- text observation (a11y) */
 function a11y(st){
   var rootNode = screen(st), lines = [], r = route(st);
   lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
@@ -1025,8 +977,6 @@ function walkText(n, d, out, st){
     if (v && typeof v === 'object') walkText(v, line !== null ? d+1 : d, out, st);
   }
 }
-/* per-environment nodes: return a string to print, true if already printed,
- * or null to ignore */
 function walkExtra(n, d, out, st){
 
   if (n.t === 'head'){
@@ -1061,7 +1011,6 @@ function walkExtra(n, d, out, st){
   return null;
 }
 
-/* --------------------------------------------------------- derived view */
 function derive(st){
   var loc = {}, feats = {}, held = {};
   APPS.forEach(function(a){
@@ -1124,9 +1073,6 @@ root.GUI_ENGINE = ENGINE;
 </script>
 
 <script id="ui">
-/* ===========================================================================
- * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
- * ======================================================================== */
 (function(){
 'use strict';
 var E = window.GUI_ENGINE;

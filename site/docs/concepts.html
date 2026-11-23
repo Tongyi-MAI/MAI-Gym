@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="System architecture, executable task model, shared rollout harness, EnvClient lifecycle, Hybrid Action Space (GUI + CLI), and the evaluate–diagnose–synthesize–retrain loop.">
+  <link rel="canonical" href="https://tongyi-mai.github.io/MAI-Gym/docs/concepts.html">
+  <meta property="og:site_name" content="MAI-Gym Docs">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Platform &amp; Core Concepts — MAI-Gym Docs">
+  <meta property="og:description" content="System architecture, executable task model, shared rollout harness, EnvClient lifecycle, Hybrid Action Space (GUI + CLI), and the evaluate–diagnose–synthesize–retrain loop.">
+  <meta property="og:url" content="https://tongyi-mai.github.io/MAI-Gym/docs/concepts.html">
+  <meta property="og:image" content="https://tongyi-mai.github.io/MAI-Gym/assets/figs/overview.webp">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Platform &amp; Core Concepts — MAI-Gym Docs">
+  <meta name="twitter:description" content="System architecture, executable task model, shared rollout harness, EnvClient lifecycle, Hybrid Action Space (GUI + CLI), and the evaluate–diagnose–synthesize–retrain loop.">
+  <meta name="twitter:image" content="https://tongyi-mai.github.io/MAI-Gym/assets/figs/overview.webp">
+  <title>Platform &amp; Core Concepts — MAI-Gym Docs</title>
+  <link rel="icon" type="image/png" href="../assets/favicon.png">
+  <script>
+    (function () {
+      var t;
+      try { t = localStorage.getItem('maigym.theme'); } catch (e) {}
+      document.documentElement.dataset.theme = t === 'day' ? 'day' : 'night';
+    })();
+  </script>
+  <link rel="preload" href="../assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="assets/docs.css">
+  <script>
+    window.MAIGYM_DOCS = {
+      root: "",
+      rawMd: "raw/concepts.md",
+      slug: "concepts.html"
+    };
+  </script>
+  <script src="assets/docs.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#doc-content">Skip to main content</a>
+
+  <header class="topbar" id="topbar">
+    <div class="topbar-row">
+      <div class="topbar-left">
+        <button class="mobile-nav-btn" id="mobile-nav-btn" type="button" aria-label="Toggle navigation" aria-expanded="false">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 5.5h14M3 10h14M3 14.5h14"/></svg>
+        </button>
+        <a class="brand" href="index.html" aria-label="MAI-Gym Documentation home">
+          <img src="../assets/mark.svg" width="26" height="26" alt="">
+          <span class="brand-name">MAI-<span>Gym</span></span>
+          <span class="brand-pill">Docs</span>
+        </a>
+      </div>
+
+      <button class="search-trigger" id="search-trigger" type="button" aria-label="Search documentation">
+        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="5.2"/><path d="m12 12 3.6 3.6"/></svg>
+        <span>Search docs...</span>
+        <kbd>⌘K</kbd>
+      </button>
+
+      <div class="topbar-right">
+        <a class="top-link" href="../index.html">Project Page</a>
+        <a class="top-link" href="https://arxiv.org/abs/2610.20939" target="_blank" rel="noopener noreferrer">Paper</a>
+        <a class="top-link" href="https://huggingface.co/Tongyi-MAI/MAI-Gym-9B" target="_blank" rel="noopener noreferrer">Model</a>
+        <a class="repo-chip" href="https://github.com/Tongyi-MAI/MAI-Gym" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+          <span>Tongyi-MAI/MAI-Gym</span>
+        </a>
+        <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle color theme" title="Switch light / dark theme">
+          <svg class="i-sun" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="3.6" fill="currentColor"/><path d="M10 1.8v2.1M10 16.1v2.1M1.8 10h2.1M16.1 10h2.1M4.2 4.2l1.5 1.5M14.3 14.3l1.5 1.5M4.2 15.8l1.5-1.5M14.3 5.7l1.5-1.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <svg class="i-moon" viewBox="0 0 20 20" aria-hidden="true"><path d="M16.2 12.6A6.8 6.8 0 0 1 7.4 3.8a6.8 6.8 0 1 0 8.8 8.8z" fill="currentColor"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="drawer-backdrop" id="drawer-backdrop" hidden></div>
+
+  <div class="doc-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Documentation navigation">
+      <div class="side-group"><p class="side-heading">Overview</p><ul><li><a class="side-link" href="index.html">Quickstart</a></li><li><a class="side-link active" aria-current="page" href="concepts.html">Platform &amp; Core Concepts</a></li><li><a class="side-link" href="mai-gym-9b.html">MAI-Gym-9B</a></li><li><a class="side-link" href="dashboard.html">Trajectory Dashboard</a></li></ul></div><div class="side-group"><p class="side-heading">User Guide</p><ul><li><a class="side-link" href="evaluation.html">Evaluation Guide</a></li><li><a class="side-link" href="training.html">Online RL Training</a></li><li><a class="side-link" href="rollout.html">Rollout CLI</a></li><li><a class="side-link" href="kubernetes.html">Kubernetes Fleets</a></li></ul></div><div class="side-group"><p class="side-heading">Benchmarks &amp; Environments</p><ul><li><a class="side-link" href="environments.html">Benchmarks Overview</a></li><li><a class="side-link" href="mocked-apps.html">Mocked Apps</a></li><li><a class="side-link" href="envs/mobile.html">Mobile Benchmarks</a></li><li><a class="side-link" href="envs/computer.html">Computer Benchmarks</a></li><li><a class="side-link" href="envs/web.html">Web Benchmarks</a></li></ul></div><div class="side-group"><p class="side-heading">Customization</p><ul><li><a class="side-link" href="extending.html">Extending MAI-Gym</a></li><li><a class="side-link" href="coding-agents.html">Coding-Agent Setup</a></li><li><a class="side-link" href="development.html">Development &amp; Layout</a></li><li><a class="side-link" href="licensing.html">Licensing &amp; Notices</a></li></ul></div>
+    </aside>
+
+    <main class="doc-main" id="doc-content">
+      <article class="doc-article">
+        <header class="page-header">
+          <div class="page-eyebrow">Overview</div>
+          <div class="page-title-row">
+            <h1>Platform &amp; Core Concepts</h1>
+            <button type="button" class="copy-page-btn" id="copy-page-btn" title="Copy page as Markdown">
+              <svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+              <svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>Copy page</span>
+            </button>
+          </div>
+          <p class="page-lead">System architecture, executable task model, shared rollout harness, EnvClient lifecycle, Hybrid Action Space (GUI + CLI), and the evaluate–diagnose–synthesize–retrain loop.</p>
+        </header>
+
+        <div class="prose">
+          <p>MAI-Gym combines a unified cross-platform execution stack with a single executable task abstraction, a <strong>Hybrid Action Space (GUI + CLI)</strong>, and one shared rollout pipeline that keeps evaluation, trajectory collection, and online RL training consistent. For the formal treatment and empirical analysis, see the <a href="https://arxiv.org/abs/2610.20939" target="_blank" rel="noopener noreferrer">technical report<svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a>.</p>
+<figure class="doc-figure"><img src="../assets/figs/overview.webp" alt="Overview of MAI-Gym: online mobile, computer, and web environments, four core capabilities, evaluate–diagnose–synthesize–retrain loop, and MAI-Gym-9B benchmark scaling" loading="lazy" data-zoomable><figcaption>Overview of MAI-Gym: online mobile, computer, and web environments, four core capabilities, evaluate–diagnose–synthesize–retrain loop, and MAI-Gym-9B benchmark scaling</figcaption></figure>
+<hr>
+<h2 id="platform-architecture">Platform Architecture<a class="heading-link" href="#platform-architecture" aria-label="Link to Platform Architecture">#</a></h2>
+<figure class="doc-figure"><img src="../assets/framework-architecture.png" alt="MAI-Gym framework architecture" loading="lazy" data-zoomable><figcaption>MAI-Gym framework architecture</figcaption></figure>
+<p>Watch the <a href="../assets/video/mai-gym-demo.mp4">full project demo</a> or explore the <a href="../index.html">interactive project website</a>.</p>
+<h3 id="core-platform-capabilities">Core Platform Capabilities<a class="heading-link" href="#core-platform-capabilities" aria-label="Link to Core Platform Capabilities">#</a></h3>
+<ul><li><strong>One Harness, One Rollout Path:</strong> Evaluation (<code>mai-gym eval</code>), trajectory collection (<code>mai-gym rollout</code>), and online RL training (<code>mai-gym train</code>) execute the exact same agent harness, prompt builder, action parser, and interaction loop—eliminating train–eval drift.</li><li><strong>Unified Environment Management:</strong> <code>EnvClient</code> exposes a consistent lifecycle for allocation, observation, exact task reset, action execution, and verification while adapters preserve each benchmark&#x27;s native initialization, action space, and evaluators (<a href="extending.html#environment-contract--responsibilities">Extending MAI-Gym</a>).</li><li><p><strong>Cross-Platform Execution Stack (up to 20,000 Concurrent Envs):</strong> A single manager serves mobile, computer, and web instances across Kubernetes, Docker, physical devices, or remote endpoints:</p><ul><li><strong>Mobile:</strong> Containerized Android via ReDroid (avoiding nested virtualization on container clusters) with golden <code>/data</code> snapshot resets, plus local Docker/KVM emulators.</li><li><strong>Computer:</strong> Isolated desktop VMs with strict guest-readiness checks, per-instance service ports and artifact caches, and automatic container recovery.</li><li><strong>Web:</strong> Headless Chromium hosting live websites, self-hosted benchmark suites, and deterministic browser <strong>Mocked Apps</strong>.</li></ul></li><li><strong>Fault-Isolated, Elastic Rollouts:</strong> Asynchronous provisioning, warm pools, session leases, idempotent action IDs, operation deadlines, isolated verifier process groups, and object-storage (<code>oss</code>) screenshot transport keep infrastructure faults separate from the training signal.</li><li><strong>Efficient Multimodal History:</strong> Window-wise history (<code>K = 10, O = 2</code>) preserves reusable prompt prefixes for KV-cache hits while bounding active screenshots; sticky routing pins each trajectory to the inference engine holding its cache.</li><li><strong>Verifiable Rewards &amp; Visual Diagnostics:</strong> Programmatic state verifiers and VLM judges produce rewards, while the embedded <a href="dashboard.html">Rust Trajectory Dashboard</a> and its HTTP diagnosis API connect aggregate scores directly to live fleets, screenshots, model reasoning traces, and verifier outputs.</li><li><strong>Online RL Integration:</strong> Feeds synchronous or asynchronous rollout trajectories directly into the bundled <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/resources/slime/README.md" target="_blank" rel="noopener noreferrer">Slime<svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a> runtime (Megatron-LM + SGLang), supporting <strong>GRPO, DAPO, GSPO, REINFORCE++, SAO, and PPO</strong> (<a href="training.html">Online RL Training</a>).</li></ul>
+<hr>
+<h2 id="the-four-stage-improvement-loop">The Four-Stage Improvement Loop<a class="heading-link" href="#the-four-stage-improvement-loop" aria-label="Link to The Four-Stage Improvement Loop">#</a></h2>
+<p>MAI-Gym is structured around a closed improvement cycle for GUI agents:</p>
+<ol><li><strong>Evaluate</strong> — Run one command (<code>mai-gym eval</code>) across mobile, computer, and web benchmarks using the exact training harness (<a href="evaluation.html">Evaluation Guide</a>).</li><li><strong>Diagnose</strong> — Inspect fleet health, benchmark matrices, and step-by-step screenshots in the <a href="dashboard.html">Trajectory Dashboard</a>, or query its <a href="dashboard.html#http-diagnosis-api">HTTP diagnosis API</a> with coding agents for automated failure analysis.</li><li><strong>Synthesize</strong> — Construct resettable <strong>Mocked Apps</strong> (<a href="mocked-apps.html">Mocked Apps</a>: <em>Real-World Clones</em> and <em>Novel Apps</em>), coherent cross-app initial states, and execution-validated tasks targeting weak capabilities (see the <a href="https://arxiv.org/abs/2610.20939" target="_blank" rel="noopener noreferrer">technical report<svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a>).</li><li><strong>Retrain</strong> — Launch joint multi-domain online RL (<code>mai-gym train</code>) with policy-adaptive task sampling and window-wise history packing (<a href="training.html">Online RL Training</a>).</li></ol>
+<hr>
+<h2 id="executable-tasks--verification">Executable Tasks &amp; Verification<a class="heading-link" href="#executable-tasks--verification" aria-label="Link to Executable Tasks &amp; Verification">#</a></h2>
+<p>An <strong>environment</strong> <code>E</code> is an interactive software system such as an Android container, a desktop virtual machine, or a browser application. An <strong>executable task</strong> is a four-tuple:</p>
+<div class="code-block" data-lang="text"><div class="code-head"><span class="code-lang">text</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-text">x = (E, s₀, g, V)</code></pre></div>
+<div class="table-wrap"><table><thead><tr><th style="text-align:left">Component</th><th style="text-align:left">Definition</th></tr></thead><tbody><tr><td style="text-align:left"><strong>Environment</strong> (<code>E</code>)</td><td style="text-align:left">Target execution runtime (mobile, computer, or web) exposed behind the uniform <code>EnvClient</code> interface.</td></tr><tr><td style="text-align:left"><strong>Initial State</strong> (<code>s₀</code>)</td><td style="text-align:left">Reproducible application records, workspace files, accounts, and system settings loaded before step 1. Each episode runs in an isolated instance reset to <code>s₀</code>.</td></tr><tr><td style="text-align:left"><strong>Instruction</strong> (<code>g</code>)</td><td style="text-align:left">Natural-language task goal grounded in the environment state.</td></tr><tr><td style="text-align:left"><strong>Verifier</strong> (<code>V</code>)</td><td style="text-align:left">Programmatic state verifier and/or VLM trajectory judge evaluating the final state <code>s_T</code> (and optionally the trajectory <code>τ</code>).</td></tr></tbody></table></div>
+<h3 id="partial-credit-vs-binary-success">Partial Credit vs. Binary Success<a class="heading-link" href="#partial-credit-vs-binary-success" aria-label="Link to Partial Credit vs. Binary Success">#</a></h3>
+<p>Task requirements are represented as binary criteria <code>b_j ∈ {0, 1}</code> with positive weights <code>w_j &gt; 0</code> and a mandatory subset <code>C</code>:</p>
+<ul><li><strong>Partial reward (<code>r ∈ [0, 1]</code>):</strong> Weighted average of satisfied criteria, <code>r = (∑ w_j · b_j) / (∑ w_j)</code>.</li><li><strong>Task success (<code>S ∈ {0, 1}</code>):</strong> Binary indicator <code>S = ∏_{j ∈ C} b_j</code> requiring every mandatory criterion to pass.</li></ul>
+<p>Benchmarks such as OSWorld 2.0, MobileGym, and Mocked Apps (<code>mocked-apps</code>) report both binary full success and weighted partial scores.</p>
+<hr>
+<span id="one-harness-one-rollout-path" class="doc-anchor"></span><span id="shared-environment-interface" class="doc-anchor"></span><h2 id="shared-rollout-path--envclient-lifecycle">Shared Rollout Path &amp; <code>EnvClient</code> Lifecycle<a class="heading-link" href="#shared-rollout-path--envclient-lifecycle" aria-label="Link to Shared Rollout Path &amp; EnvClient Lifecycle">#</a></h2>
+<p>The same model checkpoint can produce noticeably different benchmark scores under different harnesses—for example, if evaluation retains 10 screenshots while training retains 5, or if coordinate scaling and action parsing diverge. MAI-Gym prevents train–eval drift by routing all three workloads through <strong>one shared agent harness and rollout path</strong>:</p>
+<div class="code-block" data-lang="text"><div class="code-head"><span class="code-lang">text</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-text">Rollout Scheduler ──▶ Rollout Worker ──▶ EnvClient ──▶ Environment Manager ──▶ Mobile / Computer / Web
+                            │
+                            ▼
+                  Agent Harness + Inference Engine (SGLang / OpenAI API)
+                            │
+                            ▼
+                    Trajectory Buffer
+           ┌────────────────┼────────────────┐
+           ▼                ▼                ▼
+      Evaluation     Data Collection    Online RL Training
+    (mai-gym eval)  (mai-gym rollout)    (mai-gym train)</code></pre></div>
+<p>Every workload drives every environment through the exact same <code>EnvClient</code> lifecycle:</p>
+<div class="code-block" data-lang="text"><div class="code-head"><span class="code-lang">text</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-text">acquire ──▶ reset ──▶ (observe ──▶ act)* ──▶ evaluate ──▶ release</code></pre></div>
+<div class="table-wrap"><table><thead><tr><th style="text-align:left">Stage</th><th style="text-align:left">Responsibility</th></tr></thead><tbody><tr><td style="text-align:left"><code>acquire</code></td><td style="text-align:left">Lease an isolated environment session from the manager (local, Docker, SSH, or Kubernetes warm pool).</td></tr><tr><td style="text-align:left"><code>reset</code></td><td style="text-align:left">Restore exact initial task state (<code>s₀</code>) and register task-specific preconditions.</td></tr><tr><td style="text-align:left"><code>observe</code> / <code>act</code></td><td style="text-align:left">Capture screenshots (and optional CLI command output), parse batched actions, and execute them idempotently with deadlines.</td></tr><tr><td style="text-align:left"><code>evaluate</code></td><td style="text-align:left">Run the benchmark&#x27;s native programmatic verifier and/or VLM judge in isolation to produce rewards.</td></tr><tr><td style="text-align:left"><code>release</code></td><td style="text-align:left">Return the session to the warm pool (or recycle unhealthy instances) and persist full trajectory artifacts.</td></tr></tbody></table></div>
+<p>For the 5-operation adapter contract (<code>reqEnvs</code>, <code>observe</code>, <code>reset</code>, <code>step</code>, <code>eval</code>) and responsibility matrix, see <a href="extending.html#environment-contract--responsibilities">Extending MAI-Gym</a>.</p>
+<h3 id="supported-environment-domains">Supported Environment Domains<a class="heading-link" href="#supported-environment-domains" aria-label="Link to Supported Environment Domains">#</a></h3>
+<div class="table-wrap"><table><thead><tr><th style="text-align:left">Domain</th><th style="text-align:left">Supported Environments</th><th style="text-align:left">Guide</th></tr></thead><tbody><tr><td style="text-align:left"><strong>Mobile</strong></td><td style="text-align:left">MobileWorld, AndroidWorld, MobileGym, Mocked Apps (<em>Real-World Clones</em>)</td><td style="text-align:left"><a href="envs/mobile.html">Mobile Benchmarks</a></td></tr><tr><td style="text-align:left"><strong>Computer</strong></td><td style="text-align:left">OSWorld-Verified, OSWorld 2.0, MacAgentBench, MyPCBench</td><td style="text-align:left"><a href="envs/computer.html">Computer Benchmarks</a></td></tr><tr><td style="text-align:left"><strong>Web</strong></td><td style="text-align:left">WebVoyager, Online-Mind2Web, WebArena, Mocked Apps (<code>mocked-apps</code>)</td><td style="text-align:left"><a href="envs/web.html">Web Benchmarks</a> · <a href="mocked-apps.html">Mocked Apps</a></td></tr></tbody></table></div>
+<hr>
+<span id="hybrid-action-space" class="doc-anchor"></span><h2 id="hybrid-action-space-gui--cli">Hybrid Action Space (GUI + CLI)<a class="heading-link" href="#hybrid-action-space-gui--cli" aria-label="Link to Hybrid Action Space (GUI + CLI)">#</a></h2>
+<p>MAI-Gym defines a <strong>Hybrid Action Space</strong> that combines coordinate-based GUI interaction with direct command-line (<code>&lt;bash&gt;</code>) execution, tool/API calls, user clarification, and explicit task termination:</p>
+<ul><li><strong>Computer environments (Hybrid GUI + CLI):</strong> On each turn, the agent dynamically chooses between graphical <code>pyautogui</code> actions and raw <code>&lt;bash&gt;</code> shell commands—using CLI execution when scripting, file manipulation, or inspection is faster and more reliable than clicking, and GUI actions for visual applications.</li><li><strong>Mobile &amp; Web environments (GUI):</strong> Agents operate through coordinate-based touch/pointer GUI actions (plus API and flow-control actions) on the exact same harness.</li></ul>
+<p>A single <strong>step</strong> corresponds to one model decision and may emit an <strong>ordered batch</strong> of actions (e.g., clicking a field, typing text, and pressing a shortcut in one turn). When a later step depends on shell output, the agent emits the <code>&lt;bash&gt;</code> block and inspects stdout/stderr on the next turn; failed CLI commands return their error text as observation feedback rather than aborting the episode. Step budgets and history windows count decision steps.</p>
+<div class="table-wrap"><table><thead><tr><th style="text-align:left">Category</th><th style="text-align:left">Action</th><th style="text-align:left">Definition</th></tr></thead><tbody><tr><td style="text-align:left"><strong>GUI</strong></td><td style="text-align:left"><code>click</code></td><td style="text-align:left">Clicks at normalized screen coordinates <code>(x, y)</code> (plus <code>right_click</code> / <code>triple_click</code> on desktop).</td></tr><tr><td style="text-align:left"><strong>GUI</strong></td><td style="text-align:left"><code>double_click</code></td><td style="text-align:left">Double-clicks at <code>(x, y)</code> (double tap on touch screens).</td></tr><tr><td style="text-align:left"><strong>GUI</strong></td><td style="text-align:left"><code>long_press</code></td><td style="text-align:left">Long-presses at <code>(x, y)</code>.</td></tr><tr><td style="text-align:left"><strong>GUI</strong></td><td style="text-align:left"><code>type</code></td><td style="text-align:left">Types the specified text content.</td></tr><tr><td style="text-align:left"><strong>GUI</strong></td><td style="text-align:left"><code>hotkey</code></td><td style="text-align:left">Presses a key or key combination (e.g., <code>ctrl+c</code>).</td></tr><tr><td style="text-align:left"><strong>GUI</strong></td><td style="text-align:left"><code>open</code></td><td style="text-align:left">Opens a specified application.</td></tr><tr><td style="text-align:left"><strong>GUI</strong></td><td style="text-align:left"><code>drag</code> / <code>scroll</code></td><td style="text-align:left">Drags from <code>(x1, y1)</code> to <code>(x2, y2)</code> or scrolls at a screen location.</td></tr><tr><td style="text-align:left"><strong>GUI</strong></td><td style="text-align:left"><code>system_button</code></td><td style="text-align:left">Presses a mobile system button (<code>back</code>, <code>home</code>, <code>menu</code>, or <code>enter</code>).</td></tr><tr><td style="text-align:left"><strong>GUI</strong></td><td style="text-align:left"><code>wait</code></td><td style="text-align:left">Pauses execution for a specified duration.</td></tr><tr><td style="text-align:left"><strong>CLI</strong></td><td style="text-align:left"><code>cli_command</code> (<code>&lt;bash&gt;</code>)</td><td style="text-align:left">Executes a Bash command verbatim in the active desktop environment and returns its output.</td></tr><tr><td style="text-align:left"><strong>API</strong></td><td style="text-align:left"><code>api_call</code></td><td style="text-align:left">Invokes a registered tool/API with specified arguments.</td></tr><tr><td style="text-align:left"><strong>Control</strong></td><td style="text-align:left"><code>ask_user</code></td><td style="text-align:left">Requests clarifying information from the user (when enabled).</td></tr><tr><td style="text-align:left"><strong>Control</strong></td><td style="text-align:left"><code>terminate</code></td><td style="text-align:left">Ends the episode with an optional final answer and status (<code>success</code> or <code>failed</code>).</td></tr></tbody></table></div>
+<hr>
+<h2 id="next-steps">Next Steps<a class="heading-link" href="#next-steps" aria-label="Link to Next Steps">#</a></h2>
+<ul><li>See benchmark results and usage for the released 9B model: <a href="mai-gym-9b.html">MAI-Gym-9B</a></li><li>Browse all 10 GUI benchmarks and Mocked Apps: <a href="environments.html">Benchmarks Overview</a></li><li>Run your first local or benchmark evaluation: <a href="index.html">Quickstart</a> · <a href="evaluation.html">Evaluation Guide</a></li><li>Add custom harnesses, tasks, or benchmark adapters: <a href="extending.html">Extending MAI-Gym</a></li></ul>
+        </div>
+
+        <nav class="pagination" aria-label="Pagination">
+          <a class="pag-link prev" href="index.html"><span class="pag-label">Previous</span><span class="pag-title">&larr; Quickstart</span></a>
+          <a class="pag-link next" href="mai-gym-9b.html"><span class="pag-label">Next</span><span class="pag-title">MAI-Gym-9B &rarr;</span></a>
+        </nav>
+
+        <footer class="doc-footer">
+          <div class="doc-footer-links">
+            <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/site/docs/raw/concepts.md" target="_blank" rel="noopener noreferrer">Edit this page on GitHub &nearr;</a>
+            <a href="https://github.com/Tongyi-MAI/MAI-Gym/issues/new?title=Docs:%20Platform &amp;amp; Core Concepts" target="_blank" rel="noopener noreferrer">Raise a docs issue &nearr;</a>
+            <a href="llms.txt">llms.txt</a>
+          </div>
+          <p class="doc-footer-meta">MAI-Gym · MIT License · Tongyi-MAI</p>
+        </footer>
+      </article>
+    </main>
+
+    <aside class="toc-rail" aria-label="On this page">
+      <div class="toc-inner">
+        <p class="toc-title">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M2.5 4h11M2.5 8h7M2.5 12h11"/></svg>
+          On this page
+        </p>
+        <ul class="toc-list" id="toc-list"><li><a class="toc-link" href="#platform-architecture">Platform Architecture</a></li><li><a class="toc-link toc-h3" href="#core-platform-capabilities">Core Platform Capabilities</a></li><li><a class="toc-link" href="#the-four-stage-improvement-loop">The Four-Stage Improvement Loop</a></li><li><a class="toc-link" href="#executable-tasks--verification">Executable Tasks &amp; Verification</a></li><li><a class="toc-link toc-h3" href="#partial-credit-vs-binary-success">Partial Credit vs. Binary Success</a></li><li><a class="toc-link" href="#shared-rollout-path--envclient-lifecycle">Shared Rollout Path &amp; EnvClient Lifecycle</a></li><li><a class="toc-link toc-h3" href="#supported-environment-domains">Supported Environment Domains</a></li><li><a class="toc-link" href="#hybrid-action-space-gui--cli">Hybrid Action Space (GUI + CLI)</a></li><li><a class="toc-link" href="#next-steps">Next Steps</a></li></ul>
+        <div class="toc-actions">
+          <a href="#top" class="toc-action-link" id="back-to-top">&uarr; Back to top</a>
+          <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/site/docs/raw/concepts.md" class="toc-action-link" target="_blank" rel="noopener noreferrer">View Markdown &nearr;</a>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <dialog class="search-dialog" id="search-dialog" aria-label="Search documentation">
+    <div class="search-box">
+      <div class="search-input-row">
+        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="5.2"/><path d="m12 12 3.6 3.6"/></svg>
+        <input id="search-input" type="search" placeholder="Search documentation, CLI flags, benchmarks..." autocomplete="off" spellcheck="false">
+        <button type="button" class="search-esc" id="search-close">ESC</button>
+      </div>
+      <div class="search-results" id="search-results" role="listbox"></div>
+      <div class="search-foot">
+        <span><kbd>&uarr;</kbd><kbd>&darr;</kbd> navigate</span>
+        <span><kbd>Enter</kbd> open</span>
+        <span><kbd>Esc</kbd> close</span>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="img-dialog" id="img-dialog" aria-label="Image preview">
+    <button type="button" class="img-dialog-close" id="img-dialog-close" aria-label="Close preview">&times;</button>
+    <img id="img-dialog-src" alt="">
+  </dialog>
+</body>
+</html>

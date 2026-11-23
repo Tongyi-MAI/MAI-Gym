@@ -4,32 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Camera (mocked GUI env)</title>
-<!--
-  ============================================================================
-  Camera — a single-file H5 stock camera for agent research.
 
-  Same two-block contract as every environment here: script#engine is a pure,
-  DOM-free state machine on globalThis.GUI_ENGINE; script#ui renders its screen
-  tree and exposes window.__ENV__.
-
-  What is new: three dials that are not independent. Aperture, shutter and ISO
-  are each a ladder of whole stops, and the exposure of the frame is one
-  number — shutter + ISO − aperture — measured against what the scene needs.
-  Open the aperture a stop and the frame gains a stop; you have to give it
-  back somewhere or the picture is blown out.
-
-  And every rung has a price. Below 1/30 a handheld frame smears; above ISO
-  1600 it turns grainy; past f/2.8 the background stops falling away. The
-  seeded frame is two stops under with all three of those still satisfied, and
-  there is exactly one pair of moves that buys two stops without breaking any
-  of them.
-
-  The viewfinder is generative SVG that actually gets brighter and darker with
-  the exposure error, the shot counter comes from free storage divided by the
-  size of one frame at the chosen format, and everything is integer stops and
-  integer megabytes.
-  ============================================================================
--->
 <style>
 :root{
   --outer:#05070a;
@@ -295,18 +270,12 @@ body.bare .n-sheet{animation:none}
 <div id="hud" class="off"></div>
 
 <script id="engine">
-/* ===========================================================================
- * ENGINE — pure, deterministic, DOM-free.
- * 三个转盘各是一把整档的梯子，曝光 = 快门档 + ISO 档 − 光圈档。
- * 优先模式下相机自己凑那一档，凑法写在 resolved() 里。
- * ======================================================================== */
 (function(root){
 'use strict';
 
 var ENV_ID  = 'lumen_camera';
 var VERSION = '1.0.0';
 
-/* ------------------------------------------------------------- utilities */
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function pad2(n){ return (n < 10 ? '0' : '') + n; }
 function hhmm(m){ m = ((m % 1440) + 1440) % 1440; return pad2(Math.floor(m/60)) + ':' + pad2(m%60); }
@@ -345,7 +314,6 @@ function setPath(o, path, value){
   return o;
 }
 
-/* ------------------------------------------- screen-tree node constructors */
 function N(t, o){ o = o || {}; o.t = t; return o; }
 function txt(s, cls){ return N('text', {text:s, cls:cls || ''}); }
 function row(id, text, o){
@@ -370,18 +338,15 @@ function push(st, name, params){ st.ui.stack.push({name:name, params:params || {
 function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
 function toast(st, t){ st.ui.toast = t; }
 
-/* ------------------------------------------------------------ 曝光三角
- * 三个梯子，每一级正好一档。曝光 = 快门档 + ISO 档 − 光圈档。 */
 var APERTURES = ['f/1.4','f/2','f/2.8','f/4','f/5.6','f/8','f/11','f/16'];
 var SHUTTERS  = ['1/2000','1/1000','1/500','1/250','1/125','1/60','1/30','1/15','1/8','1/4',
                  '1/2','1s'];
 var ISOS      = ['50','100','200','400','800','1600','3200','6400'];
 var EVCOMP    = [-3,-2,-1,0,1,2,3];
 
-/* 三条底线，越过就有代价 */
-var BLUR_FROM = 7;      /* 1/15 及更慢，手持会糊 */
-var NOISE_FROM = 6;     /* ISO 3200 起噪点明显 */
-var BOKEH_TO = 2;       /* f/2.8 及更大光圈才有明显虚化 */
+var BLUR_FROM = 7;
+var NOISE_FROM = 6;
+var BOKEH_TO = 2;
 
 var SCENES = [
   {id:'sc_room', name:'室内傍晚 Living room, dusk', need:11,
@@ -399,7 +364,6 @@ var MODES = [
 ];
 function modeOf(id){ for (var i=0;i<MODES.length;i++) if (MODES[i].id === id) return MODES[i]; return MODES[0]; }
 
-/* 相机在优先模式下怎么凑那一档 */
 function resolved(st){
   var need = sceneOf(st.scene).need + st.ev;
   var a = st.ap, s = st.sh, i = st.iso;
@@ -410,7 +374,6 @@ function resolved(st){
     a = s + i - need;
     a = Math.max(0, Math.min(APERTURES.length - 1, a));
   } else if (st.mode === 'm_auto'){
-    /* 先把 ISO 压到最低，再在不糊的前提下放慢快门，还不够就抬 ISO */
     a = 0; i = 1; s = need - i + a;
     while (s > BLUR_FROM - 1 && i < ISOS.length - 1){ i += 1; s = need - i + a; }
     s = Math.max(0, Math.min(SHUTTERS.length - 1, s));
@@ -437,7 +400,6 @@ function faults(st){
 }
 function clean(st){ return faults(st).length === 0; }
 
-/* ------------------------------------------------------------ 画质与存储 */
 var FORMATS = [
   {id:'j12',  name:'JPEG 12MP',      mb:4,  note:'默认，够用'},
   {id:'j48',  name:'JPEG 48MP',      mb:14, note:'细节多一点'},
@@ -451,22 +413,20 @@ function freeMb(st){ return st.freeMb; }
 function shotsLeft(st){ return Math.floor(freeMb(st) / fmtOf(st.format).mb); }
 function burstCost(st){ return st.burst * fmtOf(st.format).mb; }
 
-/* =========================================================== state */
 function createInitialState(seed){
   seed = seed || 0;
   return {
     meta:{env:ENV_ID, version:VERSION, seed:seed, steps:0, finished:false, answer:null},
     scene:'sc_room',
     mode:'m_manual',
-    ap:1,        /* f/2 */
-    sh:6,        /* 1/30 */
-    iso:4,       /* ISO 800 */
+    ap:1,
+    sh:6,
+    iso:4,
     ev:0,
     format:'j12',
     burst:1,
     freeMb:4860,
     shots:[],
-    /* 种子只打乱场景预设的排列，哪些场景存在不会变 */
     order:shuffled(SCENES.map(function(x){ return x.id; }), seed),
     ui:{tab:'shoot', stack:[{name:'shoot', params:{}}], sheet:null, confirm:null,
         inputs:{}, toast:null},
@@ -481,7 +441,6 @@ var SELECT = {
   formats:FORMATS, blurFrom:BLUR_FROM, noiseFrom:NOISE_FROM, bokehTo:BOKEH_TO, route:route
 };
 
-/* =========================================================== reducer */
 function reduce(prev, action){
   var st = clone(prev), A = action || {};
   st.ui.toast = null;
@@ -529,7 +488,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- 三个转盘 ---- */
   case 'SET_AP': {
     var w = locked(st, 'ap');
     if (w) { toast(st, w); break; }
@@ -568,7 +526,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- 画质 ---- */
   case 'SET_FORMAT': {
     st.format = A.id;
     toast(st, fmtOf(A.id).name + '，一张 ' + fmtOf(A.id).mb + ' MB，还能拍 '
@@ -581,7 +538,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- 快门 ---- */
   case 'SHOOT': {
     var need = burstCost(st);
     if (need > freeMb(st)) {
@@ -617,7 +573,6 @@ function reduce(prev, action){
   return st;
 }
 
-/* =========================================================== screens */
 function tabbar(st){
   var items = [
     {id:'tab_shoot',    text:'Shoot',   icon:'cam',   tab:'shoot'},
@@ -629,7 +584,6 @@ function tabbar(st){
   });
   return N('tabbar', {id:'tabbar', items:items});
 }
-/* 取景器：亮度真的跟着曝光误差走 */
 function viewfinder(st){
   var off = offBy(st);
   var lift = Math.max(0, Math.min(1, 0.5 + off * 0.16));
@@ -858,11 +812,6 @@ function screen(st){
   return rootNode;
 }
 
-/* =======================================================================
- * TRAVERSAL — element index, GUI action interface, text observation.
- * Identical in every environment here: the screen tree is the only thing
- * that differs, and all three readers below walk that same tree.
- * ==================================================================== */
 var SKIP_KEYS = {act:1, minus:1, plus:1, close:1, yes:1, params:1, meta:1, grid:1, deps:1};
 
 function labelOf(n){ return n.text || n.title || n.name || n.label || n.main || ''; }
@@ -876,9 +825,6 @@ function collect(n, out){
                                             input:(n.t === 'inputrow')});
   if (n.t === 'mask' && n.close)  out.push({id:n.id, act:n.close, text:'Dismiss overlay', t:'mask'});
   for (var k in n){
-    /* a node may carry extra buttons as a pair of keys: someId holds the
-     * test-id and some holds the action. That is how steppers, sheet close
-     * buttons and per-row buttons all get into the element index. */
     if (k.length > 2 && k.slice(-2) === 'Id' && typeof n[k] === 'string'){
       var sib = n[k.slice(0, -2)];
       if (sib && typeof sib === 'object' && sib.type)
@@ -931,7 +877,6 @@ function step(st, a){
   }
 }
 
-/* ------------------------------------------------- text observation (a11y) */
 function a11y(st){
   var rootNode = screen(st), lines = [], r = route(st);
   lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
@@ -996,8 +941,6 @@ function walkText(n, d, out, st){
     if (v && typeof v === 'object') walkText(v, line !== null ? d+1 : d, out, st);
   }
 }
-/* per-environment nodes: return a string to print, true if already printed,
- * or null to ignore */
 function walkExtra(n, d, out, st){
 
   if (n.t === 'vf'){
@@ -1026,7 +969,6 @@ function walkExtra(n, d, out, st){
   return null;
 }
 
-/* --------------------------------------------------------- derived view */
 function derive(st){
   var r = resolved(st);
   return {
@@ -1089,9 +1031,6 @@ root.GUI_ENGINE = ENGINE;
 </script>
 
 <script id="ui">
-/* ===========================================================================
- * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
- * ======================================================================== */
 (function(){
 'use strict';
 var E = window.GUI_ENGINE;

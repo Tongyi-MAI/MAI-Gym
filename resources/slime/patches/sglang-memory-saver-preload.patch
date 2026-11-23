@@ -1,0 +1,28 @@
+--- a/python/sglang/srt/utils/torch_memory_saver_adapter.py
++++ b/python/sglang/srt/utils/torch_memory_saver_adapter.py
+@@ -1,4 +1,5 @@
+ import logging
++import os
+ from abc import ABC
+ from contextlib import contextmanager
+ 
+@@ -24,6 +25,19 @@
+                 "via `pip3 install torch-memory-saver`. "
+             )
+             raise import_error
++        if enable and os.environ.get("SGLANG_MEMORY_SAVER_CUDA_GRAPH", "").lower() in (
++            "1", "true", "yes", "on",
++        ):
++            # Importing Megatron can select its torch hook on the shared singleton.
++            # SGLang graph offload requires preload before the first allocation.
++            impl = getattr(_memory_saver, "_impl", None)
++            if impl is None:
++                _memory_saver.hook_mode = "preload"
++            elif getattr(impl, "_hook_mode", None) != "preload":
++                raise RuntimeError(
++                    "SGLang CUDA graph offload requires the preload memory-saver "
++                    "hook before memory allocation"
++                )
+         return (
+             _TorchMemorySaverAdapterReal() if enable else _TorchMemorySaverAdapterNoop()
+         )

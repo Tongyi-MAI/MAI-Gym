@@ -6,14 +6,18 @@ import json
 import os
 import struct
 from dataclasses import dataclass, field
+from io import BytesIO
 from pathlib import Path
 from typing import Any
+
+from PIL import Image
 
 from mai_gym.agents.backends.http_chat_model import HttpChatModel
 from mai_gym.agents.parsing.mai_gym_mobile_use import (
     ActionParseResult,
     parse_action_response,
 )
+from mai_gym.utils.images import to_data_url
 
 MAX_ACTION_PARSE_RETRIES = 3
 HISTORY_IMAGE_PLACEHOLDER = "<image_collapsed>"
@@ -77,7 +81,6 @@ def render_prompt_template(
     apps: list[str],
     tools: str | list[dict[str, Any]] | None = None,
 ) -> str:
-    """Render the small checked-in prompt without requiring Jinja."""
 
     template_path = Path(__file__).resolve().parents[1] / "prompts" / template_name
     template = template_path.read_text(encoding="utf-8")
@@ -89,7 +92,9 @@ def render_prompt_template(
         before, remainder = template.split(block_start, 1)
         tools_block, after = remainder.split(block_end, 1)
         if tools:
-            rendered_tools = tools if isinstance(tools, str) else json.dumps(tools, ensure_ascii=False)
+            rendered_tools = (
+                tools if isinstance(tools, str) else json.dumps(tools, ensure_ascii=False)
+            )
             template = before + tools_block + after
         else:
             rendered_tools = ""
@@ -193,24 +198,21 @@ def keep_recent_images(
     return out
 
 
-def decode_png_size(image_b64: str) -> tuple[int, int] | None:
+def decode_image_size(image_b64: str) -> tuple[int, int] | None:
     try:
         raw = base64.b64decode(image_b64, validate=True)
-    except (ValueError, TypeError):
+        if len(raw) >= 24 and raw[:8] == b"\x89PNG\r\n\x1a\n" and raw[12:16] == b"IHDR":
+            return struct.unpack(">II", raw[16:24])
+        with Image.open(BytesIO(raw)) as image:
+            return image.size
+    except (ValueError, TypeError, OSError):
         return None
-    if len(raw) < 24 or raw[:8] != b"\x89PNG\r\n\x1a\n" or raw[12:16] != b"IHDR":
-        return None
-    return struct.unpack(">II", raw[16:24])
+
+
+decode_png_size = decode_image_size
 
 
 class MAIGymMobileUsePolicy:
-    """Deployment-independent mobile-use agent.
-
-    The model transport is injected through ``chat_model``. This module owns only
-    the agent loop and prompt/history state; action conversion lives in
-    ``mai_gym.agents.parsing.mai_gym_mobile_use``.
-    """
-
     NATIVE_ACTION_SPACE = "mobile_use"
 
     def __init__(
@@ -335,7 +337,7 @@ class MAIGymMobileUsePolicy:
                 return {"action_type": "wait"}
 
         if self.original_image_width is None or self.original_image_height is None:
-            size = decode_png_size(screenshot_b64)
+            size = decode_image_size(screenshot_b64)
             if size is not None:
                 self.original_image_width, self.original_image_height = size
         screenshot_b64 = await self._resize_screenshot_for_model(screenshot_b64)
@@ -347,7 +349,7 @@ class MAIGymMobileUsePolicy:
                     "content": [
                         {
                             "type": "image_url",
-                            "image_url": f"data:image/png;base64,{screenshot_b64}",
+                            "image_url": to_data_url(screenshot_b64),
                         }
                     ],
                 }
@@ -416,6 +418,7 @@ __all__ = [
     "MAIGymMobileUsePolicy",
     "SYSTEM_PROMPT",
     "StepRecord",
+    "decode_image_size",
     "decode_png_size",
     "keep_recent_images",
     "render_prompt_template",

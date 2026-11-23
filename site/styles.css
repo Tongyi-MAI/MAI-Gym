@@ -1,5 +1,4 @@
 @charset "UTF-8";
-/* MAI-Gym project page. Section rhythm follows recreation-bench.cc; palette is Qwen purple. */
 @font-face{font-family:"InterVar";src:url(assets/fonts/inter-latin-wght-normal.woff2) format("woff2");font-weight:100 900;font-display:swap}
 @font-face{font-family:"JBMono";src:url(assets/fonts/jetbrains-mono-latin-wght-normal.woff2) format("woff2");font-weight:100 800;font-display:swap}
 :root{
@@ -9,7 +8,6 @@
   --line:#e7e5f2;--line-strong:#d6d3ea;--paper:#fbfbfe;--tint:#f5f4fd;--card:#fff;
   --good:#16a34a;--bad:#dc2626;
   --d-bg:#0b0920;--d-bg-2:#120e2e;--d-line:rgba(167,160,255,.16);--d-text:#eeebff;--d-muted:#a29ec9;
-  /* training-board signals (circuit.js); the day theme swaps in darker, legible steps */
   --sig-ctrl:#8b84ff;--sig-obs:#4fd1ff;--sig-reward:#ffc65c;--sig-weights:#ff6fb5;--sig-loop:#4be3a0;--sig-idle:#6c66b8;
   --sans:"InterVar",Inter,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",Arial,sans-serif;
   --mono:"JBMono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
@@ -35,7 +33,6 @@ a:focus-visible,button:focus-visible,input:focus-visible,[tabindex]:focus-visibl
 .skip-link{position:fixed;top:-100px;left:20px;padding:10px 20px;background:var(--ink);color:#fff;z-index:60;border-radius:8px}
 .skip-link:focus{top:10px}
 
-/* ---------------------------------------------------------------- header */
 .site-header{position:fixed;top:0;left:0;right:0;height:64px;z-index:40;background:rgba(251,251,254,.82);backdrop-filter:saturate(1.6) blur(14px);-webkit-backdrop-filter:saturate(1.6) blur(14px);border-bottom:1px solid rgba(21,18,46,.06);transition:background .35s,border-color .35s,color .35s}
 .site-header.on-dark{background:rgba(11,9,32,.55);border-bottom-color:rgba(167,160,255,.10);color:var(--d-text)}
 .header-inner{height:100%;width:min(1600px,calc(100% - 64px));margin:auto;display:flex;align-items:center;justify-content:space-between;gap:24px}
@@ -69,7 +66,6 @@ a:focus-visible,button:focus-visible,input:focus-visible,[tabindex]:focus-visibl
 .menu-toggle{display:none;border:1px solid currentColor;background:none;border-radius:9px;width:38px;height:38px;padding:0;place-items:center;opacity:.8}
 .menu-toggle svg{width:18px;height:18px}
 
-/* ---------------------------------------------------------------- hero + board */
 .hero{position:relative;background:var(--d-bg);color:var(--d-text);padding-top:64px;overflow:hidden;isolation:isolate}
 .hero-sky{position:absolute;inset:0;z-index:-1;background:
   radial-gradient(900px 520px at 12% -6%,rgba(97,92,237,.42),transparent 62%),
@@ -89,7 +85,6 @@ a:focus-visible,button:focus-visible,input:focus-visible,[tabindex]:focus-visibl
   radial-gradient(820px 560px at 78% 4%,rgba(176,107,255,.12),transparent 58%),
   linear-gradient(180deg,#f6f5fc 0%,#fbfbfe 60%,#f4f3fc 100%)}
 
-/* a wall of the environments the gym ships, set back behind the title */
 .cover-wall{position:absolute;z-index:-1;right:-6%;top:-14%;width:62%;height:128%;filter:saturate(.78) brightness(.82);
   display:flex;gap:clamp(14px,1.5vw,26px);justify-content:flex-end;
   transform:perspective(1500px) rotateY(-19deg) rotateX(7deg) rotateZ(-3deg);
@@ -148,7 +143,6 @@ h1 span{background:linear-gradient(118deg,#8b84ff 0%,#b48cff 48%,#e9b4ff 100%);-
 .hero-res li:first-child{padding-left:0;border-left:0}
 .hero-res svg{width:18px;height:18px;flex:none;fill:none;stroke:#8b84ff;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 
-/* ---- the board gets a screen of its own */
 .board-section{position:relative;background:var(--d-bg);color:var(--d-text);overflow:hidden;isolation:isolate;
   display:flex;flex-direction:column;justify-content:center;min-height:100vh;min-height:100svh;padding-block:calc(64px + 18px) 26px}
 .board-sky{position:absolute;inset:0;z-index:-1;background:
@@ -206,7 +200,6 @@ h1 span{background:linear-gradient(118deg,#8b84ff 0%,#b48cff 48%,#e9b4ff 100%);-
 .ctl.play .i-play{display:none}
 .ctl.play.paused .i-play{display:block}
 .ctl.play.paused .i-pause{display:none}
-/* the SVG takes the width the viewport height allows; --fold is set by circuit.js */
 .board-main{display:grid;grid-template-columns:minmax(0,calc((100vh - var(--fold,300px)) * 1.7778)) minmax(352px,1fr);justify-content:center;gap:16px}
 .board-view{min-width:0}
 .board-side{display:flex;flex-direction:column;gap:10px;min-width:0}
@@ -294,11 +287,9 @@ h1 span{background:linear-gradient(118deg,#8b84ff 0%,#b48cff 48%,#e9b4ff 100%);-
 .board-hint{display:flex;gap:7px;align-items:baseline;font:500 10.5px/1.5 var(--mono);color:var(--d-muted)}
 .board-hint span{color:#8b84ff}
 @media(min-width:1101px){
-  /* the side panel never makes the board taller than the circuit */
   .board-side{container-type:size;container-name:bside}
 }
 @container bside (min-height:455px){
-  /* room for the names: they fill the panel instead of leaving it blank */
   .board-side .stage-rail{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
   .board-side .stage-rail button{padding:5px 9px 6px;font-size:12px;justify-content:flex-start}
   .board-side .stage-rail button span{display:inline}
@@ -308,10 +299,9 @@ h1 span{background:linear-gradient(118deg,#8b84ff 0%,#b48cff 48%,#e9b4ff 100%);-
   .wrap,.wrap-wide,.header-inner{width:min(2040px,calc(100% - 200px))}
 }
 
-/* ---------------------------------------------------------------- sections */
 .section{padding-block:104px}
 .section-head{max-width:880px;margin-bottom:44px}
-#results .section-head,#mock-vs-real .section-head{max-width:none}   /* keep these titles on one line */
+#results .section-head,#mock-vs-real .section-head{max-width:none}
 .eyebrow{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:650;letter-spacing:1.6px;text-transform:uppercase;color:var(--accent)}
 .eyebrow b{font:600 11px var(--mono);letter-spacing:0;padding:2px 7px;border-radius:6px;background:var(--accent-wash);color:var(--accent-dark)}
 h2{font-size:clamp(30px,3.6vw,46px);font-weight:680;line-height:1.1;letter-spacing:-.035em;margin-top:16px;color:var(--ink)}
@@ -320,15 +310,12 @@ h2 span{display:block;font-size:clamp(17px,1.7vw,21px);font-weight:450;letter-sp
 .js .reveal{opacity:0;transform:translateY(22px);transition:opacity .8s var(--ease),transform .8s var(--ease)}
 .js .reveal.in{opacity:1;transform:none}
 
-/* ---------------------------------------------------------------- mock vs real */
 .mock-stage{display:grid;grid-template-columns:250px auto 1fr;gap:clamp(40px,4vw,72px);align-items:start;--phone-w:clamp(190px,min(21vw,calc((100vh - 268px) * .4425)),360px)}
-/* heading, app list, phone, and caption fit one screen below the sticky header */
 #mock-vs-real{padding-block:40px 64px}
 #mock-vs-real .section-head{margin-bottom:24px}
 #mock-vs-real .mock-list{gap:2px}
 #mock-vs-real .mock-list button{padding:8px 14px}
 @media(min-width:1101px){
-  /* the side panel sits level with the phone and grows to use the column */
   #mock-vs-real .mock-side{align-self:center;padding-top:0}
   #mock-vs-real .mock-kicker{font-size:12px}
   #mock-vs-real .mock-side h3{font-size:36px}
@@ -338,7 +325,6 @@ h2 span{display:block;font-size:clamp(17px,1.7vw,21px);font-weight:450;letter-sp
   #mock-vs-real .screen-thumbs{max-width:760px;gap:16px;margin-top:26px}
   #mock-vs-real .screen-thumbs button{padding:10px 10px 11px;border-radius:16px}
   #mock-vs-real .thumb-pair{gap:6px}
-  /* a mock-only screen shows one image at the size of one half of a pair */
   #mock-vs-real .thumb-pair.one{display:flex;justify-content:center}
   #mock-vs-real .thumb-pair.one img{width:calc(50% - 3px)}
   #mock-vs-real .screen-thumbs b{font-size:13.5px;margin-top:9px}
@@ -398,7 +384,6 @@ h2 span{display:block;font-size:clamp(17px,1.7vw,21px);font-weight:450;letter-sp
 .mock-task b{flex:none;font:650 10px var(--mono);letter-spacing:.8px;text-transform:uppercase;color:#fff;background:var(--grad);padding:3px 8px;border-radius:6px;position:relative;top:-2px}
 .mock-note{margin-top:18px;font-size:13px;color:var(--ink-2);background:linear-gradient(90deg,var(--accent-wash),transparent);border-left:3px solid var(--accent);border-radius:0 10px 10px 0;padding:11px 14px;max-width:640px;line-height:1.6}
 
-/* ---------------------------------------------------------------- reel (dark) */
 .reel-section{position:relative;background:var(--d-bg);color:var(--d-text);padding-block:104px 88px;overflow:hidden;isolation:isolate}
 .reel-section::before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(800px 400px at 15% 0%,rgba(97,92,237,.35),transparent 65%),radial-gradient(700px 420px at 90% 100%,rgba(176,107,255,.22),transparent 60%)}
 .reel-section h2{color:#fff}
@@ -411,7 +396,6 @@ h2 span{display:block;font-size:clamp(17px,1.7vw,21px);font-weight:450;letter-sp
 .reel-track:focus-within,.is-modal-open .reel-track{animation-play-state:paused}
 .reel-set{display:flex;flex:none;gap:22px;padding-right:22px}
 .reel-card{flex:none;width:var(--reel-w,164px);padding:0;border:0;background:none;text-align:left;color:inherit;cursor:pointer}
-/* fit both rows of phones on one screen: the phone width follows the viewport height */
 #apps{padding-block:32px 24px;--reel-w:clamp(88px,calc((100vh - 370px) / 4.33),164px)}
 #apps .section-head{margin-bottom:14px}
 #apps .reel-window{padding:10px 0}
@@ -431,8 +415,6 @@ h2 span{display:block;font-size:clamp(17px,1.7vw,21px);font-weight:450;letter-sp
 @keyframes reel-right{from{transform:translateX(-50%)}to{transform:translateX(0)}}
 @media(hover:hover){.reel-track:hover{animation-play-state:paused}}
 
-/* ---------------------------------------------------------------- overview */
-/* figure and dashboard panel share one screen: the figure is as wide as the viewport height allows */
 .overview-grid{display:grid;grid-template-columns:minmax(0,max(560px,calc((100vh - 400px) * 2.225 + 46px))) minmax(300px,max(420px,22vw));justify-content:center;gap:18px;align-items:stretch}
 @media(max-width:1100px){
   .hero.cover,.board-section{min-height:0}.overview-grid{grid-template-columns:minmax(0,1fr)}.dash-panel{max-width:640px;width:100%;justify-self:center}}
@@ -443,7 +425,6 @@ h2 span{display:block;font-size:clamp(17px,1.7vw,21px);font-weight:450;letter-sp
 .dash-kicker{font:600 11px var(--mono);letter-spacing:.6px;color:var(--accent);text-transform:uppercase}
 .dash-panel h3{font-size:17px;font-weight:650;letter-spacing:-.3px;line-height:1.3;margin-top:-6px}
 .dash-main{margin:0;display:flex;flex-direction:column;gap:12px;min-height:0}
-/* the screenshot sits in a dark app window; the dashboard itself is dark, so any spare height reads as window */
 .dash-zoom{display:flex;flex-direction:column;width:100%;padding:0;border:1px solid #2a2547;border-radius:12px;overflow:hidden;background:#0d1016;cursor:zoom-in;box-shadow:0 14px 30px -18px rgba(30,20,90,.55)}
 .dash-bar{flex:none;display:flex;align-items:center;gap:5px;height:24px;padding:0 10px;background:#1a1730;border-bottom:1px solid #2a2547}
 .dash-bar i{width:7px;height:7px;border-radius:50%}
@@ -463,7 +444,6 @@ h2 span{display:block;font-size:clamp(17px,1.7vw,21px);font-weight:450;letter-sp
 .dash-thumbs button:hover{color:var(--ink)}
 .dash-thumbs button[aria-selected=true]{background:#fff;color:var(--accent-dark);box-shadow:0 1px 3px rgba(20,16,60,.12)}
 @media(min-width:1101px){
-  /* beside the figure, the panel takes the figure's height and the window absorbs the difference */
   .dash-panel{container-type:size}
   .dash-main{flex:1 1 auto}
   .dash-zoom{flex:1 1 auto;min-height:110px}
@@ -477,7 +457,6 @@ h2 span{display:block;font-size:clamp(17px,1.7vw,21px);font-weight:450;letter-sp
 .release-list b{font-size:12.5px;font-weight:650;margin-right:6px}
 .release-list span{font-size:12.5px;border:1px solid var(--line-strong);border-radius:999px;padding:5px 13px;background:#fff;color:var(--ink-2)}
 
-/* ---------------------------------------------------------------- results */
 .results-toolbar{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
 .seg{display:inline-flex;gap:2px;padding:3px;border-radius:12px;background:#fff;border:1px solid var(--line-strong)}
 .seg button{border:0;background:none;border-radius:9px;padding:7px 15px;font-size:13px;font-weight:600;color:var(--muted)}
@@ -532,7 +511,6 @@ tr.ours .score-meter span{background:var(--grad)}
 .paper-table tr.ours.gain td{font-size:10.5px;padding-top:0;padding-bottom:7px}
 .table-footer{margin-top:14px;color:var(--muted);font-size:12px;line-height:1.65;max-width:980px}
 
-/* ---------------------------------------------------------------- analysis */
 .analysis-shell{display:grid;grid-template-columns:220px 1fr;gap:28px;align-items:start}
 .analysis-tabs{display:flex;flex-direction:column;gap:4px;position:sticky;top:96px}
 .analysis-tabs button{text-align:left;border:1px solid transparent;background:none;border-radius:12px;padding:10px 13px;font-size:13.5px;font-weight:580;color:var(--ink-2);display:flex;justify-content:space-between;align-items:center;gap:8px;transition:background .2s,border-color .2s}
@@ -579,7 +557,6 @@ details.table-view summary{cursor:pointer;font-weight:600;color:var(--ink-2)}
 .sub-tabs button{border:1px solid var(--line-strong);background:#fff;border-radius:999px;font-size:12.5px;padding:6px 14px;font-weight:600;color:var(--ink-2)}
 .sub-tabs button[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:#fff}
 
-/* ---------------------------------------------------------------- citation & footer */
 .citation-block{border:1px solid var(--line-strong);border-radius:18px;overflow:hidden;background:#fff;box-shadow:var(--shadow)}
 .citation-toolbar{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-bottom:1px solid var(--line);background:#fbfaff;font:600 12px var(--mono)}
 .citation-toolbar div{display:flex;gap:16px}
@@ -593,7 +570,6 @@ details.table-view summary{cursor:pointer;font-weight:600;color:var(--ink-2)}
 .site-footer nav{display:flex;gap:22px;flex-wrap:wrap;font-size:12.5px}
 .site-footer nav a:hover{color:#fff}
 
-/* ---------------------------------------------------------------- app player dialog */
 dialog{border:0;padding:0;background:transparent;max-width:none;max-height:none}
 dialog::backdrop{background:rgba(11,9,32,.72);backdrop-filter:blur(6px)}
 dialog[open] .player,dialog[open] .zoom{animation:pop .35s var(--ease)}
@@ -646,7 +622,7 @@ dialog[open] .player,dialog[open] .zoom{animation:pop .35s var(--ease)}
 .task-list button{width:100%;text-align:left;border:1px solid transparent;background:none;border-radius:12px;padding:9px 11px;display:grid;grid-template-columns:46px 1fr;gap:8px;align-items:start;font-size:12.5px;line-height:1.5}
 .task-list button:hover{background:#fff;border-color:var(--line)}
 .task-list button[aria-current=true]{background:#fff;border-color:var(--accent-soft);box-shadow:var(--shadow-sm)}
-.task-list .level{display:block}   /* fill the column so every badge is the same width */
+.task-list .level{display:block}
 .task-list .t-text{color:var(--ink-2)}
 .task-list .t-text b{display:block;color:var(--ink);font-weight:620;font-size:13px}
 .task-list .done::after{content:" ✓";color:var(--good);font-weight:700}
@@ -662,9 +638,6 @@ dialog[open] .player,dialog[open] .zoom{animation:pop .35s var(--ease)}
 .zoom img{max-height:calc(100dvh - 120px);width:auto;max-width:100%;margin:auto;object-fit:contain;border-radius:10px}
 [data-zoom]{cursor:zoom-in}
 
-/* ---------------------------------------------------------------- day theme */
-/* Night is the designed default; the day theme turns the hero, the board, the reel and the
-   footer light. Variables do most of the work, the rest overrides hard-coded night colors. */
 [data-theme=day]{
   color-scheme:light;
   --d-bg:#f4f3fc;--d-bg-2:#fff;--d-line:#e3e0f3;--d-text:var(--ink);--d-muted:var(--muted);
@@ -760,7 +733,6 @@ dialog[open] .player,dialog[open] .zoom{animation:pop .35s var(--ease)}
 [data-theme=day] .footer-brand b{color:var(--ink)}
 [data-theme=day] .site-footer nav a:hover{color:var(--ink)}
 
-/* ---------------------------------------------------------------- responsive */
 @media(max-width:1240px){
   .hero-top{grid-template-columns:minmax(0,1fr)}
   .hero-side{min-width:0}

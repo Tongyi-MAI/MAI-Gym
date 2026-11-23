@@ -1,0 +1,13 @@
+devices:
+  - name: local-mobileworld
+    env_type: mobileworld
+    connection:
+      attach:
+        backends:
+          - url: http://127.0.0.1:6800
+    max_sessions: 1
+    sessions_per_backend: 1
+manager:
+  host: 127.0.0.1
+  port: 8090
+  traj_log_dir: ./traj_logs

@@ -1,0 +1,72 @@
+[project]
+name = "mai-gym"
+version = "0.1.0"
+description = "RL training and rollout environment server for GUI agents"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "httpx>=0.27.0",
+    "pydantic>=2.10",
+    "pyyaml>=6.0",
+    "click>=8.0",
+    "kubernetes>=30.1.0",
+    "aiohttp==3.10.11",
+    "openai>=1.0.0",
+    "pillow>=10.0.0",
+    "jinja2>=3.1",
+    "docker>=7.0.0",
+    "filelock>=3.13.0",
+    "psutil>=5.9.0",
+    "requests>=2.31.0",
+    "playwright>=1.40.0",
+    "pydrive>=1.3.1",
+    "requests-toolbelt>=1.0.0",
+    "python-dotenv>=1.0.0",
+    "pandas>=2.2.0",
+    "pyarrow>=16.0.0",
+    "joblib>=1.3.0",
+    "loguru>=0.7.0",
+    "ossfs>=2025.5.0",
+    "aiooss2>=0.2.11",
+    "aiofiles>=24.1.0",
+]
+
+[dependency-groups]
+dev = ["ruff>=0.8.0", "mypy>=1.13.0"]
+
+[project.scripts]
+mai-gym = "mai_gym.cli.main:cli"
+
+[build-system]
+requires = ["hatchling>=1.27.0"]
+build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mai_gym", "src/mai_gym_rl"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["E501", "UP031", "SIM108", "SIM116"]
+
+[tool.ruff.lint.per-file-ignores]
+"src/mai_gym/agents/implementations/dashscope_base_agent.py" = ["E402"]
+"src/mai_gym/agents/implementations/general_e2e_agent.py" = ["E402"]
+"src/mai_gym/envs/__init__.py" = ["E402", "F401"]
+"src/mai_gym/envs/osworld/verifier_patches/__init__.py" = ["E402"]
+"src/mai_gym_rl/slime_adapter/rollout.py" = ["F401"]
+"src/mai_gym_rl/slime_adapter/rollout_mobile_stepwise.py" = ["B023"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true

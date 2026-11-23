@@ -1,0 +1,10 @@
+{
+  "label": "official-937ec49",
+  "source_repository": "ljang0/MyPCBench",
+  "source_revision": "937ec49882508223c7ea3f79ead3330c6810feb1",
+  "assets_revision": "3b40aeb4be1149ae1e28ecd1a28f8d8171f09be0",
+  "task_manifest": "all_tasks_with_grading.json",
+  "task_manifest_sha256": "16f8943efda0553a754751238459e2be9f2601da984c230939c8ad66f8f3e2b4",
+  "vm_disk": "michael_scott.qcow2",
+  "vm_disk_sha256": "990330f9bb5593164f196824c05d95fb7946cb8edca326084907c9dd9198e870"
+}

@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Scale MobileWorld environments across Kubernetes nodes with SandboxSet warm pools, session leasing, and demand autoscaling.">
+  <link rel="canonical" href="https://tongyi-mai.github.io/MAI-Gym/docs/kubernetes.html">
+  <meta property="og:site_name" content="MAI-Gym Docs">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Kubernetes Fleets — MAI-Gym Docs">
+  <meta property="og:description" content="Scale MobileWorld environments across Kubernetes nodes with SandboxSet warm pools, session leasing, and demand autoscaling.">
+  <meta property="og:url" content="https://tongyi-mai.github.io/MAI-Gym/docs/kubernetes.html">
+  <meta property="og:image" content="https://tongyi-mai.github.io/MAI-Gym/assets/figs/overview.webp">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Kubernetes Fleets — MAI-Gym Docs">
+  <meta name="twitter:description" content="Scale MobileWorld environments across Kubernetes nodes with SandboxSet warm pools, session leasing, and demand autoscaling.">
+  <meta name="twitter:image" content="https://tongyi-mai.github.io/MAI-Gym/assets/figs/overview.webp">
+  <title>Kubernetes Fleets — MAI-Gym Docs</title>
+  <link rel="icon" type="image/png" href="../assets/favicon.png">
+  <script>
+    (function () {
+      var t;
+      try { t = localStorage.getItem('maigym.theme'); } catch (e) {}
+      document.documentElement.dataset.theme = t === 'day' ? 'day' : 'night';
+    })();
+  </script>
+  <link rel="preload" href="../assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="assets/docs.css">
+  <script>
+    window.MAIGYM_DOCS = {
+      root: "",
+      rawMd: "raw/kubernetes.md",
+      slug: "kubernetes.html"
+    };
+  </script>
+  <script src="assets/docs.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#doc-content">Skip to main content</a>
+
+  <header class="topbar" id="topbar">
+    <div class="topbar-row">
+      <div class="topbar-left">
+        <button class="mobile-nav-btn" id="mobile-nav-btn" type="button" aria-label="Toggle navigation" aria-expanded="false">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 5.5h14M3 10h14M3 14.5h14"/></svg>
+        </button>
+        <a class="brand" href="index.html" aria-label="MAI-Gym Documentation home">
+          <img src="../assets/mark.svg" width="26" height="26" alt="">
+          <span class="brand-name">MAI-<span>Gym</span></span>
+          <span class="brand-pill">Docs</span>
+        </a>
+      </div>
+
+      <button class="search-trigger" id="search-trigger" type="button" aria-label="Search documentation">
+        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="5.2"/><path d="m12 12 3.6 3.6"/></svg>
+        <span>Search docs...</span>
+        <kbd>⌘K</kbd>
+      </button>
+
+      <div class="topbar-right">
+        <a class="top-link" href="../index.html">Project Page</a>
+        <a class="top-link" href="https://arxiv.org/abs/2610.20939" target="_blank" rel="noopener noreferrer">Paper</a>
+        <a class="top-link" href="https://huggingface.co/Tongyi-MAI/MAI-Gym-9B" target="_blank" rel="noopener noreferrer">Model</a>
+        <a class="repo-chip" href="https://github.com/Tongyi-MAI/MAI-Gym" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+          <span>Tongyi-MAI/MAI-Gym</span>
+        </a>
+        <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle color theme" title="Switch light / dark theme">
+          <svg class="i-sun" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="3.6" fill="currentColor"/><path d="M10 1.8v2.1M10 16.1v2.1M1.8 10h2.1M16.1 10h2.1M4.2 4.2l1.5 1.5M14.3 14.3l1.5 1.5M4.2 15.8l1.5-1.5M14.3 5.7l1.5-1.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <svg class="i-moon" viewBox="0 0 20 20" aria-hidden="true"><path d="M16.2 12.6A6.8 6.8 0 0 1 7.4 3.8a6.8 6.8 0 1 0 8.8 8.8z" fill="currentColor"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="drawer-backdrop" id="drawer-backdrop" hidden></div>
+
+  <div class="doc-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Documentation navigation">
+      <div class="side-group"><p class="side-heading">Overview</p><ul><li><a class="side-link" href="index.html">Quickstart</a></li><li><a class="side-link" href="concepts.html">Platform &amp; Core Concepts</a></li><li><a class="side-link" href="mai-gym-9b.html">MAI-Gym-9B</a></li><li><a class="side-link" href="dashboard.html">Trajectory Dashboard</a></li></ul></div><div class="side-group"><p class="side-heading">User Guide</p><ul><li><a class="side-link" href="evaluation.html">Evaluation Guide</a></li><li><a class="side-link" href="training.html">Online RL Training</a></li><li><a class="side-link" href="rollout.html">Rollout CLI</a></li><li><a class="side-link active" aria-current="page" href="kubernetes.html">Kubernetes Fleets</a></li></ul></div><div class="side-group"><p class="side-heading">Benchmarks &amp; Environments</p><ul><li><a class="side-link" href="environments.html">Benchmarks Overview</a></li><li><a class="side-link" href="mocked-apps.html">Mocked Apps</a></li><li><a class="side-link" href="envs/mobile.html">Mobile Benchmarks</a></li><li><a class="side-link" href="envs/computer.html">Computer Benchmarks</a></li><li><a class="side-link" href="envs/web.html">Web Benchmarks</a></li></ul></div><div class="side-group"><p class="side-heading">Customization</p><ul><li><a class="side-link" href="extending.html">Extending MAI-Gym</a></li><li><a class="side-link" href="coding-agents.html">Coding-Agent Setup</a></li><li><a class="side-link" href="development.html">Development &amp; Layout</a></li><li><a class="side-link" href="licensing.html">Licensing &amp; Notices</a></li></ul></div>
+    </aside>
+
+    <main class="doc-main" id="doc-content">
+      <article class="doc-article">
+        <header class="page-header">
+          <div class="page-eyebrow">User Guide</div>
+          <div class="page-title-row">
+            <h1>Kubernetes Fleets (MobileWorld)</h1>
+            <button type="button" class="copy-page-btn" id="copy-page-btn" title="Copy page as Markdown">
+              <svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+              <svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>Copy page</span>
+            </button>
+          </div>
+          <p class="page-lead">Scale MobileWorld environments across Kubernetes nodes with SandboxSet warm pools, session leasing, and demand autoscaling.</p>
+        </header>
+
+        <div class="prose">
+          <p>Scale a single <strong>MAI-Gym</strong> manager to lease Android environments across multiple Kubernetes nodes. Evaluation and RL runners communicate exclusively with the manager, while the manager provisions sandboxes and routes requests directly to each MobileWorld backend&#x27;s pod IP.</p>
+<div class="code-block" data-lang="text"><div class="code-head"><span class="code-lang">text</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-text">mai-gym eval / train  ──▶  MAI-Gym Manager (:8090)  ──▶  SandboxSet / SandboxClaim  ──▶  MobileWorld Pods (:6800)</code></pre></div>
+<p>The walkthrough below provisions a 2-session warm pool and evaluates <code>SetAlarmTask</code> against it.</p>
+<hr>
+<h2 id="1-verify-cluster-prerequisites">1. Verify cluster prerequisites<a class="heading-link" href="#1-verify-cluster-prerequisites" aria-label="Link to 1. Verify cluster prerequisites">#</a></h2>
+<p>The Kubernetes launcher uses the Alibaba Cloud ACS sandbox template API and <code>agents.kruise.io/v1alpha1</code> custom resources (<code>Sandbox</code>, <code>SandboxSet</code>, and <code>SandboxClaim</code>). Ensure your cluster has:</p>
+<ul><li>A compatible <code>agents.kruise.io</code> controller installed.</li><li>A sandbox template that boots the MobileWorld emulator, restores Android assets, and serves the backend on a known port (<a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/skills/envs/mobileworld.md" target="_blank" rel="noopener noreferrer">MobileWorld image &amp; snapshot preparation<svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a>).</li><li>Network reachability from the manager host to pod IPs on the backend port.</li></ul>
+<p>Verify permissions using the kubeconfig the manager will run with (replace <code>mai-gym-eval</code> with a dedicated namespace for this fleet):</p>
+<div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"><span class="tok-cmd">kubectl</span> api-resources <span class="tok-flag">--api-group</span>=agents.kruise.io
+<span class="tok-cmd">kubectl</span> get namespace mai-gym-eval
+<span class="tok-cmd">kubectl</span> auth can-i create sandboxclaims.agents.kruise.io <span class="tok-flag">-n</span> mai-gym-eval</code></pre></div>
+<hr>
+<h2 id="2-start-the-manager-and-verify-readiness">2. Start the manager and verify readiness<a class="heading-link" href="#2-start-the-manager-and-verify-readiness" aria-label="Link to 2. Start the manager and verify readiness">#</a></h2>
+<p>Save the configuration below as <code>fleet.yaml</code> on the manager host. Replace <code>&lt;mobileworld-template-id&gt;</code> with your cluster&#x27;s template ID and set <code>service_port</code> to the backend port <strong>inside the pod</strong>.</p>
+<div class="code-block" data-lang="yaml"><div class="code-head"><span class="code-lang">yaml</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-yaml"><span class="tok-key">devices</span>:
+  - <span class="tok-key">name</span>: <span class="tok-string">mobileworld-fleet</span>
+    <span class="tok-key">env_type</span>: <span class="tok-string">mobileworld</span>
+    <span class="tok-key">device_type</span>: <span class="tok-string">mobile</span>
+    <span class="tok-key">infra_type</span>: <span class="tok-string">k8s</span>
+    <span class="tok-key">max_sessions</span>: <span class="tok-num">2</span>
+    <span class="tok-key">sessions_per_backend</span>: <span class="tok-num">1</span>
+    <span class="tok-key">launch</span>:
+      <span class="tok-key">acquisition</span>: <span class="tok-string">pool</span>
+      <span class="tok-key">namespace</span>: <span class="tok-string">mai-gym-eval</span>
+      <span class="tok-key">template_id</span>: <span class="tok-string">&lt;mobileworld-template-id&gt;</span>
+      <span class="tok-key">service_port</span>: <span class="tok-num">6800</span>
+      <span class="tok-key">pool_name</span>: <span class="tok-string">mobileworld-eval</span>
+      <span class="tok-key">pool_size</span>: <span class="tok-num">2</span>
+<span class="tok-key">manager</span>:
+  <span class="tok-key">host</span>: <span class="tok-string">127.0.0.1</span>
+  <span class="tok-key">port</span>: <span class="tok-num">8090</span>
+  <span class="tok-key">auto_prewarm</span>: <span class="tok-kw">true</span></code></pre></div>
+<ul><li><code>pool_size</code> sets the warm replica count maintained by the <code>SandboxSet</code>.</li><li><code>max_sessions</code> caps the total sessions registered on the manager.</li><li><code>auto_prewarm: true</code> claims backends at startup so runners can immediately discover tasks.</li><li>By default, the manager uses <code>~/.kube/config</code>; set <code>launch.kubeconfig</code> to use another kubeconfig file.</li></ul>
+<p>Start the manager:</p>
+<div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"><span class="tok-cmd">uv</span> run mai-gym serve <span class="tok-flag">--config</span> fleet.yaml</code></pre></div>
+<p>In another terminal on the manager host, verify that pods are claimed, <code>by_device.mobileworld-fleet.ready</code> reaches <code>2</code>, and <code>/tasks</code> includes <code>SetAlarmTask</code>:</p>
+<div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"><span class="tok-cmd">kubectl</span> <span class="tok-flag">-n</span> mai-gym-eval get sandboxsets,sandboxclaims,pods
+<span class="tok-cmd">curl</span> <span class="tok-flag">-fsS</span> http://127.0.0.1:8090/sessions
+<span class="tok-cmd">curl</span> <span class="tok-flag">-fsS</span> http://127.0.0.1:8090/tasks</code></pre></div>
+<div class="callout callout-tip" role="note"><div class="callout-title"><span class="callout-dot" aria-hidden="true"></span>Tip</div><div class="callout-body"><p>If sessions remain unready, inspect <code>SandboxClaim</code> status and pod events in <code>mai-gym-eval</code> (<code>kubectl -n mai-gym-eval describe pods</code>).</p></div></div>
+<hr>
+<h2 id="3-run-an-evaluation-against-the-fleet">3. Run an evaluation against the fleet<a class="heading-link" href="#3-run-an-evaluation-against-the-fleet" aria-label="Link to 3. Run an evaluation against the fleet">#</a></h2>
+<p>Keep your model configuration from the <a href="evaluation.html">Evaluation Guide</a> and point <code>benchmarks.mobileworld.manager_url</code> to the fleet manager:</p>
+<div class="code-block" data-lang="yaml"><div class="code-head"><span class="code-lang">yaml</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-yaml"><span class="tok-key">benchmarks</span>:
+  <span class="tok-key">mobileworld</span>:
+    <span class="tok-key">manager_url</span>: <span class="tok-string">http://127.0.0.1:8090</span>
+    <span class="tok-key">num_envs</span>: <span class="tok-num">1</span>
+    <span class="tok-key">tasks</span>: <span class="tok-string">[SetAlarmTask]</span></code></pre></div>
+<div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"><span class="tok-cmd">uv</span> run mai-gym eval <span class="tok-flag">--config</span> eval.yaml <span class="tok-flag">--benchmarks</span> mobileworld <span class="tok-flag">--trials</span> 1</code></pre></div>
+<div class="callout callout-note" role="note"><div class="callout-title"><span class="callout-dot" aria-hidden="true"></span>Note</div><div class="callout-body"><p>If the runner executes on a different machine than the manager, bind <code>manager.host</code> appropriately and pass the manager&#x27;s reachable address in <code>manager_url</code>. For larger suites, increase <code>num_envs</code> up to your manager&#x27;s session capacity.</p></div></div>
+<hr>
+<h2 id="capacity-acquisition-modes">Capacity Acquisition Modes<a class="heading-link" href="#capacity-acquisition-modes" aria-label="Link to Capacity Acquisition Modes">#</a></h2>
+<p>Choose <code>launch.acquisition</code> based on your workload pattern:</p>
+<div class="table-wrap"><table><thead><tr><th style="text-align:left">Mode</th><th style="text-align:left">Best for</th><th style="text-align:left">How backends are acquired</th></tr></thead><tbody><tr><td style="text-align:left"><code>direct</code></td><td style="text-align:left">Occasional runs that can tolerate cold-start time</td><td style="text-align:left">Creates an individual <code>Sandbox</code> on demand from <code>template_id</code>.</td></tr><tr><td style="text-align:left"><code>pool</code></td><td style="text-align:left">Repeated evaluations or high-throughput RL training</td><td style="text-align:left">Claims ready backends from a named <code>SandboxSet</code> maintained pre-warmed by the controller.</td></tr><tr><td style="text-align:left"><code>adopt</code></td><td style="text-align:left">Pre-provisioned backends in a dedicated namespace</td><td style="text-align:left">Discovers eligible running, unowned sandboxes with a pod IP (capacity bounded by available instances).</td></tr></tbody></table></div>
+<h3 id="demand-based-fleet-autoscaling">Demand-based fleet autoscaling<a class="heading-link" href="#demand-based-fleet-autoscaling" aria-label="Link to Demand-based fleet autoscaling">#</a></h3>
+<p>To scale warm pool capacity automatically based on active session demand, combine <code>acquisition: pool</code> with <code>lazy_acquire</code> and <code>fleet_autoscale</code> (using <code>sessions_per_backend: 1</code>):</p>
+<div class="code-block" data-lang="yaml"><div class="code-head"><span class="code-lang">yaml</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-yaml">    <span class="tok-key">launch</span>:
+      <span class="tok-key">acquisition</span>: <span class="tok-string">pool</span>
+      <span class="tok-key">lazy_acquire</span>: <span class="tok-kw">true</span>
+      <span class="tok-key">fleet_autoscale</span>:
+        <span class="tok-key">enabled</span>: <span class="tok-kw">true</span>
+        <span class="tok-key">min_replicas</span>: <span class="tok-num">2</span><span class="tok-comment">   # Pre-warmed replicas retained after idle timeout</span></code></pre></div>
+<p>Monitor live demand and allocation through the manager API:</p>
+<ul><li><code>GET /fleet/requests</code> — currently requested fleet capacity</li><li><code>GET /sessions</code> — active, ready, and leased session counts</li></ul>
+<hr>
+<h2 id="retiring-a-fixed-pool">Retiring a Fixed Pool<a class="heading-link" href="#retiring-a-fixed-pool" aria-label="Link to Retiring a Fixed Pool">#</a></h2>
+<div class="callout callout-warning" role="note"><div class="callout-title"><span class="callout-dot" aria-hidden="true"></span>Warning</div><div class="callout-body"><p>Stopping the manager process alone can leave <code>SandboxSet</code>, <code>SandboxClaim</code>, and <code>Sandbox</code> resources running in the cluster for reuse on restart.</p></div></div>
+<p>Follow this checklist when decommissioning a fleet:</p>
+<ol><li>Wait for active evaluation or training jobs to finish.</li><li>Confirm <code>summary.leased</code> is <code>0</code> in <code>curl -fsS http://127.0.0.1:8090/sessions</code>.</li><li>Stop the <code>mai-gym serve</code> process.</li><li>Delete the <code>SandboxSet</code> and any remaining <code>SandboxClaim</code> / <code>Sandbox</code> resources in the dedicated namespace (<code>mai-gym-eval</code>).</li></ol>
+        </div>
+
+        <nav class="pagination" aria-label="Pagination">
+          <a class="pag-link prev" href="rollout.html"><span class="pag-label">Previous</span><span class="pag-title">&larr; Rollout CLI</span></a>
+          <a class="pag-link next" href="environments.html"><span class="pag-label">Next</span><span class="pag-title">Benchmarks Overview &rarr;</span></a>
+        </nav>
+
+        <footer class="doc-footer">
+          <div class="doc-footer-links">
+            <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/site/docs/raw/kubernetes.md" target="_blank" rel="noopener noreferrer">Edit this page on GitHub &nearr;</a>
+            <a href="https://github.com/Tongyi-MAI/MAI-Gym/issues/new?title=Docs:%20Kubernetes Fleets" target="_blank" rel="noopener noreferrer">Raise a docs issue &nearr;</a>
+            <a href="llms.txt">llms.txt</a>
+          </div>
+          <p class="doc-footer-meta">MAI-Gym · MIT License · Tongyi-MAI</p>
+        </footer>
+      </article>
+    </main>
+
+    <aside class="toc-rail" aria-label="On this page">
+      <div class="toc-inner">
+        <p class="toc-title">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M2.5 4h11M2.5 8h7M2.5 12h11"/></svg>
+          On this page
+        </p>
+        <ul class="toc-list" id="toc-list"><li><a class="toc-link" href="#1-verify-cluster-prerequisites">1. Verify cluster prerequisites</a></li><li><a class="toc-link" href="#2-start-the-manager-and-verify-readiness">2. Start the manager and verify readiness</a></li><li><a class="toc-link" href="#3-run-an-evaluation-against-the-fleet">3. Run an evaluation against the fleet</a></li><li><a class="toc-link" href="#capacity-acquisition-modes">Capacity Acquisition Modes</a></li><li><a class="toc-link toc-h3" href="#demand-based-fleet-autoscaling">Demand-based fleet autoscaling</a></li><li><a class="toc-link" href="#retiring-a-fixed-pool">Retiring a Fixed Pool</a></li></ul>
+        <div class="toc-actions">
+          <a href="#top" class="toc-action-link" id="back-to-top">&uarr; Back to top</a>
+          <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/site/docs/raw/kubernetes.md" class="toc-action-link" target="_blank" rel="noopener noreferrer">View Markdown &nearr;</a>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <dialog class="search-dialog" id="search-dialog" aria-label="Search documentation">
+    <div class="search-box">
+      <div class="search-input-row">
+        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="5.2"/><path d="m12 12 3.6 3.6"/></svg>
+        <input id="search-input" type="search" placeholder="Search documentation, CLI flags, benchmarks..." autocomplete="off" spellcheck="false">
+        <button type="button" class="search-esc" id="search-close">ESC</button>
+      </div>
+      <div class="search-results" id="search-results" role="listbox"></div>
+      <div class="search-foot">
+        <span><kbd>&uarr;</kbd><kbd>&darr;</kbd> navigate</span>
+        <span><kbd>Enter</kbd> open</span>
+        <span><kbd>Esc</kbd> close</span>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="img-dialog" id="img-dialog" aria-label="Image preview">
+    <button type="button" class="img-dialog-close" id="img-dialog-close" aria-label="Close preview">&times;</button>
+    <img id="img-dialog-src" alt="">
+  </dialog>
+</body>
+</html>

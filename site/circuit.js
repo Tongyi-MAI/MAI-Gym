@@ -1,13 +1,8 @@
-/* MAI-Gym training board: an interactive, circuit-style diagram of how one
-   rollout path serves RL training, evaluation, and data collection.
-   Layout mirrors the paper's architecture figure. Text stays in plain words:
-   no API calls, formulas, or internal states. */
 (function () {
   'use strict';
   const NS = 'http://www.w3.org/2000/svg';
   const W = 1280, H = 720;
   const TYPES = {
-    // colors are CSS variables so the day and night themes can each pick legible ones (styles.css)
     ctrl: { color: 'var(--sig-ctrl)', label: 'Requests & actions' },
     obs: { color: 'var(--sig-obs)', label: 'Observations & screenshots' },
     reward: { color: 'var(--sig-reward)', label: 'Rewards & trajectories' },
@@ -15,7 +10,6 @@
     loop: { color: 'var(--sig-loop)', label: 'Diagnose → synthesize loop' },
   };
 
-  /* ------------------------------------------------------------ parts */
   const ZONES = [
     { x: 20, y: 40, w: 440, h: 562, label: 'ROLLOUT · INFERENCE · TRAINING' },
     { x: 476, y: 40, w: 430, h: 562, label: 'ENVIRONMENT MANAGER' },
@@ -49,7 +43,6 @@
   ];
   const chipById = Object.fromEntries(CHIPS.map(c => [c.id, c]));
 
-  // Orthogonal waypoints; corners are cut at 45° when drawn, PCB-style.
   const TRACES = [
     { id: 'pool_sched', a: 'pool', b: 'sched', type: 'ctrl', p: [[220, 106], [260, 106]] },
     { id: 'sched_work', a: 'sched', b: 'work', type: 'ctrl', p: [[330, 142], [330, 176]] },
@@ -87,7 +80,6 @@
   ];
   const traceById = Object.fromEntries(TRACES.map(t => [t.id, t]));
 
-  /* ------------------------------------------------------------ stories */
   const S = {
     sample: { t: 'Sample tasks', chips: ['pool', 'sched', 'work'], traces: ['pool_sched', 'sched_work'],
       d: 'Before each round the scheduler estimates every task\'s success rate from its past attempts. Unseen and uncertain tasks get the full group of attempts; never-solved and mastered tasks get smaller budgets, so their status keeps being rechecked as the policy moves.',
@@ -138,7 +130,7 @@
   };
 
   const INFO = {
-    pool: ['Task Pool', 'Synthesized, verifiable tasks across MobileWorld and OSWorld environments, plus tasks in the apps MAI-Gym builds itself.', ['2,000 tasks released', 'never overlaps a benchmark task']],
+    pool: ['Task Pool', 'Synthesized, verifiable tasks across MobileWorld and OSWorld environments, plus tasks in the apps MAI-Gym builds itself.', ['2,000 verified tasks in the study', 'never overlaps a benchmark task']],
     sched: ['Rollout Scheduler', 'Queues a set of attempts each round and closes the round only when every attempt has finished.', ['more attempts where the model is uncertain', 'fewer on tasks it always solves or never solves']],
     work: ['Rollout workers', 'Each worker takes an environment, runs the agent on a task, and records what happened. The same agent code serves training, evaluation, and data collection.', ['one agent, three workloads', 'a fix reaches all three at once']],
     gw: ['Model Gateway', 'Routes every model call to an inference engine. All turns of one attempt go to the same engine so it can reuse its earlier work; if that engine fails, the attempt moves to another.', []],
@@ -163,7 +155,6 @@
     dash: ['Dashboard', 'Fleet health, runs, benchmark scores, and step-by-step trajectories — every number links back to the screenshots behind it.', []],
   };
 
-  /* ------------------------------------------------------------ svg helpers */
   function el(tag, attrs, parent, text) {
     const n = document.createElementNS(NS, tag);
     for (const k in attrs) n.setAttribute(k, attrs[k]);
@@ -183,7 +174,6 @@
     return d + `L${last[0]},${last[1]}`;
   }
 
-  /* ------------------------------------------------------------ build */
   function build(root) {
     const ctl = (k, label, icon) => `<button type="button" class="ctl${k === 'play' ? ' play' : ''}" data-ctl="${k}" aria-label="${label}">${icon}</button>`;
     root.innerHTML = `
@@ -240,10 +230,8 @@
         el('text', { x, y, class: 'silk small', transform: rot ? `rotate(${rot} ${x} ${y})` : '' }, gt, txt);
       }
     });
-    // junction vias on the host trace
     [[1258, 265], [1258, 401]].forEach(([x, y]) => el('circle', { cx: x, cy: y, r: 3.4, class: 'via' }, gt));
 
-    // signal key, silkscreened into the free corner of the board
     const gk = el('g', { class: 'key' }, svg);
     el('rect', { x: 864, y: 614, width: 396, height: 92, rx: 14, class: 'zone' }, gk);
     el('text', { x: 878, y: 606, class: 'silk' }, gk, 'SIGNALS');
@@ -317,7 +305,6 @@
     }
   }
 
-  /* ------------------------------------------------------------ runtime */
   function init(root) {
     const { svg, pulses } = build(root);
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -349,7 +336,6 @@
     }
     const scroller = root.querySelector('.board-scroll');
     function follow() {
-      // On narrow screens the board scrolls sideways; keep the active stage in view.
       if (scroller.scrollWidth <= scroller.clientWidth + 4 || !st.visible) return;
       const ids = S[stageKeys()[st.i]].chips.map(id => chipById[id]);
       const cx = ids.reduce((sum, c) => sum + c.x + c.w / 2, 0) / ids.length;
@@ -395,7 +381,6 @@
       });
       rail.style.setProperty('--dur', STAGE_MS + 'ms');
       rail.classList.toggle('running', st.playing);
-      // restart the progress animation
       const cur = rail.querySelector('button.on i');
       if (cur) { cur.style.animation = 'none'; void cur.offsetWidth; cur.style.animation = ''; }
       buildPulses(a.traces);
@@ -429,7 +414,6 @@
       rail.classList.toggle('running', st.playing);
     }
 
-    // LEDs: a fleet that never sleeps
     const leds = CHIPS.filter(c => c.leds).flatMap(c => c.leds);
     const gpus = CHIPS.find(c => c.id === 'eng').gpus;
     const ledState = leds.map(() => Math.random());
@@ -468,7 +452,6 @@
       requestAnimationFrame(frame);
     }
 
-    // events
     root.querySelector('.mode-switch').addEventListener('click', e => {
       const b = e.target.closest('[data-mode]');
       if (!b || b.dataset.mode === st.mode) return;
@@ -501,7 +484,6 @@
     svg.addEventListener('focusout', e => { if (st.hover && !(e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest('.chip'))) { st.hover = null; paint(); } });
     new IntersectionObserver(es => es.forEach(x => { st.visible = x.isIntersecting; if (x.isIntersecting) st.t0 = performance.now() - 200; }), { threshold: 0.15 }).observe(root);
 
-    // Scripted control for the demo video (demo_video/compose.html); the page itself never calls it.
     root.boardApi = {
       setMode(m) { if (m !== st.mode && MODES[m]) { st.mode = m; applyMode(); setStage(0); } },
       setStage(k) {
@@ -515,18 +497,16 @@
       size: { W, H },
     };
 
-    // The SVG is as wide as the viewport height allows (see .board-main in styles.css).
     const main = root.querySelector('.board-main');
     const sec = root.closest('.board-section');
 
     function fit() {
       if (sec) {
-        // the board owns a whole screen: give the circuit every pixel the heading leaves it
         const cs = getComputedStyle(sec);
         const head = sec.querySelector('.board-head');
-        const chrome = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom)   // padding already clears the fixed header
+        const chrome = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom)
           + (head ? head.getBoundingClientRect().height + parseFloat(getComputedStyle(head).marginBottom) : 0)
-          + 36;                                                                   // the board card's own padding
+          + 36;
         root.style.setProperty('--fold', Math.round(chrome) + 'px');
         return;
       }

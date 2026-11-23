@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Self-contained, resettable Real-World Clones and 42 bundled Novel Apps (837 tasks) runnable via --benchmarks mocked-apps with native programmatic verifiers.">
+  <link rel="canonical" href="https://tongyi-mai.github.io/MAI-Gym/docs/mocked-apps.html">
+  <meta property="og:site_name" content="MAI-Gym Docs">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Mocked Apps — MAI-Gym Docs">
+  <meta property="og:description" content="Self-contained, resettable Real-World Clones and 42 bundled Novel Apps (837 tasks) runnable via --benchmarks mocked-apps with native programmatic verifiers.">
+  <meta property="og:url" content="https://tongyi-mai.github.io/MAI-Gym/docs/mocked-apps.html">
+  <meta property="og:image" content="https://tongyi-mai.github.io/MAI-Gym/assets/figs/overview.webp">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Mocked Apps — MAI-Gym Docs">
+  <meta name="twitter:description" content="Self-contained, resettable Real-World Clones and 42 bundled Novel Apps (837 tasks) runnable via --benchmarks mocked-apps with native programmatic verifiers.">
+  <meta name="twitter:image" content="https://tongyi-mai.github.io/MAI-Gym/assets/figs/overview.webp">
+  <title>Mocked Apps — MAI-Gym Docs</title>
+  <link rel="icon" type="image/png" href="../assets/favicon.png">
+  <script>
+    (function () {
+      var t;
+      try { t = localStorage.getItem('maigym.theme'); } catch (e) {}
+      document.documentElement.dataset.theme = t === 'day' ? 'day' : 'night';
+    })();
+  </script>
+  <link rel="preload" href="../assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="assets/docs.css">
+  <script>
+    window.MAIGYM_DOCS = {
+      root: "",
+      rawMd: "raw/mocked-apps.md",
+      slug: "mocked-apps.html"
+    };
+  </script>
+  <script src="assets/docs.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#doc-content">Skip to main content</a>
+
+  <header class="topbar" id="topbar">
+    <div class="topbar-row">
+      <div class="topbar-left">
+        <button class="mobile-nav-btn" id="mobile-nav-btn" type="button" aria-label="Toggle navigation" aria-expanded="false">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 5.5h14M3 10h14M3 14.5h14"/></svg>
+        </button>
+        <a class="brand" href="index.html" aria-label="MAI-Gym Documentation home">
+          <img src="../assets/mark.svg" width="26" height="26" alt="">
+          <span class="brand-name">MAI-<span>Gym</span></span>
+          <span class="brand-pill">Docs</span>
+        </a>
+      </div>
+
+      <button class="search-trigger" id="search-trigger" type="button" aria-label="Search documentation">
+        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="5.2"/><path d="m12 12 3.6 3.6"/></svg>
+        <span>Search docs...</span>
+        <kbd>⌘K</kbd>
+      </button>
+
+      <div class="topbar-right">
+        <a class="top-link" href="../index.html">Project Page</a>
+        <a class="top-link" href="https://arxiv.org/abs/2610.20939" target="_blank" rel="noopener noreferrer">Paper</a>
+        <a class="top-link" href="https://huggingface.co/Tongyi-MAI/MAI-Gym-9B" target="_blank" rel="noopener noreferrer">Model</a>
+        <a class="repo-chip" href="https://github.com/Tongyi-MAI/MAI-Gym" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+          <span>Tongyi-MAI/MAI-Gym</span>
+        </a>
+        <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle color theme" title="Switch light / dark theme">
+          <svg class="i-sun" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="3.6" fill="currentColor"/><path d="M10 1.8v2.1M10 16.1v2.1M1.8 10h2.1M16.1 10h2.1M4.2 4.2l1.5 1.5M14.3 14.3l1.5 1.5M4.2 15.8l1.5-1.5M14.3 5.7l1.5-1.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <svg class="i-moon" viewBox="0 0 20 20" aria-hidden="true"><path d="M16.2 12.6A6.8 6.8 0 0 1 7.4 3.8a6.8 6.8 0 1 0 8.8 8.8z" fill="currentColor"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="drawer-backdrop" id="drawer-backdrop" hidden></div>
+
+  <div class="doc-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Documentation navigation">
+      <div class="side-group"><p class="side-heading">Overview</p><ul><li><a class="side-link" href="index.html">Quickstart</a></li><li><a class="side-link" href="concepts.html">Platform &amp; Core Concepts</a></li><li><a class="side-link" href="mai-gym-9b.html">MAI-Gym-9B</a></li><li><a class="side-link" href="dashboard.html">Trajectory Dashboard</a></li></ul></div><div class="side-group"><p class="side-heading">User Guide</p><ul><li><a class="side-link" href="evaluation.html">Evaluation Guide</a></li><li><a class="side-link" href="training.html">Online RL Training</a></li><li><a class="side-link" href="rollout.html">Rollout CLI</a></li><li><a class="side-link" href="kubernetes.html">Kubernetes Fleets</a></li></ul></div><div class="side-group"><p class="side-heading">Benchmarks &amp; Environments</p><ul><li><a class="side-link" href="environments.html">Benchmarks Overview</a></li><li><a class="side-link active" aria-current="page" href="mocked-apps.html">Mocked Apps</a></li><li><a class="side-link" href="envs/mobile.html">Mobile Benchmarks</a></li><li><a class="side-link" href="envs/computer.html">Computer Benchmarks</a></li><li><a class="side-link" href="envs/web.html">Web Benchmarks</a></li></ul></div><div class="side-group"><p class="side-heading">Customization</p><ul><li><a class="side-link" href="extending.html">Extending MAI-Gym</a></li><li><a class="side-link" href="coding-agents.html">Coding-Agent Setup</a></li><li><a class="side-link" href="development.html">Development &amp; Layout</a></li><li><a class="side-link" href="licensing.html">Licensing &amp; Notices</a></li></ul></div>
+    </aside>
+
+    <main class="doc-main" id="doc-content">
+      <article class="doc-article">
+        <header class="page-header">
+          <div class="page-eyebrow">Benchmarks &amp; Environments</div>
+          <div class="page-title-row">
+            <h1>Mocked Apps</h1>
+            <button type="button" class="copy-page-btn" id="copy-page-btn" title="Copy page as Markdown">
+              <svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+              <svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>Copy page</span>
+            </button>
+          </div>
+          <p class="page-lead">Self-contained, resettable Real-World Clones and 42 bundled Novel Apps (837 tasks) runnable via --benchmarks mocked-apps with native programmatic verifiers.</p>
+        </header>
+
+        <div class="prose">
+          <p>In MAI-Gym, <strong>Mocked Apps</strong> are self-contained, resettable application environments that let GUI agents practice and be evaluated thousands of times without external side effects. Mocked Apps comprise two categories:</p>
+<ol><li><strong>Real-World Clones</strong> — Resettable clones of production applications studied in the <a href="https://arxiv.org/abs/2610.20939" target="_blank" rel="noopener noreferrer">technical report<svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a> (spanning travel, banking, ride-hailing, food delivery, local services, and social media) for safe practice and clone-to-real transfer (<a href="https://tongyi-mai.github.io/MAI-Gym/#mock-vs-real" target="_blank" rel="noopener noreferrer">side-by-side comparison<svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a>).</li><li><strong>Novel Apps</strong> — <strong>42 original browser-based HTML5 applications</strong> (<strong>837 verified tasks</strong>, deterministic programmatic verifiers, and reference oracle action sequences) bundled in <a href="https://github.com/Tongyi-MAI/MAI-Gym/tree/main/resources/novel-apps" target="_blank" rel="noopener noreferrer"><code>resources/novel-apps/</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a> to evaluate adaptation to unfamiliar interfaces through reward alone (<a href="https://tongyi-mai.github.io/MAI-Gym/#apps" target="_blank" rel="noopener noreferrer">interactive gallery<svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a>).</li></ol>
+<p>Open any bundled app&#x27;s <code>index.html</code> directly in a browser—for example, <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/resources/novel-apps/squirrel_eats/index.html" target="_blank" rel="noopener noreferrer">Squirrel Eats<svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a> to browse restaurants and place an order—or <a href="https://github.com/Tongyi-MAI/MAI-Gym/tree/main/resources/novel-apps" target="_blank" rel="noopener noreferrer">browse all 42 apps<svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a>.</p>
+<hr>
+<h2 id="evaluate-a-task">Evaluate a task<a class="heading-link" href="#evaluate-a-task" aria-label="Link to Evaluate a task">#</a></h2>
+<p>Run these commands from the MAI-Gym repository root. Set <code>MODEL_URL</code> to an OpenAI-compatible vision endpoint and <code>MODEL_NAME</code> to its served model ID. If the endpoint requires authentication, export <code>OPENAI_API_KEY</code>.</p>
+<div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"><span class="tok-cmd">uv</span> sync <span class="tok-flag">--locked</span>
+<span class="tok-cmd">uv</span> run playwright install chromium
+<span class="tok-cmd">uv</span> run mai-gym eval <span class="tok-flag">--config</span> configs/mocked-apps.yaml <span class="tok-flag">--benchmarks</span> mocked-apps \
+  <span class="tok-flag">--model</span> <span class="tok-string">&quot;<span class="tok-var">$MODEL_URL</span>&quot;</span> <span class="tok-flag">--model-name</span> <span class="tok-string">&quot;<span class="tok-var">$MODEL_NAME</span>&quot;</span> <span class="tok-flag">--trials</span> 1</code></pre></div>
+<p>The <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/configs/mocked-apps.yaml" target="_blank" rel="noopener noreferrer">preset<svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a> starts the web backend and manager locally. It runs <code>kestrel_bank/T01_freeze</code> in Chromium, verifies the card state, and writes the evaluation outcome and weighted partial score to the printed <code>results.json</code>. Select other tasks by their <code>&lt;app-id&gt;/&lt;task-id&gt;</code> in the preset:</p>
+<div class="code-block" data-lang="yaml"><div class="code-head"><span class="code-lang">yaml</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-yaml"><span class="tok-key">benchmarks</span>:
+  <span class="tok-key">mocked-apps</span>:
+    <span class="tok-key">tasks</span>: <span class="tok-string">[kestrel_bank/T01_freeze, kestrel_bank/T02_query_payday]</span>
+    <span class="tok-key">num_envs</span>: <span class="tok-num">1</span></code></pre></div>
+<p>Task IDs, instructions, and step budgets are listed in each app&#x27;s <code>tasks.json</code>. Omit <code>tasks</code> to evaluate all 837 tasks. Each episode resets to its declared seed and initial state.</p>
+<h2 id="use-the-manager-for-training">Use the manager for training<a class="heading-link" href="#use-the-manager-for-training" aria-label="Link to Use the manager for training">#</a></h2>
+<p>Start the same environment manager with <code>uv run mai-gym serve --config configs/mocked-apps.yaml</code>. In your training task pool, include rows with <code>env_type: &quot;mocked-apps&quot;</code>:</p>
+<div class="code-block" data-lang="json"><div class="code-head"><span class="code-lang">json</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-json">{<span class="tok-key">&quot;prompt&quot;</span>:<span class="tok-string">&quot;Freeze your card. Leave everything else on the card page alone.&quot;</span>,<span class="tok-key">&quot;label&quot;</span>:<span class="tok-string">&quot;&quot;</span>,<span class="tok-key">&quot;metadata&quot;</span>:{<span class="tok-key">&quot;env_type&quot;</span>:<span class="tok-string">&quot;mocked-apps&quot;</span>,<span class="tok-key">&quot;task_id&quot;</span>:<span class="tok-string">&quot;kestrel_bank/T01_freeze&quot;</span>}}</code></pre></div>
+<p>Set <code>model.agent_variant: mai_gym_computer_use</code> in the training configuration. Under <code>tasks</code>, point the pool at the running manager. The address below assumes the trainer can reach the manager on loopback.</p>
+<div class="code-block" data-lang="yaml"><div class="code-head"><span class="code-lang">yaml</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-yaml"><span class="tok-key">tasks</span>:
+  - <span class="tok-key">pool</span>: <span class="tok-string">mocked-apps.jsonl</span>
+    <span class="tok-key">env_type</span>: <span class="tok-string">mocked-apps</span>
+    <span class="tok-key">manager_url</span>: <span class="tok-string">http://127.0.0.1:8092</span>
+    <span class="tok-key">num_sessions</span>: <span class="tok-num">1</span></code></pre></div>
+<p>Run <code>mai-gym train --config train.yaml</code> inside the training container. <a href="training.html">Online RL training guide</a></p>
+<h2 id="app-files">App files<a class="heading-link" href="#app-files" aria-label="Link to App files">#</a></h2>
+<p>Each app directory includes three files, and the directory name is the app ID. Keep them together when copying an app.</p>
+<div class="table-wrap"><table><thead><tr><th style="text-align:left">File</th><th style="text-align:left">Contents</th></tr></thead><tbody><tr><td style="text-align:left"><code>index.html</code></td><td style="text-align:left">The interactive app, including its interface and state</td></tr><tr><td style="text-align:left"><code>tasks.json</code></td><td style="text-align:left">Task instructions, initial conditions, and success criteria</td></tr><tr><td style="text-align:left"><code>oracle.json</code></td><td style="text-align:left">Reference actions keyed by task ID</td></tr></tbody></table></div>
+<p>The bundled Novel Apps collection contains 837 tasks across 42 apps. To try a task or watch a reference solution in the project demo, open the <a href="https://tongyi-mai.github.io/MAI-Gym/#apps" target="_blank" rel="noopener noreferrer">interactive gallery<svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a>.</p>
+<p>Released under the <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License<svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a>.</p>
+        </div>
+
+        <nav class="pagination" aria-label="Pagination">
+          <a class="pag-link prev" href="environments.html"><span class="pag-label">Previous</span><span class="pag-title">&larr; Benchmarks Overview</span></a>
+          <a class="pag-link next" href="envs/mobile.html"><span class="pag-label">Next</span><span class="pag-title">Mobile Benchmarks &rarr;</span></a>
+        </nav>
+
+        <footer class="doc-footer">
+          <div class="doc-footer-links">
+            <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/site/docs/raw/mocked-apps.md" target="_blank" rel="noopener noreferrer">Edit this page on GitHub &nearr;</a>
+            <a href="https://github.com/Tongyi-MAI/MAI-Gym/issues/new?title=Docs:%20Mocked Apps" target="_blank" rel="noopener noreferrer">Raise a docs issue &nearr;</a>
+            <a href="llms.txt">llms.txt</a>
+          </div>
+          <p class="doc-footer-meta">MAI-Gym · MIT License · Tongyi-MAI</p>
+        </footer>
+      </article>
+    </main>
+
+    <aside class="toc-rail" aria-label="On this page">
+      <div class="toc-inner">
+        <p class="toc-title">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M2.5 4h11M2.5 8h7M2.5 12h11"/></svg>
+          On this page
+        </p>
+        <ul class="toc-list" id="toc-list"><li><a class="toc-link" href="#evaluate-a-task">Evaluate a task</a></li><li><a class="toc-link" href="#use-the-manager-for-training">Use the manager for training</a></li><li><a class="toc-link" href="#app-files">App files</a></li></ul>
+        <div class="toc-actions">
+          <a href="#top" class="toc-action-link" id="back-to-top">&uarr; Back to top</a>
+          <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/site/docs/raw/mocked-apps.md" class="toc-action-link" target="_blank" rel="noopener noreferrer">View Markdown &nearr;</a>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <dialog class="search-dialog" id="search-dialog" aria-label="Search documentation">
+    <div class="search-box">
+      <div class="search-input-row">
+        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="5.2"/><path d="m12 12 3.6 3.6"/></svg>
+        <input id="search-input" type="search" placeholder="Search documentation, CLI flags, benchmarks..." autocomplete="off" spellcheck="false">
+        <button type="button" class="search-esc" id="search-close">ESC</button>
+      </div>
+      <div class="search-results" id="search-results" role="listbox"></div>
+      <div class="search-foot">
+        <span><kbd>&uarr;</kbd><kbd>&darr;</kbd> navigate</span>
+        <span><kbd>Enter</kbd> open</span>
+        <span><kbd>Esc</kbd> close</span>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="img-dialog" id="img-dialog" aria-label="Image preview">
+    <button type="button" class="img-dialog-close" id="img-dialog-close" aria-label="Close preview">&times;</button>
+    <img id="img-dialog-src" alt="">
+  </dialog>
+</body>
+</html>

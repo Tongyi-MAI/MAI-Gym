@@ -1,0 +1,19 @@
+{
+  "label": "official-55ddaf5",
+  "source_repository": "google-research/android_world",
+  "source_revision": "55ddaf5edc6f6c25673aed343907d5b9dca66f84",
+  "task_inventory": "android_world.registry.TaskRegistry(android_world)",
+  "accessibility_forwarder": {
+    "url": "https://storage.googleapis.com/android_env-tasks/2024.05.13-accessibility_forwarder.apk",
+    "sha256": "97a56a544e44d79f9b3181fc7dbdd72cffa908efd3d53c82afad1773061a350a"
+  },
+  "system_image": {
+    "api_level": 33,
+    "variant": "google_apis/x86_64",
+    "revision": 17,
+    "url": "https://dl.google.com/android/repository/sys-img/google_apis/x86_64-33_r17.zip",
+    "bytes": 1707857511,
+    "sha1": "2b96f5bd5c79bfe1cc645e70b3e630b5755d9711",
+    "sha256": "0455f853dcaf23e89b44f810e4b6391e8ef356326ec0e6c25b7f3f9de9ff5659"
+  }
+}

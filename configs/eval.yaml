@@ -1,0 +1,16 @@
+model:
+  name: example-model
+  base_url: http://127.0.0.1:8000/v1
+  api_key: env/OPENAI_API_KEY
+  agent_variant: unified
+
+benchmarks:
+  mobileworld:
+    manager_config: mobileworld.yaml
+    num_envs: 1
+  osworld-verified:
+    manager_url: http://127.0.0.1:8091
+    num_envs: 1
+
+observations:
+  screenshot_transport: inline

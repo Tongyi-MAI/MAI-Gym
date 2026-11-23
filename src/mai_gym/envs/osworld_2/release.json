@@ -1,0 +1,19 @@
+{
+  "label": "official-v2.1",
+  "source_repository": "xlang-ai/OSWorld-V2",
+  "source_revision": "3d778a3c9a34a079316f70df023b166700445792",
+  "release_descriptor": "benchmark_releases/osworld-v2.1.json",
+  "task_repository": "xlangai/osworld_v2_tasks",
+  "task_revision": "0a1aadad95aa79b00b3783e717d865089ab06e26",
+  "task_manifest_sha256": "c54d428329be5ca72742a6becd49ee83cf739df5dea429bba182e1f3f21badfb",
+  "task_count": 108,
+  "assets_repository": "xlangai/osworld_v2_assets_gated",
+  "assets_revision": "384b3834faba5700a7b589e6cc181490c9808949",
+  "website_repository": "Task-Web/OSWorld-web",
+  "website_revision": "60c89fe6a8ed934668619d8d26132848239eb8ee",
+  "vm_repository": "xlangai/v2-image",
+  "vm_revision": "6e16459a2feb5a8f1ed65babcfe7a2a6205d049d",
+  "vm_path": "osworld-v2-ubuntu-x86.qcow2.zip",
+  "vm_sha256": "14b08aa7ba6c023ecb91d46de8df5de32af4d1d6bd75ea925519caf9677fc8b3",
+  "docker_image": "happysixd/osworld-docker@sha256:0e6497a9295647cf05bf2b2af522fdd79bdeba2737595259cab310a3bcf6baa9"
+}

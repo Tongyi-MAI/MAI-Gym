@@ -4,33 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Anvil (mocked GUI env)</title>
-<!--
-  ============================================================================
-  Anvil — a single-file H5 remittance app for agent research.
 
-  Same two-block contract as every environment here: script#engine is a pure,
-  DOM-free state machine on globalThis.GUI_ENGINE; script#ui renders its screen
-  tree and exposes window.__ENV__.
-
-  What is new is the input model. Two amount fields are tied together by an
-  exchange rate: type in what you send and the app works out what arrives,
-  type in what has to arrive and it solves backwards for what you must send.
-  Whichever one you typed into last is the anchor, and changing the delivery
-  route re-solves the other one.
-
-  Underneath sits a cost structure with no single winner. Four routes charge
-  differently — a flat fee in bands, a percentage with a floor, a flat fee,
-  and nothing at all — and each takes a different margin out of the rate. So
-  the cheapest route depends on the amount: the wallet wins under £111, the
-  debit card between there and £475.24, and the bank transfer above it. Two
-  routes also have ceilings, which take them off the table entirely once the
-  amount is large enough.
-
-  All arithmetic is integer. Sterling is in pence, destination currencies are
-  in their own minor unit, and rates are held as micro-units of destination
-  minor currency per penny, so every figure on screen is exact.
-  ============================================================================
--->
 <style>
 :root{
   --outer:#e3e6ee;
@@ -302,18 +276,12 @@ body.bare .n-sheet{animation:none}
 <div id="hud" class="off"></div>
 
 <script id="engine">
-/* ===========================================================================
- * ENGINE — pure, deterministic, DOM-free.
- * Sterling is integer pence, destination currencies integer minor units,
- * and rates micro-units of minor currency per penny. Nothing rounds twice.
- * ======================================================================== */
 (function(root){
 'use strict';
 
 var ENV_ID  = 'anvil_remit';
 var VERSION = '1.0.0';
 
-/* ------------------------------------------------------------- utilities */
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function pad2(n){ return (n < 10 ? '0' : '') + n; }
 function hhmm(m){ m = ((m % 1440) + 1440) % 1440; return pad2(Math.floor(m/60)) + ':' + pad2(m%60); }
@@ -352,7 +320,6 @@ function setPath(o, path, value){
   return o;
 }
 
-/* ------------------------------------------- screen-tree node constructors */
 function N(t, o){ o = o || {}; o.t = t; return o; }
 function txt(s, cls){ return N('text', {text:s, cls:cls || ''}); }
 function row(id, text, o){
@@ -377,9 +344,6 @@ function push(st, name, params){ st.ui.stack.push({name:name, params:params || {
 function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
 function toast(st, t){ st.ui.toast = t; }
 
-/* ------------------------------------------------------ currencies & rates
- * rate is micro-units of destination minor currency per one penny, so all of
- * this is integer arithmetic and nothing rounds twice. */
 var CCY = {
   INR:{code:'INR', sym:'₹', name:'Indian rupee',   minor:100, rate:105842000, country:'India'},
   PHP:{code:'PHP', sym:'₱', name:'Philippine peso', minor:100, rate: 72150000, country:'the Philippines'},
@@ -420,14 +384,12 @@ function sendFor(st, r, code, receive){
   var rt = rateOf(st, r, code);
   return rt > 0 ? Math.ceil(receive * 1000000 / rt) : 0;
 }
-/* what the transfer costs you over the mid-market rate: the fee, plus the
- * margin the route takes out of the rate */
 function costOf(st, r, code, send){
   return feeOf(st, r, send) + Math.round(send * (rateOf(st, r, code) === 0 ? 0
     : (ccyOf(code).rate - rateOf(st, r, code))) / ccyOf(code).rate);
 }
 function capped(r, send){ return r.cap > 0 && send > r.cap; }
-var VERIFY_OVER = 500000;                   /* £5,000 needs paperwork this app does not have */
+var VERIFY_OVER = 500000;
 function blocked(st, r, send){
   if (capped(r, send)) return 'over the ' + money(r.cap) + ' limit on this route';
   if (send > VERIFY_OVER) return 'over ' + money(VERIFY_OVER) + ' — needs identity checks first';
@@ -460,7 +422,6 @@ function rateText(st, r, code){
 }
 function midText(code){ return '1 GBP = ' + (ccyOf(code).rate / 10000).toFixed(4) + ' ' + code; }
 
-/* ------------------------------------------------------------- recipients */
 var PEOPLE = [
   {id:'p_asha',  name:'Asha Nair',      ccy:'INR', bank:'HDFC ···8812', note:'Sister'},
   {id:'p_lito',  name:'Lito Ramos',     ccy:'PHP', bank:'BDO ···4417',  note:'Father'},
@@ -473,7 +434,6 @@ function initials(name){
   return (p[0][0] + (p.length > 1 ? p[p.length-1][0] : '')).toUpperCase();
 }
 
-/* ------------------------------------------------------------- the draft */
 function draftPerson(st){ return personOf(st.draft.personId); }
 function draftCcy(st){ var p = draftPerson(st); return p ? p.ccy : 'INR'; }
 function draftRoute(st){ return routeOf(st.draft.routeId) || ROUTES[0]; }
@@ -482,7 +442,6 @@ function draftReceive(st){ return receiveFor(st, draftRoute(st), draftCcy(st), s
 function draftFee(st){ return feeOf(st, draftRoute(st), st.draft.send); }
 function draftPay(st){ return st.draft.send + draftFee(st); }
 function draftBlocked(st){ return blocked(st, draftRoute(st), st.draft.send); }
-/* the route the recipient ends up best off on, at the current amount */
 function bestRoute(st){
   var code = draftCcy(st), send = st.draft.send, best = null;
   ROUTES.forEach(function(r){
@@ -512,7 +471,6 @@ function amountText(n, minor){
   return group(Math.floor(n / minor)) + '.' + (n % minor < 10 ? '0' : '') + (n % minor);
 }
 
-/* =========================================================== state */
 function createInitialState(seed){
   seed = seed || 0;
   return {
@@ -525,7 +483,6 @@ function createInitialState(seed){
       {id:'tx_9003', personId:'p_asha',  routeId:'r_bank', send:60000, got:6328690,
        ccy:'INR', when:'28 Jul', fee:499}
     ],
-    /* the seed permutes the order the recipient shortcuts are offered in */
     order:shuffled(PEOPLE.map(function(p){ return p.id; }), seed),
     ui:{tab:'send', stack:[{name:'send', params:{}}], sheet:null, confirm:null,
         inputs:{amt_send:'200.00', amt_recv:'', promo:''}, toast:null, sort:'cost'},
@@ -540,13 +497,11 @@ var SELECT = {
   routes:ROUTES, people:PEOPLE, route:route
 };
 
-/* =========================================================== reducer */
 function reduce(prev, action){
   var st = clone(prev), A = action || {};
   st.ui.toast = null;
   st.meta.steps += 1;
 
-  /* whichever field was typed into last stays put; the other one is solved for */
   function resolve(st){
     var r = draftRoute(st), code = draftCcy(st);
     if (st.draft.anchor === 'receive' && st.draft.asked > 0){
@@ -601,7 +556,6 @@ function reduce(prev, action){
   }
   case 'SORT': st.ui.sort = A.id; break;
 
-  /* ---- the two coupled fields ---- */
   case 'SET_INPUT':
     st.ui.inputs[A.field] = A.value;
     if (A.field === 'amt_send'){
@@ -616,7 +570,6 @@ function reduce(prev, action){
       resolve(st);
       st.ui.inputs.amt_recv = A.value;
     } else if (A.field === 'promo'){
-      /* typed but not applied until the button is pressed */
     }
     break;
 
@@ -639,7 +592,6 @@ function reduce(prev, action){
     st.draft.personId = p.id;
     st.ui.sheet = null;
     if (p.ccy !== was && st.draft.anchor === 'receive'){
-      /* a target in rupees means nothing in złoty, so fall back to the send side */
       st.draft.anchor = 'send'; st.draft.asked = 0;
       toast(st, 'Now sending to ' + ccyOf(p.ccy).name + ' — the target amount was cleared');
     }
@@ -697,7 +649,6 @@ function reduce(prev, action){
   return st;
 }
 
-/* =========================================================== screens */
 function tabbar(st){
   var items = [
     {id:'tab_send',     text:'Send',     icon:'send',   tab:'send'},
@@ -930,11 +881,6 @@ function screen(st){
   return rootNode;
 }
 
-/* =======================================================================
- * TRAVERSAL — element index, GUI action interface, text observation.
- * Identical in every environment here: the screen tree is the only thing
- * that differs, and all three readers below walk that same tree.
- * ==================================================================== */
 var SKIP_KEYS = {act:1, minus:1, plus:1, close:1, yes:1, params:1, meta:1, rows:1, deps:1};
 
 function labelOf(n){ return n.text || n.title || n.name || n.label || n.main || ''; }
@@ -948,9 +894,6 @@ function collect(n, out){
                                             input:(n.t === 'inputrow')});
   if (n.t === 'mask' && n.close)  out.push({id:n.id, act:n.close, text:'Dismiss overlay', t:'mask'});
   for (var k in n){
-    /* a node may carry extra buttons as a pair of keys: someId holds the
-     * test-id and some holds the action. That is how steppers, sheet close
-     * buttons and per-row buttons all get into the element index. */
     if (k.length > 2 && k.slice(-2) === 'Id' && typeof n[k] === 'string'){
       var sib = n[k.slice(0, -2)];
       if (sib && typeof sib === 'object' && sib.type)
@@ -1003,7 +946,6 @@ function step(st, a){
   }
 }
 
-/* ------------------------------------------------- text observation (a11y) */
 function a11y(st){
   var rootNode = screen(st), lines = [], r = route(st);
   lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
@@ -1068,8 +1010,6 @@ function walkText(n, d, out, st){
     if (v && typeof v === 'object') walkText(v, line !== null ? d+1 : d, out, st);
   }
 }
-/* per-environment nodes: return a string to print, true if already printed,
- * or null to ignore */
 function walkExtra(n, d, out, st){
 
   if (n.t === 'conv'){
@@ -1101,7 +1041,6 @@ function walkExtra(n, d, out, st){
   return null;
 }
 
-/* --------------------------------------------------------- derived view */
 function derive(st){
   var code = draftCcy(st), send = st.draft.send;
   var cost = {}, got = {}, fee = {};
@@ -1165,9 +1104,6 @@ root.GUI_ENGINE = ENGINE;
 </script>
 
 <script id="ui">
-/* ===========================================================================
- * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
- * ======================================================================== */
 (function(){
 'use strict';
 var E = window.GUI_ENGINE;

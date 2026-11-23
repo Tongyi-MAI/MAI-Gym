@@ -1,0 +1,635 @@
+[
+  {
+    "slug": "index.html",
+    "title": "Quickstart",
+    "group": "Overview",
+    "description": "Install the MAI-Gym CLI and run your first verified GUI agent evaluation—locally on Mocked Apps (no Docker/KVM) or on MobileWorld—plus visual replay and optional online RL.",
+    "headings": [
+      {
+        "id": "1-install-the-cli",
+        "text": "1. Install the CLI"
+      },
+      {
+        "id": "2-option-a--fast-local-tryout-mocked-apps-no-docker-or-kvm",
+        "text": "2. Option A — Fast Local Tryout: Mocked Apps (No Docker or KVM)"
+      },
+      {
+        "id": "3-option-b--mobileworld-evaluation-android-emulator",
+        "text": "3. Option B — MobileWorld Evaluation (Android Emulator)"
+      },
+      {
+        "id": "start-a-mobileworld-backend",
+        "text": "Start a MobileWorld backend"
+      },
+      {
+        "id": "configure-and-evaluate-mai-gym-9b",
+        "text": "Configure and evaluate MAI-Gym-9B"
+      },
+      {
+        "id": "4-inspect-results-visually-in-the-control-room-dashboard",
+        "text": "4. Inspect Results Visually in the Control Room Dashboard"
+      },
+      {
+        "id": "5-train-a-gui-agent-with-online-rl-optional",
+        "text": "5. Train a GUI Agent with Online RL (Optional)"
+      },
+      {
+        "id": "cli-at-a-glance",
+        "text": "CLI at a Glance"
+      }
+    ],
+    "content": "Quickstart Home · Quickstart · Platform & Core Concepts · MAI-Gym-9B · Evaluation · Training MAI-Gym is an open, all-in-one platform for evaluating GUI agents ( mai-gym eval ), collecting interaction trajectories ( mai-gym rollout ), and running online reinforcement learning ( mai-gym train ) across Mobile , Computer , and Web environments—scaling from a single local browser or emulator to 20,000+ concurrent cloud instances . Follow the steps below to go from a clean checkout to your first verified GUI agent evaluation. Choose Option A for a zero-Docker local tryout with Mocked Apps , or Option B for a full Android emulator evaluation on MobileWorld and optional online RL training. [!TIP] Using a coding agent (Claude Code, Codex, Cursor)? Agent-readable setup guides live under skills/README.md . Open this repository in your coding agent to automate benchmark preparation, reset checks, evaluation, and training bring-up. --- 1. Install the CLI Requires Python 3.12+ and uv ( curl -LsSf https://astral.sh/uv/install.sh sh on Linux/macOS). From the repository root: Confirm that the help output lists serve , eval , rollout , and train . [!NOTE] If an existing environment reports Failed to spawn: mai-gym , restore the CLI entry point with: --- 2. Option A — Fast Local Tryout: Mocked Apps (No Docker or KVM) This repository bundles 42 browser-based Novel Apps (837 verified tasks with deterministic verifiers and reference oracle trajectories) under resources/novel-apps/ . Run an end-to-end evaluation on macOS or Linux using only Chromium and an OpenAI-compatible vision model endpoint: configs/mocked-apps.yaml launches a local web backend and manager, executes kestrel bank/T01 freeze in headless Chromium, verifies the final app state, and writes the full-success outcome and weighted partial score to the printed results.json . See Mocked Apps to select other apps/tasks or run all 837 tasks. --- 3. Option B — MobileWorld Evaluation (Android Emulator) Start a MobileWorld backend [!NOTE] Deploying across multiple nodes? Follow the Kubernetes Fleets guide and pass the fleet manager URL in eval.yaml . On a Linux x86 64 host with Docker and KVM enabled, launch a single Android emulator backend (skip to the curl checks if you already have a running backend): Initialize the emulator and verify that SetAlarmTask is registered: If your task profile differs, pick any GUI-only task ID from the returned list and use it consistently below. See Mobile Benchmarks for an overview or skills/envs/mobileworld.md for immutable profile lock setup. Configure and evaluate MAI-Gym-9B Download Tongyi-MAI/MAI-Gym-9B and copy the sample configurations into a working directory outside the checkout: Configure $EVAL DIR/eval.yaml to run SetAlarmTask : Ensure $EVAL DIR/mobileworld.yaml points to your backend URL ( http://127.0.0.1:6800 ): Run a 1-trial evaluation (the CLI automatically launches and tears down SGLang for local Hugging Face checkpoints): [!TIP] Using an existing OpenAI-compatible API endpoint instead of local SGLang? Skip the checkpoint download and pass the API base URL and model ID directly: Check the printed results.json ( success rate: 1.0 and unscored trials: 0 indicate native success). --- 4. Inspect Results Visually in the Control Room Dashboard Every benchmark score and RL rollout batch traces back to live fleet telemetry and step-by-step screenshots in the embedded Rust Trajectory Dashboard. Launch the dashboard against your trajectory root to monitor active sessions, compare checkpoints, and inspect drawn click/drag overlays alongside model reasoning traces and deterministic verifier criteria: Trajectory Replay — Step-by-step screenshots with drawn click/drag overlays, model reasoning traces, tool calls, and verifier criteria Fleet Overview — Real-time capacity snapshot, active session leases, steps/sec throughput timeline, and session inventory See Trajectory Dashboard for all four views ( Trajectory Replay , Run Explorer , Fleet Overview , Benc"
+  },
+  {
+    "slug": "concepts.html",
+    "title": "Platform & Core Concepts",
+    "group": "Overview",
+    "description": "System architecture, executable task model, shared rollout harness, EnvClient lifecycle, Hybrid Action Space (GUI + CLI), and the evaluate–diagnose–synthesize–retrain loop.",
+    "headings": [
+      {
+        "id": "platform-architecture",
+        "text": "Platform Architecture"
+      },
+      {
+        "id": "core-platform-capabilities",
+        "text": "Core Platform Capabilities"
+      },
+      {
+        "id": "the-four-stage-improvement-loop",
+        "text": "The Four-Stage Improvement Loop"
+      },
+      {
+        "id": "executable-tasks--verification",
+        "text": "Executable Tasks & Verification"
+      },
+      {
+        "id": "partial-credit-vs-binary-success",
+        "text": "Partial Credit vs. Binary Success"
+      },
+      {
+        "id": "shared-rollout-path--envclient-lifecycle",
+        "text": "Shared Rollout Path & EnvClient Lifecycle"
+      },
+      {
+        "id": "supported-environment-domains",
+        "text": "Supported Environment Domains"
+      },
+      {
+        "id": "hybrid-action-space-gui--cli",
+        "text": "Hybrid Action Space (GUI + CLI)"
+      },
+      {
+        "id": "next-steps",
+        "text": "Next Steps"
+      }
+    ],
+    "content": "Platform & Core Concepts Home · Quickstart · Platform & Core Concepts · MAI-Gym-9B · Evaluation · Training MAI-Gym combines a unified cross-platform execution stack with a single executable task abstraction, a Hybrid Action Space (GUI + CLI) , and one shared rollout pipeline that keeps evaluation, trajectory collection, and online RL training consistent. For the formal treatment and empirical analysis, see the technical report. --- Platform Architecture Watch the full project demo or explore the interactive project website. Core Platform Capabilities - One Harness, One Rollout Path: Evaluation ( mai-gym eval ), trajectory collection ( mai-gym rollout ), and online RL training ( mai-gym train ) execute the exact same agent harness, prompt builder, action parser, and interaction loop—eliminating train–eval drift. - Unified Environment Management: EnvClient exposes a consistent lifecycle for allocation, observation, exact task reset, action execution, and verification while adapters preserve each benchmark's native initialization, action space, and evaluators (Extending MAI-Gym). - Cross-Platform Execution Stack (up to 20,000 Concurrent Envs): A single manager serves mobile, computer, and web instances across Kubernetes, Docker, physical devices, or remote endpoints: - Mobile: Containerized Android via ReDroid (avoiding nested virtualization on container clusters) with golden /data snapshot resets, plus local Docker/KVM emulators. - Computer: Isolated desktop VMs with strict guest-readiness checks, per-instance service ports and artifact caches, and automatic container recovery. - Web: Headless Chromium hosting live websites, self-hosted benchmark suites, and deterministic browser Mocked Apps . - Fault-Isolated, Elastic Rollouts: Asynchronous provisioning, warm pools, session leases, idempotent action IDs, operation deadlines, isolated verifier process groups, and object-storage ( oss ) screenshot transport keep infrastructure faults separate from the training signal. - Efficient Multimodal History: Window-wise history ( K = 10, O = 2 ) preserves reusable prompt prefixes for KV-cache hits while bounding active screenshots; sticky routing pins each trajectory to the inference engine holding its cache. - Verifiable Rewards & Visual Diagnostics: Programmatic state verifiers and VLM judges produce rewards, while the embedded Rust Trajectory Dashboard and its HTTP diagnosis API connect aggregate scores directly to live fleets, screenshots, model reasoning traces, and verifier outputs. - Online RL Integration: Feeds synchronous or asynchronous rollout trajectories directly into the bundled Slime runtime (Megatron-LM + SGLang), supporting GRPO, DAPO, GSPO, REINFORCE++, SAO, and PPO (Online RL Training). --- The Four-Stage Improvement Loop MAI-Gym is structured around a closed improvement cycle for GUI agents: 1. Evaluate — Run one command ( mai-gym eval ) across mobile, computer, and web benchmarks using the exact training harness (Evaluation Guide). 2. Diagnose — Inspect fleet health, benchmark matrices, and step-by-step screenshots in the Trajectory Dashboard, or query its HTTP diagnosis API with coding agents for automated failure analysis. 3. Synthesize — Construct resettable Mocked Apps (Mocked Apps: Real-World Clones and Novel Apps ), coherent cross-app initial states, and execution-validated tasks targeting weak capabilities (see the technical report). 4. Retrain — Launch joint multi-domain online RL ( mai-gym train ) with policy-adaptive task sampling and window-wise history packing (Online RL Training). --- Executable Tasks & Verification An environment E is an interactive software system such as an Android container, a desktop virtual machine, or a browser application. An executable task is a four-tuple: Component Definition :--- :--- Environment ( E ) Target execution runtime (mobile, computer, or web) exposed behind the uniform EnvClient interface. Initial State ( s₀ ) Reproducible application records, workspace files, accou"
+  },
+  {
+    "slug": "mai-gym-9b.html",
+    "title": "MAI-Gym-9B",
+    "group": "Overview",
+    "description": "Open 9B GUI agent trained with joint mobile–computer online RL: benchmark results, clone-to-real transfer highlights, and quick evaluation setup.",
+    "headings": [
+      {
+        "id": "benchmark-performance",
+        "text": "Benchmark Performance"
+      },
+      {
+        "id": "key-empirical-highlights",
+        "text": "Key Empirical Highlights"
+      },
+      {
+        "id": "running-mai-gym-9b",
+        "text": "Running MAI-Gym-9B"
+      },
+      {
+        "id": "download-and-evaluate-locally-auto-served-sglang",
+        "text": "Download and Evaluate Locally (Auto-Served SGLang)"
+      },
+      {
+        "id": "evaluate-against-an-openai-compatible-endpoint",
+        "text": "Evaluate Against an OpenAI-Compatible Endpoint"
+      },
+      {
+        "id": "training-reference",
+        "text": "Training Reference"
+      },
+      {
+        "id": "next-steps",
+        "text": "Next Steps"
+      }
+    ],
+    "content": "MAI-Gym-9B Home · Quickstart · Platform & Core Concepts · MAI-Gym-9B · Evaluation · Training MAI-Gym-9B is an open 9B-parameter GUI agent trained end to end with MAI-Gym. Initialized from Qwen3.5-9B with a mixed mobile–computer SFT warm-up followed by a single joint online reinforcement learning run ( GRPO ) on synthesized MobileWorld and OSWorld tasks, MAI-Gym-9B achieves state-of-the-art performance among open GUI agents under 10B parameters across mobile and desktop benchmarks. - Hugging Face Checkpoint: Tongyi-MAI/MAI-Gym-9B - Technical Report: arXiv:2610.20939 - Starter RL Config: configs/mai-gym-9b.yaml --- Benchmark Performance All results below report native benchmark metrics (%) from Section 4 of the technical report, evaluated through the shared MAI-Gym harness ( temperature=0.0 ). Gains show absolute percentage-point improvements over the base Qwen3.5-9B model. Domain Generalization Benchmark Qwen3.5-9B (Base) MAI-Gym-9B Gain :--- :--- :--- ---: ---: ---: Mobile Task OOD MobileWorld (GUI-only) 18.0 78.4 +60.4 Mobile Env OOD AndroidWorld 57.8 75.9 +18.1 Mobile Env OOD MobileGym (partial) 9.0 46.5 +37.5 Computer Task OOD OSWorld-Verified 41.8 76.2 +34.4 Computer Env OOD OSWorld 2.0 (binary / partial) 0.0 / 2.5 3.7 / 11.3 +3.7 / +8.8 Computer Env OOD MacAgentBench 20.7 41.3 +20.6 Computer Env OOD MyPCBench 6.5 15.2 +8.7 --- Key Empirical Highlights - Single Joint Policy Across Mobile & Computer: A single online RL run across mobile and desktop environments generalizes strongly not only to unseen tasks ( Task OOD : 78.4% on MobileWorld, 76.2% on OSWorld-Verified), but also to unseen operating systems and benchmark suites ( Env OOD : AndroidWorld, MobileGym, OSWorld 2.0, MacAgentBench, and MyPCBench). - Clone-to-Real Transfer (Mocked Apps → Physical Phone): Training with online RL inside the resettable Railway12306 Real-World Clone transfers directly to the real production Railway12306 app on a physical smartphone, raising task success from 28.8% → 48.1% without live production side effects during training. - Novel-App Adaptation (42 Novel Mocked Apps): On previously unseen browser-based Novel Apps (Mocked Apps gallery), online RL adapts rapidly to unfamiliar layouts and workflows from verifier reward alone. [!NOTE] For complete frontier & open-model baseline comparisons, SFT-vs-RL ablations, infrastructure scaling up to 20,000 concurrent environments, joint RL vs. model merging, and task-scaling curves, see Section 4 of the technical report. --- Running MAI-Gym-9B Download and Evaluate Locally (Auto-Served SGLang) Download the checkpoint from Hugging Face and let mai-gym eval launch and tear down SGLang automatically: Evaluate Against an OpenAI-Compatible Endpoint If Tongyi-MAI/MAI-Gym-9B is already served (e.g., via SGLang or vLLM): Training Reference Use configs/mai-gym-9b.yaml as a starting point for joint mobile and computer GRPO training. The Online RL Training guide explains how to prepare task pools and run the preset with the prebuilt Slime image. --- Next Steps - Run your first verified trial in minutes: Quickstart - Configure all 10 benchmarks and native metrics: Evaluation Guide - Explore Mocked Apps: Mocked Apps - Replay model predictions and verifier outcomes: Trajectory Dashboard"
+  },
+  {
+    "slug": "dashboard.html",
+    "title": "Trajectory Dashboard",
+    "group": "Overview",
+    "description": "Visual Control Room tour plus setup for the embedded Rust/SQLite dashboard server, indexer, and HTTP diagnosis API.",
+    "headings": [
+      {
+        "id": "control-room-visual-tour",
+        "text": "Control Room Visual Tour"
+      },
+      {
+        "id": "build-and-run",
+        "text": "Build and run"
+      },
+      {
+        "id": "http-diagnosis-api",
+        "text": "HTTP Diagnosis API"
+      },
+      {
+        "id": "configuration",
+        "text": "Configuration"
+      },
+      {
+        "id": "validation",
+        "text": "Validation"
+      },
+      {
+        "id": "license",
+        "text": "License"
+      }
+    ],
+    "content": "MAI-Gym Trajectory Dashboard The embedded Rust Control Room dashboard connects aggregate evaluation and online RL metrics directly to live fleet status and step-by-step trajectory artifacts. A separate indexer discovers and refreshes trajectories into a local SQLite index so metadata browsing never scans object storage on every request. The frontend and its plotting library are embedded directly in the server binary. The dashboard is designed to answer three diagnostic questions (Paper §3.3 & Appendix A.1): 1. Is the fleet healthy? Monitor instance capacity, usage history, throughput, and active session leases across managers. 2. Which tasks explain a score? Navigate from benchmark matrices and runs down to evaluation rollouts, training batches, and individual attempts (including automatic environment-failure reruns). 3. Where did an attempt go wrong? Replay episodes step by step, aligning each screenshot with drawn action coordinates, the model's reasoning trace, executed tool calls, and verifier outcomes so agent failures stand apart from infrastructure faults. --- Control Room Visual Tour Click any screenshot to zoom in: Trajectory Replay — Step-by-step screenshots with click/drag overlays, model reasoning traces, tool calls, and verifier criteria Run Explorer — Follow every run across RL rollout batches, trained subsets, and evaluation iterations Fleet Overview — Live capacity snapshot, active session leases, steps/sec throughput timeline, and session inventory Benchmark Matrix — Compare checkpoints across benchmark suites with pass@k scores and drill down to underlying runs --- Build and run Use a Rust toolchain that supports edition 2024. From src/dashboard-rs/ , build the two binaries and create a local copy of the configuration. Edit .state/dashboard.yaml before starting the processes. Set the manager's url to its HTTP address and traj root to the absolute directory where it recorded trajectories. For the first MobileWorld evaluation with an auto-started manager, this is the mobileworld/ directory next to the run's results.json . Find your evaluation output In the first terminal, prepare the index and start the server. In a second terminal, start the indexer from src/dashboard-rs/ with the same configuration and database. Open the dashboard once the indexer is running at http://127.0.0.1:6092/ . Select your run, task, and attempt to inspect screenshots, model outputs, actions, and verifier scores. A fresh index starts empty and fills as the indexer discovers trajectories. --- HTTP Diagnosis API The dashboard server exposes read-only JSON endpoints that support both the web UI and automated agent-driven diagnosis by coding agents (such as Claude Code or Codex): Endpoint Description :--- :--- GET /ready · GET /api/managers Server readiness and configured manager list. GET /api/overview · GET /api/health · GET /api/sessions · GET /api/history Fleet capacity, manager health, active leases, and utilization history. GET /api/benchmarks · GET /api/benchmarks/suite Aggregate benchmark suite tables and per-suite run breakdowns. GET /api/traj/info · GET /api/traj/runs · GET /api/traj/rollouts Trajectory root status, run list, and rollout/batch groups. GET /api/traj/tasks · GET /api/traj/list · GET /api/traj/results Per-task summaries, attempt listings (including reruns), and score exports. GET /api/traj/detail · GET /api/traj/screenshot Step-by-step trajectory details (model outputs, actions, verifier output) and step screenshots. --- Configuration The indexer and server share the SQLite database. The indexer takes a writer lock to prevent duplicate writers. Manager sampling, active attempts, discovery, and historical reconciliation advance independently with bounded storage concurrency. config.example.yaml uses local files. To browse object storage, set a manager's traj root to an oss://bucket/prefix URI and supply MAI GYM OSS ENDPOINT , MAI GYM OSS ACCESS KEY ID , and MAI GYM OSS ACCESS KEY SECRET through the server's environm"
+  },
+  {
+    "slug": "evaluation.html",
+    "title": "Evaluation Guide",
+    "group": "User Guide",
+    "description": "Run single- and multi-benchmark GUI agent evaluations with native verifiers, pass@N metrics, and automatic SGLang serving.",
+    "headings": [
+      {
+        "id": "supported-benchmarks--native-protocols",
+        "text": "Supported Benchmarks & Native Protocols"
+      },
+      {
+        "id": "prerequisites",
+        "text": "Prerequisites"
+      },
+      {
+        "id": "1-connect-the-model-and-backend",
+        "text": "1. Connect the model and backend"
+      },
+      {
+        "id": "2-run-one-task",
+        "text": "2. Run one task"
+      },
+      {
+        "id": "3-read-the-evaluation-outcome-and-replay-the-episode",
+        "text": "3. Read the evaluation outcome and replay the episode"
+      },
+      {
+        "id": "understanding-evaluation-metrics--automatic-retries",
+        "text": "Understanding evaluation metrics & automatic retries"
+      },
+      {
+        "id": "replay-in-the-trajectory-dashboard",
+        "text": "Replay in the trajectory dashboard"
+      },
+      {
+        "id": "4-add-osworld-verified",
+        "text": "4. Add OSWorld-Verified"
+      },
+      {
+        "id": "model-and-protocol-options",
+        "text": "Model and Protocol Options"
+      },
+      {
+        "id": "action-format-modelagent_variant",
+        "text": "Action format ( model.agent variant )"
+      },
+      {
+        "id": "screenshot-transport-observationsscreenshot_transport",
+        "text": "Screenshot transport ( observations.screenshot transport )"
+      },
+      {
+        "id": "openai-compatible-api-override",
+        "text": "OpenAI-compatible API override"
+      },
+      {
+        "id": "local-hugging-face-checkpoint-auto-served-with-sglang",
+        "text": "Local Hugging Face checkpoint (auto-served with SGLang)"
+      },
+      {
+        "id": "next-steps",
+        "text": "Next Steps"
+      }
+    ],
+    "content": "Evaluation Guide Home · Quickstart · Evaluation · Training · Rollout · Kubernetes · Concepts Run a single MobileWorld task, inspect the native evaluation outcome, replay the episode in the trajectory dashboard, and extend the same configuration to multi-benchmark runs (such as MobileWorld + OSWorld-Verified or all supported benchmarks). For lightweight local browser evaluation without Docker or VMs, see Mocked Apps ( --benchmarks mocked-apps ). [!TIP] Prefer agent-assisted setup? Use the coding-agent evaluation prompt in Claude Code, Codex, or Cursor to automate backend checks and trial runs. --- Supported Benchmarks & Native Protocols mai-gym eval preserves each benchmark's native step limit, verifier, and primary evaluation metric (Paper Table 3). By default, evaluation runs with deterministic decoding ( temperature=0.0 ) and --trials 3 , reporting both pass@n ( pass at n ) and pass^n ( pass all n ). Domain Benchmark CLI ID ( --benchmarks ) Tasks Max Steps Native Metric Benchmark Guide :--- :--- :--- ---: :--- :--- :--- Mobile MobileWorld (GUI-only) mobileworld 117 100 success rate Mobile Benchmarks Mobile AndroidWorld androidworld 116 Task-dependent success rate Mobile Benchmarks Mobile MobileGym mobilegym 256 100 partial score (binary + partial) Mobile Benchmarks Computer OSWorld-Verified osworld-verified 361 100 success rate Computer Benchmarks Computer OSWorld 2.0 osworld-2 108 500 binary and partial Computer Benchmarks Computer MacAgentBench macagentbench 676 50 success rate Computer Benchmarks Computer MyPCBench mypcbench 184 100 perfect task rate Computer Benchmarks Web WebVoyager webvoyager 643 15 success rate Web Benchmarks Web Online-Mind2Web onlinemind2web 123 50 success rate Web Benchmarks Web WebArena webarena 812 30 success rate Web Benchmarks Web Mocked Apps (bundled) mocked-apps 837 Task-dependent binary and partial Mocked Apps --- Prerequisites - MAI-Gym CLI installed on the evaluation host (Install the CLI). - MobileWorld Android backend with a working snapshot and native verifier, healthy and exposing your target task (Prepare and check the backend). - Vision model available either as: - an OpenAI-compatible API (model ID, API base URL, and OPENAI API KEY if required), or - a local Hugging Face checkpoint on a GPU host with SGLang installed. --- 1. Connect the model and backend From the repository root, copy the sample configs to a working directory outside the checkout. Keep both files in the same directory so the relative manager config: mobileworld.yaml path resolves automatically. Update the two files for your environment: File Key fields to configure :--- :--- eval.yaml Set model.name to the served model ID and model.base url to your API base (e.g., http://127.0.0.1:8000/v1 ). Credentials are read via env/OPENAI API KEY . Optionally set model.agent variant if your model uses a specific action format, and observations.screenshot transport ( inline for small local runs, oss for large multi-node fleets). mobileworld.yaml Set devices[0].connection.attach.backends[0].url to your Android backend URL (e.g., http://127.0.0.1:6800 ). The sample manager listens on port 8090 . [!NOTE] Backend vs. Manager: The backend runs the Android device/emulator. The manager leases devices to the runner, resets state per task, and records trajectories. When manager config: mobileworld.yaml is set, mai-gym eval starts a local manager automatically for the run. If you already run a persistent manager (for example, a Kubernetes fleet), replace manager config with manager url . --- 2. Run one task Start with SetAlarmTask , a MobileWorld Clock task with a native state verifier (upstream task definition). Confirm it is registered on your backend (or query GET /tasks on an existing MAI-Gym manager): If your manifest differs, pick any GUI-only task ID from the response. Add tasks under benchmarks.mobileworld in $EVAL DIR/eval.yaml : [!NOTE] tasks selects which tasks to run (omit tasks to run all discovered tasks for that benchmark)."
+  },
+  {
+    "slug": "training.html",
+    "title": "Online RL Training",
+    "group": "User Guide",
+    "description": "Train GUI agents with online RL (GRPO, DAPO, GSPO, REINFORCE++, SAO, PPO) using policy-adaptive sampling and window-wise packing.",
+    "headings": [
+      {
+        "id": "how-mai-gym-online-rl-works",
+        "text": "How MAI-Gym Online RL Works"
+      },
+      {
+        "id": "supported-rl-algorithms-algorithmname",
+        "text": "Supported RL Algorithms ( algorithm.name )"
+      },
+      {
+        "id": "prerequisites--presets",
+        "text": "Prerequisites & Presets"
+      },
+      {
+        "id": "1-prepare-inputs-on-the-host",
+        "text": "1. Prepare inputs on the host"
+      },
+      {
+        "id": "model-checkpoint",
+        "text": "Model checkpoint"
+      },
+      {
+        "id": "task-pools-jsonl-or-parquet",
+        "text": "Task pools (JSONL or Parquet)"
+      },
+      {
+        "id": "adapt-trainyaml",
+        "text": "Adapt train.yaml"
+      },
+      {
+        "id": "2-start-the-slime-container-host",
+        "text": "2. Start the Slime container (Host)"
+      },
+      {
+        "id": "3-configure-the-environment-container",
+        "text": "3. Configure the environment (Container)"
+      },
+      {
+        "id": "4-launch-training--locate-checkpoints-container",
+        "text": "4. Launch training & locate checkpoints (Container)"
+      },
+      {
+        "id": "start-or-connect-to-ray",
+        "text": "Start or connect to Ray"
+      },
+      {
+        "id": "output-directory-layout",
+        "text": "Output directory layout"
+      },
+      {
+        "id": "resuming-from-a-checkpoint",
+        "text": "Resuming from a Checkpoint"
+      },
+      {
+        "id": "next-steps",
+        "text": "Next Steps"
+      }
+    ],
+    "content": "Online RL Training Guide Home · Quickstart · Evaluation · Training · Rollout · Kubernetes · Concepts Train GUI agents with online reinforcement learning using a single YAML configuration and the bundled Slime runtime ( ghcr.io/tongyi-mai/mai gym slime:v1 , combining Megatron-LM for training with SGLang for rollouts). Rollout workers execute GUI tasks across mobile, computer, and web managers on the same harness used for evaluation, collect deterministic verifier rewards, update policy weights, and export Hugging Face checkpoints directly to your host. [!TIP] Prefer agent-assisted setup? Use the coding-agent training prompt in Claude Code, Codex, or Cursor. Looking for a minimal 4-GPU, single-task verification run first? Start with the README training quickstart using configs/train-quickstart.yaml . --- How MAI-Gym Online RL Works Long, screenshot-heavy GUI trajectories introduce three challenges beyond text-only RL. MAI-Gym addresses them directly in the rollout and training pipeline (Paper §3.5): 1. Policy-Adaptive Task Sampling ( sampling. ): Group-based algorithms such as GRPO receive zero gradient when all G attempts on a task succeed or all fail. Before each round, the scheduler tracks per-task success rates: unseen and frontier tasks receive the full algorithm.group size ( G = 8 ) attempts, while never-solved tasks and mastered tasks (success rate ≥ η , success threshold: 0.8 ) receive small nonzero probe budgets ( fail budget , mastered budget ) so they are rechecked as the policy evolves. Advantages are computed only after all attempts in a group finish, avoiding completion-order or trajectory-length bias. 2. Window-Wise History & Packing ( history. ): Instead of dropping the oldest screenshot every step (which invalidates the KV cache on every turn) or packing an entire 50–100-step multimodal trajectory into one sequence (which exceeds GPU memory), MAI-Gym groups turns into windows of K steps ( window size: 10 ) overlapping by O steps ( overlap: 2 ). Within a window, observations are appended for KV-cache reuse; at window boundaries, older screenshots collapse to text placeholders while text history stays intact. During training, each window becomes one causal training sample with loss applied only to new turns (e.g., turns 1–10 in window 1, turns 11–18 in window 2 with turns 9–10 as context), replaying exact rollout tokens ( token native history: true ) and falling back to step-wise samples if prefixes diverge. Screenshots are decoded lazily per micro-batch with selective vision-tower activation recomputation. 3. Train–Rollout Consistency: Launch-time checks catch multimodal preprocessing mismatches, and during training MAI-Gym compares trainer and rollout log-probabilities on every generated token, monitoring the k₃ KL divergence estimator to immediately surface kernel corruption, misaligned packed histories, or engine/trainer skew. Supported RL Algorithms ( algorithm.name ) Algorithm Value Notes :--- :--- :--- GRPO (default) grpo Group-normalized terminal reward baseline ( group size = 2 ), per-token clipped surrogate loss, optional KL loss term ( kl loss coef ). Used for MAI-Gym-9B. DAPO dapo Decoupled clip / dynamic sampling variant built on the GRPO estimator. GSPO gspo Sequence-level importance-ratio policy optimization. REINFORCE++ reinforce++ Critic-free baseline advantage estimator. PPO ppo Clipped policy optimization with a learned value function. SAO sao Asynchronous single-rollout updates with a learned value critic (requires trainer.entrypoint ). --- Prerequisites & Presets - Linux host with NVIDIA GPUs and Docker GPU support ( --gpus all ). - Complete Hugging Face checkpoint (weights + tokenizer files) for the Qwen3.5-9B architecture (e.g., Qwen/Qwen3.5-9B or Tongyi-MAI/MAI-Gym-9B). For reproducing MAI-Gym-9B, the paper starts from an SFT warm-up checkpoint trained on mixed mobile and computer trajectories (Paper §4.1). - At least one verified benchmark manager reachable from the training container. Ver"
+  },
+  {
+    "slug": "rollout.html",
+    "title": "Rollout CLI",
+    "group": "User Guide",
+    "description": "Run direct task rollouts for agent debugging, trajectory collection, multi-pass execution, and controlled retries.",
+    "headings": [
+      {
+        "id": "when-to-use-rollout-vs-eval-vs-train",
+        "text": "When to use rollout vs. eval vs. train"
+      },
+      {
+        "id": "configuration",
+        "text": "Configuration"
+      },
+      {
+        "id": "running-rollouts",
+        "text": "Running Rollouts"
+      },
+      {
+        "id": "passes-scoring-retries-and-resume",
+        "text": "Passes, Scoring, Retries, and Resume"
+      },
+      {
+        "id": "output--trajectory-inspection",
+        "text": "Output & Trajectory Inspection"
+      }
+    ],
+    "content": "Rollout CLI Home · Quickstart · Evaluation · Training · Rollout · Kubernetes · Concepts mai-gym rollout runs GUI tasks directly for agent debugging, trajectory collection, and controlled multi-pass execution. It records screenshots, actions, and verifier scores on the exact same task runner used by mai-gym eval . When to use rollout vs. eval vs. train Command Best for :--- :--- mai-gym rollout Direct single-environment trajectory collection, custom agent debugging, --set overrides, and fine-grained retry/resume control. mai-gym eval Standardized single- or multi-benchmark evaluations with native benchmark defaults, auto-served SGLang, and cross-benchmark summaries (Evaluation Guide). mai-gym train Updating policy weights via online RL with Slime (RL Training Guide). --- Configuration Prepare the target backend and native verifier using the relevant benchmark guide (Benchmarks Overview · skills/envs.md ), then adapt a local copy of configs/rollout.yaml : Section What it configures :--- :--- agent Policy type ( type ), served model ID ( model name ), OpenAI-compatible endpoint ( base url ), credential env reference ( api key: env/... ), and step budget ( max steps ). rollout Manager URL ( manager url ), env type , task filters, concurrency ( num envs ), evaluation mode ( built in , llm judge , both ), and screenshot transport. manager & devices Local manager and device backend definitions used when auto-starting a manager. [!IMPORTANT] Keep machine-specific configuration files outside the repository checkout and supply secrets only via runtime environment variables (for example, env/OPENAI API KEY ). --- Running Rollouts From the repository root, with your model endpoint and benchmark backend ready: Filter specific registered task IDs and override concurrency: [!NOTE] Use --manager-url (alias: --server ) to override the manager URL at runtime. When the resolved manager URL is local and unreachable, mai-gym rollout automatically starts a manager for the lifetime of the run using the supplied YAML configuration. --- Passes, Scoring, Retries, and Resume Option Behavior :--- :--- --pass-n N Run N independent passes (default: 1 ). Multi-pass runs write aggregate results.json and summary.md reports. --evaluation-mode MODE Choose built in (default native verifier), llm judge , or both (judge modes require a judge-capable manager). --retry-until-scored Re-run only unscored attempts ( score is None ) caused by environment failures until all cells are scored or --max-retry-rounds is reached. --max-retry-rounds N Cap retry rounds (excluding the initial round); 0 allows unbounded retries when --retry-until-scored is enabled. --exact-train-id Use rollout.train id verbatim without a random suffix. Set it to a prior run's printed ID to resume that run. --no-resume Re-run every requested task even when a saved result.txt already exists. --tasks-dir PATH --domains DOMAINS Discover generated OSWorld-style task files and optionally filter comma-separated domains. --set KEY=VALUE Override any YAML field by dotted path (repeatable, e.g., --set agent.model name=foo ). Explicit CLI flags take precedence. List all available flags and defaults: --- Output & Trajectory Inspection At startup, mai-gym rollout prints the resolved train id and Run log root . - Aggregate reports (multi-pass or --retry-until-scored ) distinguish native full success, partial scores, and unscored technical failures. - Visual replay: Point the Rust trajectory dashboard at the printed trajectory root to inspect screenshots, model reasoning traces, executed actions, and verifier scores."
+  },
+  {
+    "slug": "kubernetes.html",
+    "title": "Kubernetes Fleets",
+    "group": "User Guide",
+    "description": "Scale MobileWorld environments across Kubernetes nodes with SandboxSet warm pools, session leasing, and demand autoscaling.",
+    "headings": [
+      {
+        "id": "1-verify-cluster-prerequisites",
+        "text": "1. Verify cluster prerequisites"
+      },
+      {
+        "id": "2-start-the-manager-and-verify-readiness",
+        "text": "2. Start the manager and verify readiness"
+      },
+      {
+        "id": "3-run-an-evaluation-against-the-fleet",
+        "text": "3. Run an evaluation against the fleet"
+      },
+      {
+        "id": "capacity-acquisition-modes",
+        "text": "Capacity Acquisition Modes"
+      },
+      {
+        "id": "demand-based-fleet-autoscaling",
+        "text": "Demand-based fleet autoscaling"
+      },
+      {
+        "id": "retiring-a-fixed-pool",
+        "text": "Retiring a Fixed Pool"
+      }
+    ],
+    "content": "Kubernetes Fleets (MobileWorld) Home · Quickstart · Evaluation · Training · Rollout · Kubernetes · Concepts Scale a single MAI-Gym manager to lease Android environments across multiple Kubernetes nodes. Evaluation and RL runners communicate exclusively with the manager, while the manager provisions sandboxes and routes requests directly to each MobileWorld backend's pod IP. The walkthrough below provisions a 2-session warm pool and evaluates SetAlarmTask against it. --- 1. Verify cluster prerequisites The Kubernetes launcher uses the Alibaba Cloud ACS sandbox template API and agents.kruise.io/v1alpha1 custom resources ( Sandbox , SandboxSet , and SandboxClaim ). Ensure your cluster has: - A compatible agents.kruise.io controller installed. - A sandbox template that boots the MobileWorld emulator, restores Android assets, and serves the backend on a known port (MobileWorld image & snapshot preparation). - Network reachability from the manager host to pod IPs on the backend port. Verify permissions using the kubeconfig the manager will run with (replace mai-gym-eval with a dedicated namespace for this fleet): --- 2. Start the manager and verify readiness Save the configuration below as fleet.yaml on the manager host. Replace with your cluster's template ID and set service port to the backend port inside the pod . - pool size sets the warm replica count maintained by the SandboxSet . - max sessions caps the total sessions registered on the manager. - auto prewarm: true claims backends at startup so runners can immediately discover tasks. - By default, the manager uses /.kube/config ; set launch.kubeconfig to use another kubeconfig file. Start the manager: In another terminal on the manager host, verify that pods are claimed, by device.mobileworld-fleet.ready reaches 2 , and /tasks includes SetAlarmTask : [!TIP] If sessions remain unready, inspect SandboxClaim status and pod events in mai-gym-eval ( kubectl -n mai-gym-eval describe pods ). --- 3. Run an evaluation against the fleet Keep your model configuration from the Evaluation Guide and point benchmarks.mobileworld.manager url to the fleet manager: [!NOTE] If the runner executes on a different machine than the manager, bind manager.host appropriately and pass the manager's reachable address in manager url . For larger suites, increase num envs up to your manager's session capacity. --- Capacity Acquisition Modes Choose launch.acquisition based on your workload pattern: Mode Best for How backends are acquired :--- :--- :--- direct Occasional runs that can tolerate cold-start time Creates an individual Sandbox on demand from template id . pool Repeated evaluations or high-throughput RL training Claims ready backends from a named SandboxSet maintained pre-warmed by the controller. adopt Pre-provisioned backends in a dedicated namespace Discovers eligible running, unowned sandboxes with a pod IP (capacity bounded by available instances). Demand-based fleet autoscaling To scale warm pool capacity automatically based on active session demand, combine acquisition: pool with lazy acquire and fleet autoscale (using sessions per backend: 1 ): Monitor live demand and allocation through the manager API: - GET /fleet/requests — currently requested fleet capacity - GET /sessions — active, ready, and leased session counts --- Retiring a Fixed Pool [!WARNING] Stopping the manager process alone can leave SandboxSet , SandboxClaim , and Sandbox resources running in the cluster for reuse on restart. Follow this checklist when decommissioning a fleet: 1. Wait for active evaluation or training jobs to finish. 2. Confirm summary.leased is 0 in curl -fsS http://127.0.0.1:8090/sessions . 3. Stop the mai-gym serve process. 4. Delete the SandboxSet and any remaining SandboxClaim / Sandbox resources in the dedicated namespace ( mai-gym-eval )."
+  },
+  {
+    "slug": "environments.html",
+    "title": "Benchmarks Overview",
+    "group": "Benchmarks & Environments",
+    "description": "Overview of all 10 supported GUI benchmarks across Mobile, Computer, and Web alongside Mocked Apps, native metrics, and reproducible setup skills.",
+    "headings": [
+      {
+        "id": "supported-suites-at-a-glance",
+        "text": "Supported Suites at a Glance"
+      },
+      {
+        "id": "domain-guides",
+        "text": "Domain Guides"
+      },
+      {
+        "id": "reproducible-setup--coding-agent-skills",
+        "text": "Reproducible Setup & Coding-Agent Skills"
+      },
+      {
+        "id": "next-steps",
+        "text": "Next Steps"
+      }
+    ],
+    "content": "Benchmarks Overview MAI-Gym integrates 10 standard GUI benchmarks spanning Mobile , Computer , and Web environments alongside Mocked Apps ( Real-World Clones and 42 bundled browser-based Novel Apps ). Every environment is exposed behind the same EnvClient interface and evaluated with the exact harness used for training, while preserving each benchmark's native step budget, action semantics, and verifier. --- Supported Suites at a Glance Use the CLI ID in eval.yaml under benchmarks: and on the command line via mai-gym eval --benchmarks . Domain Benchmark / Suite CLI ID Tasks Max Steps Verifier Type Native Metric Guide Setup Skill :--- :--- :--- ---: :--- :--- :--- :--- :--- Mobile MobileWorld mobileworld 117 100 Programmatic state success rate Mobile mobileworld.md Mobile AndroidWorld androidworld 116 Task-dependent Programmatic state success rate Mobile androidworld.md Mobile MobileGym mobilegym 256 100 Programmatic state partial score (binary + partial) Mobile mobilegym.md Computer OSWorld-Verified osworld-verified 361 100 Programmatic state success rate Computer osworld.md Computer OSWorld 2.0 osworld-2 108 500 Programmatic state binary and partial Computer osworld 2.md Computer MacAgentBench macagentbench 676 50 Programmatic checkpoints success rate Computer macagentbench.md Computer MyPCBench mypcbench 184 100 Rubric VLM judge perfect task rate Computer mypcbench.md Web WebVoyager webvoyager 643 15 VLM trajectory judge success rate Web webvoyager.md Web Online-Mind2Web onlinemind2web 123 50 VLM judge ( WebJudge ) success rate Web onlinemind2web.md Web WebArena webarena 812 30 Programmatic state success rate Web webarena.md Web Mocked Apps (bundled) mocked-apps 837 Task-dependent Programmatic state binary and partial Mocked Apps configs/mocked-apps.yaml --- Domain Guides - Mocked Apps — Resettable Real-World Clones and 42 bundled browser-based Novel Apps (837 tasks with native verifiers and reference oracle trajectories). The fastest way to evaluate or train locally with zero Docker/KVM setup. - Mobile Benchmarks — MobileWorld , AndroidWorld , and MobileGym : Android container/emulator and mobile-viewport suites covering cross-app workflows, system settings, and Chinese/English touch UIs. - Computer Benchmarks — OSWorld-Verified , OSWorld 2.0 , MacAgentBench , and MyPCBench : Ubuntu and macOS desktop VM suites utilizing MAI-Gym's Hybrid Action Space (GUI + CLI) . - Web Benchmarks — WebVoyager , Online-Mind2Web , and WebArena : live-web and self-hosted multi-site browser benchmarks with native VLM judges and programmatic web evaluators. --- Reproducible Setup & Coding-Agent Skills GUI benchmarks are sensitive to upstream source revisions, OS images, application snapshots, and task manifests. MAI-Gym separates benchmark runtime isolation (each benchmark runs in its own worker process/interpreter or container with pinned assets) from the shared mai-gym runner and manager: - Immutable profile locks: Native workers verify source commits, task manifest SHA-256 hashes, Docker image digests, and VM/browser asset checksums before provisioning. - Single-task reset validation: Before scaling to a full benchmark or RL fleet, validate one real manifest task end to end—confirming full native success, clean episode reset, and absence of residual state. - Judge isolation: Benchmarks that require a VLM trajectory judge ( MyPCBench , WebVoyager , Online-Mind2Web ) configure the judge endpoint and API key environment variable independently from the evaluated agent model. [!TIP] Full preparation instructions & coding-agent skills: Detailed host checklists, JSON profile lock schemas, worker templates, and reset verification protocols live in skills/envs.md and the per-benchmark guides under skills/envs/ . You can read them directly or point Claude Code, Codex, or Cursor at skills/README.md to automate setup. --- Next Steps - Run a single- or multi-benchmark evaluation: Evaluation Guide - Try the zero-Docker local suite first: Mocked Apps - Scal"
+  },
+  {
+    "slug": "mocked-apps.html",
+    "title": "Mocked Apps",
+    "group": "Benchmarks & Environments",
+    "description": "Self-contained, resettable Real-World Clones and 42 bundled Novel Apps (837 tasks) runnable via --benchmarks mocked-apps with native programmatic verifiers.",
+    "headings": [
+      {
+        "id": "evaluate-a-task",
+        "text": "Evaluate a task"
+      },
+      {
+        "id": "use-the-manager-for-training",
+        "text": "Use the manager for training"
+      },
+      {
+        "id": "app-files",
+        "text": "App files"
+      }
+    ],
+    "content": "Mocked Apps In MAI-Gym, Mocked Apps are self-contained, resettable application environments that let GUI agents practice and be evaluated thousands of times without external side effects. Mocked Apps comprise two categories: 1. Real-World Clones — Resettable clones of production applications studied in the technical report (spanning travel, banking, ride-hailing, food delivery, local services, and social media) for safe practice and clone-to-real transfer (side-by-side comparison). 2. Novel Apps — 42 original browser-based HTML5 applications ( 837 verified tasks , deterministic programmatic verifiers, and reference oracle action sequences) bundled in resources/novel-apps/ to evaluate adaptation to unfamiliar interfaces through reward alone (interactive gallery). Open any bundled app's index.html directly in a browser—for example, Squirrel Eats to browse restaurants and place an order—or browse all 42 apps. --- Evaluate a task Run these commands from the MAI-Gym repository root. Set MODEL URL to an OpenAI-compatible vision endpoint and MODEL NAME to its served model ID. If the endpoint requires authentication, export OPENAI API KEY . The preset starts the web backend and manager locally. It runs kestrel bank/T01 freeze in Chromium, verifies the card state, and writes the evaluation outcome and weighted partial score to the printed results.json . Select other tasks by their / in the preset: Task IDs, instructions, and step budgets are listed in each app's tasks.json . Omit tasks to evaluate all 837 tasks. Each episode resets to its declared seed and initial state. Use the manager for training Start the same environment manager with uv run mai-gym serve --config configs/mocked-apps.yaml . In your training task pool, include rows with env type: \"mocked-apps\" : Set model.agent variant: mai gym computer use in the training configuration. Under tasks , point the pool at the running manager. The address below assumes the trainer can reach the manager on loopback. Run mai-gym train --config train.yaml inside the training container. Online RL training guide App files Each app directory includes three files, and the directory name is the app ID. Keep them together when copying an app. File Contents --- --- index.html The interactive app, including its interface and state tasks.json Task instructions, initial conditions, and success criteria oracle.json Reference actions keyed by task ID The bundled Novel Apps collection contains 837 tasks across 42 apps. To try a task or watch a reference solution in the project demo, open the interactive gallery. Released under the MIT License."
+  },
+  {
+    "slug": "envs/mobile.html",
+    "title": "Mobile Benchmarks",
+    "group": "Benchmarks & Environments",
+    "description": "Overview of MobileWorld, AndroidWorld, and MobileGym: task scope, Android/mobile runtimes, verification protocols, and MAI-Gym-9B results.",
+    "headings": [
+      {
+        "id": "mobileworld",
+        "text": "MobileWorld"
+      },
+      {
+        "id": "running-in-mai-gym",
+        "text": "Running in MAI-Gym"
+      },
+      {
+        "id": "androidworld",
+        "text": "AndroidWorld"
+      },
+      {
+        "id": "running-in-mai-gym-1",
+        "text": "Running in MAI-Gym"
+      },
+      {
+        "id": "mobilegym",
+        "text": "MobileGym"
+      },
+      {
+        "id": "running-in-mai-gym-2",
+        "text": "Running in MAI-Gym"
+      },
+      {
+        "id": "next-steps",
+        "text": "Next Steps"
+      }
+    ],
+    "content": "Mobile Benchmarks MAI-Gym evaluates mobile GUI agents across three standard Android and mobile-viewport benchmarks— MobileWorld , AndroidWorld , and MobileGym —spanning both in-distribution/task-OOD Android container suites and out-of-distribution mobile environments. All three run through MAI-Gym's shared mobile touch harness ( click , double click , long press , drag / swipe , type , open , system button , wait , terminate ). [!TIP] Looking for detailed host checklists, immutable profile lock JSONs, or coding-agent bring-up prompts? Each benchmark below links directly to its full setup skill under skills/envs/ and skills/envs.md . --- MobileWorld MobileWorld (upstream repository) is a realistic Android benchmark featuring rich multi-app mobile tasks (alarms, messaging, notes, email, calendar, shopping, and system utilities) backed by deterministic state initialization and native evaluators. In MAI-Gym, MobileWorld (GUI-only) serves as the primary mobile evaluation suite and scales seamlessly from a single local Docker/KVM container to 20,000+ concurrent ReDroid pods on Kubernetes. Property Value :--- :--- CLI ID ( --benchmarks ) mobileworld Tasks & Scope 117 GUI-only tasks across everyday Android applications Step Budget 100 interaction steps Verification & Metric Native programmatic state verifier · success rate Runtime Stack Containerized Android emulator (Docker/KVM locally) or ReDroid on Kubernetes MAI-Gym-9B Result 78.4% (+60.4 over Qwen3.5-9B base · Task OOD) Running in MAI-Gym Start a MobileWorld backend (see Quickstart or Kubernetes Fleets), point mobileworld.yaml at its URL, and evaluate: - Host requirements: Linux x86 64 with Docker, KVM, and disk space for Android snapshots (or a remote Kubernetes pool). - Detailed setup & agent skill: skills/envs/mobileworld.md · release.json --- AndroidWorld AndroidWorld (upstream repository) is a widely adopted dynamic Android benchmark built on Google's Android Emulator (Pixel 6, API 33 AVD). Tasks are procedurally parameterized with seeds across 20 real Android applications (Contacts, Clock, Calendar, Files, Markor, OsmAnd, Simple Draw, Expense trackers, etc.) and verified programmatically by inspecting live Android SQLite databases, files, and device state. In MAI-Gym, AndroidWorld evaluates Environment OOD generalization from MobileWorld/OSWorld training to an unseen Android stack. Property Value :--- :--- CLI ID ( --benchmarks ) androidworld Tasks & Scope 116 seeded Android tasks across 20 real apps Step Budget Task-dependent (derived from AndroidWorld's native complexity allocator) Verification & Metric Native programmatic state verifier ( is successful ) · success rate Runtime Stack Pixel 6 API-33 AVD via Android Emulator ( adb + gRPC/console ports, KVM) MAI-Gym-9B Result 75.9% (+18.1 over Qwen3.5-9B base · Env OOD) Running in MAI-Gym Configure an isolated AndroidWorld worker pointing at your pinned AVD and task manifest, then run: - Host requirements: Linux x86 64 with KVM, Android SDK/emulator, Pixel 6 API-33 AVD, adb , and dedicated console/gRPC ports. - Detailed setup & agent skill: skills/envs/androidworld.md · release.json --- MobileGym MobileGym (upstream repository) is a browser-hosted suite of high-fidelity simulated Chinese mobile apps ( Bench256 ) running inside Playwright Chromium at a native mobile viewport ( 360×800 logical , 3× DPR → 1080×2400 screenshots ). Because it requires no Android VM or KVM, MobileGym offers lightweight parallel execution while testing rich bilingual/Chinese UI grounding, multi-step workflows, and partial-credit state progression. Property Value :--- :--- CLI ID ( --benchmarks ) mobilegym Tasks & Scope 256 tasks ( Bench256 ) across simulated mobile apps with companion media assets Step Budget 100 interaction steps Verification & Metric Native programmatic state verifier · partial score (reports both binary & partial) Runtime Stack Playwright Chromium + Node-built static frontend (no KVM required; CJK fonts needed) MAI-Gym-9B Result"
+  },
+  {
+    "slug": "envs/computer.html",
+    "title": "Computer Benchmarks",
+    "group": "Benchmarks & Environments",
+    "description": "Overview of OSWorld-Verified, OSWorld 2.0, MacAgentBench, and MyPCBench: desktop VM suites, Hybrid Action Space (GUI + CLI), and evaluation protocols.",
+    "headings": [
+      {
+        "id": "osworld-verified",
+        "text": "OSWorld-Verified"
+      },
+      {
+        "id": "running-in-mai-gym",
+        "text": "Running in MAI-Gym"
+      },
+      {
+        "id": "osworld-20",
+        "text": "OSWorld 2.0"
+      },
+      {
+        "id": "running-in-mai-gym-1",
+        "text": "Running in MAI-Gym"
+      },
+      {
+        "id": "macagentbench",
+        "text": "MacAgentBench"
+      },
+      {
+        "id": "running-in-mai-gym-2",
+        "text": "Running in MAI-Gym"
+      },
+      {
+        "id": "mypcbench",
+        "text": "MyPCBench"
+      },
+      {
+        "id": "running-in-mai-gym-3",
+        "text": "Running in MAI-Gym"
+      },
+      {
+        "id": "next-steps",
+        "text": "Next Steps"
+      }
+    ],
+    "content": "Computer Benchmarks MAI-Gym integrates four desktop operating system benchmarks— OSWorld-Verified , OSWorld 2.0 , MacAgentBench , and MyPCBench —covering Ubuntu Linux and macOS environments across office suites, browsers, IDEs, file systems, media tools, and multi-service developer workflows. On all computer benchmarks, MAI-Gym enables its Hybrid Action Space (GUI + CLI) , allowing agents to seamlessly combine pyautogui visual interactions with direct shell execution. [!TIP] Looking for detailed VM/image pinning, immutable profile lock JSONs, or coding-agent bring-up prompts? Each benchmark below links directly to its full setup skill under skills/envs/ and skills/envs.md . --- OSWorld-Verified OSWorld-Verified (upstream repository) is the standard verified benchmark for open-ended Ubuntu desktop computer use, spanning LibreOffice (Calc, Writer, Impress), Chrome, GIMP, VS Code, Thunderbird, VLC, OS file management, and multi-app workflows. Each task boots from a reproducible Ubuntu VM snapshot and is graded deterministically by native Python evaluators inspecting application files, settings, and outputs. Property Value :--- :--- CLI ID ( --benchmarks ) osworld-verified Tasks & Scope 361 verified Ubuntu desktop tasks across productivity, creative, web, and OS apps Step Budget 100 interaction steps Action Space Hybrid GUI ( pyautogui ) + CLI ( ) Verification & Metric Native programmatic state evaluator · success rate Runtime Stack Ubuntu desktop VM (Docker/KVM with pinned QCOW2 base + disposable overlays) MAI-Gym-9B Result 76.2% (+34.4 over Qwen3.5-9B base · Task OOD) Running in MAI-Gym Start an OSWorld-Verified manager ( mai-gym serve ) and evaluate directly—or pair it with MobileWorld in a single command (see Add OSWorld-Verified): - Host requirements: Linux x86 64 , Docker, KVM, RAM for an Ubuntu desktop VM, and disk space for the base QCOW2 + private overlays. - Detailed setup & agent skill: skills/envs/osworld.md · release.json --- OSWorld 2.0 OSWorld 2.0 (upstream repository, v2.1 profile) raises the difficulty bar with long-horizon, multi-step professional desktop workflows backed by supporting local websites and GitLab services. Tasks allow up to 500 steps and grade multi-criterion progress via both strict full-completion binary indicators and weighted partial scores. Property Value :--- :--- CLI ID ( --benchmarks ) osworld-2 Tasks & Scope 108 long-horizon desktop + multi-service tasks (Ubuntu VM + local web/GitLab services) Step Budget 500 interaction steps Action Space Hybrid GUI ( pyautogui ) + CLI ( ) Verification & Metric Native programmatic class evaluators · binary and partial Runtime Stack Ubuntu desktop VM (Docker/KVM) + pinned supporting web & GitLab services MAI-Gym-9B Result 3.7% binary / 11.3% partial (+3.7 / +8.8 over Qwen3.5-9B base · Env OOD) Running in MAI-Gym - Host requirements: Linux x86 64 , Docker/KVM, Ubuntu guest QCOW2, and dedicated ports for matching task/web/GitLab services. - Detailed setup & agent skill: skills/envs/osworld 2.md · release.json --- MacAgentBench MacAgentBench (upstream repository) evaluates desktop GUI agents in a macOS environment, testing cross-OS generalization beyond Linux desktops (Finder, macOS system settings, native macOS apps, shortcuts, and workflows). Tasks are verified via native macOS checkpoint evaluators executed over isolated guest sessions. Property Value :--- :--- CLI ID ( --benchmarks ) macagentbench Tasks & Scope 676 macOS desktop tasks across native apps and system workflows Step Budget 50 interaction steps Action Space Hybrid GUI + CLI Verification & Metric Native macOS checkpoint evaluators · success rate Runtime Stack KVM-hosted macOS guest VM with per-episode QCOW2 overlays and SSH control MAI-Gym-9B Result 41.3% (+20.6 over Qwen3.5-9B base · Env OOD) Running in MAI-Gym - Host requirements: KVM-capable VM host, pinned macOS disk & BaseSystem images, SSH access to the guest, and memory/disk headroom for writable overlays. - Detailed setup & agent skill:"
+  },
+  {
+    "slug": "envs/web.html",
+    "title": "Web Benchmarks",
+    "group": "Benchmarks & Environments",
+    "description": "Overview of WebVoyager, Online-Mind2Web, and WebArena: live-web and self-hosted multi-site browser benchmarks with VLM judges and programmatic evaluators.",
+    "headings": [
+      {
+        "id": "webvoyager",
+        "text": "WebVoyager"
+      },
+      {
+        "id": "running-in-mai-gym",
+        "text": "Running in MAI-Gym"
+      },
+      {
+        "id": "online-mind2web",
+        "text": "Online-Mind2Web"
+      },
+      {
+        "id": "running-in-mai-gym-1",
+        "text": "Running in MAI-Gym"
+      },
+      {
+        "id": "webarena",
+        "text": "WebArena"
+      },
+      {
+        "id": "running-in-mai-gym-2",
+        "text": "Running in MAI-Gym"
+      },
+      {
+        "id": "looking-for-zero-setup-browser-environments",
+        "text": "Looking for Zero-Setup Browser Environments?"
+      },
+      {
+        "id": "next-steps",
+        "text": "Next Steps"
+      }
+    ],
+    "content": "Web Benchmarks MAI-Gym integrates three standard browser benchmarks— WebVoyager , Online-Mind2Web , and WebArena —covering both open live-web navigation and deterministic self-hosted web applications. For lightweight, resettable offline browser apps bundled directly inside this repository, see Mocked Apps ( --benchmarks mocked-apps ). [!TIP] Looking for detailed browser/site compose files, immutable profile lock JSONs, or coding-agent bring-up prompts? Each benchmark below links directly to its full setup skill under skills/envs/ and skills/envs.md . --- WebVoyager WebVoyager (upstream repository) tests open-ended information seeking and interaction across 15 live real-world websites (search, flights, hotels, shopping, recipes, academic databases, maps, and media). Each task starts on a prescribed live URL and runs within a tight 15-step budget , evaluated by WebVoyager's native VLM trajectory judge ( auto eval.py ) over the final answer and trailing screenshots. Property Value :--- :--- CLI ID ( --benchmarks ) webvoyager Tasks & Scope 643 tasks across 15 live real-world websites Step Budget 15 interaction steps Verification & Metric Native VLM trajectory judge ( evaluation/auto eval.py ) · success rate Runtime Stack Isolated Playwright Chromium contexts + outbound internet access Running in MAI-Gym - Host requirements: Python 3.12+, Playwright Chromium, outbound internet access to target websites, and an OpenAI-compatible VLM judge endpoint ( JUDGE API KEY ). - Detailed setup & agent skill: skills/envs/webvoyager.md · release.json --- Online-Mind2Web Online-Mind2Web (upstream repository) evaluates real-world web task completion across diverse live websites with a 50-step budget . Episodes are evaluated using the benchmark's native WebJudge pipeline, which identifies key task requirements, selects critical screenshots along the trajectory, and grades factual executed actions and the final response. Property Value :--- :--- CLI ID ( --benchmarks ) onlinemind2web Tasks & Scope 123 tasks (paper subset; full gated dataset via osunlp/Online-Mind2Web on Hugging Face) Step Budget 50 interaction steps Verification & Metric Native WebJudge VLM trajectory evaluator · success rate Runtime Stack Isolated Playwright Chromium contexts + outbound internet access Running in MAI-Gym - Host requirements: Python 3.12+, Playwright Chromium, approved Hugging Face access ( HF TOKEN for dataset download), outbound web access, and a judge API endpoint ( JUDGE API KEY ). - Detailed setup & agent skill: skills/envs/onlinemind2web.md · release.json --- WebArena WebArena (upstream repository) provides a completely self-hosted, reproducible web benchmark consisting of 812 tasks across seven functional websites: an e-commerce storefront ( Shopping ), store back-office ( Shopping Admin ), forum ( Reddit ), code forge ( GitLab ), encyclopedia ( Wikipedia ), maps ( Map ), and a start portal ( Homepage ). Because the entire stack runs locally via Docker Compose, WebArena avoids live-internet flakiness and evaluates every task using deterministic programmatic verifiers ( evaluation harness ). Property Value :--- :--- CLI ID ( --benchmarks ) webarena Tasks & Scope 812 tasks across 7 self-hosted functional web applications Step Budget 30 interaction steps Verification & Metric Native programmatic web & database evaluators ( evaluation harness ) · success rate Runtime Stack Docker Compose 7-site stack + Playwright Chromium with per-episode authentication state Running in MAI-Gym - Host requirements: Linux Docker host with sufficient RAM/disk for the 7 self-hosted site containers and volumes, plus Playwright Chromium (native worker uses Python 3.11 when required by upstream pins). - Detailed setup & agent skill: skills/envs/webarena.md · release.json --- Looking for Zero-Setup Browser Environments? If you want deterministic, locally resettable web apps without hosting Docker Compose stacks or relying on live websites, try the 42 bundled Novel Apps in Mocked Apps ( "
+  },
+  {
+    "slug": "extending.html",
+    "title": "Extending MAI-Gym",
+    "group": "Customization",
+    "description": "Four extension points (harnesses, tasks, adapters, environment specs) and the 5-operation environment contract.",
+    "headings": [
+      {
+        "id": "four-extension-points",
+        "text": "Four Extension Points"
+      },
+      {
+        "id": "environment-contract--responsibilities",
+        "text": "Environment Contract & Responsibilities"
+      },
+      {
+        "id": "reliability-guarantees",
+        "text": "Reliability Guarantees"
+      },
+      {
+        "id": "adding-a-custom-task",
+        "text": "Adding a Custom Task"
+      },
+      {
+        "id": "option-a-live-task-registration-mobileworld",
+        "text": "Option A: Live Task Registration (MobileWorld)"
+      },
+      {
+        "id": "option-b-custom-python-task-class",
+        "text": "Option B: Custom Python Task Class"
+      },
+      {
+        "id": "adding-an-agent-harness",
+        "text": "Adding an Agent Harness"
+      },
+      {
+        "id": "adding-a-new-benchmark-environment",
+        "text": "Adding a New Benchmark Environment"
+      },
+      {
+        "id": "next-steps",
+        "text": "Next Steps"
+      }
+    ],
+    "content": "Extending MAI-Gym Home · Quickstart · Development · Extending MAI-Gym · Platform & Core Concepts MAI-Gym isolates agent logic, task definitions, environment adapters, and deployment specifications behind explicit extension points (Paper §3.1 & Appendix A.2). Extending any one layer automatically works across mai-gym eval , mai-gym rollout , and mai-gym train . --- Four Extension Points Extension Point What You Implement Where It Lives :--- :--- :--- 1. Add Agent Harness Context construction, policy invocation, output parsing, and action dispatch. Once registered, all three workloads ( eval , rollout , train ) use it unchanged. src/mai gym/agents/ 2. Add Tasks Instruction, required initial assets, setup/reset logic, and programmatic verifier (or judge rubric) for an existing environment. examples/mobileworld/open settings.py · POST /register task set 3. Integrate Environments An environment adapter implementing the 5-operation contract below, preserving the benchmark's native initialization, action space, and verifier. src/mai gym/envs/ 4. Customize Environments An environment specification listing installed apps, supporting services, and launch/restore settings—reusing an existing adapter and deployment backend. Device YAML ( devices[].env config , launch ) --- Environment Contract & Responsibilities Every environment adapter implements five core operations behind the manager API (Paper Appendix A.2): Operation Role :--- :--- reqEnvs(spec, n) Provisions or attaches n environment instances matching spec . observe(h) Returns the current observation (screenshot, optional CLI command output, metadata) for session h . reset(h, x) Restores session h to the reproducible initial state s 0 of task x . step(h, a) Applies an action (or action batch) a to session h and returns updated state. eval(h, x) Invokes the native task verifier (code verifier and/or VLM judge) for task x on session h . Above this contract, MAI-Gym implements scheduling, leasing, trajectory persistence, and reward delivery once for all platforms: Concern Environment Adapter MAI-Gym Manager & Runner :--- :--- :--- Capacity Reports health and available instances Leases sessions, reclaims expired capacity, and assigns attempts Isolation Initializes task state and isolates concurrent instances Keeps one attempt bound to one session for its entire lifetime Observation Returns screenshots, command output, and metadata Selects screenshot transport ( inline / oss ) and records trajectories Action Executes the declared action vocabulary Parses model outputs, dispatches idempotent actions, and logs results Task Installs task state and invokes its native verifier Samples tasks, forms rollout groups, and delivers rewards to training Reliability Guarantees - Session leases: Prevent replaced or timed-out workers from mutating an instance owned by a newer attempt. - Idempotent actions: Mutating requests carry caller-supplied action identifiers so network retries apply an action at most once. - Fault isolation: Every operation has an explicit deadline, verifiers run in isolated process groups with resource limits, and infrastructure faults are recorded separately from zero rewards. --- Adding a Custom Task Option A: Live Task Registration (MobileWorld) On the MAI-Gym manager, upload a task ZIP bundle via POST /register task set (or POST /task/register on the customized MobileWorld backend image) with a set id and package archive. Registered tasks become immediately discoverable via GET /tasks without restarting the container. Option B: Custom Python Task Class See examples/mobileworld/open settings.py for a minimal task class with a deterministic verifier checking the foreground Android package ( com.android.settings ). To validate any new task before training, verify the initial → completed → reset sequence ( 0 → 1 → 0 ): the verifier returns 0 at initial state s₀ , 1 after task completion, and 0 again after environment reset. --- Adding an Agent Harness 1. Implement a policy clas"
+  },
+  {
+    "slug": "coding-agents.html",
+    "title": "Coding-Agent Setup",
+    "group": "Customization",
+    "description": "Reusable setup prompts for Claude Code, Codex, and Cursor to automate benchmark preparation, evaluation, and training.",
+    "headings": [
+      {
+        "id": "prepare-an-evaluation",
+        "text": "Prepare an evaluation"
+      },
+      {
+        "id": "prepare-training",
+        "text": "Prepare training"
+      }
+    ],
+    "content": "Setup guides for coding agents Open the MAI-Gym checkout in Claude Code, Codex, Cursor or another coding agent that can read files and run commands. Pick a prompt below and fill in the resources the agent may use. Give it credential environment-variable names and keep the values in your shell. For manual setup, start with Quickstart. Goal Start here --- --- Prepare a benchmark backend, its assets and native verifier Environment setup, then the linked benchmark guide Configure a model endpoint and run a benchmark evaluation Evaluation setup Use the prebuilt Slime image and prepare task pools and managers Training setup Evaluate or explore Mocked Apps with the CLI Mocked Apps guide Prepare an evaluation Prepare training"
+  },
+  {
+    "slug": "development.html",
+    "title": "Development & Layout",
+    "group": "Customization",
+    "description": "Repository layout, minimal mobile-agent extraction subset, and local development commands.",
+    "headings": [
+      {
+        "id": "repository-layout",
+        "text": "Repository Layout"
+      },
+      {
+        "id": "minimal-mobile-use-agent-subset",
+        "text": "Minimal Mobile-Use Agent Subset"
+      },
+      {
+        "id": "local-verification",
+        "text": "Local Verification"
+      },
+      {
+        "id": "python",
+        "text": "Python"
+      },
+      {
+        "id": "trajectory-dashboard-rust",
+        "text": "Trajectory Dashboard (Rust)"
+      },
+      {
+        "id": "licensing--attribution",
+        "text": "Licensing & Attribution"
+      }
+    ],
+    "content": "Development & Repository Layout Home · Quickstart · Evaluation · Training · Rollout · Kubernetes · Concepts A reference to the MAI-Gym codebase layout, minimal mobile-agent extraction subset, and local development commands. --- Repository Layout Path Contents :--- :--- src/mai gym/ Core environment manager, EnvClient , benchmark adapters, agent harnesses, CLI, and evaluation runner src/mai gym rl/ Online RL adapters, rollout buffer bridges, and Slime integration src/dashboard-rs/ Embedded Rust/SQLite trajectory dashboard server, indexer, frontend, and Rust tests resources/slime/ Bundled Slime RL training runtime, plugins, and third-party license notices resources/novel-apps/ 42 Novel Mocked Apps (837 tasks, native verifiers, and reference oracle trajectories) configs/ Example manager, evaluation, rollout, Mocked Apps, and RL training YAML presets examples/ Sample custom task definitions (such as examples/mobileworld/open settings.py ) skills/ Agent-readable setup guides for benchmark preparation, evaluation, and training site/docs/ Documentation website and Markdown sources --- Minimal Mobile-Use Agent Subset For lightweight deployments that only require the mobile-use agent loop, prompt templates, and action parser (without the environment manager or RL stack), extract this minimal subset: --- Local Verification Python Requires the project environment synced via uv sync --locked --python 3.12 : Trajectory Dashboard (Rust) From src/dashboard-rs/ : --- Licensing & Attribution When modifying or redistributing components, preserve upstream notices—especially third-party license and attribution files for the bundled Slime runtime under resources/slime/ . See Licensing for the full component breakdown."
+  },
+  {
+    "slug": "licensing.html",
+    "title": "Licensing & Notices",
+    "group": "Customization",
+    "description": "MIT project license and third-party notices for Slime (Apache-2.0), TileLang, and uPlot.",
+    "headings": [
+      {
+        "id": "project-license",
+        "text": "Project License"
+      },
+      {
+        "id": "third-party-components",
+        "text": "Third-Party Components"
+      },
+      {
+        "id": "external-datasets-assets-and-models",
+        "text": "External Datasets, Assets, and Models"
+      }
+    ],
+    "content": "Licensing & Third-Party Notices Home · Quickstart · Development · Concepts Project License MAI-Gym's original framework code, RL adapters, Rust dashboard code, documentation, and Mocked Apps (42 Novel Apps: code, task definitions, and reference oracle solutions) are released under the MIT License . The Trajectory Dashboard is a standalone subproject and includes a local copy of the MIT License so it can be distributed independently: - Trajectory Dashboard: src/dashboard-rs/LICENSE --- Third-Party Components Bundled third-party components retain their original copyright notices and licenses: Component License Notice / License File :--- :--- :--- Slime RL runtime (bundled) Apache-2.0 resources/slime/LICENSE · NOTICE TileLang-derived kernels (in Slime) MIT resources/slime/third party/tilelang/LICENSE (files & revisions listed in Slime NOTICE ) uPlot (dashboard charting library) MIT src/dashboard-rs/static/uplot-LICENSE --- External Datasets, Assets, and Models [!NOTE] The MAI-Gym MIT License does not replace third-party licenses or grant rights to separately downloaded benchmark datasets, application assets, VM/emulator images, or pretrained model weights. Always follow the license terms published by their respective upstream maintainers."
+  }
+]

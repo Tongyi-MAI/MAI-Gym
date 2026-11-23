@@ -1,0 +1,5 @@
+managers:
+  - label: Local manager
+    url: http://127.0.0.1:8090
+    traj_root: .state/trajectories
+url_base: ""

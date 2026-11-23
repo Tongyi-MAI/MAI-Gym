@@ -1,0 +1,50 @@
+model:
+  checkpoint: env/MAI_GYM_CHECKPOINT
+  policy_variant: mai_ui
+  tool_parser: mai_gym_mobile_use
+tasks:
+  - pool: env/MAI_GYM_MOBILE_TASKS
+    env_type: mobileworld
+    manager_url: http://127.0.0.1:8090
+    num_sessions: 8
+  - pool: env/MAI_GYM_COMPUTER_TASKS
+    env_type: osworld
+    manager_url: http://127.0.0.1:8091
+    num_sessions: 8
+algorithm:
+  name: grpo
+  group_size: 8
+  learning_rate: 3.0e-6
+  kl_loss_coef: 0.0
+  entropy_coef: 0.0
+  per_token_loss: true
+  reward_allocation: uniform
+sampling:
+  success_threshold: 0.8
+  fail_budget: 2
+  mastered_budget: 2
+rollout:
+  rounds: 2000
+  batch_size: 100
+  concurrency: 16
+  num_sessions: 16
+  temperature: 1.0
+  max_turns: 50
+  max_total_length: 65536
+  max_response_length: 6144
+history:
+  window_size: 10
+  overlap: 2
+  image_retention: 10
+  token_native_history: true
+  windowwise_train: true
+observations:
+  screenshot_transport: inline
+trainer:
+  backend: slime
+  output: ../runs/mai-gym-9b
+  global_batch_size: 320
+  save_interval: 1
+  nodes: 4
+  gpus_per_node: 8
+  parallelism: {tensor: 4, pipeline: 2, context: 4, data: 1}

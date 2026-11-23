@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Run single- and multi-benchmark GUI agent evaluations with native verifiers, pass@N metrics, and automatic SGLang serving.">
+  <link rel="canonical" href="https://tongyi-mai.github.io/MAI-Gym/docs/evaluation.html">
+  <meta property="og:site_name" content="MAI-Gym Docs">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Evaluation Guide — MAI-Gym Docs">
+  <meta property="og:description" content="Run single- and multi-benchmark GUI agent evaluations with native verifiers, pass@N metrics, and automatic SGLang serving.">
+  <meta property="og:url" content="https://tongyi-mai.github.io/MAI-Gym/docs/evaluation.html">
+  <meta property="og:image" content="https://tongyi-mai.github.io/MAI-Gym/assets/figs/overview.webp">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Evaluation Guide — MAI-Gym Docs">
+  <meta name="twitter:description" content="Run single- and multi-benchmark GUI agent evaluations with native verifiers, pass@N metrics, and automatic SGLang serving.">
+  <meta name="twitter:image" content="https://tongyi-mai.github.io/MAI-Gym/assets/figs/overview.webp">
+  <title>Evaluation Guide — MAI-Gym Docs</title>
+  <link rel="icon" type="image/png" href="../assets/favicon.png">
+  <script>
+    (function () {
+      var t;
+      try { t = localStorage.getItem('maigym.theme'); } catch (e) {}
+      document.documentElement.dataset.theme = t === 'day' ? 'day' : 'night';
+    })();
+  </script>
+  <link rel="preload" href="../assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="assets/docs.css">
+  <script>
+    window.MAIGYM_DOCS = {
+      root: "",
+      rawMd: "raw/evaluation.md",
+      slug: "evaluation.html"
+    };
+  </script>
+  <script src="assets/docs.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#doc-content">Skip to main content</a>
+
+  <header class="topbar" id="topbar">
+    <div class="topbar-row">
+      <div class="topbar-left">
+        <button class="mobile-nav-btn" id="mobile-nav-btn" type="button" aria-label="Toggle navigation" aria-expanded="false">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 5.5h14M3 10h14M3 14.5h14"/></svg>
+        </button>
+        <a class="brand" href="index.html" aria-label="MAI-Gym Documentation home">
+          <img src="../assets/mark.svg" width="26" height="26" alt="">
+          <span class="brand-name">MAI-<span>Gym</span></span>
+          <span class="brand-pill">Docs</span>
+        </a>
+      </div>
+
+      <button class="search-trigger" id="search-trigger" type="button" aria-label="Search documentation">
+        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="5.2"/><path d="m12 12 3.6 3.6"/></svg>
+        <span>Search docs...</span>
+        <kbd>⌘K</kbd>
+      </button>
+
+      <div class="topbar-right">
+        <a class="top-link" href="../index.html">Project Page</a>
+        <a class="top-link" href="https://arxiv.org/abs/2610.20939" target="_blank" rel="noopener noreferrer">Paper</a>
+        <a class="top-link" href="https://huggingface.co/Tongyi-MAI/MAI-Gym-9B" target="_blank" rel="noopener noreferrer">Model</a>
+        <a class="repo-chip" href="https://github.com/Tongyi-MAI/MAI-Gym" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+          <span>Tongyi-MAI/MAI-Gym</span>
+        </a>
+        <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle color theme" title="Switch light / dark theme">
+          <svg class="i-sun" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="3.6" fill="currentColor"/><path d="M10 1.8v2.1M10 16.1v2.1M1.8 10h2.1M16.1 10h2.1M4.2 4.2l1.5 1.5M14.3 14.3l1.5 1.5M4.2 15.8l1.5-1.5M14.3 5.7l1.5-1.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <svg class="i-moon" viewBox="0 0 20 20" aria-hidden="true"><path d="M16.2 12.6A6.8 6.8 0 0 1 7.4 3.8a6.8 6.8 0 1 0 8.8 8.8z" fill="currentColor"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="drawer-backdrop" id="drawer-backdrop" hidden></div>
+
+  <div class="doc-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Documentation navigation">
+      <div class="side-group"><p class="side-heading">Overview</p><ul><li><a class="side-link" href="index.html">Quickstart</a></li><li><a class="side-link" href="concepts.html">Platform &amp; Core Concepts</a></li><li><a class="side-link" href="mai-gym-9b.html">MAI-Gym-9B</a></li><li><a class="side-link" href="dashboard.html">Trajectory Dashboard</a></li></ul></div><div class="side-group"><p class="side-heading">User Guide</p><ul><li><a class="side-link active" aria-current="page" href="evaluation.html">Evaluation Guide</a></li><li><a class="side-link" href="training.html">Online RL Training</a></li><li><a class="side-link" href="rollout.html">Rollout CLI</a></li><li><a class="side-link" href="kubernetes.html">Kubernetes Fleets</a></li></ul></div><div class="side-group"><p class="side-heading">Benchmarks &amp; Environments</p><ul><li><a class="side-link" href="environments.html">Benchmarks Overview</a></li><li><a class="side-link" href="mocked-apps.html">Mocked Apps</a></li><li><a class="side-link" href="envs/mobile.html">Mobile Benchmarks</a></li><li><a class="side-link" href="envs/computer.html">Computer Benchmarks</a></li><li><a class="side-link" href="envs/web.html">Web Benchmarks</a></li></ul></div><div class="side-group"><p class="side-heading">Customization</p><ul><li><a class="side-link" href="extending.html">Extending MAI-Gym</a></li><li><a class="side-link" href="coding-agents.html">Coding-Agent Setup</a></li><li><a class="side-link" href="development.html">Development &amp; Layout</a></li><li><a class="side-link" href="licensing.html">Licensing &amp; Notices</a></li></ul></div>
+    </aside>
+
+    <main class="doc-main" id="doc-content">
+      <article class="doc-article">
+        <header class="page-header">
+          <div class="page-eyebrow">User Guide</div>
+          <div class="page-title-row">
+            <h1>Evaluation Guide</h1>
+            <button type="button" class="copy-page-btn" id="copy-page-btn" title="Copy page as Markdown">
+              <svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+              <svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>Copy page</span>
+            </button>
+          </div>
+          <p class="page-lead">Run single- and multi-benchmark GUI agent evaluations with native verifiers, pass@N metrics, and automatic SGLang serving.</p>
+        </header>
+
+        <div class="prose">
+          <p>Run a single MobileWorld task, inspect the native evaluation outcome, replay the episode in the trajectory dashboard, and extend the same configuration to multi-benchmark runs (such as MobileWorld + OSWorld-Verified or all supported benchmarks). For lightweight local browser evaluation without Docker or VMs, see <a href="mocked-apps.html#evaluate-a-task">Mocked Apps</a> (<code>--benchmarks mocked-apps</code>).</p>
+<div class="callout callout-tip" role="note"><div class="callout-title"><span class="callout-dot" aria-hidden="true"></span>Tip</div><div class="callout-body"><p><strong>Prefer agent-assisted setup?</strong> Use the <a href="coding-agents.html#prepare-an-evaluation">coding-agent evaluation prompt</a> in Claude Code, Codex, or Cursor to automate backend checks and trial runs.</p></div></div>
+<hr>
+<h2 id="supported-benchmarks--native-protocols">Supported Benchmarks &amp; Native Protocols<a class="heading-link" href="#supported-benchmarks--native-protocols" aria-label="Link to Supported Benchmarks &amp; Native Protocols">#</a></h2>
+<p><code>mai-gym eval</code> preserves each benchmark&#x27;s native step limit, verifier, and primary evaluation metric (Paper Table 3). By default, evaluation runs with deterministic decoding (<code>temperature=0.0</code>) and <code>--trials 3</code>, reporting both <code>pass@n</code> (<code>pass_at_n</code>) and <code>pass^n</code> (<code>pass_all_n</code>).</p>
+<div class="table-wrap"><table><thead><tr><th style="text-align:left">Domain</th><th style="text-align:left">Benchmark</th><th style="text-align:left">CLI ID (<code>--benchmarks</code>)</th><th style="text-align:right">Tasks</th><th style="text-align:left">Max Steps</th><th style="text-align:left">Native Metric</th><th style="text-align:left">Benchmark Guide</th></tr></thead><tbody><tr><td style="text-align:left"><strong>Mobile</strong></td><td style="text-align:left">MobileWorld (GUI-only)</td><td style="text-align:left"><code>mobileworld</code></td><td style="text-align:right">117</td><td style="text-align:left">100</td><td style="text-align:left"><code>success_rate</code></td><td style="text-align:left"><a href="envs/mobile.html#mobileworld">Mobile Benchmarks</a></td></tr><tr><td style="text-align:left"><strong>Mobile</strong></td><td style="text-align:left">AndroidWorld</td><td style="text-align:left"><code>androidworld</code></td><td style="text-align:right">116</td><td style="text-align:left">Task-dependent</td><td style="text-align:left"><code>success_rate</code></td><td style="text-align:left"><a href="envs/mobile.html#androidworld">Mobile Benchmarks</a></td></tr><tr><td style="text-align:left"><strong>Mobile</strong></td><td style="text-align:left">MobileGym</td><td style="text-align:left"><code>mobilegym</code></td><td style="text-align:right">256</td><td style="text-align:left">100</td><td style="text-align:left"><code>partial_score</code> <em>(binary + partial)</em></td><td style="text-align:left"><a href="envs/mobile.html#mobilegym">Mobile Benchmarks</a></td></tr><tr><td style="text-align:left"><strong>Computer</strong></td><td style="text-align:left">OSWorld-Verified</td><td style="text-align:left"><code>osworld-verified</code></td><td style="text-align:right">361</td><td style="text-align:left">100</td><td style="text-align:left"><code>success_rate</code></td><td style="text-align:left"><a href="envs/computer.html#osworld-verified">Computer Benchmarks</a></td></tr><tr><td style="text-align:left"><strong>Computer</strong></td><td style="text-align:left">OSWorld 2.0</td><td style="text-align:left"><code>osworld-2</code></td><td style="text-align:right">108</td><td style="text-align:left">500</td><td style="text-align:left"><code>binary_and_partial</code></td><td style="text-align:left"><a href="envs/computer.html#osworld-20">Computer Benchmarks</a></td></tr><tr><td style="text-align:left"><strong>Computer</strong></td><td style="text-align:left">MacAgentBench</td><td style="text-align:left"><code>macagentbench</code></td><td style="text-align:right">676</td><td style="text-align:left">50</td><td style="text-align:left"><code>success_rate</code></td><td style="text-align:left"><a href="envs/computer.html#macagentbench">Computer Benchmarks</a></td></tr><tr><td style="text-align:left"><strong>Computer</strong></td><td style="text-align:left">MyPCBench</td><td style="text-align:left"><code>mypcbench</code></td><td style="text-align:right">184</td><td style="text-align:left">100</td><td style="text-align:left"><code>perfect_task_rate</code></td><td style="text-align:left"><a href="envs/computer.html#mypcbench">Computer Benchmarks</a></td></tr><tr><td style="text-align:left"><strong>Web</strong></td><td style="text-align:left">WebVoyager</td><td style="text-align:left"><code>webvoyager</code></td><td style="text-align:right">643</td><td style="text-align:left">15</td><td style="text-align:left"><code>success_rate</code></td><td style="text-align:left"><a href="envs/web.html#webvoyager">Web Benchmarks</a></td></tr><tr><td style="text-align:left"><strong>Web</strong></td><td style="text-align:left">Online-Mind2Web</td><td style="text-align:left"><code>onlinemind2web</code></td><td style="text-align:right">123</td><td style="text-align:left">50</td><td style="text-align:left"><code>success_rate</code></td><td style="text-align:left"><a href="envs/web.html#online-mind2web">Web Benchmarks</a></td></tr><tr><td style="text-align:left"><strong>Web</strong></td><td style="text-align:left">WebArena</td><td style="text-align:left"><code>webarena</code></td><td style="text-align:right">812</td><td style="text-align:left">30</td><td style="text-align:left"><code>success_rate</code></td><td style="text-align:left"><a href="envs/web.html#webarena">Web Benchmarks</a></td></tr><tr><td style="text-align:left"><strong>Web</strong></td><td style="text-align:left">Mocked Apps <em>(bundled)</em></td><td style="text-align:left"><code>mocked-apps</code></td><td style="text-align:right">837</td><td style="text-align:left">Task-dependent</td><td style="text-align:left"><code>binary_and_partial</code></td><td style="text-align:left"><a href="mocked-apps.html#evaluate-a-task">Mocked Apps</a></td></tr></tbody></table></div>
+<hr>
+<h2 id="prerequisites">Prerequisites<a class="heading-link" href="#prerequisites" aria-label="Link to Prerequisites">#</a></h2>
+<ul><li><strong>MAI-Gym CLI</strong> installed on the evaluation host (<a href="index.html#install-the-cli">Install the CLI</a>).</li><li><strong>MobileWorld Android backend</strong> with a working snapshot and native verifier, healthy and exposing your target task (<a href="index.html#prepare-a-mobileworld-environment">Prepare and check the backend</a>).</li><li><p><strong>Vision model</strong> available either as:</p><ul><li>an <strong>OpenAI-compatible API</strong> (model ID, API base URL, and <code>OPENAI_API_KEY</code> if required), or</li><li>a <strong>local Hugging Face checkpoint</strong> on a GPU host with SGLang installed.</li></ul></li></ul>
+<hr>
+<h2 id="1-connect-the-model-and-backend">1. Connect the model and backend<a class="heading-link" href="#1-connect-the-model-and-backend" aria-label="Link to 1. Connect the model and backend">#</a></h2>
+<p>From the repository root, copy the sample configs to a working directory outside the checkout. Keep both files in the same directory so the relative <code>manager_config: mobileworld.yaml</code> path resolves automatically.</p>
+<div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"><span class="tok-var">EVAL_DIR</span>=<span class="tok-string">&quot;<span class="tok-var">$HOME</span>/mai-gym-eval&quot;</span>
+<span class="tok-cmd">mkdir</span> <span class="tok-flag">-p</span> <span class="tok-string">&quot;<span class="tok-var">$EVAL_DIR</span>&quot;</span>
+<span class="tok-cmd">cp</span> <span class="tok-flag">-i</span> configs/eval.yaml configs/mobileworld.yaml <span class="tok-string">&quot;<span class="tok-var">$EVAL_DIR</span>/&quot;</span></code></pre></div>
+<p>Update the two files for your environment:</p>
+<div class="table-wrap"><table><thead><tr><th style="text-align:left">File</th><th style="text-align:left">Key fields to configure</th></tr></thead><tbody><tr><td style="text-align:left"><code>eval.yaml</code></td><td style="text-align:left">Set <code>model.name</code> to the served model ID and <code>model.base_url</code> to your API base (e.g., <code>http://127.0.0.1:8000/v1</code>). Credentials are read via <code>env/OPENAI_API_KEY</code>. Optionally set <code>model.agent_variant</code> if your model uses a specific action format, and <code>observations.screenshot_transport</code> (<code>inline</code> for small local runs, <code>oss</code> for large multi-node fleets).</td></tr><tr><td style="text-align:left"><code>mobileworld.yaml</code></td><td style="text-align:left">Set <code>devices[0].connection.attach.backends[0].url</code> to your Android backend URL (e.g., <code>http://127.0.0.1:6800</code>). The sample manager listens on port <code>8090</code>.</td></tr></tbody></table></div>
+<div class="callout callout-note" role="note"><div class="callout-title"><span class="callout-dot" aria-hidden="true"></span>Note</div><div class="callout-body"><p><strong>Backend vs. Manager:</strong> The <strong>backend</strong> runs the Android device/emulator. The <strong>manager</strong> leases devices to the runner, resets state per task, and records trajectories. When <code>manager_config: mobileworld.yaml</code> is set, <code>mai-gym eval</code> starts a local manager automatically for the run. If you already run a persistent manager (for example, a <a href="kubernetes.html">Kubernetes fleet</a>), replace <code>manager_config</code> with <code>manager_url</code>.</p></div></div>
+<hr>
+<span id="preflight-and-first-task" class="doc-anchor"></span><h2 id="2-run-one-task">2. Run one task<a class="heading-link" href="#2-run-one-task" aria-label="Link to 2. Run one task">#</a></h2>
+<p>Start with <code>SetAlarmTask</code>, a MobileWorld Clock task with a native state verifier (<a href="https://github.com/Tongyi-MAI/MobileWorld/blob/main/src/mobile_world/tasks/definitions/native/set_alarm.py" target="_blank" rel="noopener noreferrer">upstream task definition<svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a>). Confirm it is registered on your backend (or query <code>GET /tasks</code> on an existing MAI-Gym manager):</p>
+<div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"><span class="tok-cmd">curl</span> <span class="tok-flag">-fsS</span> http://127.0.0.1:6800/task/list | uv run python <span class="tok-flag">-m</span> json.tool</code></pre></div>
+<p>If your manifest differs, pick any GUI-only task ID from the response. Add <code>tasks</code> under <code>benchmarks.mobileworld</code> in <code>$EVAL_DIR/eval.yaml</code>:</p>
+<div class="code-block" data-lang="yaml"><div class="code-head"><span class="code-lang">yaml</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-yaml"><span class="tok-key">benchmarks</span>:
+  <span class="tok-key">mobileworld</span>:
+    <span class="tok-key">manager_config</span>: <span class="tok-string">mobileworld.yaml</span>
+    <span class="tok-key">num_envs</span>: <span class="tok-num">1</span>
+    <span class="tok-key">tasks</span>: <span class="tok-string">[SetAlarmTask]</span>
+  <span class="tok-key">osworld-verified</span>:
+    <span class="tok-key">manager_url</span>: <span class="tok-string">http://127.0.0.1:8091</span>
+    <span class="tok-key">num_envs</span>: <span class="tok-num">1</span></code></pre></div>
+<div class="callout callout-note" role="note"><div class="callout-title"><span class="callout-dot" aria-hidden="true"></span>Note</div><div class="callout-body"><p><code>tasks</code> selects <strong>which</strong> tasks to run (omit <code>tasks</code> to run all discovered tasks for that benchmark). <code>--trials</code> controls how many independent trials to run for <strong>each</strong> selected task.</p></div></div>
+<p>Launch a 1-trial evaluation and save outputs to <code>$EVAL_DIR/runs</code>:</p>
+<div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"><span class="tok-cmd">uv</span> run mai-gym eval <span class="tok-flag">--config</span> <span class="tok-string">&quot;<span class="tok-var">$EVAL_DIR</span>/eval.yaml&quot;</span> \
+  <span class="tok-flag">--benchmarks</span> mobileworld <span class="tok-flag">--trials</span> 1 <span class="tok-flag">--output</span> <span class="tok-string">&quot;<span class="tok-var">$EVAL_DIR</span>/runs&quot;</span></code></pre></div>
+<hr>
+<span id="3-read-the-verdict-and-replay-the-episode" class="doc-anchor"></span><h2 id="3-read-the-evaluation-outcome-and-replay-the-episode">3. Read the evaluation outcome and replay the episode<a class="heading-link" href="#3-read-the-evaluation-outcome-and-replay-the-episode" aria-label="Link to 3. Read the evaluation outcome and replay the episode">#</a></h2>
+<p>When the run finishes, the CLI prints the path to <code>results.json</code> after <code>Evaluation results:</code>.</p>
+<h3 id="understanding-evaluation-metrics--automatic-retries">Understanding evaluation metrics &amp; automatic retries<a class="heading-link" href="#understanding-evaluation-metrics--automatic-retries" aria-label="Link to Understanding evaluation metrics &amp; automatic retries">#</a></h3>
+<div class="table-wrap"><table><thead><tr><th style="text-align:left">Field</th><th style="text-align:left">Meaning</th></tr></thead><tbody><tr><td style="text-align:left"><code>metric</code></td><td style="text-align:left">Primary native metric for the benchmark (see table above).</td></tr><tr><td style="text-align:left"><code>score</code></td><td style="text-align:left">Primary benchmark score (<code>partial_score</code> for MobileGym; <code>success_rate</code> otherwise).</td></tr><tr><td style="text-align:left"><code>tasks</code></td><td style="text-align:left">Total number of tasks evaluated in the benchmark entry.</td></tr><tr><td style="text-align:left"><code>success_rate</code></td><td style="text-align:left">Native full-success rate across scored tasks (<code>1.0</code> for a single passing task).</td></tr><tr><td style="text-align:left"><code>partial_score</code></td><td style="text-align:left">Mean weighted partial reward across scored tasks.</td></tr><tr><td style="text-align:left"><code>unscored_trials</code></td><td style="text-align:left">Attempts that still lack a score after retries (<code>0</code> indicates a clean infrastructure run).</td></tr><tr><td style="text-align:left"><code>pass_at_n</code></td><td style="text-align:left"><em>(Multi-trial)</em> Fraction of scored tasks with at least one successful trial (<code>pass@n</code>).</td></tr><tr><td style="text-align:left"><code>pass_all_n</code></td><td style="text-align:left"><em>(Multi-trial)</em> Fraction of fully scored tasks that succeeded on every trial (<code>pass^n</code>).</td></tr></tbody></table></div>
+<ul><li><strong>Environment-failure isolation &amp; retries:</strong> When an attempt terminates due to an infrastructure error rather than an agent mistake, <code>mai-gym eval</code> records it as unscored and automatically reruns it up to <code>--max-retry-rounds</code> times (default: <code>5</code>; pass <code>0</code> to disable retries). Reruns remain visible in the dashboard, and the CLI exits with an error if any <code>unscored_trials</code> remain after retries.</li><li>A <strong>scored failure</strong> still produces a valid native evaluation outcome and a full replayable trajectory.</li><li>For a per-task breakdown, open <code>mobileworld/&lt;model&gt;/passn_report_*/summary.md</code> in the same run directory.</li></ul>
+<h3 id="replay-in-the-trajectory-dashboard">Replay in the trajectory dashboard<a class="heading-link" href="#replay-in-the-trajectory-dashboard" aria-label="Link to Replay in the trajectory dashboard">#</a></h3>
+<p>To inspect screenshots, model responses, parsed actions, and evaluator outputs step by step:</p>
+<ol><li><p>Point <code>managers[].traj_root</code> in the dashboard config to the manager&#x27;s trajectory directory:</p><ul><li><strong>Auto-started manager:</strong> use the absolute path to the <code>mobileworld/</code> directory beside the printed <code>results.json</code>.</li><li><strong>Persistent manager:</strong> use its configured trajectory storage path (accessible from the dashboard host).</li></ul></li><li>Start the Rust server and indexer, then open the run ID printed by the CLI. See <a href="dashboard.html#build-and-run">Dashboard setup</a>.</li></ol>
+<div class="callout callout-important" role="note"><div class="callout-title"><span class="callout-dot" aria-hidden="true"></span>Important</div><div class="callout-body"><p><strong>Validating a new backend?</strong> Complete at least one task with a native full-success outcome, then reset the environment and verify that the initial state is cleanly restored (retaining failed attempts alongside success and reset logs). See the <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/skills/envs.md#verification-protocol" target="_blank" rel="noopener noreferrer">Environment validation protocol<svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a>.</p></div></div>
+<hr>
+<h2 id="4-add-osworld-verified">4. Add OSWorld-Verified<a class="heading-link" href="#4-add-osworld-verified" aria-label="Link to 4. Add OSWorld-Verified">#</a></h2>
+<p>To evaluate mobile and desktop tasks in a single command, prepare an OSWorld-Verified manager (<a href="envs/computer.html#osworld-verified">Computer Benchmarks</a> · <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/skills/envs/osworld.md" target="_blank" rel="noopener noreferrer">setup skill<svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a>) and point <code>benchmarks.osworld-verified.manager_url</code> in <code>$EVAL_DIR/eval.yaml</code> to its address (default <code>http://127.0.0.1:8091</code>; see <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/configs/eval.yaml" target="_blank" rel="noopener noreferrer"><code>configs/eval.yaml</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a>). Add one registered OSWorld task to its <code>tasks</code> list to validate both domains together:</p>
+<div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"><span class="tok-cmd">uv</span> run mai-gym eval <span class="tok-flag">--config</span> <span class="tok-string">&quot;<span class="tok-var">$EVAL_DIR</span>/eval.yaml&quot;</span> \
+  <span class="tok-flag">--benchmarks</span> mobileworld osworld-verified <span class="tok-flag">--trials</span> 1 <span class="tok-flag">--output</span> <span class="tok-string">&quot;<span class="tok-var">$EVAL_DIR</span>/runs&quot;</span></code></pre></div>
+<p>The resulting <code>results.json</code> contains a separate entry for each benchmark. Remove each <code>tasks</code> filter when ready to run every task exposed by your managers.</p>
+<div class="callout callout-note" role="note"><div class="callout-title"><span class="callout-dot" aria-hidden="true"></span>Note</div><div class="callout-body"><p>For judge-based benchmarks, configure the native judge model and credentials separately from the evaluated agent model. See <a href="environments.html">Benchmarks Overview</a>.</p></div></div>
+<hr>
+<h2 id="model-and-protocol-options">Model and Protocol Options<a class="heading-link" href="#model-and-protocol-options" aria-label="Link to Model and Protocol Options">#</a></h2>
+<h3 id="action-format-modelagent_variant">Action format (<code>model.agent_variant</code>)<a class="heading-link" href="#action-format-modelagent_variant" aria-label="Link to Action format ( model.agent variant )">#</a></h3>
+<p>The default <code>unified</code> agent automatically selects the appropriate mobile (<code>mai_gym_mobile_use_windows_wise</code>) or desktop (<code>mai_gym_computer_use</code>) prompt and action parser for MobileWorld and OSWorld-Verified; MobileGym uses a native touch policy, and web benchmarks default to <code>general_e2e_agent</code>. List all registered agent variants:</p>
+<div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"><span class="tok-cmd">uv</span> run python <span class="tok-flag">-c</span> <span class="tok-string">&#x27;from mai_gym.agents import list_agents; print(*sorted(list_agents()))&#x27;</span></code></pre></div>
+<h3 id="screenshot-transport-observationsscreenshot_transport">Screenshot transport (<code>observations.screenshot_transport</code>)<a class="heading-link" href="#screenshot-transport-observationsscreenshot_transport" aria-label="Link to Screenshot transport ( observations.screenshot transport )">#</a></h3>
+<ul><li><code>inline</code> <em>(default)</em>: sends screenshots directly inside HTTP responses—simplest for local or small-scale runs.</li><li><code>oss</code>: uploads screenshots to object storage and passes references through control messages, keeping manager bandwidth low at large fleet scales (requires an <code>observations.oss</code> block with credentials via <code>env/...</code>).</li></ul>
+<h3 id="openai-compatible-api-override">OpenAI-compatible API override<a class="heading-link" href="#openai-compatible-api-override" aria-label="Link to OpenAI-compatible API override">#</a></h3>
+<p>Override the endpoint and served model ID directly from the command line:</p>
+<div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"><span class="tok-cmd">uv</span> run mai-gym eval <span class="tok-flag">--config</span> <span class="tok-string">&quot;<span class="tok-var">$EVAL_DIR</span>/eval.yaml&quot;</span> \
+  <span class="tok-flag">--model</span> https://model-provider.example/v1 <span class="tok-flag">--model-name</span> your-served-model \
+  <span class="tok-flag">--benchmarks</span> mobileworld <span class="tok-flag">--trials</span> 1</code></pre></div>
+<h3 id="local-hugging-face-checkpoint-auto-served-with-sglang">Local Hugging Face checkpoint (auto-served with SGLang)<a class="heading-link" href="#local-hugging-face-checkpoint-auto-served-with-sglang" aria-label="Link to Local Hugging Face checkpoint (auto-served with SGLang)">#</a></h3>
+<p>On a GPU host with SGLang installed, pass the local checkpoint directory to <code>--model</code>—the CLI launches and tears down SGLang automatically for the duration of the run.</p>
+<p>To reproduce the 10-benchmark evaluation from <a href="https://arxiv.org/html/2610.20939v1#S3.SS3" target="_blank" rel="noopener noreferrer">Paper §3.3<svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a>, point <code>MAI_GYM_CONFIG</code> to a YAML declaring all ten benchmark managers and their task selections:</p>
+<div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"><span class="tok-cmd">export</span> MAI_GYM_CONFIG=/absolute/path/to/prepared-eval.yaml
+<span class="tok-cmd">uv</span> run <span class="tok-flag">--with</span> sglang mai-gym eval <span class="tok-flag">--model</span> /absolute/path/to/hf-checkpoint \
+  <span class="tok-flag">--benchmarks</span> mobileworld androidworld mobilegym \
+    osworld-verified osworld-2 macagentbench mypcbench \
+    webvoyager onlinemind2web webarena <span class="tok-flag">--trials</span> 3</code></pre></div>
+<hr>
+<h2 id="next-steps">Next Steps<a class="heading-link" href="#next-steps" aria-label="Link to Next Steps">#</a></h2>
+<ul><li>Debug individual tasks or control retries directly: <a href="rollout.html">Rollout CLI</a></li><li>Inspect trajectories visually or query the diagnosis API: <a href="dashboard.html#http-diagnosis-api">Trajectory Dashboard</a></li><li>Scale MobileWorld across multiple nodes: <a href="kubernetes.html">Kubernetes Fleets</a></li><li>Evaluate Mocked Apps locally via <code>--benchmarks mocked-apps</code>: <a href="mocked-apps.html#evaluate-a-task">Mocked Apps</a></li><li>Train a GUI agent with online RL: <a href="training.html">RL Training Guide</a></li></ul>
+        </div>
+
+        <nav class="pagination" aria-label="Pagination">
+          <a class="pag-link prev" href="dashboard.html"><span class="pag-label">Previous</span><span class="pag-title">&larr; Trajectory Dashboard</span></a>
+          <a class="pag-link next" href="training.html"><span class="pag-label">Next</span><span class="pag-title">Online RL Training &rarr;</span></a>
+        </nav>
+
+        <footer class="doc-footer">
+          <div class="doc-footer-links">
+            <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/site/docs/raw/evaluation.md" target="_blank" rel="noopener noreferrer">Edit this page on GitHub &nearr;</a>
+            <a href="https://github.com/Tongyi-MAI/MAI-Gym/issues/new?title=Docs:%20Evaluation Guide" target="_blank" rel="noopener noreferrer">Raise a docs issue &nearr;</a>
+            <a href="llms.txt">llms.txt</a>
+          </div>
+          <p class="doc-footer-meta">MAI-Gym · MIT License · Tongyi-MAI</p>
+        </footer>
+      </article>
+    </main>
+
+    <aside class="toc-rail" aria-label="On this page">
+      <div class="toc-inner">
+        <p class="toc-title">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M2.5 4h11M2.5 8h7M2.5 12h11"/></svg>
+          On this page
+        </p>
+        <ul class="toc-list" id="toc-list"><li><a class="toc-link" href="#supported-benchmarks--native-protocols">Supported Benchmarks &amp; Native Protocols</a></li><li><a class="toc-link" href="#prerequisites">Prerequisites</a></li><li><a class="toc-link" href="#1-connect-the-model-and-backend">1. Connect the model and backend</a></li><li><a class="toc-link" href="#2-run-one-task">2. Run one task</a></li><li><a class="toc-link" href="#3-read-the-evaluation-outcome-and-replay-the-episode">3. Read the evaluation outcome and replay the episode</a></li><li><a class="toc-link toc-h3" href="#understanding-evaluation-metrics--automatic-retries">Understanding evaluation metrics &amp; automatic retries</a></li><li><a class="toc-link toc-h3" href="#replay-in-the-trajectory-dashboard">Replay in the trajectory dashboard</a></li><li><a class="toc-link" href="#4-add-osworld-verified">4. Add OSWorld-Verified</a></li><li><a class="toc-link" href="#model-and-protocol-options">Model and Protocol Options</a></li><li><a class="toc-link toc-h3" href="#action-format-modelagent_variant">Action format ( model.agent variant )</a></li><li><a class="toc-link toc-h3" href="#screenshot-transport-observationsscreenshot_transport">Screenshot transport ( observations.screenshot transport )</a></li><li><a class="toc-link toc-h3" href="#openai-compatible-api-override">OpenAI-compatible API override</a></li><li><a class="toc-link toc-h3" href="#local-hugging-face-checkpoint-auto-served-with-sglang">Local Hugging Face checkpoint (auto-served with SGLang)</a></li><li><a class="toc-link" href="#next-steps">Next Steps</a></li></ul>
+        <div class="toc-actions">
+          <a href="#top" class="toc-action-link" id="back-to-top">&uarr; Back to top</a>
+          <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/site/docs/raw/evaluation.md" class="toc-action-link" target="_blank" rel="noopener noreferrer">View Markdown &nearr;</a>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <dialog class="search-dialog" id="search-dialog" aria-label="Search documentation">
+    <div class="search-box">
+      <div class="search-input-row">
+        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="5.2"/><path d="m12 12 3.6 3.6"/></svg>
+        <input id="search-input" type="search" placeholder="Search documentation, CLI flags, benchmarks..." autocomplete="off" spellcheck="false">
+        <button type="button" class="search-esc" id="search-close">ESC</button>
+      </div>
+      <div class="search-results" id="search-results" role="listbox"></div>
+      <div class="search-foot">
+        <span><kbd>&uarr;</kbd><kbd>&darr;</kbd> navigate</span>
+        <span><kbd>Enter</kbd> open</span>
+        <span><kbd>Esc</kbd> close</span>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="img-dialog" id="img-dialog" aria-label="Image preview">
+    <button type="button" class="img-dialog-close" id="img-dialog-close" aria-label="Close preview">&times;</button>
+    <img id="img-dialog-src" alt="">
+  </dialog>
+</body>
+</html>

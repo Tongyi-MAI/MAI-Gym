@@ -1,0 +1,9 @@
+{
+  "label": "official-1a8db93",
+  "source_repository": "OSU-NLP-Group/Online-Mind2Web",
+  "source_revision": "1a8db93168d5d7870402b7f453160e1c557153c8",
+  "dataset_repository": "osunlp/Online-Mind2Web",
+  "dataset_revision": "eacad896a84dc5b65e29b0b06e4699ab0544d701",
+  "task_manifest": "Online_Mind2Web.json",
+  "task_manifest_sha256": "7dedf381531d423dc0fc48d21dc1d425655dd75f38b10211a880fa09102f257f"
+}

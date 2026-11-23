@@ -1,0 +1,12 @@
+{
+  "label": "official-8903ebe",
+  "source_repository": "xlang-ai/OSWorld",
+  "source_revision": "8903ebeb0efdf74331bd7dc37ed91ccbbff22317",
+  "task_manifest": "evaluation_examples/test_all.json",
+  "task_manifest_sha256": "47c54203369bd438abf279f6b9836bffc5aa43de6cbaccdfed546993f3fe9149",
+  "vm_repository": "xlangai/ubuntu_osworld",
+  "vm_revision": "a5d9c3eaae98eebf6e3a0beb84e7e47cf72ae133",
+  "vm_archive_sha256": "b795b6cd4c69b252c1b4f10150a347795555032501b60fd031751ed09b896712",
+  "vm_qcow2_sha256": "6bf667a852b3c307f61d9f09c42559351f45e0607e428b4997becf534cf4d313",
+  "docker_image": "happysixd/osworld-docker@sha256:0e6497a9295647cf05bf2b2af522fdd79bdeba2737595259cab310a3bcf6baa9"
+}

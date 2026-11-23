@@ -52,9 +52,7 @@ def window_start(
 ) -> int:
     stride = window_size - overlap
     if stride <= 0:
-        raise ValueError(
-            f"window_size - overlap must be > 0 (W={window_size}, OV={overlap})"
-        )
+        raise ValueError(f"window_size - overlap must be > 0 (W={window_size}, OV={overlap})")
     return max(0, stride * ((step_idx - overlap) // stride))
 
 
@@ -78,8 +76,6 @@ def collapse_to_window(
 
 
 class MAIGymMobileUseWindowsWisePolicy(MAIGymMobileUsePolicy):
-    """Mobile-use agent with a W=10, overlap=2 sawtooth history window."""
-
     def __init__(
         self,
         *args: Any,

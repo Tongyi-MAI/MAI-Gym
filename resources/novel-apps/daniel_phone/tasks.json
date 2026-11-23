@@ -1,0 +1,1389 @@
+{
+  "env": "daniel_phone",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_free",
+      "name": "How tight is it",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "tags": [
+        "storage",
+        "query",
+        "read-only"
+      ],
+      "instruction": "How much free space is on this iPhone, and how far short of the iOS 26.1 update is that?",
+      "goal": [
+        {
+          "name": "3.14 GB free",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![\\d.,+-])(?:3[.,]14)(?!\\d|[.,]\\d)"
+        },
+        {
+          "name": "3.66 GB short",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![\\d.,+-])(?:3[.,]66)(?!\\d|[.,]\\d)"
+        },
+        {
+          "name": "nothing changed",
+          "path": "derived.freeDevice",
+          "op": "eq",
+          "value": 3140
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T02_largest",
+      "name": "Open the biggest app",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "tags": [
+        "storage"
+      ],
+      "instruction": "Which app is taking up the most space on this iPhone? Open its storage page.",
+      "goal": [
+        {
+          "name": "Sonora is open",
+          "path": "derived.appOpen",
+          "op": "eq",
+          "value": "sonora_music"
+        },
+        {
+          "name": "on an app page",
+          "path": "derived.route",
+          "op": "eq",
+          "value": "app"
+        }
+      ]
+    },
+    {
+      "id": "T03_empty",
+      "name": "Empty Recently Deleted",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "storage",
+        "photos"
+      ],
+      "instruction": "Empty Recently Deleted. Do not offload or delete any app.",
+      "goal": [
+        {
+          "name": "Recently Deleted is empty",
+          "path": "derived.trash",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "nothing offloaded",
+          "path": "derived.offloadedCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "nothing deleted",
+          "path": "derived.deletedCount",
+          "op": "eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T04_owner",
+      "name": "Whose phone is this",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "tags": [
+        "owner",
+        "query",
+        "read-only"
+      ],
+      "instruction": "Whose iPhone is this, and who is in his Family Sharing group?",
+      "goal": [
+        {
+          "name": "Daniel Okafor",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?i)(?<!\\w)Daniel\\s+Okafor(?!\\w)"
+        },
+        {
+          "name": "Ama",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Aa]ma"
+        },
+        {
+          "name": "Zoe",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Zz]oe"
+        },
+        {
+          "name": "Kwame",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Kk]wame"
+        },
+        {
+          "name": "Grace is also in Family Sharing",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?i)\\bGrace\\b"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T05_bak_one",
+      "name": "Stop the biggest backup",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "tags": [
+        "icloud"
+      ],
+      "instruction": "Turn off the iCloud backup for whichever app is contributing the most to tonight's backup. Leave every other switch alone.",
+      "goal": [
+        {
+          "name": "Files backup is off",
+          "path": "derived.bakOffIds",
+          "op": "contains",
+          "value": "harbour_files"
+        },
+        {
+          "name": "only that one",
+          "path": "derived.bakOffCount",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "device untouched",
+          "path": "derived.freeDevice",
+          "op": "eq",
+          "value": 3140
+        }
+      ]
+    },
+    {
+      "id": "T06_offload_maps",
+      "name": "Offload Maps",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "storage"
+      ],
+      "instruction": "Offload Maps. Nothing else.",
+      "goal": [
+        {
+          "name": "Maps offloaded",
+          "path": "derived.offloadedIds",
+          "op": "set_eq",
+          "value": [
+            "compass_maps"
+          ]
+        },
+        {
+          "name": "nothing deleted",
+          "path": "derived.deletedCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "480 MB back",
+          "path": "derived.freeDevice",
+          "op": "eq",
+          "value": 3620
+        },
+        {
+          "name": "Recently Deleted untouched",
+          "path": "derived.trash",
+          "op": "eq",
+          "value": 2180
+        },
+        {
+          "name": "Required: apps",
+          "path": "apps",
+          "op": "multiset_eq",
+          "value": [
+            {
+              "id": "quill_messages",
+              "short": "Messages",
+              "envName": "信息",
+              "glyph": "chat",
+              "where": "dock",
+              "brand": "#0a84ff",
+              "size": 100,
+              "docs": 4800,
+              "bak": 4800,
+              "bakOn": true,
+              "off": false,
+              "del": false
+            },
+            {
+              "id": "compass_maps",
+              "short": "Maps",
+              "envName": "Maps",
+              "glyph": "pin",
+              "where": "dock",
+              "brand": "#1b6ac9",
+              "size": 480,
+              "docs": 980,
+              "bak": 180,
+              "bakOn": true,
+              "off": true,
+              "del": false
+            },
+            {
+              "id": "lumen_camera",
+              "short": "Camera",
+              "envName": "Camera",
+              "glyph": "camera",
+              "where": "dock",
+              "brand": "#ffd60a",
+              "size": 140,
+              "docs": 60,
+              "bak": 0,
+              "bakOn": true,
+              "off": false,
+              "del": false
+            },
+            {
+              "id": "nightjar_clock",
+              "short": "Clock",
+              "envName": "时钟",
+              "glyph": "clock",
+              "where": "p1",
+              "brand": "#ff9f0a",
+              "size": 21,
+              "docs": 12,
+              "bak": 10,
+              "bakOn": true,
+              "off": false,
+              "del": false
+            },
+            {
+              "id": "cirrus_weather",
+              "short": "Weather",
+              "envName": "天气",
+              "glyph": "sun",
+              "where": "p1",
+              "brand": "#5ac8fa",
+              "size": 68,
+              "docs": 140,
+              "bak": 40,
+              "bakOn": true,
+              "off": false,
+              "del": false
+            },
+            {
+              "id": "umber_photos",
+              "short": "Umber",
+              "envName": "Umber",
+              "glyph": "image",
+              "where": "p1",
+              "brand": "#e0a35c",
+              "size": 410,
+              "docs": 2760,
+              "bak": 2760,
+              "bakOn": true,
+              "off": false,
+              "del": false
+            },
+            {
+              "id": "sonora_music",
+              "short": "Sonora",
+              "envName": "Sonora",
+              "glyph": "music",
+              "where": "p1",
+              "brand": "#c084fc",
+              "size": 340,
+              "docs": 18400,
+              "bak": 0,
+              "bakOn": true,
+              "off": false,
+              "del": false
+            },
+            {
+              "id": "slate_calc",
+              "short": "Calculator",
+              "envName": "计算器",
+              "glyph": "calc",
+              "where": "p1",
+              "brand": "#ff9f0a",
+              "size": 12,
+              "docs": 6,
+              "bak": 4,
+              "bakOn": true,
+              "off": false,
+              "del": false
+            },
+            {
+              "id": "covey_contacts",
+              "short": "Contacts",
+              "envName": "通讯录",
+              "glyph": "user",
+              "where": "p1",
+              "brand": "#007aff",
+              "size": 72,
+              "docs": 180,
+              "bak": 60,
+              "bakOn": true,
+              "off": false,
+              "del": false
+            },
+            {
+              "id": "marlin_mail",
+              "short": "Mail",
+              "envName": "Marlin Mail",
+              "glyph": "mail",
+              "where": "p1",
+              "brand": "#1f6feb",
+              "size": 80,
+              "docs": 3240,
+              "bak": 0,
+              "bakOn": true,
+              "off": false,
+              "del": false
+            },
+            {
+              "id": "harbour_files",
+              "short": "Files",
+              "envName": "Files",
+              "glyph": "folder",
+              "where": "p1",
+              "brand": "#1a73e8",
+              "size": 110,
+              "docs": 9800,
+              "bak": 6200,
+              "bakOn": true,
+              "off": false,
+              "del": false
+            },
+            {
+              "id": "foxglove_reader",
+              "short": "Books",
+              "envName": "Foxglove",
+              "glyph": "book",
+              "where": "p1",
+              "brand": "#8a5a2b",
+              "size": 150,
+              "docs": 4240,
+              "bak": 4240,
+              "bakOn": true,
+              "off": false,
+              "del": false
+            },
+            {
+              "id": "squirrel_eats",
+              "short": "Eats",
+              "envName": "松鼠外卖 · Squirrel Eats",
+              "glyph": "bag",
+              "where": "p1",
+              "brand": "#ff6b35",
+              "size": 120,
+              "docs": 1180,
+              "bak": 940,
+              "bakOn": true,
+              "off": false,
+              "del": false
+            },
+            {
+              "id": "kestrel_bank",
+              "short": "Kestrel",
+              "envName": "Kestrel",
+              "glyph": "bank",
+              "where": "p1",
+              "brand": "#1d63d1",
+              "size": 76,
+              "docs": 220,
+              "bak": 140,
+              "bakOn": true,
+              "off": false,
+              "del": false
+            },
+            {
+              "id": "ironwood_gym",
+              "short": "Fitness",
+              "envName": "Ironwood",
+              "glyph": "dumbbell",
+              "where": "p1",
+              "brand": "#c9f24a",
+              "size": 105,
+              "docs": 880,
+              "bak": 640,
+              "bakOn": true,
+              "off": false,
+              "del": false
+            },
+            {
+              "id": "roost_stays",
+              "short": "Roost",
+              "envName": "Roost · Stays",
+              "glyph": "bed",
+              "where": "p2",
+              "brand": "#2f6f5e",
+              "size": 190,
+              "docs": 1140,
+              "bak": 1140,
+              "bakOn": true,
+              "off": false,
+              "del": false
+            },
+            {
+              "id": "aperture_cinema",
+              "short": "Aperture",
+              "envName": "Aperture Cinema",
+              "glyph": "film",
+              "where": "p2",
+              "brand": "#f5c451",
+              "size": 260,
+              "docs": 3180,
+              "bak": 3180,
+              "bakOn": true,
+              "off": false,
+              "del": false
+            },
+            {
+              "id": "larkline_transit",
+              "short": "Larkline",
+              "envName": "Larkline",
+              "glyph": "bus",
+              "where": "p2",
+              "brand": "#0f766e",
+              "size": 64,
+              "docs": 160,
+              "bak": 60,
+              "bakOn": true,
+              "off": false,
+              "del": false
+            },
+            {
+              "id": "pigeon_parcels",
+              "short": "Pigeon",
+              "envName": "Pigeon",
+              "glyph": "box",
+              "where": "p2",
+              "brand": "#b0442c",
+              "size": 60,
+              "docs": 760,
+              "bak": 720,
+              "bakOn": true,
+              "off": false,
+              "del": false
+            },
+            {
+              "id": "tally_split",
+              "short": "Tally",
+              "envName": "Tally",
+              "glyph": "split",
+              "where": "p2",
+              "brand": "#4f46e5",
+              "size": 37,
+              "docs": 420,
+              "bak": 360,
+              "bakOn": true,
+              "off": false,
+              "del": false
+            },
+            {
+              "id": "anvil_remit",
+              "short": "Anvil",
+              "envName": "Anvil",
+              "glyph": "swap",
+              "where": "p2",
+              "brand": "#a8321e",
+              "size": 34,
+              "docs": 90,
+              "bak": 40,
+              "bakOn": true,
+              "off": false,
+              "del": false
+            },
+            {
+              "id": "bastion_loan",
+              "short": "Bastion",
+              "envName": "Bastion",
+              "glyph": "card",
+              "where": "p2",
+              "brand": "#4c3bcf",
+              "size": 36,
+              "docs": 110,
+              "bak": 50,
+              "bakOn": true,
+              "off": false,
+              "del": false
+            },
+            {
+              "id": "cinder_vault",
+              "short": "Cinder",
+              "envName": "Cinder",
+              "glyph": "key",
+              "where": "p2",
+              "brand": "#e2704a",
+              "size": 30,
+              "docs": 40,
+              "bak": 30,
+              "bakOn": true,
+              "off": false,
+              "del": false
+            },
+            {
+              "id": "gavel_auction",
+              "short": "Gavel",
+              "envName": "Gavel",
+              "glyph": "gavel",
+              "where": "p2",
+              "brand": "#1f4d3d",
+              "size": 42,
+              "docs": 140,
+              "bak": 120,
+              "bakOn": true,
+              "off": false,
+              "del": false
+            },
+            {
+              "id": "pitchside_league",
+              "short": "Pitchside",
+              "envName": "Pitchside",
+              "glyph": "football",
+              "where": "p2",
+              "brand": "#146b45",
+              "size": 90,
+              "docs": 260,
+              "bak": 240,
+              "bakOn": true,
+              "off": false,
+              "del": false
+            },
+            {
+              "id": "larkspur_fest",
+              "short": "Larkspur",
+              "envName": "Larkspur",
+              "glyph": "ticket",
+              "where": "p2",
+              "brand": "#e8b04b",
+              "size": 85,
+              "docs": 300,
+              "bak": 280,
+              "bakOn": true,
+              "off": false,
+              "del": false
+            },
+            {
+              "id": "saffron_recipes",
+              "short": "Saffron",
+              "envName": "Saffron",
+              "glyph": "chef",
+              "where": "p2",
+              "brand": "#1f6f4a",
+              "size": 95,
+              "docs": 1980,
+              "bak": 1860,
+              "bakOn": true,
+              "off": false,
+              "del": false
+            },
+            {
+              "id": "rota_shifts",
+              "short": "Rota",
+              "envName": "排班",
+              "glyph": "cal",
+              "where": "f_work",
+              "brand": "#0f766e",
+              "size": 22,
+              "docs": 90,
+              "bak": 80,
+              "bakOn": true,
+              "off": false,
+              "del": false
+            },
+            {
+              "id": "trellis_build",
+              "short": "Trellis",
+              "envName": "Trellis",
+              "glyph": "hammer",
+              "where": "f_work",
+              "brand": "#38bdf8",
+              "size": 31,
+              "docs": 95,
+              "bak": 80,
+              "bakOn": true,
+              "off": false,
+              "del": false
+            },
+            {
+              "id": "quorum_vote",
+              "short": "Quorum",
+              "envName": "Quorum",
+              "glyph": "ballot",
+              "where": "f_work",
+              "brand": "#c8102e",
+              "size": 18,
+              "docs": 30,
+              "bak": 20,
+              "bakOn": true,
+              "off": false,
+              "del": false
+            },
+            {
+              "id": "bench_workshop",
+              "short": "Bench",
+              "envName": "Bench",
+              "glyph": "saw",
+              "where": "f_work",
+              "brand": "#8a5a1e",
+              "size": 20,
+              "docs": 120,
+              "bak": 100,
+              "bakOn": true,
+              "off": false,
+              "del": false
+            },
+            {
+              "id": "hearth_home",
+              "short": "Hearth",
+              "envName": "Hearth · Home",
+              "glyph": "home",
+              "where": "f_home",
+              "brand": "#f0a24b",
+              "size": 33,
+              "docs": 360,
+              "bak": 320,
+              "bakOn": true,
+              "off": false,
+              "del": false
+            },
+            {
+              "id": "meter_energy",
+              "short": "Meter",
+              "envName": "抄表",
+              "glyph": "bolt",
+              "where": "f_home",
+              "brand": "#1668c8",
+              "size": 24,
+              "docs": 70,
+              "bak": 50,
+              "bakOn": true,
+              "off": false,
+              "del": false
+            },
+            {
+              "id": "willow_meds",
+              "short": "Willow",
+              "envName": "Willow",
+              "glyph": "pill",
+              "where": "f_home",
+              "brand": "#2b7f8f",
+              "size": 27,
+              "docs": 180,
+              "bak": 160,
+              "bakOn": true,
+              "off": false,
+              "del": false
+            },
+            {
+              "id": "levain_bake",
+              "short": "Levain",
+              "envName": "Levain",
+              "glyph": "wheat",
+              "where": "f_home",
+              "brand": "#e0a33c",
+              "size": 25,
+              "docs": 200,
+              "bak": 180,
+              "bakOn": true,
+              "off": false,
+              "del": false
+            },
+            {
+              "id": "sable_privacy",
+              "short": "Privacy",
+              "envName": "Privacy",
+              "glyph": "shield",
+              "where": "f_util",
+              "brand": "#007aff",
+              "size": 14,
+              "docs": 20,
+              "bak": 10,
+              "bakOn": true,
+              "off": false,
+              "del": false
+            },
+            {
+              "id": "tideline_screen",
+              "short": "Screen Time",
+              "envName": "屏幕使用时间",
+              "glyph": "hourglass",
+              "where": "f_util",
+              "brand": "#5856d6",
+              "size": 15,
+              "docs": 50,
+              "bak": 30,
+              "bakOn": true,
+              "off": false,
+              "del": false
+            },
+            {
+              "id": "kitbag_pack",
+              "short": "Kitbag",
+              "envName": "Kitbag",
+              "glyph": "suitcase",
+              "where": "f_util",
+              "brand": "#3c6e47",
+              "size": 28,
+              "docs": 520,
+              "bak": 480,
+              "bakOn": true,
+              "off": false,
+              "del": false
+            },
+            {
+              "id": "grid_puzzle",
+              "short": "Sudoku",
+              "envName": "数独",
+              "glyph": "grid9",
+              "where": "f_util",
+              "brand": "#1b58a6",
+              "size": 16,
+              "docs": 60,
+              "bak": 40,
+              "bakOn": true,
+              "off": false,
+              "del": false
+            },
+            {
+              "id": "pipit_lessons",
+              "short": "Pipit",
+              "envName": "Pipit",
+              "glyph": "cap",
+              "where": "f_util",
+              "brand": "#3f9d54",
+              "size": 40,
+              "docs": 340,
+              "bak": 300,
+              "bakOn": true,
+              "off": false,
+              "del": false
+            }
+          ]
+        },
+        {
+          "name": "Required: photosMode",
+          "path": "photosMode",
+          "op": "eq",
+          "value": "optimise"
+        },
+        {
+          "name": "Required: updated",
+          "path": "updated",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Required: backupDone",
+          "path": "backupDone",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Required: lastBackup",
+          "path": "lastBackup",
+          "op": "eq",
+          "value": "Yesterday, 03:14"
+        },
+        {
+          "name": "Required: settings",
+          "path": "settings",
+          "op": "eq",
+          "value": {
+            "cellularBackup": false,
+            "autoUpdate": true,
+            "shared": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "T07_offload_vs_delete",
+      "name": "Offload or delete",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "storage",
+        "query",
+        "read-only"
+      ],
+      "instruction": "For Books: how much does offloading it free, and how much does deleting it free? Say both figures and what the difference is made of.",
+      "goal": [
+        {
+          "name": "150 MB offloaded",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![\\d.,+-])150(?:[.,]0+)?(?!\\d|[.,]\\d)"
+        },
+        {
+          "name": "4.39 GB deleted",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![\\d.,+-])(?:4[.,]39)(?!\\d|[.,]\\d)"
+        },
+        {
+          "name": "mentions documents",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Dd]ocuments|[Dd]ata|downloads"
+        },
+        {
+          "name": "read-only",
+          "path": "derived.offloadedCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "nothing deleted",
+          "path": "derived.deletedCount",
+          "op": "eq",
+          "value": 0
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T08_no_backup",
+      "name": "Big on disk, nothing in the backup",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "icloud",
+        "query",
+        "read-only"
+      ],
+      "instruction": "One app is by far the largest thing on this iPhone and yet adds nothing at all to tonight's iCloud backup. Which one, and why?",
+      "goal": [
+        {
+          "name": "Sonora",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Ss]onora"
+        },
+        {
+          "name": "says it re-downloads",
+          "source": "answer",
+          "op": "regex",
+          "value": "re-?download|redownload|store|streamed|not backed up"
+        },
+        {
+          "name": "nothing switched off",
+          "path": "derived.bakOffCount",
+          "op": "eq",
+          "value": 0
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T09_originals",
+      "name": "The switch that cannot be flipped",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "photos",
+        "query"
+      ],
+      "instruction": "Try switching Photos to Download and Keep Originals, then tell me what happened and by how much it misses.",
+      "goal": [
+        {
+          "name": "still on Optimise",
+          "path": "derived.photosMode",
+          "op": "eq",
+          "value": "optimise"
+        },
+        {
+          "name": "says it cannot",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Cc]an ?not|[Cc]an't|refus|impossible|not enough|too (big|small)|no room"
+        },
+        {
+          "name": "89.5 GB more",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![\\d.,+-])(?:89[.,]5)(?!\\d|[.,]\\d)"
+        },
+        {
+          "name": "nothing deleted",
+          "path": "derived.deletedCount",
+          "op": "eq",
+          "value": 0
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T10_move_books",
+      "name": "Tidy Books away",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "home",
+        "layout"
+      ],
+      "instruction": "Move Books into the Utilities folder. Leave every other icon where it is.",
+      "goal": [
+        {
+          "name": "Books is in Utilities",
+          "path": "derived.place.foxglove_reader",
+          "op": "eq",
+          "value": "f_util"
+        },
+        {
+          "name": "Sudoku did not move",
+          "path": "derived.place.grid_puzzle",
+          "op": "eq",
+          "value": "f_util"
+        },
+        {
+          "name": "Mail did not move",
+          "path": "derived.place.marlin_mail",
+          "op": "eq",
+          "value": "p1"
+        },
+        {
+          "name": "folder closed",
+          "path": "derived.openFolder",
+          "op": "eq",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "id": "T11_dock",
+      "name": "Rearrange the Dock",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "home",
+        "layout"
+      ],
+      "instruction": "He wants Files in the Dock. The Dock holds four, so move Camera out to Home Screen page 2 first and then put Files in.",
+      "goal": [
+        {
+          "name": "Files in the Dock",
+          "path": "derived.dock",
+          "op": "contains",
+          "value": "harbour_files"
+        },
+        {
+          "name": "Camera out of the Dock",
+          "path": "derived.dock",
+          "op": "not_contains",
+          "value": "lumen_camera"
+        },
+        {
+          "name": "Camera on page 2",
+          "path": "derived.place.lumen_camera",
+          "op": "eq",
+          "value": "p2"
+        },
+        {
+          "name": "Dock still four",
+          "path": "derived.dockCount",
+          "op": "eq",
+          "value": 4
+        }
+      ]
+    },
+    {
+      "id": "T12_after_trash",
+      "name": "Still short",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "storage",
+        "query"
+      ],
+      "instruction": "Empty Recently Deleted, then tell me how much the iOS 26.1 update is still short by. Answer with only the requested number.",
+      "goal": [
+        {
+          "name": "emptied",
+          "path": "derived.trash",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "still short",
+          "path": "derived.canUpdate",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "no app touched",
+          "path": "derived.offloadedCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Requested numeric answer",
+          "source": "answer",
+          "op": "eq",
+          "value": 1.48,
+          "extract": "single_number"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T13_bak_count",
+      "name": "How many switches",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "icloud",
+        "query",
+        "read-only"
+      ],
+      "instruction": "As things stand right now, what is the smallest number of app backup switches he has to turn off for tonight's backup to fit? Do not change anything. Answer with only the requested number.",
+      "goal": [
+        {
+          "name": "nothing switched off",
+          "path": "derived.bakOffCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Recently Deleted untouched",
+          "path": "derived.trash",
+          "op": "eq",
+          "value": 2180
+        },
+        {
+          "name": "Requested numeric answer",
+          "source": "answer",
+          "op": "eq",
+          "value": 5,
+          "extract": "single_number"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T14_bak_do",
+      "name": "Make tonight's backup fit",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "icloud"
+      ],
+      "instruction": "Turn off the smallest number of app backup switches that makes tonight's backup fit, then run the backup.",
+      "goal": [
+        {
+          "name": "backup fits",
+          "path": "derived.backupFits",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "exactly five off",
+          "path": "derived.bakOffCount",
+          "op": "eq",
+          "value": 5
+        },
+        {
+          "name": "it ran",
+          "path": "derived.backupDone",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "device untouched",
+          "path": "derived.freeDevice",
+          "op": "eq",
+          "value": 3140
+        }
+      ]
+    },
+    {
+      "id": "T15_pools",
+      "name": "Two different pools",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "icloud",
+        "storage",
+        "query"
+      ],
+      "instruction": "Turn off the Files backup, then tell me how much space that gave back on the iPhone itself.",
+      "goal": [
+        {
+          "name": "Files backup off",
+          "path": "derived.bakOffIds",
+          "op": "contains",
+          "value": "harbour_files"
+        },
+        {
+          "name": "only that one",
+          "path": "derived.bakOffCount",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "device unchanged",
+          "path": "derived.freeDevice",
+          "op": "eq",
+          "value": 3140
+        },
+        {
+          "name": "none at all",
+          "source": "answer",
+          "op": "regex",
+          "value": "[Nn]one|[Nn]othing|zero|(?<!\\d)0(?!\\d)"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T16_cannot",
+      "name": "Can offloading do it",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "storage",
+        "query",
+        "read-only"
+      ],
+      "instruction": "Without deleting anything and without emptying Recently Deleted, can he free enough for iOS 26.1 by offloading apps? Answer yes or no and prove it with the numbers.",
+      "goal": [
+        {
+          "name": "no",
+          "source": "answer",
+          "op": "regex",
+          "value": "^[^.]*\\b([Nn]o|[Cc]annot|[Cc]an't|[Ii]mpossible)\\b"
+        },
+        {
+          "name": "3.62 GB is the ceiling",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![\\d.,+-])(?:3[.,]62)(?!\\d|[.,]\\d)"
+        },
+        {
+          "name": "3.66 GB is needed",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![\\d.,+-])(?:3[.,]66)(?!\\d|[.,]\\d)"
+        },
+        {
+          "name": "nothing offloaded",
+          "path": "derived.offloadedCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "nothing deleted",
+          "path": "derived.deletedCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Recently Deleted untouched",
+          "path": "derived.trash",
+          "op": "eq",
+          "value": 2180
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T17_fewest",
+      "name": "Enough room, no documents lost",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "storage",
+        "planning"
+      ],
+      "instruction": "Free enough space for iOS 26.1 without deleting a single app — every app's documents have to survive. Offload as few apps as possible.",
+      "goal": [
+        {
+          "name": "enough room",
+          "path": "derived.canUpdate",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "nothing deleted",
+          "path": "derived.deletedCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Recently Deleted emptied",
+          "path": "derived.trash",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "exactly four offloaded",
+          "path": "derived.offloadedCount",
+          "op": "eq",
+          "value": 4
+        },
+        {
+          "name": "iCloud switches untouched",
+          "path": "derived.bakOffCount",
+          "op": "eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T18_install",
+      "name": "Install it",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "storage",
+        "planning"
+      ],
+      "instruction": "Get iOS 26.1 installed. Do not delete any app and do not touch the iCloud backup switches.",
+      "goal": [
+        {
+          "name": "installed",
+          "path": "derived.updated",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "nothing deleted",
+          "path": "derived.deletedCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "backup switches untouched",
+          "path": "derived.bakOffCount",
+          "op": "eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T19_smallest_delete",
+      "name": "One app, no photos touched",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "storage",
+        "planning"
+      ],
+      "instruction": "He refuses to empty Recently Deleted — those photos are staying. Delete the smallest single app that on its own frees enough for the update, and delete nothing else.",
+      "goal": [
+        {
+          "name": "Books deleted",
+          "path": "derived.deletedIds",
+          "op": "set_eq",
+          "value": [
+            "foxglove_reader"
+          ]
+        },
+        {
+          "name": "enough room",
+          "path": "derived.canUpdate",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Recently Deleted still full",
+          "path": "derived.trash",
+          "op": "eq",
+          "value": 2180
+        },
+        {
+          "name": "nothing offloaded",
+          "path": "derived.offloadedCount",
+          "op": "eq",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "T20_both",
+      "name": "Both pools, one evening",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 34,
+      "tags": [
+        "storage",
+        "icloud",
+        "planning"
+      ],
+      "instruction": "Sort this phone out for the night: empty Recently Deleted, then get iOS 26.1 installable AND tonight's iCloud backup to fit — without deleting a single app, and changing as few things as possible. When it is done, tell me how many changes you made in total, counting the empty as one. Answer with only the requested number.",
+      "goal": [
+        {
+          "name": "emptied",
+          "path": "derived.trash",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "nothing deleted",
+          "path": "derived.deletedCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "update fits",
+          "path": "derived.canUpdate",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "exactly four offloaded",
+          "path": "derived.offloadedCount",
+          "op": "eq",
+          "value": 4
+        },
+        {
+          "name": "backup fits",
+          "path": "derived.backupFits",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "exactly four switches off",
+          "path": "derived.bakOffCount",
+          "op": "eq",
+          "value": 4
+        },
+        {
+          "name": "Requested numeric answer",
+          "source": "answer",
+          "op": "eq",
+          "value": 9,
+          "extract": "single_number"
+        }
+      ],
+      "answer_expected": true
+    }
+  ],
+  "revision": "open-source-review-4"
+}

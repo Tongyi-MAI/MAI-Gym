@@ -1,0 +1,550 @@
+{
+  "env": "roost_stays",
+  "note": "Golden action sequences. CI replays them and runs the verifier — if one stops passing, the environment or the task drifted.",
+  "solutions": {
+    "T01_currency_and_optout": [
+      {
+        "action": "tap",
+        "id": "tab_profile"
+      },
+      {
+        "action": "tap",
+        "id": "me_settings"
+      },
+      {
+        "action": "tap",
+        "id": "cur_EUR"
+      },
+      {
+        "action": "tap",
+        "id": "set_marketing"
+      }
+    ],
+    "T02_wishlist_two": [
+      {
+        "action": "tap",
+        "id": "fav_stay_p_tree"
+      },
+      {
+        "action": "tap",
+        "id": "fav_stay_p_dome"
+      }
+    ],
+    "T03_simple_booking": [
+      {
+        "action": "tap",
+        "id": "home_dates"
+      },
+      {
+        "action": "tap",
+        "id": "day_2026-06-17"
+      },
+      {
+        "action": "tap",
+        "id": "day_2026-06-20"
+      },
+      {
+        "action": "tap",
+        "id": "cal_done"
+      },
+      {
+        "action": "tap",
+        "id": "stay_p_loft"
+      },
+      {
+        "action": "tap",
+        "id": "reserve"
+      },
+      {
+        "action": "tap",
+        "id": "book_confirm"
+      }
+    ],
+    "T04_query_cheapest_pet_friendly": [
+      {
+        "action": "tap",
+        "id": "home_search_go"
+      },
+      {
+        "action": "tap",
+        "id": "filter_pets"
+      },
+      {
+        "action": "tap",
+        "id": "filter_freecancel"
+      },
+      {
+        "action": "tap",
+        "id": "sort_price"
+      },
+      {
+        "action": "finish",
+        "answer": "118"
+      }
+    ],
+    "T05_custom_booking_flagship": [
+      {
+        "action": "tap",
+        "id": "home_dates"
+      },
+      {
+        "action": "tap",
+        "id": "day_2026-06-20"
+      },
+      {
+        "action": "tap",
+        "id": "day_2026-06-23"
+      },
+      {
+        "action": "tap",
+        "id": "cal_done"
+      },
+      {
+        "action": "tap",
+        "id": "home_guests"
+      },
+      {
+        "action": "tap",
+        "id": "g_adults_plus"
+      },
+      {
+        "action": "tap",
+        "id": "g_children_plus"
+      },
+      {
+        "action": "tap",
+        "id": "g_pets_plus"
+      },
+      {
+        "action": "tap",
+        "id": "guests_done"
+      },
+      {
+        "action": "tap",
+        "id": "stay_p_cabin"
+      },
+      {
+        "action": "tap",
+        "id": "reserve"
+      },
+      {
+        "action": "tap",
+        "id": "addon_breakfast"
+      },
+      {
+        "action": "tap",
+        "id": "addon_checkout"
+      },
+      {
+        "action": "tap",
+        "id": "book_promo"
+      },
+      {
+        "action": "type",
+        "id": "promo_input",
+        "text": "ROOST20"
+      },
+      {
+        "action": "tap",
+        "id": "promo_apply"
+      },
+      {
+        "action": "tap",
+        "id": "book_payment"
+      },
+      {
+        "action": "tap",
+        "id": "pay_pm_visa"
+      },
+      {
+        "action": "type",
+        "id": "book_note",
+        "text": "Arriving late, around 10pm"
+      },
+      {
+        "action": "tap",
+        "id": "book_confirm"
+      }
+    ],
+    "T06_cancel_trip": [
+      {
+        "action": "tap",
+        "id": "tab_trips"
+      },
+      {
+        "action": "tap",
+        "id": "trip_cancel_b_2001"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      }
+    ],
+    "T07_add_card_and_default": [
+      {
+        "action": "tap",
+        "id": "tab_profile"
+      },
+      {
+        "action": "tap",
+        "id": "me_payments"
+      },
+      {
+        "action": "tap",
+        "id": "card_add"
+      },
+      {
+        "action": "type",
+        "id": "card_number",
+        "text": "5412 3456 7890 4417"
+      },
+      {
+        "action": "type",
+        "id": "card_exp",
+        "text": "09/29"
+      },
+      {
+        "action": "tap",
+        "id": "card_save"
+      },
+      {
+        "action": "tap",
+        "id": "pay_default_pm_new4"
+      }
+    ],
+    "T08_constraint_booking": [
+      {
+        "action": "tap",
+        "id": "home_dates"
+      },
+      {
+        "action": "tap",
+        "id": "day_2026-06-10"
+      },
+      {
+        "action": "tap",
+        "id": "day_2026-06-13"
+      },
+      {
+        "action": "tap",
+        "id": "cal_done"
+      },
+      {
+        "action": "tap",
+        "id": "stay_p_lake"
+      },
+      {
+        "action": "tap",
+        "id": "reserve"
+      },
+      {
+        "action": "tap",
+        "id": "book_confirm"
+      }
+    ],
+    "T09_units_and_stepfree": [
+      {
+        "action": "tap",
+        "id": "tab_profile"
+      },
+      {
+        "action": "tap",
+        "id": "me_settings"
+      },
+      {
+        "action": "tap",
+        "id": "unit_km"
+      },
+      {
+        "action": "tap",
+        "id": "set_accessibleOnly"
+      }
+    ],
+    "T10_query_nearest_stay": [
+      {
+        "action": "tap",
+        "id": "home_search_go"
+      },
+      {
+        "action": "tap",
+        "id": "sort_distance"
+      },
+      {
+        "action": "finish",
+        "answer": "160"
+      }
+    ],
+    "T11_wishlist_far_stays": [
+      {
+        "action": "tap",
+        "id": "fav_stay_p_loft"
+      },
+      {
+        "action": "tap",
+        "id": "fav_stay_p_lake"
+      }
+    ],
+    "T12_mark_review_helpful": [
+      {
+        "action": "tap",
+        "id": "stay_p_cabin"
+      },
+      {
+        "action": "tap",
+        "id": "stay_rating"
+      },
+      {
+        "action": "tap",
+        "id": "helpful_rv_cabin_3"
+      }
+    ],
+    "T13_query_worst_review": [
+      {
+        "action": "tap",
+        "id": "stay_p_lake"
+      },
+      {
+        "action": "tap",
+        "id": "stay_rating"
+      },
+      {
+        "action": "tap",
+        "id": "rsort_low"
+      },
+      {
+        "action": "finish",
+        "answer": "3"
+      }
+    ],
+    "T14_query_location_score": [
+      {
+        "action": "tap",
+        "id": "stay_p_loft"
+      },
+      {
+        "action": "tap",
+        "id": "stay_rating"
+      },
+      {
+        "action": "finish",
+        "answer": "5.0"
+      }
+    ],
+    "T15_reviews_then_book": [
+      {
+        "action": "tap",
+        "id": "stay_p_tree"
+      },
+      {
+        "action": "tap",
+        "id": "stay_rating"
+      },
+      {
+        "action": "tap",
+        "id": "helpful_rv_tree_1"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "stay_fav"
+      },
+      {
+        "action": "tap",
+        "id": "stay_dates"
+      },
+      {
+        "action": "tap",
+        "id": "day_2026-06-25"
+      },
+      {
+        "action": "tap",
+        "id": "day_2026-06-27"
+      },
+      {
+        "action": "tap",
+        "id": "cal_done"
+      },
+      {
+        "action": "tap",
+        "id": "reserve"
+      },
+      {
+        "action": "tap",
+        "id": "book_confirm"
+      }
+    ],
+    "T16_change_dates_then_book": [
+      {
+        "action": "tap",
+        "id": "home_dates"
+      },
+      {
+        "action": "tap",
+        "id": "day_2026-06-12"
+      },
+      {
+        "action": "tap",
+        "id": "day_2026-06-14"
+      },
+      {
+        "action": "tap",
+        "id": "cal_done"
+      },
+      {
+        "action": "tap",
+        "id": "stay_p_dome"
+      },
+      {
+        "action": "tap",
+        "id": "reserve"
+      },
+      {
+        "action": "tap",
+        "id": "book_confirm"
+      }
+    ],
+    "T17_expired_promo": [
+      {
+        "action": "tap",
+        "id": "home_dates"
+      },
+      {
+        "action": "tap",
+        "id": "day_2026-06-15"
+      },
+      {
+        "action": "tap",
+        "id": "day_2026-06-17"
+      },
+      {
+        "action": "tap",
+        "id": "cal_done"
+      },
+      {
+        "action": "tap",
+        "id": "stay_p_loft"
+      },
+      {
+        "action": "tap",
+        "id": "reserve"
+      },
+      {
+        "action": "tap",
+        "id": "book_promo"
+      },
+      {
+        "action": "type",
+        "id": "promo_input",
+        "text": "SPRING10"
+      },
+      {
+        "action": "tap",
+        "id": "promo_apply"
+      },
+      {
+        "action": "tap",
+        "id": "sheet_close"
+      },
+      {
+        "action": "tap",
+        "id": "book_confirm"
+      }
+    ],
+    "T18_remove_card_set_default": [
+      {
+        "action": "tap",
+        "id": "tab_profile"
+      },
+      {
+        "action": "tap",
+        "id": "me_payments"
+      },
+      {
+        "action": "tap",
+        "id": "pay_delete_pm_paypal"
+      },
+      {
+        "action": "tap",
+        "id": "pay_default_pm_visa"
+      }
+    ],
+    "T19_rebook_past_trip": [
+      {
+        "action": "tap",
+        "id": "tab_trips"
+      },
+      {
+        "action": "tap",
+        "id": "trip_rebook_b_2002"
+      },
+      {
+        "action": "tap",
+        "id": "stay_dates"
+      },
+      {
+        "action": "tap",
+        "id": "day_2026-06-24"
+      },
+      {
+        "action": "tap",
+        "id": "day_2026-06-26"
+      },
+      {
+        "action": "tap",
+        "id": "cal_done"
+      },
+      {
+        "action": "tap",
+        "id": "reserve"
+      },
+      {
+        "action": "tap",
+        "id": "book_confirm"
+      }
+    ],
+    "T20_nearby_with_breakfast": [
+      {
+        "action": "tap",
+        "id": "home_dates"
+      },
+      {
+        "action": "tap",
+        "id": "day_2026-06-10"
+      },
+      {
+        "action": "tap",
+        "id": "day_2026-06-13"
+      },
+      {
+        "action": "tap",
+        "id": "cal_done"
+      },
+      {
+        "action": "tap",
+        "id": "home_search_go"
+      },
+      {
+        "action": "tap",
+        "id": "filter_nearby"
+      },
+      {
+        "action": "tap",
+        "id": "result_p_dome"
+      },
+      {
+        "action": "tap",
+        "id": "reserve"
+      },
+      {
+        "action": "tap",
+        "id": "addon_breakfast"
+      },
+      {
+        "action": "tap",
+        "id": "book_confirm"
+      }
+    ]
+  }
+}

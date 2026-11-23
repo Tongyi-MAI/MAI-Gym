@@ -1,0 +1,455 @@
+{
+  "env": "sonora_music",
+  "note": "Golden action sequences replayed by CI.",
+  "solutions": {
+    "T01_pause_shuffle": [
+      {
+        "action": "tap",
+        "id": "mini_play"
+      },
+      {
+        "action": "tap",
+        "id": "mini_player"
+      },
+      {
+        "action": "tap",
+        "id": "t_shuffle"
+      }
+    ],
+    "T02_quality_explicit": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "quality_lossless"
+      },
+      {
+        "action": "tap",
+        "id": "set_explicitFilter"
+      }
+    ],
+    "T03_like_current": [
+      {
+        "action": "tap",
+        "id": "mini_player"
+      },
+      {
+        "action": "tap",
+        "id": "player_like"
+      }
+    ],
+    "T04_play_album": [
+      {
+        "action": "tap",
+        "id": "album_a_neon"
+      },
+      {
+        "action": "tap",
+        "id": "album_play"
+      }
+    ],
+    "T05_queue_add": [
+      {
+        "action": "tap",
+        "id": "tab_search"
+      },
+      {
+        "action": "type",
+        "id": "search_input",
+        "text": "salt marsh"
+      },
+      {
+        "action": "tap",
+        "id": "search_go"
+      },
+      {
+        "action": "tap",
+        "id": "find_menu_t_13"
+      },
+      {
+        "action": "tap",
+        "id": "tm_queue"
+      }
+    ],
+    "T06_repeat_one": [
+      {
+        "action": "tap",
+        "id": "mini_player"
+      },
+      {
+        "action": "tap",
+        "id": "t_repeat"
+      },
+      {
+        "action": "tap",
+        "id": "t_repeat"
+      }
+    ],
+    "T07_seek_half": [
+      {
+        "action": "tap",
+        "id": "mini_player"
+      },
+      {
+        "action": "tap",
+        "id": "seek_50"
+      }
+    ],
+    "T08_query_album_length": [
+      {
+        "action": "tap",
+        "id": "tab_library"
+      },
+      {
+        "action": "tap",
+        "id": "lib_albums"
+      },
+      {
+        "action": "tap",
+        "id": "libalbum_a_glass"
+      },
+      {
+        "action": "finish",
+        "answer": "27"
+      }
+    ],
+    "T09_query_longest": [
+      {
+        "action": "tap",
+        "id": "tab_library"
+      },
+      {
+        "action": "tap",
+        "id": "lib_albums"
+      },
+      {
+        "action": "tap",
+        "id": "libalbum_a_salt"
+      },
+      {
+        "action": "finish",
+        "answer": "Low Tide, Late"
+      }
+    ],
+    "T10_playlist_add": [
+      {
+        "action": "tap",
+        "id": "tab_search"
+      },
+      {
+        "action": "type",
+        "id": "search_input",
+        "text": "chrome rain"
+      },
+      {
+        "action": "tap",
+        "id": "search_go"
+      },
+      {
+        "action": "tap",
+        "id": "find_menu_t_09"
+      },
+      {
+        "action": "tap",
+        "id": "tm_playlist"
+      },
+      {
+        "action": "tap",
+        "id": "addto_p_focus"
+      }
+    ],
+    "T11_playlist_reorder": [
+      {
+        "action": "tap",
+        "id": "tab_library"
+      },
+      {
+        "action": "tap",
+        "id": "lib_pl_p_drive"
+      },
+      {
+        "action": "tap",
+        "id": "pl_up_1"
+      }
+    ],
+    "T12_queue_reorder": [
+      {
+        "action": "tap",
+        "id": "mini_player"
+      },
+      {
+        "action": "tap",
+        "id": "player_queue"
+      },
+      {
+        "action": "tap",
+        "id": "q_up_2"
+      },
+      {
+        "action": "tap",
+        "id": "q_up_1"
+      }
+    ],
+    "T13_queue_remove": [
+      {
+        "action": "tap",
+        "id": "mini_player"
+      },
+      {
+        "action": "tap",
+        "id": "player_queue"
+      },
+      {
+        "action": "tap",
+        "id": "q_del_1"
+      }
+    ],
+    "T14_new_playlist": [
+      {
+        "action": "tap",
+        "id": "tab_library"
+      },
+      {
+        "action": "tap",
+        "id": "new_playlist"
+      },
+      {
+        "action": "type",
+        "id": "pl_name",
+        "text": "Late Shift"
+      },
+      {
+        "action": "tap",
+        "id": "pl_create"
+      },
+      {
+        "action": "tap",
+        "id": "tab_search"
+      },
+      {
+        "action": "type",
+        "id": "search_input",
+        "text": "breakwater"
+      },
+      {
+        "action": "tap",
+        "id": "search_go"
+      },
+      {
+        "action": "tap",
+        "id": "find_menu_t_11"
+      },
+      {
+        "action": "tap",
+        "id": "tm_playlist"
+      },
+      {
+        "action": "tap",
+        "id": "addto_pl_1"
+      }
+    ],
+    "T15_session_flagship": [
+      {
+        "action": "tap",
+        "id": "tab_library"
+      },
+      {
+        "action": "tap",
+        "id": "lib_pl_p_focus"
+      },
+      {
+        "action": "tap",
+        "id": "playlist_play"
+      },
+      {
+        "action": "tap",
+        "id": "pl_menu_t_23"
+      },
+      {
+        "action": "tap",
+        "id": "tm_next"
+      },
+      {
+        "action": "tap",
+        "id": "mini_player"
+      },
+      {
+        "action": "tap",
+        "id": "t_repeat"
+      },
+      {
+        "action": "tap",
+        "id": "seek_25"
+      },
+      {
+        "action": "tap",
+        "id": "player_album"
+      },
+      {
+        "action": "tap",
+        "id": "album_download"
+      }
+    ],
+    "T16_downloads": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "dl_a_dust"
+      },
+      {
+        "action": "tap",
+        "id": "dl_a_lantern"
+      }
+    ],
+    "T17_explicit_filter": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "set_explicitFilter"
+      },
+      {
+        "action": "tap",
+        "id": "tab_library"
+      },
+      {
+        "action": "tap",
+        "id": "lib_pl_p_drive"
+      },
+      {
+        "action": "finish",
+        "answer": "3"
+      }
+    ],
+    "T18_crossfade_sleep": [
+      {
+        "action": "tap",
+        "id": "tab_settings"
+      },
+      {
+        "action": "tap",
+        "id": "crossfade_inc"
+      },
+      {
+        "action": "tap",
+        "id": "crossfade_inc"
+      },
+      {
+        "action": "tap",
+        "id": "crossfade_inc"
+      },
+      {
+        "action": "tap",
+        "id": "crossfade_inc"
+      },
+      {
+        "action": "tap",
+        "id": "crossfade_inc"
+      },
+      {
+        "action": "tap",
+        "id": "crossfade_inc"
+      },
+      {
+        "action": "tap",
+        "id": "sleep_30"
+      }
+    ],
+    "T19_curate_likes": [
+      {
+        "action": "tap",
+        "id": "tab_library"
+      },
+      {
+        "action": "tap",
+        "id": "lib_liked"
+      },
+      {
+        "action": "tap",
+        "id": "lib_menu_t_03"
+      },
+      {
+        "action": "tap",
+        "id": "tm_like"
+      },
+      {
+        "action": "tap",
+        "id": "lib_menu_t_16"
+      },
+      {
+        "action": "tap",
+        "id": "tm_like"
+      },
+      {
+        "action": "tap",
+        "id": "mini_player"
+      },
+      {
+        "action": "tap",
+        "id": "player_like"
+      },
+      {
+        "action": "back"
+      },
+      {
+        "action": "tap",
+        "id": "tab_search"
+      },
+      {
+        "action": "type",
+        "id": "search_input",
+        "text": "chrome rain"
+      },
+      {
+        "action": "tap",
+        "id": "search_go"
+      },
+      {
+        "action": "tap",
+        "id": "find_menu_t_09"
+      },
+      {
+        "action": "tap",
+        "id": "tm_like"
+      }
+    ],
+    "T20_queue_no_mira": [
+      {
+        "action": "tap",
+        "id": "album_a_neon"
+      },
+      {
+        "action": "tap",
+        "id": "album_play"
+      },
+      {
+        "action": "tap",
+        "id": "tab_search"
+      },
+      {
+        "action": "type",
+        "id": "search_input",
+        "text": "breakwater"
+      },
+      {
+        "action": "tap",
+        "id": "search_go"
+      },
+      {
+        "action": "tap",
+        "id": "find_menu_t_11"
+      },
+      {
+        "action": "tap",
+        "id": "tm_queue"
+      }
+    ]
+  }
+}

@@ -1,0 +1,1018 @@
+{
+  "env": "lumen_camera",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "T01_settings",
+      "name": "Two switches",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "settings"
+      ],
+      "instruction": "In Setup, turn off the viewfinder grid and turn on location tagging. Leave the meter alone.",
+      "goal": [
+        {
+          "name": "Grid off",
+          "path": "derived.settings.gridLines",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Location on",
+          "path": "derived.settings.saveLocation",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Meter untouched",
+          "path": "derived.settings.showMeter",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "The dials did not move",
+          "path": "derived.offBy",
+          "op": "eq",
+          "value": -2
+        }
+      ]
+    },
+    {
+      "id": "T02_off",
+      "name": "Question: how far off is it?",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "The frame is not correctly exposed. By how many stops, and in which direction?",
+      "goal": [
+        {
+          "name": "two stops",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)2(?!\\d)|[Tt]wo",
+          "weight": 3
+        },
+        {
+          "name": "under",
+          "source": "answer",
+          "op": "regex",
+          "value": "(under|欠曝|dark|-2)",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.offBy",
+          "op": "eq",
+          "value": -2
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T03_settings_now",
+      "name": "Question: what is it set to?",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 10,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "What are the three settings on the dials right now?",
+      "goal": [
+        {
+          "name": "f/2",
+          "source": "answer",
+          "op": "regex",
+          "value": "f/?2(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "1/30",
+          "source": "answer",
+          "op": "regex",
+          "value": "1/30",
+          "weight": 3
+        },
+        {
+          "name": "ISO 800",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![\\d.,+-])800(?:[.,]0+)?(?!\\d|[.,]\\d)",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.apertureStop",
+          "op": "eq",
+          "value": 1
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T04_thresholds",
+      "name": "Question: where the lines are",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 14,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "Below which shutter speed does a handheld frame smear, and above which ISO does it get grainy?",
+      "goal": [
+        {
+          "name": "1/30",
+          "source": "answer",
+          "op": "regex",
+          "value": "1/30",
+          "weight": 3
+        },
+        {
+          "name": "ISO 1600",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![\\d.,+-])1600(?:[.,]0+)?(?!\\d|[.,]\\d)",
+          "weight": 3
+        },
+        {
+          "name": "Nothing was changed",
+          "path": "derived.offBy",
+          "op": "eq",
+          "value": -2
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T05_shots",
+      "name": "Question: how many frames fit?",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 12,
+      "tags": [
+        "query",
+        "read-only"
+      ],
+      "instruction": "At the current quality setting, how many more shots will fit in the free space? Answer with only the requested number.",
+      "goal": [
+        {
+          "name": "Nothing was shot",
+          "path": "derived.shotCount",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Requested numeric answer",
+          "source": "answer",
+          "op": "eq",
+          "value": 1215,
+          "extract": "single_number"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T06_locked_dial",
+      "name": "The dial the camera is holding",
+      "level": "L1",
+      "seed": 0,
+      "max_steps": 16,
+      "tags": [
+        "refusal"
+      ],
+      "instruction": "Switch to aperture priority, then try to change the shutter speed yourself. Say what the camera told you.",
+      "goal": [
+        {
+          "name": "You are in aperture priority",
+          "path": "derived.mode",
+          "op": "eq",
+          "value": "m_ap"
+        },
+        {
+          "name": "the camera picks the shutter",
+          "source": "answer",
+          "op": "regex",
+          "value": "(相机|camera|优先|priority|凑)",
+          "weight": 3
+        },
+        {
+          "name": "Required: accepted_events[?action.action=tap][?action.id=sh_4]",
+          "source": "trajectory",
+          "path": "accepted_events[?action.action=tap][?action.id=sh_4]",
+          "op": "len_gte",
+          "value": 1
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T07_expose",
+      "name": "Get it exposed",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "exposure"
+      ],
+      "instruction": "For the current living-room scene, use manual mode to get the exposure to exactly zero. Any combination of aperture, shutter and ISO is fine.",
+      "goal": [
+        {
+          "name": "Exposure is spot on",
+          "path": "derived.offBy",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Still in manual",
+          "path": "derived.mode",
+          "op": "eq",
+          "value": "m_manual"
+        },
+        {
+          "name": "derived.scene",
+          "path": "derived.scene",
+          "op": "eq",
+          "value": "sc_room"
+        }
+      ]
+    },
+    {
+      "id": "T08_iso_cost",
+      "name": "What the easy fix costs",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "exposure",
+        "reasoning"
+      ],
+      "instruction": "Fix the two stops by raising the ISO alone. Then tell me what that broke.",
+      "goal": [
+        {
+          "name": "Exposure is right",
+          "path": "derived.offBy",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "ISO is at 3200",
+          "path": "derived.iso",
+          "op": "eq",
+          "value": "3200"
+        },
+        {
+          "name": "It is grainy now",
+          "path": "derived.noisy",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "noise",
+          "source": "answer",
+          "op": "regex",
+          "value": "(nois|grain|噪)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T09_shutter_cost",
+      "name": "The other easy fix",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 20,
+      "tags": [
+        "exposure",
+        "reasoning"
+      ],
+      "instruction": "Keep ISO at 800 and the aperture unchanged. In manual mode, correct the two-stop underexposure using only the shutter, then explain the resulting trade-off.",
+      "goal": [
+        {
+          "name": "Exposure is right",
+          "path": "derived.offBy",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "ISO is back at 800",
+          "path": "derived.iso",
+          "op": "eq",
+          "value": "800"
+        },
+        {
+          "name": "Shutter is 1/8",
+          "path": "derived.shutter",
+          "op": "eq",
+          "value": "1/8"
+        },
+        {
+          "name": "It will smear",
+          "path": "derived.blurred",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "blur",
+          "source": "answer",
+          "op": "regex",
+          "value": "(blur|smear|shake|糊)",
+          "weight": 3
+        },
+        {
+          "name": "derived.scene",
+          "path": "derived.scene",
+          "op": "eq",
+          "value": "sc_room"
+        },
+        {
+          "name": "derived.mode",
+          "path": "derived.mode",
+          "op": "eq",
+          "value": "m_manual"
+        },
+        {
+          "name": "derived.aperture",
+          "path": "derived.aperture",
+          "op": "eq",
+          "value": "f/2"
+        },
+        {
+          "name": "derived.ev",
+          "path": "derived.ev",
+          "op": "eq",
+          "value": 0
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T10_ap_mode",
+      "name": "Let the camera pick the shutter",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "mode"
+      ],
+      "instruction": "Switch to aperture priority and leave everything else. What shutter does the camera choose, and is that usable handheld?",
+      "goal": [
+        {
+          "name": "Aperture priority",
+          "path": "derived.mode",
+          "op": "eq",
+          "value": "m_ap"
+        },
+        {
+          "name": "It picked 1/8",
+          "path": "derived.shutter",
+          "op": "eq",
+          "value": "1/8"
+        },
+        {
+          "name": "Which smears",
+          "path": "derived.blurred",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "1/8",
+          "source": "answer",
+          "op": "regex",
+          "value": "1/8",
+          "weight": 3
+        },
+        {
+          "name": "no, it will smear",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![A-Za-z])(?:not|blur|smear|糊)",
+          "weight": 3
+        },
+        {
+          "name": "Required: scene",
+          "path": "scene",
+          "op": "eq",
+          "value": "sc_room"
+        },
+        {
+          "name": "Required: ap",
+          "path": "ap",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "Required: sh",
+          "path": "sh",
+          "op": "eq",
+          "value": 6
+        },
+        {
+          "name": "Required: iso",
+          "path": "iso",
+          "op": "eq",
+          "value": 4
+        },
+        {
+          "name": "Required: ev",
+          "path": "ev",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Required: format",
+          "path": "format",
+          "op": "eq",
+          "value": "j12"
+        },
+        {
+          "name": "Required: burst",
+          "path": "burst",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "Required: freeMb",
+          "path": "freeMb",
+          "op": "eq",
+          "value": 4860
+        },
+        {
+          "name": "Required: shots",
+          "path": "shots",
+          "op": "multiset_eq",
+          "value": []
+        },
+        {
+          "name": "Required: settings",
+          "path": "settings",
+          "op": "eq",
+          "value": {
+            "gridLines": true,
+            "showMeter": true,
+            "saveLocation": false
+          }
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T11_auto",
+      "name": "What auto does",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "mode"
+      ],
+      "instruction": "Switch to full auto and tell me the three settings it lands on.",
+      "goal": [
+        {
+          "name": "Auto mode",
+          "path": "derived.mode",
+          "op": "eq",
+          "value": "m_auto"
+        },
+        {
+          "name": "It is clean",
+          "path": "derived.clean",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "f/1.4",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![\\d.,+-])(?:1[.,]4)(?!\\d|[.,]\\d)",
+          "weight": 3
+        },
+        {
+          "name": "1/30",
+          "source": "answer",
+          "op": "regex",
+          "value": "1/30",
+          "weight": 3
+        },
+        {
+          "name": "ISO 1600",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![\\d.,+-])1600(?:[.,]0+)?(?!\\d|[.,]\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T12_raw",
+      "name": "Switch to RAW",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "storage"
+      ],
+      "instruction": "Set the quality to RAW 48MP and tell me how many shots that leaves room for. Answer with only the requested number.",
+      "goal": [
+        {
+          "name": "RAW 48 is selected",
+          "path": "derived.format",
+          "op": "eq",
+          "value": "r48"
+        },
+        {
+          "name": "78 MB a frame",
+          "path": "derived.perShotMb",
+          "op": "eq",
+          "value": 78
+        },
+        {
+          "name": "62 shots left",
+          "path": "derived.shotsLeft",
+          "op": "eq",
+          "value": 62
+        },
+        {
+          "name": "Requested numeric answer",
+          "source": "answer",
+          "op": "eq",
+          "value": 62,
+          "extract": "single_number"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T13_park",
+      "name": "Out in the sun",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "scene"
+      ],
+      "instruction": "Switch the scene to the park, leaving the dials where they are, and tell me what happens.",
+      "goal": [
+        {
+          "name": "Park scene",
+          "path": "derived.scene",
+          "op": "eq",
+          "value": "sc_park"
+        },
+        {
+          "name": "Six stops over",
+          "path": "derived.offBy",
+          "op": "eq",
+          "value": 6
+        },
+        {
+          "name": "six stops over",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)6(?!\\d)|[Ss]ix",
+          "weight": 3
+        },
+        {
+          "name": "blown out",
+          "source": "answer",
+          "op": "regex",
+          "value": "(over|blown|过曝|bright)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T14_night_market",
+      "name": "The night market",
+      "level": "L2",
+      "seed": 0,
+      "max_steps": 18,
+      "tags": [
+        "scene"
+      ],
+      "instruction": "Switch to the night market scene. Do the current dials work there? Say why.",
+      "goal": [
+        {
+          "name": "Night market",
+          "path": "derived.scene",
+          "op": "eq",
+          "value": "sc_street"
+        },
+        {
+          "name": "Nothing is wrong with it",
+          "path": "derived.clean",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "The dials never moved",
+          "path": "derived.apertureStop",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "yes, it is fine",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?i)\\b(?:yes|correct|clean|fine)\\b|正好|可以|合适",
+          "weight": 3
+        },
+        {
+          "name": "Explains the exposure target",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?i)(?<!\\d)9(?!\\d)\\s*(?:stops?|档)|(?:需要|目标|曝光).*?(?<!\\d)9(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "Preserve sh",
+          "path": "sh",
+          "op": "eq",
+          "value": 6
+        },
+        {
+          "name": "Preserve iso",
+          "path": "iso",
+          "op": "eq",
+          "value": 4
+        },
+        {
+          "name": "Preserve ev",
+          "path": "ev",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "Preserve mode",
+          "path": "mode",
+          "op": "eq",
+          "value": "m_manual"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T15_only_clean",
+      "name": "The only combination that works",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "constraint",
+        "search"
+      ],
+      "instruction": "In manual, in this living room, find the settings that are correctly exposed AND will not smear AND will not be grainy. Set them, and say what they are.",
+      "goal": [
+        {
+          "name": "Exposed exactly",
+          "path": "derived.offBy",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "No smear",
+          "path": "derived.blurred",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "No grain",
+          "path": "derived.noisy",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Aperture f/1.4",
+          "path": "derived.aperture",
+          "op": "eq",
+          "value": "f/1.4"
+        },
+        {
+          "name": "Shutter 1/30",
+          "path": "derived.shutter",
+          "op": "eq",
+          "value": "1/30"
+        },
+        {
+          "name": "ISO 1600",
+          "path": "derived.iso",
+          "op": "eq",
+          "value": "1600"
+        },
+        {
+          "name": "Still manual",
+          "path": "derived.mode",
+          "op": "eq",
+          "value": "m_manual"
+        },
+        {
+          "name": "f/1.4, 1/30, ISO 1600",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<![\\d.,+-])(?:1[.,]4)(?!\\d|[.,]\\d)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T16_why_unique",
+      "name": "And why there is only one",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 26,
+      "tags": [
+        "reasoning"
+      ],
+      "instruction": "In the living room, find the manual settings that give correct exposure without motion blur or excessive noise. Set them, then explain why this is the only combination of aperture, shutter and ISO that meets all three requirements.",
+      "goal": [
+        {
+          "name": "You found it",
+          "path": "derived.clean",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "name": "Aperture f/1.4",
+          "path": "derived.aperture",
+          "op": "eq",
+          "value": "f/1.4"
+        },
+        {
+          "name": "Still manual",
+          "path": "derived.mode",
+          "op": "eq",
+          "value": "m_manual"
+        },
+        {
+          "name": "the room needs 11 stops",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:(11|eleven))(?!\\d)",
+          "weight": 3
+        },
+        {
+          "name": "the three limits pin every dial",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:(1/30|1600|1[.,]4|limit|line|ceiling|fastest|slowest))(?!\\d)",
+          "weight": 3,
+          "hint": "the shutter cannot go past 1/30, the ISO cannot go past 1600, so what is left?"
+        },
+        {
+          "name": "derived.scene",
+          "path": "derived.scene",
+          "op": "eq",
+          "value": "sc_room"
+        },
+        {
+          "name": "Aperture setting",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?i)(?<![\\d.])(?:f/?\\s*)?1[.,]4(?!\\d)"
+        },
+        {
+          "name": "ISO setting",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?i)(?<!\\d)1[,]?600(?!\\d)"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T17_ap_priority_fix",
+      "name": "Make aperture priority behave",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 28,
+      "tags": [
+        "mode",
+        "constraint"
+      ],
+      "instruction": "Go to aperture priority. The shutter it picks smears. Without leaving that mode and without going past ISO 1600, get it to a shutter that will not smear. Say what you changed.",
+      "goal": [
+        {
+          "name": "Still aperture priority",
+          "path": "derived.mode",
+          "op": "eq",
+          "value": "m_ap"
+        },
+        {
+          "name": "The shutter is safe now",
+          "path": "derived.blurred",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "ISO stayed inside the line",
+          "path": "derived.noisy",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Exposure is right",
+          "path": "derived.offBy",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "opened the aperture and raised the ISO",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?<!\\d)(?:(1[.,]4|1600|aperture|ISO))(?!\\d)",
+          "weight": 3,
+          "hint": "the camera works out the shutter from the other two — so change both"
+        },
+        {
+          "name": "derived.scene",
+          "path": "derived.scene",
+          "op": "eq",
+          "value": "sc_room"
+        },
+        {
+          "name": "Aperture setting",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?i)(?<![\\d.])(?:f/?\\s*)?1[.,]4(?!\\d)"
+        },
+        {
+          "name": "ISO setting",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?i)(?<!\\d)1[,]?600(?!\\d)"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T18_raw_burst",
+      "name": "Ten RAW frames",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "storage",
+        "arithmetic"
+      ],
+      "instruction": "Set RAW 48MP and a burst of 10, then take one burst. Give the space used by that burst in MB and how many further individual shots will fit. Reply with only the numbers in that order, separated by semicolons.",
+      "goal": [
+        {
+          "name": "RAW 48",
+          "path": "derived.format",
+          "op": "eq",
+          "value": "r48"
+        },
+        {
+          "name": "Burst of ten",
+          "path": "derived.burst",
+          "op": "eq",
+          "value": 10
+        },
+        {
+          "name": "Ten frames taken",
+          "path": "derived.shotCount",
+          "op": "eq",
+          "value": 10
+        },
+        {
+          "name": "4,080 MB left",
+          "path": "derived.freeMb",
+          "op": "eq",
+          "value": 4080
+        },
+        {
+          "name": "52 shots left",
+          "path": "derived.shotsLeft",
+          "op": "eq",
+          "value": 52
+        },
+        {
+          "name": "All requested quantities",
+          "source": "answer",
+          "op": "eq",
+          "value": [
+            780,
+            52
+          ],
+          "extract": "numbers"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T19_good_frame",
+      "name": "One good frame, in RAW",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 32,
+      "tags": [
+        "constraint",
+        "commit"
+      ],
+      "instruction": "Get the frame right — exposed, not smeared, not grainy — set the quality to RAW 48MP, and take exactly one shot. Then tell me how many shots' worth of room is left. Answer with only the requested number.",
+      "goal": [
+        {
+          "name": "One shot taken",
+          "path": "derived.shotCount",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "And it was a good one",
+          "path": "derived.goodShots",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "name": "Shot in RAW 48",
+          "path": "derived.format",
+          "op": "eq",
+          "value": "r48"
+        },
+        {
+          "name": "4,782 MB left",
+          "path": "derived.freeMb",
+          "op": "eq",
+          "value": 4782
+        },
+        {
+          "name": "61 shots left",
+          "path": "derived.shotsLeft",
+          "op": "eq",
+          "value": 61
+        },
+        {
+          "name": "Requested numeric answer",
+          "source": "answer",
+          "op": "eq",
+          "value": 61,
+          "extract": "single_number"
+        }
+      ],
+      "answer_expected": true
+    },
+    {
+      "id": "T20_park_fix",
+      "name": "Six stops to give away",
+      "level": "L3",
+      "seed": 0,
+      "max_steps": 30,
+      "tags": [
+        "exposure",
+        "constraint"
+      ],
+      "instruction": "In manual mode, switch to the park. The frame is six stops over. Bring it back to correct without going past ISO 1600 and without a shutter slower than 1/30, and say which dials you used.",
+      "goal": [
+        {
+          "name": "Park scene",
+          "path": "derived.scene",
+          "op": "eq",
+          "value": "sc_park"
+        },
+        {
+          "name": "Exposed correctly",
+          "path": "derived.offBy",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "name": "No smear",
+          "path": "derived.blurred",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "No grain",
+          "path": "derived.noisy",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "name": "Still manual",
+          "path": "derived.mode",
+          "op": "eq",
+          "value": "m_manual"
+        },
+        {
+          "name": "Identify the changed exposure controls",
+          "source": "answer",
+          "op": "regex",
+          "value": "(?i)(ISO|aperture|shutter|f/|stop|快门|光圈|感光度)",
+          "weight": 3
+        }
+      ],
+      "answer_expected": true
+    }
+  ],
+  "revision": "open-source-review-4"
+}

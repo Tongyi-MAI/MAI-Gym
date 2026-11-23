@@ -4,28 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Trellis (mocked GUI env)</title>
-<!--
-  ============================================================================
-  Trellis — a single-file H5 build planner for agent research.
 
-  Same two-block contract as every environment here: script#engine is a pure,
-  DOM-free state machine on globalThis.GUI_ENGINE; script#ui renders its screen
-  tree and exposes window.__ENV__.
-
-  What is new: nothing on screen is a stored number. Twelve jobs, each with a
-  duration and a list of jobs that must finish first, and every figure the app
-  shows — the day each job can start, the day it must start, its float, the
-  finish date, which jobs are on the critical path — is a forward and backward
-  pass over that graph, recomputed from scratch on every action.
-
-  Two levers act on it. A job can be paid to go faster, up to a limit, at its
-  own price per day; and two of the dependencies are preferences rather than
-  physics and can be dropped. Both are traps as often as they are answers:
-  money spent on a job with float buys nothing at all, and shortening the
-  critical path moves it somewhere else, so the second day costs a different
-  amount from the first.
-  ============================================================================
--->
 <style>
 :root{
   --outer:#05070a;
@@ -294,18 +273,12 @@ body.bare .n-sheet{animation:none}
 <div id="hud" class="off"></div>
 
 <script id="engine">
-/* ===========================================================================
- * ENGINE — pure, deterministic, DOM-free.
- * Durations are integer days and money is integer pence. Every schedule
- * figure is recomputed by schedule(); none of them is ever stored.
- * ======================================================================== */
 (function(root){
 'use strict';
 
 var ENV_ID  = 'trellis_build';
 var VERSION = '1.0.0';
 
-/* ------------------------------------------------------------- utilities */
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function pad2(n){ return (n < 10 ? '0' : '') + n; }
 function hhmm(m){ m = ((m % 1440) + 1440) % 1440; return pad2(Math.floor(m/60)) + ':' + pad2(m%60); }
@@ -344,7 +317,6 @@ function setPath(o, path, value){
   return o;
 }
 
-/* ------------------------------------------- screen-tree node constructors */
 function N(t, o){ o = o || {}; o.t = t; return o; }
 function txt(s, cls){ return N('text', {text:s, cls:cls || ''}); }
 function row(id, text, o){
@@ -369,7 +341,6 @@ function push(st, name, params){ st.ui.stack.push({name:name, params:params || {
 function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
 function toast(st, t){ st.ui.toast = t; }
 
-/* ------------------------------------------------------ the build graph */
 function DEP(id, soft){ return {id:id, soft:!!soft}; }
 function TK(id, name, trade, days, deps, crashMax, crashCost, note){
   return {id:id, name:name, trade:trade, days:days, deps:deps, crashMax:crashMax,
@@ -424,8 +395,6 @@ function crashSpend(st){
   return n;
 }
 
-/* forward pass, then backward pass. TASKS is already in topological order,
- * which the reducer never changes, so one sweep each way is enough. */
 function schedule(st){
   var es = {}, ef = {}, ls = {}, lf = {}, i, t;
   for (i = 0; i < TASKS.length; i++){
@@ -453,14 +422,13 @@ function schedule(st){
 }
 function isCrit(st, id){ return schedule(st).slack[id] === 0; }
 
-/* ------------------------------------------------------------- the diary */
 var DOW = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 var MONTHS = [['Apr',30], ['May',31], ['Jun',30], ['Jul',31], ['Aug',31]];
 function calOffset(st, workDay){
   if (st.settings.workWeekends) return workDay;
   return Math.floor(workDay / 5) * 7 + (workDay % 5);
 }
-function dateOf(off){                      /* day 0 is Monday 6 April */
+function dateOf(off){
   var d = 6 + off, mi = 0;
   while (d > MONTHS[mi][1]) { d -= MONTHS[mi][1]; mi += 1; }
   return DOW[off % 7] + ' ' + d + ' ' + MONTHS[mi][0];
@@ -470,14 +438,12 @@ function finishDate(st){ return dateOf(calOffset(st, schedule(st).total - 1)); }
 function calendarDays(st){ return calOffset(st, schedule(st).total - 1) + 1; }
 function dayLabel(st, workDay){ return dateOf(calOffset(st, workDay)); }
 
-/* =========================================================== state */
 function createInitialState(seed){
   seed = seed || 0;
   return {
     meta:{env:ENV_ID, version:VERSION, seed:seed, steps:0, finished:false, answer:null},
-    crash:{},          /* task id -> days bought off */
-    dropped:{},        /* 'task>dep' -> true, soft dependencies only */
-    /* the seed permutes the order the trades are offered in, nothing else */
+    crash:{},
+    dropped:{},
     order:shuffled(TRADES, seed),
     ui:{tab:'plan', stack:[{name:'plan', params:{}}], sheet:null, confirm:null, inputs:{},
         toast:null, filter:'all'},
@@ -491,7 +457,6 @@ var SELECT = {
   route:route, tasks:TASKS
 };
 
-/* =========================================================== reducer */
 function reduce(prev, action){
   var st = clone(prev), A = action || {};
   st.ui.toast = null;
@@ -541,7 +506,6 @@ function reduce(prev, action){
     st.ui.filter = A.id;
     break;
 
-  /* ---- paying a job to go faster ---- */
   case 'CRASH': {
     var t = taskOf(A.id);
     if (!t) break;
@@ -571,7 +535,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- dropping a dependency that is only a preference ---- */
   case 'DROP_DEP': {
     var t2 = taskOf(A.id), d2 = null;
     if (!t2) break;
@@ -597,7 +560,6 @@ function reduce(prev, action){
   return st;
 }
 
-/* =========================================================== screens */
 function tabbar(st){
   var items = [
     {id:'tab_plan',     text:'Plan',     icon:'chart',  tab:'plan'},
@@ -667,8 +629,6 @@ function scrPlan(st){
   ]});
 }
 
-/* the graph is laid out here, in the engine, so the picture and the text
- * observation describe exactly the same arrangement */
 function levels(st){
   var lv = {}, out = [];
   TASKS.forEach(function(t){
@@ -906,11 +866,6 @@ function screen(st){
   return rootNode;
 }
 
-/* =======================================================================
- * TRAVERSAL — element index, GUI action interface, text observation.
- * Identical in every environment here: the screen tree is the only thing
- * that differs, and all three readers below walk that same tree.
- * ==================================================================== */
 var SKIP_KEYS = {act:1, minus:1, plus:1, close:1, yes:1, params:1, meta:1, grid:1, edges:1, levels:1, marks:1, deps:1};
 
 function labelOf(n){ return n.text || n.title || n.name || n.label || n.main || ''; }
@@ -924,9 +879,6 @@ function collect(n, out){
                                             input:(n.t === 'inputrow')});
   if (n.t === 'mask' && n.close)  out.push({id:n.id, act:n.close, text:'Dismiss overlay', t:'mask'});
   for (var k in n){
-    /* a node may carry extra buttons as a pair of keys: someId holds the
-     * test-id and some holds the action. That is how steppers, sheet close
-     * buttons and per-row buttons all get into the element index. */
     if (k.length > 2 && k.slice(-2) === 'Id' && typeof n[k] === 'string'){
       var sib = n[k.slice(0, -2)];
       if (sib && typeof sib === 'object' && sib.type)
@@ -979,7 +931,6 @@ function step(st, a){
   }
 }
 
-/* ------------------------------------------------- text observation (a11y) */
 function a11y(st){
   var rootNode = screen(st), lines = [], r = route(st);
   lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
@@ -1044,8 +995,6 @@ function walkText(n, d, out, st){
     if (v && typeof v === 'object') walkText(v, line !== null ? d+1 : d, out, st);
   }
 }
-/* per-environment nodes: return a string to print, true if already printed,
- * or null to ignore */
 function walkExtra(n, d, out, st){
 
   if (n.t === 'sum'){
@@ -1074,7 +1023,6 @@ function walkExtra(n, d, out, st){
   return null;
 }
 
-/* --------------------------------------------------------- derived view */
 function derive(st){
   var s = schedule(st), es = {}, slack = {}, len = {}, spend = {};
   TASKS.forEach(function(t){
@@ -1131,9 +1079,6 @@ root.GUI_ENGINE = ENGINE;
 </script>
 
 <script id="ui">
-/* ===========================================================================
- * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
- * ======================================================================== */
 (function(){
 'use strict';
 var E = window.GUI_ENGINE;

@@ -4,26 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Kestrel (mocked GUI env)</title>
-<!--
-  ============================================================================
-  Kestrel — a single-file H5 current account for agent research.
 
-  Same two-block contract as every environment here: script#engine is a pure,
-  DOM-free state machine on globalThis.GUI_ENGINE; script#ui renders its screen
-  tree and exposes window.__ENV__.
-
-  What is new: the balance is not a number, it is a line. Today is the 17th and
-  eight scheduled payments still have to come out before the month ends, so the
-  app can say what the balance will be on any day between now and then. That
-  projection is the world: pausing a standing order, moving its date, or pulling
-  money back out of a savings pot all bend the same line, and the app tells you
-  where the lowest point is. As seeded, the line dips to minus £72.49 on the
-  27th — one day before payday — and several different edits fix it.
-
-  Every amount is an integer in pence, so a projection is a sum of integers and
-  the lowest point is exact.
-  ============================================================================
--->
 <style>
 :root{
   --outer:#e3e6ee;
@@ -279,18 +260,12 @@ body.bare .n-sheet{animation:none}
 <div id="hud" class="off"></div>
 
 <script id="engine">
-/* ===========================================================================
- * ENGINE — pure, deterministic, DOM-free.
- * Money is an integer number of pence. The forecast is a running sum over the
- * scheduled payments that have not happened yet, so the lowest point is exact.
- * ======================================================================== */
 (function(root){
 'use strict';
 
 var ENV_ID  = 'kestrel_bank';
 var VERSION = '1.0.0';
 
-/* ------------------------------------------------------------- utilities */
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function pad2(n){ return (n < 10 ? '0' : '') + n; }
 function hhmm(m){ m = ((m % 1440) + 1440) % 1440; return pad2(Math.floor(m/60)) + ':' + pad2(m%60); }
@@ -329,7 +304,6 @@ function setPath(o, path, value){
   return o;
 }
 
-/* ------------------------------------------- screen-tree node constructors */
 function N(t, o){ o = o || {}; o.t = t; return o; }
 function txt(s, cls){ return N('text', {text:s, cls:cls || ''}); }
 function row(id, text, o){
@@ -354,7 +328,7 @@ function push(st, name, params){ st.ui.stack.push({name:name, params:params || {
 function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
 function toast(st, t){ st.ui.toast = t; }
 
-var TODAY = 17;                 /* the 17th of March; the clock does not move */
+var TODAY = 17;
 var MONTH = 'March';
 var DAYS_IN_MONTH = 31;
 
@@ -426,12 +400,10 @@ var POTS0 = [
   {id:'p_bike',    name:'New bike',  balance:7500,  target:60000, icon:'fitness'}
 ];
 
-/* ------------------------------------------------------- the money itself */
 function orderOf(st, id){ for (var i=0;i<st.orders.length;i++) if (st.orders[i].id === id) return st.orders[i]; return null; }
 function txnOf(st, id){ for (var i=0;i<st.txns.length;i++) if (st.txns[i].id === id) return st.txns[i]; return null; }
 function potOf(st, id){ for (var i=0;i<st.pots.length;i++) if (st.pots[i].id === id) return st.pots[i]; return null; }
 
-/* everything still to happen this month, in the order it will happen */
 function upcoming(st){
   var out = st.orders.filter(function(o){
     return o.status === 'active' && o.day > st.meta.today;
@@ -439,7 +411,6 @@ function upcoming(st){
   out.sort(function(a, b){ return a.day - b.day || a.name.localeCompare(b.name); });
   return out;
 }
-/* the balance after each of those events: this is the line the app draws */
 function projection(st){
   var bal = st.account.balance, out = [];
   upcoming(st).forEach(function(e){
@@ -477,7 +448,6 @@ function categoryTotals(st){
   return out;
 }
 function spentIn(st, cat){
-  /* net spend in a category this month: refunds count against it */
   var n = 0;
   st.txns.forEach(function(t){ if (t.cat === cat) n += -t.amount; });
   return n;
@@ -497,7 +467,6 @@ function visibleTxns(st){
   });
 }
 
-/* =========================================================== state */
 function createInitialState(seed){
   seed = seed || 0;
   return {
@@ -506,7 +475,6 @@ function createInitialState(seed){
     account:{name:'R. Marchmont', sort:'20-41-08', number:'****4417', balance:42150},
     txns:clone(TXNS0),
     orders:clone(ORDERS0),
-    /* the seed permutes the order the pots are listed in, nothing else */
     pots:shuffled(clone(POTS0), seed),
     card:{frozen:false, contactless:4500, online:true, gambling:false, abroad:false, pin:'4172',
           replacement:false},
@@ -525,7 +493,6 @@ var SELECT = {
   orderOf:orderOf, txnOf:txnOf, potOf:potOf, route:route
 };
 
-/* =========================================================== reducer */
 function reduce(prev, action){
   var st = clone(prev), A = action || {};
   st.ui.toast = null;
@@ -562,7 +529,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- transactions ---- */
   case 'SET_CAT_FILTER': st.ui.catFilter = A.id; break;
   case 'RECATEGORISE': {
     var t = txnOf(st, A.id);
@@ -578,7 +544,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- scheduled payments ---- */
   case 'ORDER_PAUSE': {
     var o = orderOf(st, A.id);
     if (!o || o.status !== 'active') break;
@@ -616,7 +581,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- pots ---- */
   case 'POT_MOVE': {
     var p = potOf(st, A.id);
     if (!p) break;
@@ -661,7 +625,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- the card ---- */
   case 'CARD_TOGGLE': st.card[A.key] = !st.card[A.key]; break;
   case 'CARD_LIMIT':
     st.card.contactless = clamp(st.card.contactless + A.delta, 1000, 10000);
@@ -681,7 +644,6 @@ function reduce(prev, action){
     toast(st, 'Card blocked. A replacement is on its way.');
     break;
 
-  /* ---- settings ---- */
   case 'SET_TOGGLE': st.settings[A.key] = !st.settings[A.key]; break;
   case 'SET_THRESHOLD':
     st.settings.lowThreshold = clamp(st.settings.lowThreshold + A.delta, 0, 50000);
@@ -692,7 +654,6 @@ function reduce(prev, action){
   return st;
 }
 
-/* =========================================================== screens */
 function tabbar(st){
   var items = [
     {id:'tab_home',     text:'Home',     icon:'money',  tab:'home'},
@@ -887,9 +848,6 @@ function scrOrder(st, params){
 
 function scrForecast(st){
   var p = projection(st), low = lowestPoint(st), pd = paydayDay(st);
-  /* the chart draws the window that matters — today up to payday. Past the
-   * salary the numbers are ten times bigger and would flatten the dip to
-   * nothing, and the dip is the whole point. */
   var pts = [{day:st.meta.today, name:'Today', balance:st.account.balance, amount:0}]
               .concat(pd ? p.filter(function(x){ return x.day < pd; }) : p);
   var maxPos = 0, maxNeg = 0;
@@ -1125,11 +1083,6 @@ function screen(st){
   return rootNode;
 }
 
-/* =======================================================================
- * TRAVERSAL — element index, GUI action interface, text observation.
- * Identical in every environment here: the screen tree is the only thing
- * that differs, and all three readers below walk that same tree.
- * ==================================================================== */
 var SKIP_KEYS = {act:1, minus:1, plus:1, close:1, yes:1, params:1, meta:1, cells:1, points:1};
 
 function labelOf(n){ return n.text || n.title || n.name || n.label || n.main || ''; }
@@ -1143,9 +1096,6 @@ function collect(n, out){
                                             input:(n.t === 'inputrow')});
   if (n.t === 'mask' && n.close)  out.push({id:n.id, act:n.close, text:'Dismiss overlay', t:'mask'});
   for (var k in n){
-    /* a node may carry extra buttons as a pair of keys: someId holds the
-     * test-id and some holds the action. That is how steppers, sheet close
-     * buttons and per-row buttons all get into the element index. */
     if (k.length > 2 && k.slice(-2) === 'Id' && typeof n[k] === 'string'){
       var sib = n[k.slice(0, -2)];
       if (sib && typeof sib === 'object' && sib.type)
@@ -1198,7 +1148,6 @@ function step(st, a){
   }
 }
 
-/* ------------------------------------------------- text observation (a11y) */
 function a11y(st){
   var rootNode = screen(st), lines = [], r = route(st);
   lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
@@ -1267,8 +1216,6 @@ function walkText(n, d, out, st){
     if (v && typeof v === 'object') walkText(v, line !== null ? d+1 : d, out, st);
   }
 }
-/* per-environment nodes: return a string to print, true if already printed,
- * or null to ignore */
 function walkExtra(n, d, out, st){
 
   if (n.t === 'balcard'){
@@ -1291,7 +1238,6 @@ function walkExtra(n, d, out, st){
   return null;
 }
 
-/* --------------------------------------------------------- derived view */
 function derive(st){
   var low = lowestPoint(st), cats = {}, pots = {};
   CATEGORIES.forEach(function(c){
@@ -1355,9 +1301,6 @@ root.GUI_ENGINE = ENGINE;
 </script>
 
 <script id="ui">
-/* ===========================================================================
- * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
- * ======================================================================== */
 (function(){
 'use strict';
 var E = window.GUI_ENGINE;

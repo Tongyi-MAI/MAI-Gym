@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Train GUI agents with online RL (GRPO, DAPO, GSPO, REINFORCE++, SAO, PPO) using policy-adaptive sampling and window-wise packing.">
+  <link rel="canonical" href="https://tongyi-mai.github.io/MAI-Gym/docs/training.html">
+  <meta property="og:site_name" content="MAI-Gym Docs">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Online RL Training — MAI-Gym Docs">
+  <meta property="og:description" content="Train GUI agents with online RL (GRPO, DAPO, GSPO, REINFORCE++, SAO, PPO) using policy-adaptive sampling and window-wise packing.">
+  <meta property="og:url" content="https://tongyi-mai.github.io/MAI-Gym/docs/training.html">
+  <meta property="og:image" content="https://tongyi-mai.github.io/MAI-Gym/assets/figs/overview.webp">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Online RL Training — MAI-Gym Docs">
+  <meta name="twitter:description" content="Train GUI agents with online RL (GRPO, DAPO, GSPO, REINFORCE++, SAO, PPO) using policy-adaptive sampling and window-wise packing.">
+  <meta name="twitter:image" content="https://tongyi-mai.github.io/MAI-Gym/assets/figs/overview.webp">
+  <title>Online RL Training — MAI-Gym Docs</title>
+  <link rel="icon" type="image/png" href="../assets/favicon.png">
+  <script>
+    (function () {
+      var t;
+      try { t = localStorage.getItem('maigym.theme'); } catch (e) {}
+      document.documentElement.dataset.theme = t === 'day' ? 'day' : 'night';
+    })();
+  </script>
+  <link rel="preload" href="../assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="assets/docs.css">
+  <script>
+    window.MAIGYM_DOCS = {
+      root: "",
+      rawMd: "raw/training.md",
+      slug: "training.html"
+    };
+  </script>
+  <script src="assets/docs.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#doc-content">Skip to main content</a>
+
+  <header class="topbar" id="topbar">
+    <div class="topbar-row">
+      <div class="topbar-left">
+        <button class="mobile-nav-btn" id="mobile-nav-btn" type="button" aria-label="Toggle navigation" aria-expanded="false">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 5.5h14M3 10h14M3 14.5h14"/></svg>
+        </button>
+        <a class="brand" href="index.html" aria-label="MAI-Gym Documentation home">
+          <img src="../assets/mark.svg" width="26" height="26" alt="">
+          <span class="brand-name">MAI-<span>Gym</span></span>
+          <span class="brand-pill">Docs</span>
+        </a>
+      </div>
+
+      <button class="search-trigger" id="search-trigger" type="button" aria-label="Search documentation">
+        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="5.2"/><path d="m12 12 3.6 3.6"/></svg>
+        <span>Search docs...</span>
+        <kbd>⌘K</kbd>
+      </button>
+
+      <div class="topbar-right">
+        <a class="top-link" href="../index.html">Project Page</a>
+        <a class="top-link" href="https://arxiv.org/abs/2610.20939" target="_blank" rel="noopener noreferrer">Paper</a>
+        <a class="top-link" href="https://huggingface.co/Tongyi-MAI/MAI-Gym-9B" target="_blank" rel="noopener noreferrer">Model</a>
+        <a class="repo-chip" href="https://github.com/Tongyi-MAI/MAI-Gym" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+          <span>Tongyi-MAI/MAI-Gym</span>
+        </a>
+        <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle color theme" title="Switch light / dark theme">
+          <svg class="i-sun" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="3.6" fill="currentColor"/><path d="M10 1.8v2.1M10 16.1v2.1M1.8 10h2.1M16.1 10h2.1M4.2 4.2l1.5 1.5M14.3 14.3l1.5 1.5M4.2 15.8l1.5-1.5M14.3 5.7l1.5-1.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <svg class="i-moon" viewBox="0 0 20 20" aria-hidden="true"><path d="M16.2 12.6A6.8 6.8 0 0 1 7.4 3.8a6.8 6.8 0 1 0 8.8 8.8z" fill="currentColor"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="drawer-backdrop" id="drawer-backdrop" hidden></div>
+
+  <div class="doc-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Documentation navigation">
+      <div class="side-group"><p class="side-heading">Overview</p><ul><li><a class="side-link" href="index.html">Quickstart</a></li><li><a class="side-link" href="concepts.html">Platform &amp; Core Concepts</a></li><li><a class="side-link" href="mai-gym-9b.html">MAI-Gym-9B</a></li><li><a class="side-link" href="dashboard.html">Trajectory Dashboard</a></li></ul></div><div class="side-group"><p class="side-heading">User Guide</p><ul><li><a class="side-link" href="evaluation.html">Evaluation Guide</a></li><li><a class="side-link active" aria-current="page" href="training.html">Online RL Training</a></li><li><a class="side-link" href="rollout.html">Rollout CLI</a></li><li><a class="side-link" href="kubernetes.html">Kubernetes Fleets</a></li></ul></div><div class="side-group"><p class="side-heading">Benchmarks &amp; Environments</p><ul><li><a class="side-link" href="environments.html">Benchmarks Overview</a></li><li><a class="side-link" href="mocked-apps.html">Mocked Apps</a></li><li><a class="side-link" href="envs/mobile.html">Mobile Benchmarks</a></li><li><a class="side-link" href="envs/computer.html">Computer Benchmarks</a></li><li><a class="side-link" href="envs/web.html">Web Benchmarks</a></li></ul></div><div class="side-group"><p class="side-heading">Customization</p><ul><li><a class="side-link" href="extending.html">Extending MAI-Gym</a></li><li><a class="side-link" href="coding-agents.html">Coding-Agent Setup</a></li><li><a class="side-link" href="development.html">Development &amp; Layout</a></li><li><a class="side-link" href="licensing.html">Licensing &amp; Notices</a></li></ul></div>
+    </aside>
+
+    <main class="doc-main" id="doc-content">
+      <article class="doc-article">
+        <header class="page-header">
+          <div class="page-eyebrow">User Guide</div>
+          <div class="page-title-row">
+            <h1>Online RL Training Guide</h1>
+            <button type="button" class="copy-page-btn" id="copy-page-btn" title="Copy page as Markdown">
+              <svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+              <svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>Copy page</span>
+            </button>
+          </div>
+          <p class="page-lead">Train GUI agents with online RL (GRPO, DAPO, GSPO, REINFORCE++, SAO, PPO) using policy-adaptive sampling and window-wise packing.</p>
+        </header>
+
+        <div class="prose">
+          <p>Train GUI agents with online reinforcement learning using a single YAML configuration and the bundled <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/resources/slime/README.md" target="_blank" rel="noopener noreferrer">Slime<svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a> runtime (<code>ghcr.io/tongyi-mai/mai_gym_slime:v1</code>, combining Megatron-LM for training with SGLang for rollouts). Rollout workers execute GUI tasks across mobile, computer, and web managers on the same harness used for evaluation, collect deterministic verifier rewards, update policy weights, and export Hugging Face checkpoints directly to your host.</p>
+<div class="callout callout-tip" role="note"><div class="callout-title"><span class="callout-dot" aria-hidden="true"></span>Tip</div><div class="callout-body"><p><strong>Prefer agent-assisted setup?</strong> Use the <a href="coding-agents.html#prepare-training">coding-agent training prompt</a> in Claude Code, Codex, or Cursor. Looking for a minimal 4-GPU, single-task verification run first? Start with the <a href="training.html">README training quickstart</a> using <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/configs/train-quickstart.yaml" target="_blank" rel="noopener noreferrer"><code>configs/train-quickstart.yaml</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a>.</p></div></div>
+<hr>
+<h2 id="how-mai-gym-online-rl-works">How MAI-Gym Online RL Works<a class="heading-link" href="#how-mai-gym-online-rl-works" aria-label="Link to How MAI-Gym Online RL Works">#</a></h2>
+<p>Long, screenshot-heavy GUI trajectories introduce three challenges beyond text-only RL. MAI-Gym addresses them directly in the rollout and training pipeline (Paper §3.5):</p>
+<ol><li><strong>Policy-Adaptive Task Sampling (<code>sampling.*</code>):</strong> Group-based algorithms such as GRPO receive zero gradient when all <code>G</code> attempts on a task succeed or all fail. Before each round, the scheduler tracks per-task success rates: unseen and frontier tasks receive the full <code>algorithm.group_size</code> (<code>G = 8</code>) attempts, while never-solved tasks and mastered tasks (success rate <code>≥ η</code>, <code>success_threshold: 0.8</code>) receive small nonzero probe budgets (<code>fail_budget</code>, <code>mastered_budget</code>) so they are rechecked as the policy evolves. Advantages are computed only after all attempts in a group finish, avoiding completion-order or trajectory-length bias.</li><li><strong>Window-Wise History &amp; Packing (<code>history.*</code>):</strong> Instead of dropping the oldest screenshot every step (which invalidates the KV cache on every turn) or packing an entire 50–100-step multimodal trajectory into one sequence (which exceeds GPU memory), MAI-Gym groups turns into windows of <code>K</code> steps (<code>window_size: 10</code>) overlapping by <code>O</code> steps (<code>overlap: 2</code>). Within a window, observations are appended for KV-cache reuse; at window boundaries, older screenshots collapse to text placeholders while text history stays intact. During training, each window becomes one causal training sample with loss applied only to new turns (e.g., turns 1–10 in window 1, turns 11–18 in window 2 with turns 9–10 as context), replaying exact rollout tokens (<code>token_native_history: true</code>) and falling back to step-wise samples if prefixes diverge. Screenshots are decoded lazily per micro-batch with selective vision-tower activation recomputation.</li><li><strong>Train–Rollout Consistency:</strong> Launch-time checks catch multimodal preprocessing mismatches, and during training MAI-Gym compares trainer and rollout log-probabilities on every generated token, monitoring the <strong><code>k₃</code> KL divergence estimator</strong> to immediately surface kernel corruption, misaligned packed histories, or engine/trainer skew.</li></ol>
+<h3 id="supported-rl-algorithms-algorithmname">Supported RL Algorithms (<code>algorithm.name</code>)<a class="heading-link" href="#supported-rl-algorithms-algorithmname" aria-label="Link to Supported RL Algorithms ( algorithm.name )">#</a></h3>
+<div class="table-wrap"><table><thead><tr><th style="text-align:left">Algorithm</th><th style="text-align:left">Value</th><th style="text-align:left">Notes</th></tr></thead><tbody><tr><td style="text-align:left"><strong>GRPO</strong> <em>(default)</em></td><td style="text-align:left"><code>grpo</code></td><td style="text-align:left">Group-normalized terminal reward baseline (<code>group_size &gt;= 2</code>), per-token clipped surrogate loss, optional KL loss term (<code>kl_loss_coef</code>). Used for MAI-Gym-9B.</td></tr><tr><td style="text-align:left"><strong>DAPO</strong></td><td style="text-align:left"><code>dapo</code></td><td style="text-align:left">Decoupled clip / dynamic sampling variant built on the GRPO estimator.</td></tr><tr><td style="text-align:left"><strong>GSPO</strong></td><td style="text-align:left"><code>gspo</code></td><td style="text-align:left">Sequence-level importance-ratio policy optimization.</td></tr><tr><td style="text-align:left"><strong>REINFORCE++</strong></td><td style="text-align:left"><code>reinforce++</code></td><td style="text-align:left">Critic-free baseline advantage estimator.</td></tr><tr><td style="text-align:left"><strong>PPO</strong></td><td style="text-align:left"><code>ppo</code></td><td style="text-align:left">Clipped policy optimization with a learned value function.</td></tr><tr><td style="text-align:left"><strong>SAO</strong></td><td style="text-align:left"><code>sao</code></td><td style="text-align:left">Asynchronous single-rollout updates with a learned value critic (requires <code>trainer.entrypoint</code>).</td></tr></tbody></table></div>
+<hr>
+<h2 id="prerequisites--presets">Prerequisites &amp; Presets<a class="heading-link" href="#prerequisites--presets" aria-label="Link to Prerequisites &amp; Presets">#</a></h2>
+<ul><li><strong>Linux host with NVIDIA GPUs</strong> and Docker GPU support (<code>--gpus all</code>).</li><li><strong>Complete Hugging Face checkpoint</strong> (weights + tokenizer files) for the Qwen3.5-9B architecture (e.g., <a href="https://huggingface.co/Qwen/Qwen3.5-9B" target="_blank" rel="noopener noreferrer">Qwen/Qwen3.5-9B<svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a> or <a href="https://huggingface.co/Tongyi-MAI/MAI-Gym-9B" target="_blank" rel="noopener noreferrer">Tongyi-MAI/MAI-Gym-9B<svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a>). For reproducing MAI-Gym-9B, the paper starts from an SFT warm-up checkpoint trained on mixed mobile and computer trajectories (Paper §4.1).</li><li><strong>At least one verified benchmark manager</strong> reachable from the training container. Verify one real task and its reset on every manager before launching training (<a href="evaluation.html#preflight-and-first-task">Evaluation preflight</a>).</li></ul>
+<div class="table-wrap"><table><thead><tr><th style="text-align:left">Preset</th><th style="text-align:left">Intended Use</th><th style="text-align:left">Default Scale</th></tr></thead><tbody><tr><td style="text-align:left"><a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/configs/train-quickstart.yaml" target="_blank" rel="noopener noreferrer"><code>configs/train-quickstart.yaml</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a></td><td style="text-align:left">Single-task MobileWorld minimal verification run (GRPO, 1 round)</td><td style="text-align:left">1 node × 4 GPUs</td></tr><tr><td style="text-align:left"><a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/configs/mai-gym-9b.yaml" target="_blank" rel="noopener noreferrer"><code>configs/mai-gym-9b.yaml</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a></td><td style="text-align:left">Joint mobile + computer RL starter preset (GRPO, window-wise history)</td><td style="text-align:left">4 nodes × 8 GPUs</td></tr></tbody></table></div>
+<div class="callout callout-note" role="note"><div class="callout-title"><span class="callout-dot" aria-hidden="true"></span>Note</div><div class="callout-body"><p>The starter preset uses inline screenshots. Set the trainer topology and the environment pool sizes to match your available resources. The CLI accepts <code>history.window</code> as an alias for <code>history.window_size</code>.</p></div></div>
+<hr>
+<h2 id="1-prepare-inputs-on-the-host">1. Prepare inputs on the host<a class="heading-link" href="#1-prepare-inputs-on-the-host" aria-label="Link to 1. Prepare inputs on the host">#</a></h2>
+<p>Run the commands in this section on the <strong>host</strong>, from the MAI-Gym repository root. Create separate directories for read-only inputs (<code>$TRAIN_DATA</code>) and writable run outputs (<code>$TRAIN_RUNS</code>):</p>
+<div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"><span class="tok-var">TRAIN_DATA</span>=<span class="tok-string">&quot;<span class="tok-var">$HOME</span>/mai-gym-data&quot;</span>
+<span class="tok-var">TRAIN_RUNS</span>=<span class="tok-string">&quot;<span class="tok-var">$HOME</span>/mai-gym-runs&quot;</span>
+<span class="tok-cmd">mkdir</span> <span class="tok-flag">-p</span> <span class="tok-string">&quot;<span class="tok-var">$TRAIN_DATA</span>&quot;</span> <span class="tok-string">&quot;<span class="tok-var">$TRAIN_RUNS</span>&quot;</span>
+<span class="tok-cmd">cp</span> <span class="tok-flag">-i</span> configs/mai-gym-9b.yaml <span class="tok-string">&quot;<span class="tok-var">$TRAIN_DATA</span>/train.yaml&quot;</span></code></pre></div>
+<h3 id="model-checkpoint">Model checkpoint<a class="heading-link" href="#model-checkpoint" aria-label="Link to Model checkpoint">#</a></h3>
+<p>Place the complete Hugging Face model directory (weights, config, and tokenizer) under <code>$TRAIN_DATA/hf-model/</code>.</p>
+<h3 id="task-pools-jsonl-or-parquet">Task pools (JSONL or Parquet)<a class="heading-link" href="#task-pools-jsonl-or-parquet" aria-label="Link to Task pools (JSONL or Parquet)">#</a></h3>
+<p>Place your task pools in <code>$TRAIN_DATA/</code> (the default preset expects <code>mobileworld.jsonl</code> and <code>osworld.jsonl</code>). Each row maps a natural-language task instruction to a registered task ID and environment type:</p>
+<div class="code-block" data-lang="json"><div class="code-head"><span class="code-lang">json</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-json">{<span class="tok-key">&quot;prompt&quot;</span>:&quot;&lt;task instruction&gt;&quot;,<span class="tok-key">&quot;label&quot;</span>:<span class="tok-string">&quot;&quot;</span>,<span class="tok-key">&quot;metadata&quot;</span>:{<span class="tok-key">&quot;task_id&quot;</span>:&quot;&lt;registered task ID&gt;&quot;,<span class="tok-key">&quot;env_type&quot;</span>:<span class="tok-string">&quot;mobileworld&quot;</span>}}</code></pre></div>
+<ul><li>Leave <code>label</code> empty when the benchmark&#x27;s native verifier supplies the reward.</li><li>Parquet task pools use the exact same schema.</li><li>For combined multi-domain datasets, ensure each row&#x27;s <code>metadata.env_type</code> matches its target manager pool.</li><li>For custom MobileWorld tasks, install or register the task class on the emulator and verify its instruction first (<a href="training.html">Register a custom training task</a>).</li><li>To train on the 42 bundled Novel Mocked Apps, point a pool at <code>env_type: mocked-apps</code> and a running <code>mai-gym serve --config configs/mocked-apps.yaml</code> manager (<a href="mocked-apps.html#use-the-manager-for-training">Mocked Apps training</a>).</li></ul>
+<h3 id="adapt-trainyaml">Adapt <code>train.yaml</code><a class="heading-link" href="#adapt-trainyaml" aria-label="Link to Adapt train.yaml">#</a></h3>
+<p>Edit <code>$TRAIN_DATA/train.yaml</code> (see <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/configs/mai-gym-9b.yaml" target="_blank" rel="noopener noreferrer"><code>configs/mai-gym-9b.yaml</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a>) to match your hardware, algorithm, and manager capacity:</p>
+<div class="table-wrap"><table><thead><tr><th style="text-align:left">Section</th><th style="text-align:left">Key settings</th></tr></thead><tbody><tr><td style="text-align:left"><code>model</code></td><td style="text-align:left"><code>checkpoint</code> (path or <code>env/MAI_GYM_CHECKPOINT</code>), <code>agent_variant</code> (default <code>unified</code>), <code>policy_variant</code> (<code>mai_ui</code> or <code>qwen35</code>), and <code>tool_parser</code>.</td></tr><tr><td style="text-align:left"><code>tasks</code></td><td style="text-align:left">List of pools (<code>pool</code>, <code>env_type</code>, <code>manager_url</code>, <code>num_sessions</code>). Point each <code>manager_url</code> to a manager reachable from the training containers and cap <code>num_sessions</code> to the manager&#x27;s capacity.</td></tr><tr><td style="text-align:left"><code>algorithm</code></td><td style="text-align:left"><code>name</code> (<code>grpo</code>, <code>dapo</code>, <code>gspo</code>, <code>reinforce++</code>, <code>ppo</code>, <code>sao</code>), <code>group_size</code>, <code>learning_rate</code>, <code>kl_loss_coef</code> (applied to the loss, not the reward), <code>entropy_coef</code>, <code>per_token_loss</code>, and <code>reward_allocation</code>.</td></tr><tr><td style="text-align:left"><code>sampling</code></td><td style="text-align:left">Policy-adaptive task sampling parameters: <code>success_threshold</code> (<code>η</code>), <code>fail_budget</code>, and <code>mastered_budget</code>.</td></tr><tr><td style="text-align:left"><code>rollout</code></td><td style="text-align:left"><code>rounds</code> (set <code>1</code> for an initial validation run), <code>batch_size</code>, <code>concurrency</code>, <code>num_sessions</code>, <code>temperature</code>, <code>max_turns</code>, <code>max_total_length</code>, and <code>max_response_length</code>.</td></tr><tr><td style="text-align:left"><code>history</code></td><td style="text-align:left"><code>window_size</code> (<code>K</code>, default <code>10</code>), <code>overlap</code> (<code>O</code>, default <code>2</code>, must satisfy <code>O &lt; K</code>), <code>image_retention</code>, <code>token_native_history</code>, and <code>windowwise_train</code>.</td></tr><tr><td style="text-align:left"><code>observations</code></td><td style="text-align:left"><code>screenshot_transport</code> (<code>inline</code> for small runs; <code>oss</code> + <code>observations.oss</code> credentials via <code>env/...</code> for large fleets).</td></tr><tr><td style="text-align:left"><code>trainer</code></td><td style="text-align:left"><code>backend</code> (<code>slime</code>), <code>nodes</code>, <code>gpus_per_node</code>, <code>parallelism</code> (<code>tensor × pipeline × context × data == nodes × gpus_per_node</code>), <code>engine_gpus</code> (must divide <code>gpus_per_node</code>), <code>global_batch_size</code>, <code>save_interval</code>, <code>output</code> (fresh container path such as <code>/runs/first-run</code>), and optional <code>resume</code> / <code>ray_address</code>.</td></tr></tbody></table></div>
+<hr>
+<span id="start-the-container" class="doc-anchor"></span><h2 id="2-start-the-slime-container-host">2. Start the Slime container (Host)<a class="heading-link" href="#2-start-the-slime-container-host" aria-label="Link to 2. Start the Slime container (Host)">#</a></h2>
+<p>From the repository root on the <strong>host</strong>, launch the prebuilt Slime container with the checkout mounted at <code>/workspace/MAI-Gym</code>, inputs read-only at <code>/data</code>, and outputs writable at <code>/runs</code>:</p>
+<div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"><span class="tok-cmd">docker</span> run <span class="tok-flag">--rm</span> <span class="tok-flag">-it</span> <span class="tok-flag">--gpus</span> all <span class="tok-flag">--ipc</span>=host <span class="tok-flag">--network</span>=host \
+  <span class="tok-flag">-v</span> <span class="tok-string">&quot;<span class="tok-var">$PWD</span>:/workspace/MAI-Gym&quot;</span> \
+  <span class="tok-flag">-v</span> <span class="tok-string">&quot;<span class="tok-var">$TRAIN_DATA</span>:/data:ro&quot;</span> \
+  <span class="tok-flag">-v</span> <span class="tok-string">&quot;<span class="tok-var">$TRAIN_RUNS</span>:/runs&quot;</span> \
+  <span class="tok-flag">-e</span> MAI_GYM_ROOT=/workspace/MAI-Gym \
+  <span class="tok-flag">-w</span> /workspace/MAI-Gym \
+  ghcr.io/tongyi-mai/mai_gym_slime:v1 bash</code></pre></div>
+<hr>
+<span id="3-check-the-configuration-inside-the-container" class="doc-anchor"></span><h2 id="3-configure-the-environment-container">3. Configure the environment (Container)<a class="heading-link" href="#3-configure-the-environment-container" aria-label="Link to 3. Configure the environment (Container)">#</a></h2>
+<p>Run all remaining commands <strong>inside the container</strong>. Install the mounted MAI-Gym checkout in editable mode and export the paths referenced by <code>configs/mai-gym-9b.yaml</code>:</p>
+<div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"><span class="tok-cmd">python</span> <span class="tok-flag">-m</span> pip install <span class="tok-flag">--no-deps</span> <span class="tok-flag">-e</span> .
+<span class="tok-cmd">export</span> MAI_GYM_CHECKPOINT=/data/hf-model
+<span class="tok-cmd">export</span> MAI_GYM_MOBILE_TASKS=/data/mobileworld.jsonl
+<span class="tok-cmd">export</span> MAI_GYM_COMPUTER_TASKS=/data/osworld.jsonl</code></pre></div>
+<p>Validate your YAML configuration and inspect the resolved Slime command before touching Ray:</p>
+<div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"><span class="tok-cmd">mai-gym</span> train <span class="tok-flag">--config</span> /data/train.yaml <span class="tok-flag">--dry-run</span></code></pre></div>
+<hr>
+<h2 id="4-launch-training--locate-checkpoints-container">4. Launch training &amp; locate checkpoints (Container)<a class="heading-link" href="#4-launch-training--locate-checkpoints-container" aria-label="Link to 4. Launch training &amp; locate checkpoints (Container)">#</a></h2>
+<h3 id="start-or-connect-to-ray">Start or connect to Ray<a class="heading-link" href="#start-or-connect-to-ray" aria-label="Link to Start or connect to Ray">#</a></h3>
+<ul><li><p><strong>Single-node run:</strong> start a local Ray head inside the container:</p><div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"><span class="tok-cmd">ray</span> start <span class="tok-flag">--head</span></code></pre></div></li><li><strong>Multi-node cluster:</strong> connect to your existing Ray head, set <code>trainer.ray_address</code> in <code>train.yaml</code>, and ensure <code>/workspace/MAI-Gym</code>, <code>/data</code>, and <code>/runs</code> are mounted identically on every node.</li></ul>
+<p>Verify that Ray detects the GPU count requested in <code>train.yaml</code>, then launch training:</p>
+<div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"><span class="tok-cmd">ray</span> status
+<span class="tok-cmd">mai-gym</span> train <span class="tok-flag">--config</span> /data/train.yaml</code></pre></div>
+<h3 id="output-directory-layout">Output directory layout<a class="heading-link" href="#output-directory-layout" aria-label="Link to Output directory layout">#</a></h3>
+<p>With <code>trainer.output: /runs/first-run</code>, inspect <code>$TRAIN_RUNS/first-run/</code> <strong>on the host</strong>:</p>
+<div class="code-block" data-lang="text"><div class="code-head"><span class="code-lang">text</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-text">$TRAIN_RUNS/first-run/
+├── artifacts/
+│   ├── adapter.yaml         # Resolved Slime adapter configuration
+│   └── tasks.jsonl          # Combined task pool (when generated from tasks[])
+├── checkpoints/             # Training state (includes latest_checkpointed_iteration.txt)
+└── hf/
+    └── iter_*/              # Exported Hugging Face checkpoints ready for eval</code></pre></div>
+<div class="callout callout-note" role="note"><div class="callout-title"><span class="callout-dot" aria-hidden="true"></span>Note</div><div class="callout-body"><p>Use <code>trainer.save_interval: 1</code> during initial verification so a checkpoint and Hugging Face export are written after round 1.</p></div></div>
+<hr>
+<h2 id="resuming-from-a-checkpoint">Resuming from a Checkpoint<a class="heading-link" href="#resuming-from-a-checkpoint" aria-label="Link to Resuming from a Checkpoint">#</a></h2>
+<p>To resume an interrupted or completed training run:</p>
+<ol><li>Keep compatible model and parallelism settings in <code>train.yaml</code>.</li><li>Set <code>trainer.resume</code> to the <strong>container path</strong> of the checkpoint directory containing <code>latest_checkpointed_iteration.txt</code> (for example, <code>/runs/first-run/checkpoints</code>).</li><li><p>Increase <code>rollout.rounds</code> to the desired total number of rounds and re-run:</p><div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"> <span class="tok-cmd">mai-gym</span> train <span class="tok-flag">--config</span> /data/train.yaml</code></pre></div></li></ol>
+<hr>
+<h2 id="next-steps">Next Steps<a class="heading-link" href="#next-steps" aria-label="Link to Next Steps">#</a></h2>
+<ul><li>Evaluate your exported checkpoint under <code>hf/iter_*/</code>: <a href="evaluation.html">Evaluation Guide</a></li><li>Scale environment pools across nodes for high-concurrency RL: <a href="kubernetes.html">Kubernetes Fleets</a></li><li>Inspect training trajectories and rewards visually: <a href="dashboard.html">Trajectory Dashboard</a></li></ul>
+        </div>
+
+        <nav class="pagination" aria-label="Pagination">
+          <a class="pag-link prev" href="evaluation.html"><span class="pag-label">Previous</span><span class="pag-title">&larr; Evaluation Guide</span></a>
+          <a class="pag-link next" href="rollout.html"><span class="pag-label">Next</span><span class="pag-title">Rollout CLI &rarr;</span></a>
+        </nav>
+
+        <footer class="doc-footer">
+          <div class="doc-footer-links">
+            <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/site/docs/raw/training.md" target="_blank" rel="noopener noreferrer">Edit this page on GitHub &nearr;</a>
+            <a href="https://github.com/Tongyi-MAI/MAI-Gym/issues/new?title=Docs:%20Online RL Training" target="_blank" rel="noopener noreferrer">Raise a docs issue &nearr;</a>
+            <a href="llms.txt">llms.txt</a>
+          </div>
+          <p class="doc-footer-meta">MAI-Gym · MIT License · Tongyi-MAI</p>
+        </footer>
+      </article>
+    </main>
+
+    <aside class="toc-rail" aria-label="On this page">
+      <div class="toc-inner">
+        <p class="toc-title">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M2.5 4h11M2.5 8h7M2.5 12h11"/></svg>
+          On this page
+        </p>
+        <ul class="toc-list" id="toc-list"><li><a class="toc-link" href="#how-mai-gym-online-rl-works">How MAI-Gym Online RL Works</a></li><li><a class="toc-link toc-h3" href="#supported-rl-algorithms-algorithmname">Supported RL Algorithms ( algorithm.name )</a></li><li><a class="toc-link" href="#prerequisites--presets">Prerequisites &amp; Presets</a></li><li><a class="toc-link" href="#1-prepare-inputs-on-the-host">1. Prepare inputs on the host</a></li><li><a class="toc-link toc-h3" href="#model-checkpoint">Model checkpoint</a></li><li><a class="toc-link toc-h3" href="#task-pools-jsonl-or-parquet">Task pools (JSONL or Parquet)</a></li><li><a class="toc-link toc-h3" href="#adapt-trainyaml">Adapt train.yaml</a></li><li><a class="toc-link" href="#2-start-the-slime-container-host">2. Start the Slime container (Host)</a></li><li><a class="toc-link" href="#3-configure-the-environment-container">3. Configure the environment (Container)</a></li><li><a class="toc-link" href="#4-launch-training--locate-checkpoints-container">4. Launch training &amp; locate checkpoints (Container)</a></li><li><a class="toc-link toc-h3" href="#start-or-connect-to-ray">Start or connect to Ray</a></li><li><a class="toc-link toc-h3" href="#output-directory-layout">Output directory layout</a></li><li><a class="toc-link" href="#resuming-from-a-checkpoint">Resuming from a Checkpoint</a></li><li><a class="toc-link" href="#next-steps">Next Steps</a></li></ul>
+        <div class="toc-actions">
+          <a href="#top" class="toc-action-link" id="back-to-top">&uarr; Back to top</a>
+          <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/site/docs/raw/training.md" class="toc-action-link" target="_blank" rel="noopener noreferrer">View Markdown &nearr;</a>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <dialog class="search-dialog" id="search-dialog" aria-label="Search documentation">
+    <div class="search-box">
+      <div class="search-input-row">
+        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="5.2"/><path d="m12 12 3.6 3.6"/></svg>
+        <input id="search-input" type="search" placeholder="Search documentation, CLI flags, benchmarks..." autocomplete="off" spellcheck="false">
+        <button type="button" class="search-esc" id="search-close">ESC</button>
+      </div>
+      <div class="search-results" id="search-results" role="listbox"></div>
+      <div class="search-foot">
+        <span><kbd>&uarr;</kbd><kbd>&darr;</kbd> navigate</span>
+        <span><kbd>Enter</kbd> open</span>
+        <span><kbd>Esc</kbd> close</span>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="img-dialog" id="img-dialog" aria-label="Image preview">
+    <button type="button" class="img-dialog-close" id="img-dialog-close" aria-label="Close preview">&times;</button>
+    <img id="img-dialog-src" alt="">
+  </dialog>
+</body>
+</html>

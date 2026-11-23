@@ -1,0 +1,8 @@
+{
+  "label": "official-image",
+  "source_repository": "Tongyi-MAI/MobileWorld",
+  "source_kind": "image-bundled",
+  "runtime_image": "ghcr.io/tongyi-mai/mobile_world@sha256:b680380eac98a7ad064707f9653772af18554d201a3e6e7cf8f15d58cdc73240",
+  "runtime_image_id": "sha256:b680380eac98a7ad064707f9653772af18554d201a3e6e7cf8f15d58cdc73240",
+  "task_manifest_sha256": "6dda26f5452819b083002f74726dd2c0cbe97cb9593b9b76e360cc82c5a21bc4"
+}

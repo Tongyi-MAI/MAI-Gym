@@ -4,20 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Tally (mocked GUI env)</title>
-<!--
-  ============================================================================
-  Tally — a single-file H5 shared-expense app for agent research.
 
-  Same two-block contract as every environment here.
-
-  What is new: money. The world is a ledger, and every screen is a view of an
-  arithmetic invariant (all balances sum to zero). Amounts are entered on a
-  numeric keypad rather than a text field, splits come in three modes, and an
-  exact split will not save until the parts add up to the whole. Rounding is
-  explicit: an equal split of £47.50 across four people is 11.88 / 11.88 /
-  11.87 / 11.87, and the app says so.
-  ============================================================================
--->
 <style>
 :root{
   --bg:#f6f7fb; --card:#fff; --line:#e8eaf2; --line2:#dcdfeb;
@@ -136,7 +123,6 @@ body.bare #notch{display:none}
 .n-radio.on:after{content:"";position:absolute;left:7px;top:4px;width:5px;height:9px;
   border:2px solid #fff;border-top:0;border-left:0;transform:rotate(42deg)}
 
-/* ---------------- balance summary ---------------- */
 .summary{margin:12px 16px;background:linear-gradient(140deg,#4f46e5,#7c68f0);border-radius:var(--r);
   padding:20px;color:#fff}
 .summary .su-lab{font-size:12px;opacity:.82;font-weight:600}
@@ -145,7 +131,6 @@ body.bare #notch{display:none}
 .balbar{display:flex;height:8px;border-radius:4px;overflow:hidden;margin:14px 16px 4px;background:#e8eaf2}
 .balbar i{display:block;height:100%}
 
-/* ---------------- keypad ---------------- */
 .amount{padding:26px 16px 10px;text-align:center}
 .amount .am-lab{font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.6px}
 .amount .am-val{font:800 46px/1.05 var(--disp);margin-top:12px;letter-spacing:-1.6px;font-variant-numeric:tabular-nums}
@@ -159,7 +144,6 @@ body.bare #notch{display:none}
 .keypad .key.wide{grid-column:span 1}
 .keypad .key.fn{font-size:16px;color:var(--ink2)}
 
-/* ---------------- split editor ---------------- */
 .splitbar{margin:8px 16px;padding:11px 14px;border-radius:var(--r2);font-size:13px;font-weight:650;
   display:flex;justify-content:space-between;gap:10px}
 .splitbar.ok{background:#e7f6ee;color:var(--owed)}
@@ -227,16 +211,12 @@ body.bare #notch{display:none}
 <div id="hud" class="off"></div>
 
 <script id="engine">
-/* ===========================================================================
- * ENGINE — pure, deterministic, DOM-free. Every amount is an integer in pence.
- * ======================================================================== */
 (function (root) {
 'use strict';
 
 var VERSION = '1.0.0';
 var ENV_ID  = 'tally_split';
 
-/* ------------------------------------------------------------- catalog */
 var PEOPLE = [
   {id:'p_ren',   name:'Ren',   you:true,  hue:248},
   {id:'p_ivo',   name:'Ivo',   hue:158},
@@ -256,7 +236,6 @@ var CATEGORIES = [
 
 var CATALOG = {people:PEOPLE, categories:CATEGORIES};
 
-/* ------------------------------------------------------------- helpers */
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function person(id){ for (var i=0;i<PEOPLE.length;i++) if (PEOPLE[i].id===id) return PEOPLE[i]; return null; }
 function pname(id){ var p = person(id); return p ? p.name : id; }
@@ -292,7 +271,6 @@ function setPath(obj, path, value){
   return obj;
 }
 
-/* --------------------------------------------------------- world clock */
 var CLOCK0 = {h:14, mi:26, s:0};
 var SECONDS_PER_STEP = 4;
 function tick(c, n){
@@ -303,7 +281,6 @@ function tick(c, n){
 }
 function clockStr(c){ return (c.h<10?'0':'')+c.h+':'+(c.mi<10?'0':'')+c.mi; }
 
-/* ------------------------------------------------------ initial state */
 function EQ(among){ return {mode:'equal', among:among, exact:{}, shares:{}}; }
 function createInitialState(seed){
   seed = seed || 0;
@@ -342,9 +319,6 @@ function createInitialState(seed){
   };
 }
 
-/* ------------------------------------------------------------- ledger */
-/* an equal split gives the remainder pennies to the first people in the list,
-   so 4750 across four is 1188 / 1188 / 1187 / 1187 and the total is exact */
 function shareOf(exp, personId){
   var sp = exp.split, among = sp.among;
   if (among.indexOf(personId) < 0) return 0;
@@ -402,7 +376,6 @@ function expenseOf(st, eid){
   for (var i=0;i<st.expenses.length;i++) if (st.expenses[i].id === eid) return st.expenses[i];
   return null;
 }
-/* greedy settle-up: repeatedly pay the biggest debtor into the biggest creditor */
 function settleUp(st, gid){
   var bal = balances(st, gid), owe = [], owed = [];
   Object.keys(bal).forEach(function(id){
@@ -421,8 +394,6 @@ function settleUp(st, gid){
   }
   return out;
 }
-/* The pairwise view: what one person and I owe each other directly, which is
- * not the same number as the simplified settle-up plan and is shown separately. */
 function othersOf(st){
   var seen = {}, out = [];
   st.groups.forEach(function(g){
@@ -475,11 +446,10 @@ var SELECT = { person:person, pname:pname, money:money, shareOf:shareOf, balance
                category:category, route:route, clockStr:clockStr, splitTotal:splitTotal,
                othersOf:othersOf, pairNet:pairNet };
 
-/* ------------------------------------------------------------- reducer */
 function push(st, name, params){ st.ui.stack.push({name:name, params:params||{}}); st.ui.sheet=null; }
 function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
 function toast(st, t){ st.ui.toast = t; }
-var MAX_AMOUNT = 99999999;   /* £999,999.99 */
+var MAX_AMOUNT = 99999999;
 
 function newDraft(st, gid){
   var g = groupOf(st, gid);
@@ -511,11 +481,9 @@ function reduce(prev, action){
     break;
   case 'SET_INPUT':
     st.ui.inputs[A.field] = A.value;
-    /* the title box feeds the draft directly, so the Save button can gate on it */
     if (A.field === 'exp_title' && st.draft) st.draft.title = A.value;
     break;
 
-  /* ---- adding an expense ---- */
   case 'EXPENSE_NEW':
     st.draft = newDraft(st, A.group);
     st.ui.inputs.exp_title = '';
@@ -554,7 +522,6 @@ function reduce(prev, action){
     if (!st.draft) break;
     st.draft.mode = A.mode;
     if (A.mode === 'exact') {
-      /* seed the exact boxes with the current equal split so the sum starts correct */
       var fake = {amount:st.draft.amount, split:{mode:'equal', among:st.draft.among, exact:{}, shares:{}}};
       st.draft.exact = {};
       st.draft.among.forEach(function(id){ st.draft.exact[id] = shareOf(fake, id); });
@@ -573,7 +540,6 @@ function reduce(prev, action){
     else { among.push(A.id);
            if (st.draft.mode === 'exact') st.draft.exact[A.id] = 0;
            if (st.draft.mode === 'shares') st.draft.shares[A.id] = 1; }
-    /* keep the group order stable */
     var g2 = groupOf(st, st.draft.group);
     if (g2) st.draft.among = g2.members.filter(function(m){ return among.indexOf(m) >= 0; });
     break;
@@ -630,7 +596,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- settling up ---- */
   case 'SETTLE_START': {
     st.ui.inputs.settle_amount = '';
     st.draft = null;
@@ -647,7 +612,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- groups ---- */
   case 'GROUP_NEW':
     st.ui.inputs.group_name = '';
     st.ui.draftGroup = {name:'', members:[st.me]};
@@ -674,7 +638,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- settings & overlays ---- */
   case 'SET_SETTING':    st.settings[A.key] = A.value; break;
   case 'TOGGLE_SETTING': st.settings[A.key] = !st.settings[A.key]; break;
   case 'OPEN_SHEET':  st.ui.sheet = {type:A.sheet, id:A.id || null}; break;
@@ -697,9 +660,6 @@ function reduce(prev, action){
   return st;
 }
 
-/* =======================================================================
- * SCREEN TREE
- * ==================================================================== */
 function N(t, o){ o = o || {}; o.t = t; return o; }
 function appbar(title, o){
   o = o || {};
@@ -733,7 +693,6 @@ function balLabel(v){
   return {text:'settled up', cls:''};
 }
 
-/* ------------------------------------------------------------- screens */
 function scrGroups(st){
   var net = netAcross(st);
   return N('screen', {id:'scr_groups', name:'groups', c:[
@@ -1088,7 +1047,6 @@ function scrSettings(st){
   ]});
 }
 
-/* ------------------------------------------------------------ overlays */
 function sheetPayer(st){
   var d = st.draft, g = d ? groupOf(st, d.group) : null;
   return N('sheet', {id:'sheet_payer', title:'Who paid?', closeId:'sheet_close', close:{type:'CLOSE_SHEET'},
@@ -1138,9 +1096,6 @@ function screen(st){
   return rootNode;
 }
 
-/* =======================================================================
- * TRAVERSAL — element index, GUI action interface, text observation
- * ==================================================================== */
 var SKIP_KEYS = {act:1, minus:1, plus:1, close:1, yes:1, params:1, meta:1, split:1, exact:1, shares:1};
 
 function labelOf(n){ return n.text || n.title || n.name || n.label || ''; }
@@ -1204,7 +1159,6 @@ function step(st, a){
   }
 }
 
-/* ------------------------------------------------- text observation (a11y) */
 function a11y(st){
   var rootNode = screen(st), lines = [], r = route(st);
   lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
@@ -1279,7 +1233,6 @@ function walkText(n, d, out, st){
   }
 }
 
-/* --------------------------------------------------------- derived view */
 function derive(st){
   var byGroup = {}, plans = {};
   st.groups.forEach(function(g){
@@ -1337,9 +1290,6 @@ root.GUI_ENGINE   = ENGINE;
 </script>
 
 <script id="ui">
-/* ===========================================================================
- * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
- * ======================================================================== */
 (function(){
 'use strict';
 var E = window.GUI_ENGINE;

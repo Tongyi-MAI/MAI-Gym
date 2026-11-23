@@ -4,28 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Kitbag (mocked GUI env)</title>
-<!--
-  ============================================================================
-  Kitbag — a single-file H5 baggage planner for agent research.
 
-  Same two-block contract as every environment here: script#engine is a pure,
-  DOM-free state machine on globalThis.GUI_ENGINE; script#ui renders its screen
-  tree and exposes window.__ENV__.
-
-  What is new: a number that jumps. Each bag has an allowance, and going over
-  it does not cost a little more per gram — it costs £45 up to three kilos
-  over, £75 up to eight, £120 beyond that. So being 260 g over is the same
-  £45 as being 2.9 kg over, and getting under the line is worth exactly as
-  much as getting a long way under it.
-
-  On top of that sit the rules about where a thing may go at all: anything
-  with a battery has to fly in the cabin, liquids over 100 ml and anything
-  sharp have to go in the hold. Those two forces pull in opposite directions,
-  and the seeded packing breaks both of them — two items are in the wrong
-  place and the hold is 2.36 kg over. Fixing only the rules leaves the bag
-  260 g over and the fee unchanged, which is the trap the tasks are built on.
-  ============================================================================
--->
 <style>
 :root{
   --outer:#e3e6ee;
@@ -281,18 +260,12 @@ body.bare .n-sheet{animation:none}
 <div id="hud" class="off"></div>
 
 <script id="engine">
-/* ===========================================================================
- * ENGINE — pure, deterministic, DOM-free.
- * Weights are integers in grams, money in pence. The fee is a band, not a
- * rate, so it jumps: being 260 g over costs exactly what 2.9 kg over costs.
- * ======================================================================== */
 (function(root){
 'use strict';
 
 var ENV_ID  = 'kitbag_pack';
 var VERSION = '1.0.0';
 
-/* ------------------------------------------------------------- utilities */
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function pad2(n){ return (n < 10 ? '0' : '') + n; }
 function hhmm(m){ m = ((m % 1440) + 1440) % 1440; return pad2(Math.floor(m/60)) + ':' + pad2(m%60); }
@@ -331,7 +304,6 @@ function setPath(o, path, value){
   return o;
 }
 
-/* ------------------------------------------- screen-tree node constructors */
 function N(t, o){ o = o || {}; o.t = t; return o; }
 function txt(s, cls){ return N('text', {text:s, cls:cls || ''}); }
 function row(id, text, o){
@@ -356,7 +328,6 @@ function push(st, name, params){ st.ui.stack.push({name:name, params:params || {
 function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
 function toast(st, t){ st.ui.toast = t; }
 
-/* ------------------------------------------------------- bags and rules */
 var BAGS = [
   {id:'b_hold',  name:'Hold bag',      allow:15000, kind:'hold',  included:true,  extraFee:0},
   {id:'b_cabin', name:'Cabin bag',     allow:7000,  kind:'cabin', included:true,  extraFee:0},
@@ -365,7 +336,6 @@ var BAGS = [
 function bagOf(st, id){ for (var i=0;i<st.bags.length;i++) if (st.bags[i].id === id) return st.bags[i]; return null; }
 function bagName(st, id){ var b = bagOf(st, id); return b ? b.name : 'Left at home'; }
 
-/* the fee does not creep, it jumps */
 var BANDS = [
   {upto:3000,     fee:4500,  label:'Up to 3 kg over'},
   {upto:8000,     fee:7500,  label:'3 to 8 kg over'},
@@ -448,7 +418,6 @@ function totalFee(st){
   });
   return n;
 }
-/* a rule is broken when a thing is in a bag its flags forbid */
 function breaks(st, item, bagId){
   if (!bagId) return null;
   var b = bagOf(st, bagId);
@@ -477,7 +446,6 @@ function totalPacked(st){ return sum(ITEMS.filter(function(x){ return !!whereIs(
 function kg(g){ return (g / 1000).toFixed(g % 1000 === 0 ? 0 : 2).replace(/\.?0+$/, '') + ' kg'; }
 function grams(g){ return g + ' g'; }
 function weightText(g){ return g >= 1000 ? kg(g) : grams(g); }
-/* the settings switch has to mean something, so every weight on screen goes through this */
 function wt(st, g){
   return (st.settings.showGrams && g >= 1000) ? kg(g) + ' (' + g + ' g)' : weightText(g);
 }
@@ -487,11 +455,8 @@ function heavy(st, bagId){
   return st.settings.warnHeavy && w <= a && w * 10 >= a * 9;
 }
 
-/* =========================================================== state */
 function createInitialState(seed){
   seed = seed || 0;
-  /* a deliberately broken start: two things in the wrong bag and the hold
-   * 2.36 kg over, which is one band of fee */
   var packed = {
     i_laptop:'b_hold', i_power:'b_hold', i_camera:'b_cabin',
     i_washbag:'b_hold', i_sun:'b_hold', i_shampoo:'b_hold', i_knife:'b_hold', i_tripod:'b_hold',
@@ -503,7 +468,6 @@ function createInitialState(seed){
     meta:{env:ENV_ID, version:VERSION, seed:seed, steps:0, finished:false, answer:null},
     bags:clone(BAGS),
     packed:packed,
-    /* the seed permutes the order the checklist offers things in */
     order:shuffled(ITEMS.map(function(x){ return x.id; }), seed),
     ui:{tab:'bags', stack:[{name:'bags', params:{}}], sheet:null, confirm:null, inputs:{},
         toast:null, filter:'all'},
@@ -518,7 +482,6 @@ var SELECT = {
   ruleOf:ruleOf, route:route
 };
 
-/* =========================================================== reducer */
 function reduce(prev, action){
   var st = clone(prev), A = action || {};
   st.ui.toast = null;
@@ -561,7 +524,6 @@ function reduce(prev, action){
     st.ui.filter = A.id;
     break;
 
-  /* ---- moving things about ---- */
   case 'MOVE': {
     var it = itemOf(A.id);
     if (!it) break;
@@ -587,7 +549,6 @@ function reduce(prev, action){
     toast(st, 'Both bags emptied');
     break;
 
-  /* ---- the booking ---- */
   case 'TOGGLE_BAG': {
     var b = bagOf(st, A.id);
     if (!b || b.id !== 'b_extra') break;
@@ -602,7 +563,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- settings ---- */
   case 'SET_TOGGLE': st.settings[A.key] = !st.settings[A.key];
     if (A.key === 'priority')
       toast(st, st.settings.priority ? 'Cabin allowance is now ' + kg(allowanceOf(st, 'b_cabin'))
@@ -614,7 +574,6 @@ function reduce(prev, action){
   return st;
 }
 
-/* =========================================================== screens */
 function tabbar(st){
   var items = [
     {id:'tab_bags',     text:'Bags',     icon:'bag',    tab:'bags'},
@@ -911,11 +870,6 @@ function screen(st){
   return rootNode;
 }
 
-/* =======================================================================
- * TRAVERSAL — element index, GUI action interface, text observation.
- * Identical in every environment here: the screen tree is the only thing
- * that differs, and all three readers below walk that same tree.
- * ==================================================================== */
 var SKIP_KEYS = {act:1, minus:1, plus:1, close:1, yes:1, params:1, meta:1, pick:1, tags:1, rows:1, flags:1};
 
 function labelOf(n){ return n.text || n.title || n.name || n.label || n.main || ''; }
@@ -929,9 +883,6 @@ function collect(n, out){
                                             input:(n.t === 'inputrow')});
   if (n.t === 'mask' && n.close)  out.push({id:n.id, act:n.close, text:'Dismiss overlay', t:'mask'});
   for (var k in n){
-    /* a node may carry extra buttons as a pair of keys: someId holds the
-     * test-id and some holds the action. That is how steppers, sheet close
-     * buttons and per-row buttons all get into the element index. */
     if (k.length > 2 && k.slice(-2) === 'Id' && typeof n[k] === 'string'){
       var sib = n[k.slice(0, -2)];
       if (sib && typeof sib === 'object' && sib.type)
@@ -984,7 +935,6 @@ function step(st, a){
   }
 }
 
-/* ------------------------------------------------- text observation (a11y) */
 function a11y(st){
   var rootNode = screen(st), lines = [], r = route(st);
   lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
@@ -1051,8 +1001,6 @@ function walkText(n, d, out, st){
     if (v && typeof v === 'object') walkText(v, line !== null ? d+1 : d, out, st);
   }
 }
-/* per-environment nodes: return a string to print, true if already printed,
- * or null to ignore */
 function walkExtra(n, d, out, st){
 
   if (n.t === 'bag'){
@@ -1079,7 +1027,6 @@ function walkExtra(n, d, out, st){
   return null;
 }
 
-/* --------------------------------------------------------- derived view */
 function derive(st){
   var where = {}, w = {}, over = {}, fee = {};
   ITEMS.forEach(function(x){ where[x.name] = whereIs(st, x.id) ? bagName(st, whereIs(st, x.id)) : null; });
@@ -1139,9 +1086,6 @@ root.GUI_ENGINE = ENGINE;
 </script>
 
 <script id="ui">
-/* ===========================================================================
- * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
- * ======================================================================== */
 (function(){
 'use strict';
 var E = window.GUI_ENGINE;

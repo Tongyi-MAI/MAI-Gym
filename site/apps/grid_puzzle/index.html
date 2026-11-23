@@ -4,26 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>数独 (mocked GUI env)</title>
-<!--
-  ============================================================================
-  数独 Grid — a single-file H5 puzzle for agent research.
 
-  Same two-block contract as every environment here: script#engine is a pure,
-  DOM-free state machine on globalThis.GUI_ENGINE; script#ui renders its screen
-  tree and exposes window.__ENV__.
-
-  What is new: the screen is a six-by-six grid with a number pad under it, and
-  the world is constraint propagation. Every empty cell's candidate set is
-  worked out from its row, its column and its two-by-three box on every single
-  action; so are the conflicts, the cells that have only one candidate left,
-  and the digits that have only one home left in a unit. None of it is stored.
-
-  The seeded board carries a wrong digit that is already in conflict, and a
-  cell whose candidate set collapses to a single number the moment that wrong
-  digit comes out. The puzzle has exactly one solution, which the engine knows
-  and uses to tell a wrong answer from a merely unfinished one.
-  ============================================================================
--->
 <style>
 :root{
   --outer:#e3e6ee;
@@ -282,18 +263,12 @@ body.bare .n-sheet{animation:none}
 <div id="hud" class="off"></div>
 
 <script id="engine">
-/* ===========================================================================
- * ENGINE — pure, deterministic, DOM-free.
- * 候选、冲突、唯一候选、唯一位置都是每次动作后从棋盘重新算的，
- * 一个都不存。这一盘的解唯一，所以「填错」和「还没填」分得开。
- * ======================================================================== */
 (function(root){
 'use strict';
 
 var ENV_ID  = 'grid_puzzle';
 var VERSION = '1.0.0';
 
-/* ------------------------------------------------------------- utilities */
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function pad2(n){ return (n < 10 ? '0' : '') + n; }
 function hhmm(m){ m = ((m % 1440) + 1440) % 1440; return pad2(Math.floor(m/60)) + ':' + pad2(m%60); }
@@ -332,7 +307,6 @@ function setPath(o, path, value){
   return o;
 }
 
-/* ------------------------------------------- screen-tree node constructors */
 function N(t, o){ o = o || {}; o.t = t; return o; }
 function txt(s, cls){ return N('text', {text:s, cls:cls || ''}); }
 function row(id, text, o){
@@ -357,8 +331,6 @@ function push(st, name, params){ st.ui.stack.push({name:name, params:params || {
 function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
 function toast(st, t){ st.ui.toast = t; }
 
-/* --------------------------------------------------------- 六宫格数独
- * 宫是 2 行 3 列。所有格子用 r,c（0 起）表示，答案唯一。 */
 var SIZE = 6, BR = 2, BC = 3;
 var SOLUTION = [
   [1,2,3, 4,5,6],
@@ -368,7 +340,6 @@ var SOLUTION = [
   [3,1,2, 6,4,5],
   [6,4,5, 3,1,2]
 ];
-/* 十二个提示，解唯一（穷举验证过），每行每列各两个 */
 var CLUES = [
   [0,1,2],[0,2,3],
   [1,0,4],[1,5,3],
@@ -404,7 +375,6 @@ function peers(r, c){
     if (!(i === r && j === c) && i !== r && j !== c) out.push([i, j]);
   return out;
 }
-/* 一格还能填哪些数 */
 function candidates(st, r, c){
   if (valueAt(st, r, c)) return [];
   var used = {}, p = peers(r, c);
@@ -413,7 +383,6 @@ function candidates(st, r, c){
   for (var n = 1; n <= SIZE; n++) if (!used[n]) out.push(n);
   return out;
 }
-/* 同一行、同一列、同一宫里重复的数 */
 function conflicts(st){
   var out = [], r, c;
   for (r = 0; r < SIZE; r++) for (c = 0; c < SIZE; c++){
@@ -444,7 +413,6 @@ function solved(st){
     if (valueAt(st, r, c) !== SOLUTION[r][c]) return false;
   return true;
 }
-/* 只剩一个候选的格子 */
 function nakedSingles(st){
   var out = [], r, c;
   for (r = 0; r < SIZE; r++) for (c = 0; c < SIZE; c++){
@@ -454,7 +422,6 @@ function nakedSingles(st){
   }
   return out;
 }
-/* 某个数在一行/一列/一宫里只剩一个位置 */
 function hiddenSingles(st){
   var out = [], n, i, j;
   function scan(cells, unit){
@@ -506,18 +473,15 @@ function parseCell(id){
   return m ? {r:parseInt(m[1], 10) - 1, c:parseInt(m[2], 10) - 1} : null;
 }
 
-/* =========================================================== state */
 function createInitialState(seed){
   seed = seed || 0;
   return {
     meta:{env:ENV_ID, version:VERSION, seed:seed, steps:0, finished:false, answer:null},
-    /* 有人先填了两格：r1c1 是对的，r2c2 填了 3，已经跟同一行第六格的 3 撞上了 */
     cells:{r1c1:1, r2c2:3},
     notes:{r3c1:[1,2], r6c6:[1,2]},
     sel:null,
     noteMode:false,
     hints:0,
-    /* 种子只打乱下面几个快捷入口的顺序 */
     order:shuffled(['tip_single', 'tip_hidden', 'tip_conflict', 'tip_left', 'tip_box'], seed),
     ui:{tab:'play', stack:[{name:'play', params:{}}], sheet:null, confirm:null, inputs:{},
         toast:null},
@@ -531,7 +495,6 @@ var SELECT = {
   placedCount:placedCount, solution:SOLUTION, clues:CLUES, size:SIZE, route:route
 };
 
-/* =========================================================== reducer */
 function reduce(prev, action){
   var st = clone(prev), A = action || {};
   st.ui.toast = null;
@@ -568,7 +531,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- 下棋 ---- */
   case 'SELECT': {
     var p = parseCell(A.id);
     if (!p) break;
@@ -667,7 +629,6 @@ function reduce(prev, action){
   return st;
 }
 
-/* =========================================================== screens */
 function tabbar(st){
   var items = [
     {id:'tab_play',     text:'棋盘', icon:'grid',  tab:'play'},
@@ -710,7 +671,6 @@ function pad(st){
       act:{type:'DIGIT', n:n}};
   })});
 }
-/* 棋盘页上的快捷条。隐性唯一的代价高，那一项只给入口不给数字。 */
 function quickTips(st){
   var ns = nakedSingles(st), cf = conflicts(st), wr = wrongCells(st);
   var m = {
@@ -912,11 +872,6 @@ function screen(st){
   return rootNode;
 }
 
-/* =======================================================================
- * TRAVERSAL — element index, GUI action interface, text observation.
- * Identical in every environment here: the screen tree is the only thing
- * that differs, and all three readers below walk that same tree.
- * ==================================================================== */
 var SKIP_KEYS = {act:1, minus:1, plus:1, close:1, yes:1, params:1, meta:1, notes:1, deps:1};
 
 function labelOf(n){ return n.text || n.title || n.name || n.label || n.main || ''; }
@@ -930,9 +885,6 @@ function collect(n, out){
                                             input:(n.t === 'inputrow')});
   if (n.t === 'mask' && n.close)  out.push({id:n.id, act:n.close, text:'Dismiss overlay', t:'mask'});
   for (var k in n){
-    /* a node may carry extra buttons as a pair of keys: someId holds the
-     * test-id and some holds the action. That is how steppers, sheet close
-     * buttons and per-row buttons all get into the element index. */
     if (k.length > 2 && k.slice(-2) === 'Id' && typeof n[k] === 'string'){
       var sib = n[k.slice(0, -2)];
       if (sib && typeof sib === 'object' && sib.type)
@@ -985,7 +937,6 @@ function step(st, a){
   }
 }
 
-/* ------------------------------------------------- text observation (a11y) */
 function a11y(st){
   var rootNode = screen(st), lines = [], r = route(st);
   lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
@@ -1050,8 +1001,6 @@ function walkText(n, d, out, st){
     if (v && typeof v === 'object') walkText(v, line !== null ? d+1 : d, out, st);
   }
 }
-/* per-environment nodes: return a string to print, true if already printed,
- * or null to ignore */
 function walkExtra(n, d, out, st){
 
   if (n.t === 'board'){
@@ -1090,7 +1039,6 @@ function walkExtra(n, d, out, st){
   return null;
 }
 
-/* --------------------------------------------------------- derived view */
 function derive(st){
   var sel = st.sel ? parseCell(st.sel) : null;
   var cells = {};
@@ -1144,9 +1092,6 @@ root.GUI_ENGINE = ENGINE;
 </script>
 
 <script id="ui">
-/* ===========================================================================
- * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
- * ======================================================================== */
 (function(){
 'use strict';
 var E = window.GUI_ENGINE;

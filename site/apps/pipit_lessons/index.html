@@ -4,28 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Pipit (mocked GUI env)</title>
-<!--
-  ============================================================================
-  Pipit — a single-file H5 language course for agent research.
 
-  Same two-block contract as every environment here: script#engine is a pure,
-  DOM-free state machine on globalThis.GUI_ENGINE; script#ui renders its screen
-  tree and exposes window.__ENV__.
-
-  What is new: the environment marks the work. Every other environment here
-  accepts whatever you tap; this one knows which answer is right, and a wrong
-  tap costs a heart, breaks the streak and puts the question back at the end of
-  the queue to be asked again. Three hearts and the lesson is over.
-
-  The answers are all in the app. The Words tab is a glossary of every term in
-  the course, so a task like "finish unit one without losing a heart" is really
-  a task about looking things up before answering — which is exactly the sort of
-  two-screen dependency a GUI agent ought to be able to handle.
-
-  Nothing is random: the questions come in a fixed order and a wrong answer goes
-  to the back of the same queue, so the same taps always produce the same lesson.
-  ============================================================================
--->
 <style>
 :root{
   --outer:#e3e6ee;
@@ -293,18 +272,12 @@ body.bare .n-sheet{animation:none}
 <div id="hud" class="off"></div>
 
 <script id="engine">
-/* ===========================================================================
- * ENGINE — pure, deterministic, DOM-free.
- * The engine holds the answers. A wrong tap costs a heart and requeues the
- * question; three wrong and the lesson ends. Nothing is random.
- * ======================================================================== */
 (function(root){
 'use strict';
 
 var ENV_ID  = 'pipit_lessons';
 var VERSION = '1.0.0';
 
-/* ------------------------------------------------------------- utilities */
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function pad2(n){ return (n < 10 ? '0' : '') + n; }
 function hhmm(m){ m = ((m % 1440) + 1440) % 1440; return pad2(Math.floor(m/60)) + ':' + pad2(m%60); }
@@ -343,7 +316,6 @@ function setPath(o, path, value){
   return o;
 }
 
-/* ------------------------------------------- screen-tree node constructors */
 function N(t, o){ o = o || {}; o.t = t; return o; }
 function txt(s, cls){ return N('text', {text:s, cls:cls || ''}); }
 function row(id, text, o){
@@ -368,7 +340,6 @@ function push(st, name, params){ st.ui.stack.push({name:name, params:params || {
 function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
 function toast(st, t){ st.ui.toast = t; }
 
-/* ------------------------------------------------------------ the course */
 function W(id, pt, en, unit, ex, exEn){
   return {id:id, pt:pt, en:en, unit:unit, ex:ex, exEn:exEn};
 }
@@ -395,8 +366,6 @@ var WORDS = [
 function wordOf(id){ for (var i=0;i<WORDS.length;i++) if (WORDS[i].id === id) return WORDS[i]; return null; }
 function unitWords(u){ return WORDS.filter(function(w){ return w.unit === u; }); }
 
-/* A question is either "which of these means X" or "put the sentence together".
- * The answer is data, and the engine is what checks it. */
 function CH(word, wrongs){ return {kind:'choice', word:word, options:[word].concat(wrongs)}; }
 function RV(word, wrongs){ return {kind:'reverse', word:word, options:[word].concat(wrongs)}; }
 function BK(word, order, extra){ return {kind:'bank', word:word, order:order, extra:extra || []}; }
@@ -441,7 +410,6 @@ function itemAnswer(it){
 function bankTiles(it){
   return it.order.concat(it.extra).map(function(t, i){ return {word:t, key:'t' + i}; });
 }
-/* the tiles are laid out in a fixed jumbled order, not the answer order */
 function jumble(list){
   var out = [], mid = Math.ceil(list.length / 2);
   for (var i = 0; i < mid; i++){
@@ -451,13 +419,10 @@ function jumble(list){
   return out;
 }
 
-/* =========================================================== state */
 function createInitialState(seed){
   seed = seed || 0;
   return {
     meta:{env:ENV_ID, version:VERSION, seed:seed, steps:0, finished:false, answer:null},
-    /* the seed permutes the order the answer buttons are shown in — never which
-     * of them is right */
     optionSeed:seed,
     progress:{ls_1:false, ls_2:false, ls_3:false},
     xp:120, streakDays:4, bestStreak:9,
@@ -485,7 +450,6 @@ var SELECT = {
   lessonDone:lessonDone, xpToday:xpToday, route:route
 };
 
-/* =========================================================== reducer */
 function startSession(st, lessonId, practice){
   var lesson = lessonOf(lessonId);
   st.session = {lesson:lessonId, practice:!!practice,
@@ -497,8 +461,6 @@ function startSession(st, lessonId, practice){
 function markAnswer(st, given){
   var s = st.session, it = sessionItem(st);
   if (!s || !it) return;
-  /* remember what was just asked so the marking stays on screen for the last
-   * question too, instead of the result page swallowing it */
   s.lastIdx = s.queue[s.pos];
   var right = (given === itemAnswer(it));
   var w = wordOf(it.word);
@@ -515,7 +477,6 @@ function markAnswer(st, given){
     if (st.wrongWords.indexOf(it.word) < 0) st.wrongWords.push(it.word);
     st.ui.verdict = {right:false, title:'Not quite',
       sub:'The answer is ' + (it.kind === 'reverse' ? w.en : (it.kind === 'bank' ? it.order.join(' ') : w.pt))};
-    /* the question goes to the back of the queue and will be asked again */
     s.queue = s.queue.concat([s.queue[s.pos]]);
     s.pos += 1;
     if (s.hearts <= 0) { s.failed = true; s.done = true; }
@@ -564,7 +525,6 @@ function reduce(prev, action){
   }
   case 'SET_UNIT': st.ui.unit = A.n; break;
 
-  /* ---- the lesson ---- */
   case 'LESSON_START':
     startSession(st, A.id, false);
     push(st, 'lesson', {id:A.id});
@@ -622,13 +582,11 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- words ---- */
   case 'CLEAR_WRONG':
     st.wrongWords = [];
     toast(st, 'Practice list cleared');
     break;
 
-  /* ---- settings ---- */
   case 'SET_GOAL': st.settings.dailyGoal = A.n; break;
   case 'SET_TOGGLE': st.settings[A.key] = !st.settings[A.key]; break;
 
@@ -637,7 +595,6 @@ function reduce(prev, action){
   return st;
 }
 
-/* =========================================================== screens */
 function tabbar(st){
   var items = [
     {id:'tab_learn',    text:'Learn',    icon:'book',   tab:'learn'},
@@ -925,11 +882,6 @@ function screen(st){
   return rootNode;
 }
 
-/* =======================================================================
- * TRAVERSAL — element index, GUI action interface, text observation.
- * Identical in every environment here: the screen tree is the only thing
- * that differs, and all three readers below walk that same tree.
- * ==================================================================== */
 var SKIP_KEYS = {act:1, minus:1, plus:1, close:1, yes:1, params:1, meta:1, options:1, order:1, extra:1, words:1};
 
 function labelOf(n){ return n.text || n.title || n.name || n.label || n.main || ''; }
@@ -943,9 +895,6 @@ function collect(n, out){
                                             input:(n.t === 'inputrow')});
   if (n.t === 'mask' && n.close)  out.push({id:n.id, act:n.close, text:'Dismiss overlay', t:'mask'});
   for (var k in n){
-    /* a node may carry extra buttons as a pair of keys: someId holds the
-     * test-id and some holds the action. That is how steppers, sheet close
-     * buttons and per-row buttons all get into the element index. */
     if (k.length > 2 && k.slice(-2) === 'Id' && typeof n[k] === 'string'){
       var sib = n[k.slice(0, -2)];
       if (sib && typeof sib === 'object' && sib.type)
@@ -998,7 +947,6 @@ function step(st, a){
   }
 }
 
-/* ------------------------------------------------- text observation (a11y) */
 function a11y(st){
   var rootNode = screen(st), lines = [], r = route(st);
   lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
@@ -1071,8 +1019,6 @@ function walkText(n, d, out, st){
     if (v && typeof v === 'object') walkText(v, line !== null ? d+1 : d, out, st);
   }
 }
-/* per-environment nodes: return a string to print, true if already printed,
- * or null to ignore */
 function walkExtra(n, d, out, st){
 
   if (n.t === 'ring') return '[Ring] ' + n.text + ' ' + n.label;
@@ -1100,7 +1046,6 @@ function walkExtra(n, d, out, st){
   return null;
 }
 
-/* --------------------------------------------------------- derived view */
 function derive(st){
   var s = st.session;
   return {
@@ -1154,9 +1099,6 @@ root.GUI_ENGINE = ENGINE;
 </script>
 
 <script id="ui">
-/* ===========================================================================
- * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
- * ======================================================================== */
 (function(){
 'use strict';
 var E = window.GUI_ENGINE;

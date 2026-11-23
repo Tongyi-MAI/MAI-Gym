@@ -4,31 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>松鼠外卖 · Squirrel Eats (mocked GUI env)</title>
-<!--
-  ============================================================================
-  Squirrel Eats — a single-file H5 mobile GUI environment for agent research.
 
-  This file is BOTH the app and the environment:
-
-    script#engine   ...  pure state machine. No DOM access whatsoever.
-                          Exposes globalThis.EATS_ENGINE = {
-                            createInitialState, reduce, screen, a11y, ...
-                          }
-                          It is loaded verbatim by the Node headless runner
-                          (pipeline/runner.mjs) inside a vm sandbox, so
-                          browser-free rollouts run the exact same code paths
-                          as the browser.
-
-    script#ui       ...  renders engine.screen(state) -> DOM, binds taps back
-                          into engine.reduce(). Exposes window.__ENV__, the
-                          control API used by the Playwright runner.
-
-  Determinism contract:
-    * no Date.now(), no Math.random() anywhere in the engine
-    * the in-world clock advances a fixed number of seconds per action
-    * ids are derived from monotonic counters in the state
-  ============================================================================
--->
 <style>
 :root{
   --accent:#ff6b35; --accent-d:#e8541f; --accent-s:#fff1ea;
@@ -47,7 +23,6 @@ body{
   overflow:hidden;
 }
 
-/* ---------- device frame ---------- */
 #device{
   position:relative;width:390px;height:844px;background:#000;
   border-radius:46px;padding:5px;box-shadow:0 30px 70px rgba(0,0,0,.35);
@@ -61,14 +36,12 @@ body{
   position:absolute;top:5px;left:50%;transform:translateX(-50%);
   width:118px;height:30px;background:#000;border-radius:0 0 18px 18px;z-index:60;
 }
-/* plain embed mode: no bezel (used for screenshots / iframe embedding) */
 body.bare{background:var(--bg)}
 body.bare #device{width:390px;height:844px;padding:0;border-radius:0;box-shadow:none;background:var(--bg)}
 body.bare #screen{border-radius:0}
 body.bare #notch{display:none}
 body.bare .n-sheet{animation:none}
 
-/* ---------- status bar ---------- */
 .statusbar{
   height:44px;flex:0 0 44px;display:flex;align-items:flex-end;justify-content:space-between;
   padding:0 22px 6px;font-size:13px;font-weight:600;letter-spacing:.2px;z-index:50;
@@ -79,7 +52,6 @@ body.bare .n-sheet{animation:none}
 .sb-bat:after{content:"";position:absolute;right:-3px;top:3px;width:2px;height:5px;background:currentColor;border-radius:0 1px 1px 0}
 .sb-bat i{position:absolute;left:1.3px;top:1.3px;bottom:1.3px;width:70%;background:currentColor;border-radius:1px}
 
-/* ---------- app chrome ---------- */
 #app{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;position:relative}
 .n-appbar{
   flex:0 0 auto;height:46px;display:flex;align-items:center;gap:6px;padding:0 12px;
@@ -105,7 +77,6 @@ body.bare .n-sheet{animation:none}
 }
 .n-scroll::-webkit-scrollbar{width:0}
 
-/* ---------- primitives ---------- */
 .n-sec{padding:10px 12px 2px;font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.3px}
 .n-card{
   background:var(--card);border-radius:var(--r);margin:8px 12px;padding:12px;
@@ -226,7 +197,6 @@ body.bare .n-sheet{animation:none}
   color:#fff;font-size:10px;line-height:16px;text-align:center;padding:0 4px;font-weight:600;
 }
 
-/* ---------- composite: shop card ---------- */
 .shop{display:flex;gap:11px}
 .shop .s-logo{flex:0 0 auto;width:66px;height:66px;border-radius:12px;font-size:27px}
 .shop .s-body{flex:1 1 auto;min-width:0}
@@ -235,7 +205,6 @@ body.bare .n-sheet{animation:none}
 .shop .s-meta b{color:var(--gold);font-weight:700}
 .shop .s-promo{margin-top:6px}
 
-/* ---------- composite: dish row ---------- */
 .dish{display:flex;gap:11px;padding:12px;border-bottom:1px solid var(--line);background:var(--card)}
 .dish:last-child{border-bottom:none}
 .dish.tap{cursor:pointer}
@@ -252,7 +221,6 @@ body.bare .n-sheet{animation:none}
 .price small{font-size:11px;font-weight:600;margin-right:1px}
 .price .was{color:var(--muted);font-weight:400;font-size:11.5px;text-decoration:line-through;margin-left:5px}
 
-/* ---------- shop header ---------- */
 .shophead{
   background:linear-gradient(160deg,#ff8b52,#ff6b35 62%,#f4572a);color:#fff;padding:12px 14px 16px;
 }
@@ -263,7 +231,6 @@ body.bare .n-sheet{animation:none}
 .shophead .sh-promos{display:flex;gap:6px;margin-top:11px;flex-wrap:wrap}
 .shophead .sh-promo{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.34);border-radius:4px;padding:2px 7px;font-size:11px}
 
-/* ---------- menu two-pane ---------- */
 .menu{display:flex;flex:1 1 auto;min-height:0}
 .menu .m-rail{
   flex:0 0 86px;background:#f7f8fa;overflow-y:auto;border-right:1px solid var(--line);
@@ -277,7 +244,6 @@ body.bare .n-sheet{animation:none}
 .menu .m-list{flex:1 1 auto;overflow-y:auto;background:var(--card)}
 .menu .m-list::-webkit-scrollbar{width:0}
 
-/* ---------- bottom bars ---------- */
 .n-bar{
   flex:0 0 auto;background:var(--card);border-top:1px solid var(--line);
   padding:9px 12px calc(9px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:10px;
@@ -305,7 +271,6 @@ body.bare .n-sheet{animation:none}
 .n-tabbar .tb i{font-style:normal;font-size:20px;line-height:1}
 .n-tabbar .tb.on{color:var(--accent);font-weight:600}
 
-/* ---------- sheet / modal ---------- */
 .n-mask{position:absolute;inset:0;background:rgba(0,0,0,.42);z-index:70;display:flex;align-items:flex-end}
 .n-sheet{
   width:100%;max-height:76%;background:var(--card);border-radius:18px 18px 0 0;
@@ -337,7 +302,6 @@ body.bare .n-sheet{animation:none}
   z-index:90;max-width:80%;text-align:center;
 }
 
-/* ---------- misc ---------- */
 .hr{height:1px;background:var(--line);margin:0 12px}
 .kv{display:flex;justify-content:space-between;padding:6px 12px;font-size:13px;color:var(--ink2)}
 .kv .k{color:var(--ink2)}
@@ -350,7 +314,6 @@ body.bare .n-sheet{animation:none}
 .pill.done{background:#eafaf1;color:#0e9f6e}
 .pill.cancel{background:#f2f3f5;color:#8a8f99}
 
-/* ---------- font-independent art: line icons + character tiles ---------- */
 .ico{display:inline-block;width:1em;height:1em;vertical-align:-.13em;flex:0 0 auto}
 .ico svg{width:100%;height:100%;display:block}
 .tile{
@@ -362,7 +325,6 @@ body.bare .n-sheet{animation:none}
 .tile.sm{font-size:15px}
 .n-tabbar .tb i{display:flex;align-items:center;justify-content:center}
 
-/* ---------- dev HUD (hidden during screenshots) ---------- */
 #hud{
   position:fixed;top:14px;left:14px;width:300px;max-height:calc(100% - 28px);overflow:auto;
   background:#12141a;color:#cfd4de;border-radius:12px;padding:12px;font:11.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;
@@ -396,18 +358,12 @@ body.bare .n-sheet{animation:none}
 <div id="hud" class="off"></div>
 
 <script id="engine">
-/* ===========================================================================
- * ENGINE — pure, deterministic, DOM-free.
- * Loaded verbatim by pipeline/runner.mjs inside a node:vm sandbox.
- * Nothing in this block may touch `document`, `window`, Date or Math.random.
- * ======================================================================== */
 (function (root) {
 'use strict';
 
 var VERSION = '1.0.0';
 var ENV_ID  = 'squirrel_eats';
 
-/* ---------------------------------------------------------------- catalog */
 var SHOPS = [
   { id:'s_xiedao',  name:'蟹岛麻辣香锅', emoji:'🍲', rating:4.8, sales:3210, fee:0, pack:2, eta:28, dist:1.2,
     cats:['川菜','香锅'], badges:['准时宝','安心送'], notice:'现炒现做，出餐约15分钟' },
@@ -423,7 +379,6 @@ var SHOPS = [
     cats:['面食','川菜'], badges:['安心送'],           notice:'重庆师傅掌勺' }
 ];
 
-/* spec groups reused by dishes */
 var SPEC_SPICE = { key:'spice', name:'辣度', opts:[
   {v:'不辣',d:0},{v:'微辣',d:0},{v:'中辣',d:0},{v:'特辣',d:0}], def:'微辣' };
 var SPEC_SIZE  = { key:'size',  name:'份量', opts:[
@@ -434,7 +389,6 @@ var SPEC_SUGAR = { key:'sugar', name:'甜度', opts:[
   {v:'标准糖',d:0},{v:'七分糖',d:0},{v:'半糖',d:0},{v:'无糖',d:0}], def:'标准糖' };
 
 var DISHES = [
-  /* --- 蟹岛麻辣香锅 --- */
   {id:'d_xd_guo',   shop:'s_xiedao', cat:'招牌', name:'招牌麻辣香锅', price:38, emoji:'🍲', sign:true,  spicy:true,
    desc:'牛肉+虾滑+时蔬，麻辣鲜香', specs:[SPEC_SPICE, SPEC_SIZE]},
   {id:'d_xd_gan',   shop:'s_xiedao', cat:'招牌', name:'干锅有机花菜', price:28, emoji:'🥦', veg:true,   spicy:true,
@@ -443,7 +397,6 @@ var DISHES = [
   {id:'d_xd_fen',   shop:'s_xiedao', cat:'主食', name:'黑龙江宽粉',   price:6,  emoji:'🍜', veg:true,   desc:'久煮不烂'},
   {id:'d_xd_cola',  shop:'s_xiedao', cat:'饮品', name:'冰镇可乐',     price:5,  emoji:'🥤', veg:true,   desc:'330ml 罐装'},
 
-  /* --- 青竹轻食 --- */
   {id:'d_qz_bowl',  shop:'s_qingzhu', cat:'招牌', name:'藜麦鸡胸沙拉', price:32, emoji:'🥗', sign:true,
    desc:'低温慢煮鸡胸 120g + 藜麦', specs:[SPEC_SIZE]},
   {id:'d_qz_veg',   shop:'s_qingzhu', cat:'招牌', name:'时蔬能量碗',   price:26, emoji:'🥬', veg:true,
@@ -452,7 +405,6 @@ var DISHES = [
   {id:'d_qz_rice',  shop:'s_qingzhu', cat:'主食', name:'糙米饭',       price:5,  emoji:'🍚', veg:true, desc:'粗粮主食'},
   {id:'d_qz_juice', shop:'s_qingzhu', cat:'饮品', name:'冷压绿蔬汁',   price:14, emoji:'🥤', veg:true, desc:'羽衣甘蓝+青苹果'},
 
-  /* --- 老王牛肉面 --- */
   {id:'d_lw_beef',  shop:'s_laowang', cat:'招牌', name:'招牌红烧牛肉面', price:22, emoji:'🍜', sign:true,
    desc:'牛腱肉三块，汤头浓',       specs:[SPEC_SPICE]},
   {id:'d_lw_pao',   shop:'s_laowang', cat:'面食', name:'泡椒鸡杂面',   price:24, emoji:'🍜', spicy:true, desc:'脆爽泡椒'},
@@ -461,7 +413,6 @@ var DISHES = [
   {id:'d_lw_veg',   shop:'s_laowang', cat:'小食', name:'烫时蔬',       price:6,  emoji:'🥬', veg:true, desc:'当日青菜'},
   {id:'d_lw_tea',   shop:'s_laowang', cat:'饮品', name:'冰镇酸梅汤',   price:7,  emoji:'🥤', veg:true, desc:'自熬无添加'},
 
-  /* --- 果茶站 --- */
   {id:'d_gc_grape', shop:'s_guocha', cat:'招牌', name:'满杯白葡萄',   price:17, emoji:'🍇', sign:true, veg:true,
    desc:'整颗白葡萄现剥',           specs:[SPEC_ICE, SPEC_SUGAR]},
   {id:'d_gc_peach', shop:'s_guocha', cat:'茶饮', name:'蜜桃乌龙',     price:15, emoji:'🍑', veg:true,
@@ -472,13 +423,11 @@ var DISHES = [
    specs:[SPEC_ICE, SPEC_SUGAR]},
   {id:'d_gc_mochi', shop:'s_guocha', cat:'小食', name:'芋泥麻薯',     price:9,  emoji:'🍡', veg:true, desc:'现做芋泥，软糯'},
 
-  /* --- 海岛炸鸡 --- */
   {id:'d_hd_bucket',shop:'s_haidao', cat:'招牌', name:'海岛全家桶',   price:69, emoji:'🍗', sign:true, desc:'8 块炸鸡 + 2 份薯条'},
   {id:'d_hd_wing',  shop:'s_haidao', cat:'招牌', name:'蜜汁烤翅(5只)', price:26, emoji:'🍖', desc:'秘制腌料 24h'},
   {id:'d_hd_burger',shop:'s_haidao', cat:'主食', name:'香辣鸡腿堡',   price:21, emoji:'🍔', spicy:true, desc:'整块鸡腿肉'},
   {id:'d_hd_cola',  shop:'s_haidao', cat:'饮品', name:'可乐(大)',     price:6,  emoji:'🥤', veg:true, desc:'500ml'},
 
-  /* --- 巷子口小面 --- */
   {id:'d_xz_wanza', shop:'s_xiangzi', cat:'招牌', name:'招牌豌杂面',  price:16, emoji:'🍝', sign:true, spicy:true,
    desc:'豌豆+杂酱双浇头',          specs:[SPEC_SPICE]},
   {id:'d_xz_su',    shop:'s_xiangzi', cat:'面食', name:'素小面',      price:10, emoji:'🍜', veg:true, desc:'重庆本味，全素',
@@ -504,7 +453,6 @@ var ADDRESSES = [
 
 var CATALOG = {shops:SHOPS, dishes:DISHES, coupons:COUPONS, addresses:ADDRESSES};
 
-/* ---------------------------------------------------------------- helpers */
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function byId(list, id){ for (var i=0;i<list.length;i++) if (list[i].id===id) return list[i]; return null; }
 function shop(id){ return byId(SHOPS, id); }
@@ -513,16 +461,14 @@ function coupon(id){ return byId(COUPONS, id); }
 function fmt(n){ return (Math.round(n*100)/100).toFixed(2); }
 function pad(n){ return (n<10?'0':'')+n; }
 
-/* deterministic LCG — the ONLY source of variation, driven by the task seed */
 function lcg(seed){ var s=(seed>>>0)||1; return function(){ s=(s*1664525+1013904223)>>>0; return s/4294967296; }; }
 function shuffled(list, seed){
-  if (!seed) return list.slice();                 // seed 0 == canonical order
+  if (!seed) return list.slice();
   var r=lcg(seed), a=list.slice();
   for (var i=a.length-1;i>0;i--){ var j=Math.floor(r()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; }
   return a;
 }
 
-/* dotted-path get/set, used by task `init.patch` and by the Python verifier's twin */
 function getPath(obj, path){
   var parts = String(path).replace(/\[(\w+|\*|last|-1)\]/g, '.$1').split('.').filter(Boolean), cur = obj;
   for (var i=0;i<parts.length;i++){
@@ -544,8 +490,6 @@ function setPath(obj, path, value){
   return obj;
 }
 
-/* ------------------------------------------------------------ world clock */
-/* fixed start: 2026-08-24 12:30:00; every action advances SECONDS_PER_STEP  */
 var CLOCK0 = {y:2026, mo:8, d:24, h:12, mi:30, s:0};
 var SECONDS_PER_STEP = 7;
 function tick(c, n){
@@ -557,7 +501,6 @@ function tick(c, n){
 function clockStr(c){ return pad(c.h)+':'+pad(c.mi); }
 function dateStr(c){ return c.y+'-'+pad(c.mo)+'-'+pad(c.d); }
 
-/* -------------------------------------------------------- initial state */
 function createInitialState(seed){
   seed = seed || 0;
   return {
@@ -590,7 +533,6 @@ function createInitialState(seed){
   };
 }
 
-/* --------------------------------------------------------- selectors/pricing */
 function cartSubtotal(st){
   var s=0; st.cart.lines.forEach(function(l){ s += l.unit * l.qty; }); return s;
 }
@@ -661,13 +603,11 @@ var SELECT = { cartSubtotal:cartSubtotal, cartCount:cartCount, orderTotal:orderT
                usableCoupons:usableCoupons, visibleShops:visibleShops, route:route, deliveryFee:deliveryFee,
                packFee:packFee, unitPrice:unitPrice, clockStr:clockStr, dateStr:dateStr };
 
-/* 起送价 — attached to the shop records above (kept separate for readability) */
 var MIN_ORDER = { s_xiedao:20, s_qingzhu:15, s_laowang:10, s_guocha:10, s_haidao:25, s_xiangzi:0 };
 SHOPS.forEach(function(s){ s.min = MIN_ORDER[s.id]; });
 function shortOf(st){ var m = st.cart.shopId ? shop(st.cart.shopId).min : 0; return Math.max(0, m - cartSubtotal(st)); }
 SELECT.shortOf = shortOf;
 
-/* ------------------------------------------------------------- reducer */
 function push(st, name, params){ st.ui.stack.push({name:name, params:params||{}}); st.ui.sheet=null; }
 function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
 function toast(st, t){ st.ui.toast = t; }
@@ -693,13 +633,12 @@ function addToCart(st, dishId, specs, qty){
 
 function reduce(prev, action){
   var st = clone(prev), A = action || {};
-  st.ui.toast = null;                       /* a toast lives exactly one step */
+  st.ui.toast = null;
   st.meta.steps += 1;
   tick(st.meta.clock, SECONDS_PER_STEP);
 
   switch (A.type) {
 
-  /* ---- navigation ---- */
   case 'NAV':   push(st, A.to, A.params); break;
   case 'BACK':
     if (st.ui.confirm) st.ui.confirm = null;
@@ -713,7 +652,6 @@ function reduce(prev, action){
     st.ui.tab = 'home'; st.ui.stack = [{name:'home', params:{}}]; st.ui.sheet = null; st.ui.confirm = null;
     break;
 
-  /* ---- text input & search ---- */
   case 'SET_INPUT': st.ui.inputs[A.field] = A.value; break;
   case 'SUBMIT_SEARCH':
     st.ui.query = String(st.ui.inputs.search || '').trim();
@@ -723,7 +661,6 @@ function reduce(prev, action){
   case 'SET_FILTER':  st.ui.filter[A.key] = A.value; break;
   case 'SET_CAT':     st.ui.cat[A.shopId] = A.idx; break;
 
-  /* ---- dish options sheet ---- */
   case 'OPEN_SPEC': {
     var d0 = dish(A.dishId); if (!d0) break;
     st.ui.sheet = { type:'spec', dishId:A.dishId, specs:defaultSpecs(d0), qty:1 };
@@ -745,7 +682,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- cart ---- */
   case 'OPEN_CART':
     if (!st.cart.lines.length) { toast(st, '购物车是空的'); break; }
     st.ui.sheet = {type:'cart'}; break;
@@ -771,13 +707,11 @@ function reduce(prev, action){
   }
   case 'CART_CLEAR': st.cart = {shopId:null, lines:[]}; st.ui.sheet = null; st.ui.confirm = null; break;
 
-  /* ---- checkout ---- */
   case 'GOTO_CHECKOUT': {
     if (!st.cart.lines.length) { toast(st, '购物车是空的'); break; }
     if (shortOf(st) > 0) { toast(st, '还差 ¥'+fmt(shortOf(st))+' 起送'); break; }
     if (!st.checkout.addressId) st.checkout.addressId = st.defaultAddressId;
     if (st.checkout.couponId && !couponUsable(st, st.checkout.couponId)) st.checkout.couponId = null;
-    /* 「自动选择最优券」开着就照做——开关上写的字必须算数 */
     if (!st.checkout.couponId && st.profile.settings.autoCoupon) {
       var best = usableCoupons(st)[0];
       if (best) st.checkout.couponId = best.id;
@@ -835,7 +769,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- addresses ---- */
   case 'SET_DEFAULT_ADDRESS':
     if (byId(st.addresses, A.id)) { st.defaultAddressId = A.id; toast(st, '已设为默认地址'); }
     break;
@@ -877,7 +810,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- orders ---- */
   case 'ORDER_CANCEL': {
     var o = byId(st.orders, A.id); if (!o) break;
     if (o.status !== 'pending') { toast(st, '该订单当前状态不可取消'); break; }
@@ -904,7 +836,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- settings / misc ---- */
   case 'TOGGLE':
     st.profile.settings[A.key] = !st.profile.settings[A.key];
     break;
@@ -918,7 +849,6 @@ function reduce(prev, action){
   return st;
 }
 
-/* CONFIRM_YES re-enters the switch without re-cloning / re-ticking */
 function reduceInner(st, action){
   var saved = st.meta.steps, savedClock = clone(st.meta.clock);
   var out = reduce(st, action);
@@ -926,15 +856,6 @@ function reduceInner(st, action){
   return out;
 }
 
-/* =======================================================================
- * SCREEN TREE
- * screen(state) -> a declarative node tree. It is consumed by
- *   (a) the DOM renderer  (script#ui)             -> pixels
- *   (b) the headless hit-tester (engine.hit)  -> browser-free rollouts
- *   (c) a11y(tree)                            -> text observation for LLMs
- * Every interactive node carries a stable `id` (the test-id) and an `act`
- * (an action object fed straight back into reduce()).
- * ==================================================================== */
 function N(t, o){ o = o || {}; o.t = t; return o; }
 
 function appbar(title, opts){
@@ -1005,7 +926,6 @@ function cartBar(st, sid){
   })]});
 }
 
-/* ------------------------------------------------------------- screens */
 function scrHome(st){
   var addr = byId(st.addresses, st.defaultAddressId) || st.addresses[0];
   var f = st.ui.filter;
@@ -1334,7 +1254,6 @@ function scrSettings(st){
   ]});
 }
 
-/* ------------------------------------------------------------- overlays */
 function sheetSpec(st){
   var sh = st.ui.sheet, d = dish(sh.dishId);
   var groups = (d.specs||[]).map(function(g){
@@ -1406,9 +1325,6 @@ function screen(st){
   return root;
 }
 
-/* =======================================================================
- * TRAVERSAL — element index, GUI action interface, text observation
- * ==================================================================== */
 var SKIP_KEYS = {act:1, minus:1, plus:1, go:1, close:1, iconAct:1, specs:1, params:1,
                  shop:1, tags:1, yes:1, meta:1};
 
@@ -1433,8 +1349,6 @@ function collect(n, out){
   }
 }
 
-/* modal semantics: when an overlay is up, only the overlay is reachable —
-   this keeps the headless hit-tester consistent with real DOM z-order. */
 function elements(st){
   var root = (st && st.t === 'screen') ? st : screen(st);
   var masks = (root.c||[]).filter(function(n){ return n.t === 'mask'; });
@@ -1453,7 +1367,6 @@ function substitute(act, text){
   return a;
 }
 
-/* ---- GUI-level action interface (identical in browser and headless) ---- */
 function step(st, a){
   a = a || {};
   var kind = a.action || a.type;
@@ -1479,7 +1392,6 @@ function step(st, a){
   }
 }
 
-/* ------------------------------------------------- text observation (a11y) */
 function a11y(st){
   var root = screen(st), lines = [];
   var r = route(st);
@@ -1596,17 +1508,12 @@ function walkText(n, d, out, st){
   }
 }
 
-/* --------------------------------------------------------- task init patch */
 function applyPatch(st, patch){
   (patch || []).forEach(function(p){ setPath(st, p.path, clone(p.value)); });
   return st;
 }
 
 
-/* ------------------------------------------------------- derived view
- * Convenience projections recomputed from the canonical state. They exist so
- * task goals can say `derived.defaultAddress.tag` instead of hardcoding an id
- * that the agent itself generated. Never write to `derived`.                */
 function derive(st){
   var last = st.orders.length ? st.orders[st.orders.length-1] : null;
   var usable = usableCoupons(st);
@@ -1629,7 +1536,6 @@ function derive(st){
 }
 function snapshot(st){ var o = clone(st); o.derived = derive(st); return o; }
 
-/* ------------------------------------------------------------------ export */
 var ENGINE = {
   ENV_ID: ENV_ID, VERSION: VERSION, CATALOG: CATALOG,
   createInitialState: createInitialState,
@@ -1640,16 +1546,12 @@ var ENGINE = {
   select: SELECT
 };
 root.EATS_ENGINE = ENGINE;
-root.GUI_ENGINE  = ENGINE;      /* generic alias the harness looks for first */
+root.GUI_ENGINE  = ENGINE;
 
 })(typeof globalThis !== 'undefined' ? globalThis : this);
 </script>
 
 <script id="ui">
-/* ===========================================================================
- * UI — renders EATS_ENGINE.screen(state) into DOM and exposes window.__ENV__.
- * The renderer is a pure function of the screen tree: no app logic lives here.
- * ======================================================================== */
 (function(){
 'use strict';
 var E = window.EATS_ENGINE;
@@ -1657,8 +1559,8 @@ var app = document.getElementById('app');
 var hud = document.getElementById('hud');
 
 var STATE = null;
-var ACTS  = [];        /* per-render action table; data-act holds the index */
-var TRAJ  = [];        /* GUI-level action log, for the Playwright runner    */
+var ACTS  = [];
+var TRAJ  = [];
 
 function esc(s){
   return String(s === undefined || s === null ? '' : s)
@@ -1670,7 +1572,6 @@ function tid(id){ return id ? ' data-testid="'+esc(id)+'"' : ''; }
 function money(n){ return '¥' + E.fmt(n); }
 function R(list){ return (list||[]).map(render).join(''); }
 
-/* ------------------------------------------------- font-independent icons */
 var SVG = {
   back:    '<path d="M15 4.5 8 12l7 7.5"/>',
   arrow:   '<path d="M9 4.5 16 12l-7 7.5"/>',
@@ -1696,7 +1597,6 @@ function icon(name, size, cls){
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" '+
     'stroke-linecap="round" stroke-linejoin="round">'+d+'</svg></span>';
 }
-/* deterministic character tile — replaces food photography, renders anywhere */
 function hashHue(s){
   var h = 0; s = String(s);
   for (var i=0;i<s.length;i++) h = (h*31 + s.charCodeAt(i)) >>> 0;
@@ -1931,7 +1831,6 @@ function render(n){
   }
 }
 
-/* ------------------------------------------------------------------ paint */
 function paint(){
   ACTS = [];
   var tree = E.screen(STATE);
@@ -1944,7 +1843,7 @@ app.addEventListener('click', function(ev){
   var el = ev.target.closest('[data-act]');
   if (!el) return;
   var mask = ev.target.closest('[data-stop]');
-  if (mask && el.classList.contains('n-mask')) return;   /* tap inside sheet != tap on mask */
+  if (mask && el.classList.contains('n-mask')) return;
   var act = ACTS[+el.getAttribute('data-act')];
   if (!act) return;
   TRAJ.push({action:'tap', id: el.getAttribute('data-testid') || null, act: act});
@@ -1965,7 +1864,6 @@ app.addEventListener('input', function(ev){
   if (again && again.focus) { again.focus(); try { again.setSelectionRange(sel, sel); } catch(e){} }
 });
 
-/* --------------------------------------------------------------- dev HUD */
 function paintHud(){
   var r = E.select.route(STATE);
   hud.innerHTML = '<h4>__ENV__ · '+E.ENV_ID+' v'+E.VERSION+'</h4>'+
@@ -1991,7 +1889,6 @@ document.addEventListener('keydown', function(e){
   if (e.key === 'h') { hud.classList.toggle('off'); if (!hud.classList.contains('off')) paintHud(); }
 });
 
-/* --------------------------------------------------- window.__ENV__ (API) */
 var ENVAPI = {
   ENV_ID: E.ENV_ID, VERSION: E.VERSION,
   reset: function(opts){
@@ -2011,8 +1908,6 @@ var ENVAPI = {
   elements:  function(){ return E.elements(STATE); },
   route:     function(){ return E.select.route(STATE); },
   trajectory:function(){ return JSON.parse(JSON.stringify(TRAJ)); },
-  /* pixel boxes for every test-id currently on screen — for coordinate agents
-     and for annotating screenshots. Coordinates are relative to the phone screen. */
   bounds: function(){
     var base = document.getElementById('screen').getBoundingClientRect(), out = {};
     app.querySelectorAll('[data-testid]').forEach(function(el){
@@ -2028,7 +1923,6 @@ var ENVAPI = {
 };
 window.__ENV__ = ENVAPI;
 
-/* ---------------------------------------------------------------- boot */
 var qs = new URLSearchParams(location.search);
 if (qs.get('bare') === '1') document.body.classList.add('bare');
 if (qs.get('hud')  === '1') hud.classList.remove('off');

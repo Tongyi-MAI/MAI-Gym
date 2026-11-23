@@ -4,22 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Roost · Stays (mocked GUI env)</title>
-<!--
-  ============================================================================
-  Roost — a single-file H5 mobile GUI environment for agent research.
 
-  Same two-block contract as every environment in this repo:
-
-    script#engine  ...  pure state machine. No DOM, no Date.now, no Math.random.
-                        Exports globalThis.ROOST_ENGINE and is loaded verbatim
-                        by pipeline/runner.mjs inside a node:vm sandbox.
-    script#ui      ...  renders engine.screen(state) -> DOM, exposes __ENV__.
-
-  Everything you see is drawn: the illustrations are inline SVG scenes built
-  from a small vocabulary (sky, ridge, water, foliage, structure), so the app
-  renders identically on a machine with no fonts, no network and no images.
-  ============================================================================
--->
 <style>
 :root{
   --accent:#2f6f5e; --accent-d:#235444; --accent-s:#e7f1ed; --accent-l:#4a9683;
@@ -38,7 +23,6 @@ body{
   color:var(--ink);display:flex;align-items:center;justify-content:center;overflow:hidden;
 }
 
-/* ---------------- device frame ---------------- */
 #device{position:relative;width:390px;height:844px;background:#111;border-radius:46px;padding:5px;
   box-shadow:0 30px 70px rgba(0,0,0,.32);flex:0 0 auto}
 #screen{position:relative;width:100%;height:100%;background:var(--bg);border-radius:41px;
@@ -51,7 +35,6 @@ body.bare #screen{border-radius:0}
 body.bare #notch{display:none}
 body.bare .n-sheet{animation:none}
 
-/* ---------------- status bar ---------------- */
 .statusbar{height:44px;flex:0 0 44px;display:flex;align-items:flex-end;justify-content:space-between;
   padding:0 22px 6px;font-size:13px;font-weight:600;z-index:50;color:var(--ink)}
 .statusbar.on-art{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.3)}
@@ -62,7 +45,6 @@ body.bare .n-sheet{animation:none}
 
 #app{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;position:relative}
 
-/* ---------------- chrome ---------------- */
 .n-appbar{flex:0 0 auto;min-height:48px;display:flex;align-items:center;gap:8px;padding:6px 12px;
   background:var(--card);border-bottom:1px solid var(--line);z-index:20}
 .n-appbar .ab-title{flex:1 1 auto;text-align:center;font:600 16.5px/1.3 var(--serif);letter-spacing:.2px;
@@ -81,7 +63,6 @@ body.bare .n-sheet{animation:none}
 .n-scroll::-webkit-scrollbar{width:0}
 .n-scroll.flush{padding-bottom:0}
 
-/* ---------------- typography ---------------- */
 .n-text{padding:2px 16px;color:var(--ink2)}
 .n-text.h1{font:700 25px/1.2 var(--serif);color:var(--ink);padding:18px 16px 6px;letter-spacing:-.2px}
 .n-text.h2{font:600 17px/1.3 var(--serif);color:var(--ink);padding:16px 16px 6px}
@@ -95,7 +76,6 @@ body.bare .n-sheet{animation:none}
 .n-space{height:16px}
 .n-divider{height:1px;background:var(--line);margin:8px 16px}
 
-/* ---------------- illustration ---------------- */
 .art{position:relative;overflow:hidden;background:#e8eeec;flex:0 0 auto}
 .art svg{width:100%;height:100%;display:block}
 .art.rounded{border-radius:var(--r2)}
@@ -112,7 +92,6 @@ body.bare .n-sheet{animation:none}
   border:1px solid var(--line);cursor:pointer}
 .gallery .g-item.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-s)}
 
-/* ---------------- cards ---------------- */
 .n-card{background:var(--card);border-radius:var(--r);margin:10px 16px;box-shadow:var(--shadow);overflow:hidden}
 .n-card.pad{padding:14px}
 .n-card.tap{cursor:pointer;transition:transform .09s}
@@ -143,7 +122,6 @@ body.bare .n-sheet{animation:none}
 .pill.live{background:#e9f6f0;color:#1f7a54}
 .pill.dead{background:#f4f2f0;color:#9a9a94}
 
-/* ---------------- rows / controls ---------------- */
 .n-row{display:flex;align-items:center;gap:12px;padding:14px;background:var(--card);
   border-bottom:1px solid var(--line2);min-height:52px}
 .n-row:last-child{border-bottom:none}
@@ -211,13 +189,11 @@ body.bare .n-sheet{animation:none}
 .n-stepper .st-btn.off{opacity:.35;cursor:not-allowed}
 .n-stepper .st-val{min-width:20px;text-align:center;font-size:15px;font-weight:650}
 
-/* ---------------- amenity grid ---------------- */
 .amen{display:grid;grid-template-columns:1fr 1fr;gap:2px 10px;padding:4px 16px 8px}
 .amen .a-item{display:flex;align-items:center;gap:9px;padding:9px 0;font-size:13.5px;color:var(--ink2)}
 .amen .a-item .ico{color:var(--accent);flex:0 0 auto}
 .amen .a-item.off{opacity:.34;text-decoration:line-through}
 
-/* ---------------- reviews ---------------- */
 .stars{display:inline-flex;gap:1.5px;color:var(--gold)}
 .rsum{padding:16px}
 .rsum .rs-top{display:flex;align-items:center;gap:12px}
@@ -243,13 +219,11 @@ body.bare .n-sheet{animation:none}
   border:1px solid var(--line);border-radius:16px;padding:5px 12px;cursor:pointer;background:#fff}
 .rev .rv-help.on{border-color:var(--accent);color:var(--accent-d);background:var(--accent-s);font-weight:650}
 
-/* ---------------- host ---------------- */
 .host{display:flex;align-items:center;gap:12px;padding:14px}
 .host .h-av{flex:0 0 auto;width:48px;height:48px;border-radius:50%;overflow:hidden;background:var(--line2)}
 .host .h-name{font:600 15px/1.3 var(--serif)}
 .host .h-sub{font-size:12px;color:var(--muted);margin-top:2px}
 
-/* ---------------- calendar ---------------- */
 .cal{padding:4px 12px 12px;background:var(--card)}
 .cal .c-head{display:flex;align-items:center;justify-content:space-between;padding:8px 4px 12px}
 .cal .c-month{font:600 16px/1 var(--serif)}
@@ -267,14 +241,12 @@ body.bare .n-sheet{animation:none}
 .cal .c-day.start.in-range{background:linear-gradient(90deg,transparent 50%,var(--accent-s) 50%)}
 .cal .c-day.end.in-range{background:linear-gradient(90deg,var(--accent-s) 50%,transparent 50%)}
 
-/* ---------------- price breakdown ---------------- */
 .kv{display:flex;justify-content:space-between;gap:12px;padding:7px 16px;font-size:13.5px;color:var(--ink2)}
 .kv .v{color:var(--ink)}
 .kv.total{padding-top:12px;margin-top:6px;border-top:1px solid var(--line);font-weight:700}
 .kv.total .k,.kv.total .v{color:var(--ink);font-size:15.5px}
 .kv.save .v{color:var(--accent)}
 
-/* ---------------- bottom bars ---------------- */
 .n-bar{flex:0 0 auto;background:var(--card);border-top:1px solid var(--line);padding:10px 16px 12px;
   display:flex;align-items:center;gap:14px;z-index:30;box-shadow:0 -4px 20px rgba(24,38,36,.05)}
 .n-bar .bar-txt{flex:1 1 auto;min-width:0}
@@ -286,7 +258,6 @@ body.bare .n-sheet{animation:none}
 .n-tabbar .tb i{display:flex}
 .n-tabbar .tb.on{color:var(--accent)}
 
-/* ---------------- overlays ---------------- */
 .n-mask{position:absolute;inset:0;background:rgba(16,26,25,.42);z-index:70;display:flex;align-items:flex-end}
 .n-sheet{width:100%;max-height:82%;background:var(--card);border-radius:20px 20px 0 0;display:flex;
   flex-direction:column;overflow:hidden;animation:up .18s ease-out}
@@ -301,7 +272,6 @@ body.bare .n-sheet{animation:none}
   color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;z-index:90;max-width:80%;text-align:center}
 .dialog{margin:auto;width:80%;background:#fff;border-radius:16px;overflow:hidden}
 
-/* ---------------- dev HUD ---------------- */
 #hud{position:fixed;top:14px;left:14px;width:310px;max-height:calc(100% - 28px);overflow:auto;
   background:#131a19;color:#c9d4d1;border-radius:12px;padding:12px;
   font:11.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;z-index:200;box-shadow:0 10px 30px rgba(0,0,0,.4)}
@@ -332,17 +302,12 @@ body.bare .n-sheet{animation:none}
 <div id="hud" class="off"></div>
 
 <script id="engine">
-/* ===========================================================================
- * ENGINE — pure, deterministic, DOM-free.
- * ======================================================================== */
 (function (root) {
 'use strict';
 
 var VERSION = '1.0.0';
 var ENV_ID  = 'roost_stays';
 
-/* -------------------------------------------------------- calendar math */
-/* Howard Hinnant's civil<->days algorithms: pure arithmetic, no Date object. */
 function daysFromCivil(y, m, d){
   y -= m <= 2 ? 1 : 0;
   var era = Math.floor(y / 400), yoe = y - era * 400;
@@ -353,7 +318,7 @@ function daysFromCivil(y, m, d){
 function parseDate(s){ var p = String(s).split('-'); return {y:+p[0], m:+p[1], d:+p[2]}; }
 function iso(y, m, d){ return y + '-' + (m<10?'0':'') + m + '-' + (d<10?'0':'') + d; }
 function dayNum(s){ var c = parseDate(s); return daysFromCivil(c.y, c.m, c.d); }
-function weekday(s){ return ((dayNum(s) + 4) % 7 + 7) % 7; }          /* 0 = Sunday */
+function weekday(s){ return ((dayNum(s) + 4) % 7 + 7) % 7; }
 function daysInMonth(y, m){ return daysFromCivil(m===12?y+1:y, m===12?1:m+1, 1) - daysFromCivil(y, m, 1); }
 function nightsBetween(a, b){ return (a && b) ? dayNum(b) - dayNum(a) : 0; }
 
@@ -367,7 +332,6 @@ function longDate(s){ if (!s) return ''; var c = parseDate(s);
 function medDate(s){ if (!s) return ''; var c = parseDate(s);
   return DOW[weekday(s)] + ' ' + MON[c.m-1] + ' ' + c.d; }
 
-/* ------------------------------------------------------------- catalog */
 var AMENITIES = [
   {key:'wifi',      label:'Fast wifi',            icon:'wifi'},
   {key:'kitchen',   label:'Full kitchen',         icon:'kitchen'},
@@ -483,8 +447,6 @@ var STAYS = [
        + 'to the sand. Grey whales pass close in on their way north through spring.'}
 ];
 
-/* Guest reviews. Displayed reviews are a sample of the full count on each stay,
-   which is why `stay.reviews` is larger than the list here. */
 var REVIEWS = [
   {id:'rv_cabin_1', stayId:'p_cabin', author:'Dana W.',  avatar:3, date:'2026-05', rating:5, helpful:14,
    text:'The wood stove is not a decoration — it heated the whole place in twenty minutes. We saw elk from the kitchen window on both mornings.'},
@@ -619,7 +581,6 @@ var CURRENCIES = {USD:{sym:'$', rate:1}, EUR:{sym:'€', rate:0.92}};
 var CATALOG = {stays:STAYS, amenities:AMENITIES, addons:ADDONS, promos:PROMOS,
                categories:CATEGORIES, reviews:REVIEWS, scoreLabels:SCORE_LABELS};
 
-/* ------------------------------------------------------------- helpers */
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function byId(list, id){ for (var i=0;i<list.length;i++) if (list[i].id===id) return list[i]; return null; }
 function stay(id){ return byId(STAYS, id); }
@@ -659,7 +620,6 @@ function setPath(obj, path, value){
   return obj;
 }
 
-/* --------------------------------------------------------- world clock */
 var TODAY = '2026-06-08';
 var CLOCK0 = {h:9, mi:41, s:0};
 var SECONDS_PER_STEP = 6;
@@ -671,7 +631,6 @@ function tick(c, n){
 }
 function clockStr(c){ return c.h + ':' + (c.mi<10?'0':'') + c.mi; }
 
-/* ------------------------------------------------------ initial state */
 function createInitialState(seed){
   seed = seed || 0;
   return {
@@ -711,7 +670,6 @@ function createInitialState(seed){
   };
 }
 
-/* ------------------------------------------------------------ pricing */
 function promoUsable(st, p, nightlyTotal){
   if (!p) return false;
   if (p.expires < st.meta.today) return false;
@@ -749,7 +707,6 @@ function fitsGuests(st, s){
   return null;
 }
 
-/* ------------------------------------------------------------ queries */
 function visibleStays(st){
   var list = shuffled(STAYS, st.meta.seed), f = st.ui.filters, q = st.ui.query.toLowerCase();
   if (q) list = list.filter(function(s){
@@ -800,7 +757,6 @@ var SELECT = { quote:quote, draftQuote:draftQuote, visibleStays:visibleStays, ro
                shortDate:shortDate, longDate:longDate, medDate:medDate, dist:dist,
                reviewsFor:reviewsFor, sortedReviews:sortedReviews, helpfulCount:helpfulCount, fitsGuests:fitsGuests, promoUsable:promoUsable };
 
-/* ------------------------------------------------------------- reducer */
 function push(st, name, params){ st.ui.stack.push({name:name, params:params||{}}); st.ui.sheet=null; }
 function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
 function toast(st, t){ st.ui.toast = t; }
@@ -817,7 +773,6 @@ function reduce(prev, action){
 
   switch (A.type) {
 
-  /* ---- navigation ---- */
   case 'NAV':  push(st, A.to, A.params); break;
   case 'BACK':
     if (st.ui.confirm) st.ui.confirm = null;
@@ -833,7 +788,6 @@ function reduce(prev, action){
     st.ui.sheet = null; st.ui.confirm = null;
     break;
 
-  /* ---- search & filtering ---- */
   case 'SET_INPUT': st.ui.inputs[A.field] = A.value; break;
   case 'SUBMIT_SEARCH':
     st.ui.query = String(st.ui.inputs.search || '').trim();
@@ -852,7 +806,6 @@ function reduce(prev, action){
     toast(st, 'Filters cleared');
     break;
 
-  /* ---- sheets ---- */
   case 'OPEN_SHEET':
     st.ui.sheet = {type:A.sheet};
     if (A.sheet === 'promo') st.ui.inputs.promo = st.draft.promo || '';
@@ -870,7 +823,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- calendar ---- */
   case 'CAL_MONTH': {
     var m = st.ui.calMonth.m + A.delta, y = st.ui.calMonth.y;
     if (m < 1) { m = 12; y -= 1; }
@@ -888,14 +840,12 @@ function reduce(prev, action){
   }
   case 'CAL_CLEAR': st.draft.checkIn = null; st.draft.checkOut = null; break;
 
-  /* ---- guests ---- */
   case 'GUESTS': {
     var lim = GUEST_LIMITS[A.key]; if (!lim) break;
     st.draft.guests[A.key] = clampInt(st.draft.guests[A.key] + A.delta, lim[0], lim[1]);
     break;
   }
 
-  /* ---- stays ---- */
   case 'FAV': {
     var i = st.wishlist.indexOf(A.stayId);
     if (i >= 0) { st.wishlist.splice(i, 1); toast(st, 'Removed from wishlist'); }
@@ -930,7 +880,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- booking ---- */
   case 'TOGGLE_ADDON': {
     var k = A.key, arr = st.draft.addons, j = arr.indexOf(k);
     if (j >= 0) arr.splice(j, 1); else arr.push(k);
@@ -952,7 +901,6 @@ function reduce(prev, action){
   }
   case 'CLEAR_PROMO': st.draft.promo = null; st.ui.inputs.promo = ''; break;
 
-  /* ---- payment methods ---- */
   case 'PICK_PAYMENT': st.draft.paymentId = A.id; pop(st); break;
   case 'SET_DEFAULT_PAYMENT':
     if (byId(st.payments, A.id)) { st.defaultPaymentId = A.id; toast(st, 'Default payment updated'); }
@@ -985,7 +933,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- confirm the booking ---- */
   case 'CONFIRM_BOOKING': {
     var d2 = st.draft, s2 = stay(d2.stayId);
     if (!s2) { toast(st, 'Pick a stay first'); break; }
@@ -1012,7 +959,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- trips ---- */
   case 'CANCEL_TRIP': {
     var b = byId(st.bookings, A.id); if (!b) break;
     if (b.status !== 'upcoming') { toast(st, 'Only upcoming trips can be cancelled'); break; }
@@ -1041,7 +987,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- settings ---- */
   case 'SET_SETTING':    st.profile.settings[A.key] = A.value; break;
   case 'TOGGLE_SETTING': st.profile.settings[A.key] = !st.profile.settings[A.key]; break;
 
@@ -1054,11 +999,6 @@ function reduce(prev, action){
   return st;
 }
 
-/* =======================================================================
- * SCREEN TREE — consumed by the DOM renderer, the headless hit-tester and
- * the a11y serialiser. Illustrations are nodes too, and they carry `alt`
- * text so a text-only agent still knows what the picture shows.
- * ==================================================================== */
 var SCENE_ALT = {
   cabin:'Illustration: an A-frame cabin among pines beneath snowy peaks at dusk',
   beach:'Illustration: a stilted bungalow above the tideline at sunset',
@@ -1141,7 +1081,6 @@ function stayCard(st, s, prefix){
   });
 }
 
-/* ------------------------------------------------------------- screens */
 function scrHome(st){
   var list = visibleStays(st);
   var cats = CATEGORIES.map(function(c){
@@ -1602,7 +1541,6 @@ function scrSettings(st){
   ]});
 }
 
-/* ------------------------------------------------------------ overlays */
 function sheetCalendar(st){
   var cm = st.ui.calMonth, d = st.draft;
   var first = weekday(iso(cm.y, cm.m, 1)), n = daysInMonth(cm.y, cm.m), cells = [];
@@ -1689,9 +1627,6 @@ function screen(st){
   return rootNode;
 }
 
-/* =======================================================================
- * TRAVERSAL — element index, GUI action interface, text observation
- * ==================================================================== */
 var SKIP_KEYS = {act:1, minus:1, plus:1, go:1, close:1, prev:1, next:1, favAct:1, helpfulAct:1,
                  yes:1, params:1, meta:1, guests:1, price:1, tags:1, status:1, reply:1, scores:1};
 
@@ -1725,7 +1660,6 @@ function collect(n, out){
   }
 }
 
-/* modal semantics: an open sheet or dialog swallows everything behind it */
 function elements(st){
   var rootNode = (st && st.t === 'screen') ? st : screen(st);
   var masks = (rootNode.c||[]).filter(function(n){ return n.t === 'mask'; });
@@ -1769,7 +1703,6 @@ function step(st, a){
   }
 }
 
-/* ------------------------------------------------- text observation (a11y) */
 function a11y(st){
   var rootNode = screen(st), lines = [], r = route(st);
   lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
@@ -1899,7 +1832,6 @@ function walkText(n, d, out, st){
   }
 }
 
-/* --------------------------------------------------------- derived view */
 function derive(st){
   var last = st.bookings.length ? st.bookings[st.bookings.length - 1] : null;
   return {
@@ -1932,7 +1864,6 @@ function applyPatch(st, patch){
   return st;
 }
 
-/* ------------------------------------------------------------------ export */
 var ENGINE = {
   ENV_ID: ENV_ID, VERSION: VERSION, CATALOG: CATALOG,
   createInitialState: createInitialState,
@@ -1943,21 +1874,12 @@ var ENGINE = {
   select: SELECT
 };
 root.ROOST_ENGINE = ENGINE;
-root.GUI_ENGINE   = ENGINE;      /* generic alias the harness looks for first */
+root.GUI_ENGINE   = ENGINE;
 
 })(typeof globalThis !== 'undefined' ? globalThis : this);
 </script>
 
 <script id="ui">
-/* ===========================================================================
- * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
- *
- * Part 1 of 2: the artwork. Every picture in this app is an inline SVG scene
- * drawn from a small vocabulary (sky, ridge, water, foliage, structure), so
- * the environment needs no image files, no network and no emoji font, and it
- * renders byte-identically on any machine. Interiors are hue-parameterised so
- * each stay's gallery is tinted to match its exterior.
- * ======================================================================== */
 (function(){
 'use strict';
 var E = window.GUI_ENGINE;
@@ -1970,7 +1892,6 @@ function esc(s){
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-/* ---------------------------------------------------------------- scenes */
 var uidSeq = 0;
 function pines(y, n, x0, gap, h, w, fill, op){
   var s = '';
@@ -2011,7 +1932,6 @@ function confetti(u){
 
 var ART = {
 
-/* ---- exteriors ------------------------------------------------------- */
 cabin: function(u){ return ''
   + '<defs>'
   + '<linearGradient id="' + u + 'sky" x1="0" y1="0" x2="0" y2="1">'
@@ -2225,7 +2145,6 @@ lake: function(u){ return ''
   + birds([330,58,6, 356,74,4], '#6a8b96');
 },
 
-/* ---- home hero -------------------------------------------------------- */
 travel: function(u){ return ''
   + '<defs>'
   + '<linearGradient id="' + u + 'sky" x1="0" y1="0" x2="0" y2="1">'
@@ -2262,7 +2181,6 @@ travel: function(u){ return ''
   + birds([300,66,7, 328,50,5, 350,72,4], '#a86a5a');
 },
 
-/* ---- interiors, tinted by the stay's hue ------------------------------ */
 living: function(u, h){ return ''
   + '<rect width="400" height="260" fill="hsl(' + h + ' 22% 94%)"/>'
   + '<rect x="0" y="196" width="400" height="64" fill="hsl(32 34% 80%)"/>'
@@ -2317,7 +2235,6 @@ bed: function(u, h){ return ''
   +   '<path d="M254 140 h38 l-7 -22 h-24 z" fill="#f4c95d"/></g>';
 },
 
-/* ---- states ----------------------------------------------------------- */
 empty: function(u){ return ''
   + '<rect width="400" height="260" fill="#eef3ef"/>'
   + '<g fill="#fff" opacity=".8">'
@@ -2335,7 +2252,6 @@ empty: function(u){ return ''
   + birds([292,52,6, 316,38,4], '#8fa89a');
 },
 
-/* ---- canyon: sandstone fins, a casita cut into the rock, late afternoon ---- */
 canyon: function(u){ return ''
   + '<defs>'
   + '<linearGradient id="' + u + 'sky" x1="0" y1="0" x2="0" y2="1">'
@@ -2372,7 +2288,6 @@ canyon: function(u){ return ''
   + birds([326,52,7, 352,70,5], '#a3563f');
 },
 
-/* ---- mountain: alpine chalet under big peaks, clear morning ---- */
 mountain: function(u){ return ''
   + '<defs>'
   + '<linearGradient id="' + u + 'sky" x1="0" y1="0" x2="0" y2="1">'
@@ -2409,7 +2324,6 @@ mountain: function(u){ return ''
   + '<ellipse cx="200" cy="224" rx="98" ry="7" fill="#9db2c2" opacity=".3"/>';
 },
 
-/* ---- barn: converted dairy barn on the prairie, golden hour ---- */
 barn: function(u){ return ''
   + '<defs>'
   + '<linearGradient id="' + u + 'sky" x1="0" y1="0" x2="0" y2="1">'
@@ -2456,7 +2370,6 @@ barn: function(u){ return ''
   + birds([84,66,7, 112,52,5, 138,72,4], '#a2653f');
 },
 
-/* ---- airstream: silver trailer on a juniper flat, red rocks behind ---- */
 airstream: function(u){ return ''
   + '<defs>'
   + '<linearGradient id="' + u + 'sky" x1="0" y1="0" x2="0" y2="1">'
@@ -2497,7 +2410,6 @@ airstream: function(u){ return ''
   + birds([336,54,7, 360,72,5], '#a3563f');
 },
 
-/* ---- coast: shingled cottage on a headland above the surf ---- */
 coast: function(u){ return ''
   + '<defs>'
   + '<linearGradient id="' + u + 'sky" x1="0" y1="0" x2="0" y2="1">'
@@ -2574,7 +2486,6 @@ function artSvg(scene, hue){
        + fn(u, hue === undefined ? 170 : hue) + '</svg>';
 }
 
-/* ------------------------------------------------------------- avatars */
 var AVATARS = [
   {skin:'#f0c9a4', hair:'#3b2a24', shirt:'#4a8f7b'},
   {skin:'#c98d63', hair:'#241a16', shirt:'#c9714f'},
@@ -2592,7 +2503,6 @@ function avatarSvg(i){
     + '</svg>';
 }
 
-/* ---------------------------------------------------------------- icons */
 var SVG = {
   back:    '<path d="M15 4.5 8 12l7 7.5"/>',
   arrow:   '<path d="M9 4.5 16 12l-7 7.5"/>',
@@ -2638,13 +2548,12 @@ function icon(name, size, cls){
     + d + '</svg></span>';
 }
 
-/* -------------------------------------------------------------- renderer */
 var ACTS = [], TRAJ = [];
 function bind(a){ if (!a) return ''; ACTS.push(a); return ' data-act="' + (ACTS.length-1) + '"'; }
 function bindT(a){ if (!a) return ''; ACTS.push(a); return ' data-actt="' + (ACTS.length-1) + '"'; }
 function tid(id){ return id ? ' data-testid="' + esc(id) + '"' : ''; }
 function R(list){ return (list||[]).map(render).join(''); }
-function starRow(n, size){                 /* NB: `stars()` is the night-sky scene helper */
+function starRow(n, size){
   var out = '<span class="stars">';
   for (var i = 1; i <= 5; i++)
     out += icon('star', size || 12, i <= n ? 'fill' : '');
@@ -2677,7 +2586,6 @@ function render(n){
          + icon('heart', 19, n.on ? 'fill' : '') + '</div>';
 
   case 'searchbar': {
-    /* the submit action is stashed on the input too, so pressing Enter works */
     var goIdx = n.go ? (ACTS.push(n.go) - 1) : -1;
     return '<div class="searchbar">' + icon('search', 17, 'muted')
          + '<input' + tid(n.id) + bindT(n.act) + ' data-enter="' + goIdx + '"'
@@ -2904,7 +2812,6 @@ function render(n){
   }
 }
 
-/* ------------------------------------------------------------------ paint */
 var STATE = null;
 function paint(){
   ACTS = []; uidSeq = 0;
@@ -2951,7 +2858,6 @@ app.addEventListener('input', function(ev){
   if (again && again.focus) { again.focus(); try { again.setSelectionRange(pos, pos); } catch(e){} }
 });
 
-/* ---------------------------------------------------------------- dev HUD */
 function paintHud(){
   var d = E.derive(STATE);
   hud.innerHTML = '<h4>__ENV__ · ' + E.ENV_ID + ' v' + E.VERSION + '</h4>'
@@ -2975,7 +2881,6 @@ document.addEventListener('keydown', function(e){
   if (e.key === 'h') { hud.classList.toggle('off'); if (!hud.classList.contains('off')) paintHud(); }
 });
 
-/* ------------------------------------------------------- window.__ENV__ */
 var ENVAPI = {
   ENV_ID: E.ENV_ID, VERSION: E.VERSION,
   reset: function(opts){

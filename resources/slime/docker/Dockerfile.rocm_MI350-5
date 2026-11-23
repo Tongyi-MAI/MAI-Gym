@@ -1,0 +1,165 @@
+# Modified by MAI-Gym contributors.
+
+
+
+FROM rocm/sgl-dev:rocm7-vllm-20250904
+
+SHELL ["/bin/bash", "-ceuxo", "pipefail"]
+
+ARG MAX_JOBS=128
+ENV MAX_JOBS=${MAX_JOBS}
+
+ENV GPU_ARCH=gfx950
+ENV PYTORCH_ROCM_ARCH=gfx950
+ENV GPU_ARCH_LIST=gfx950
+ENV AMDGPU_TARGET=gfx950
+
+
+WORKDIR /app
+
+RUN pip uninstall -y aiter || true
+RUN rm -rf aiter
+RUN git clone https://github.com/ROCm/aiter.git \
+    && cd aiter \
+    && git checkout v0.1.7.post2 \
+    && git submodule update --init --recursive \
+    && GPU_ARCHS=gfx950 python setup.py develop
+
+
+WORKDIR /app
+
+RUN rm -rf TransformerEngine
+RUN git clone https://github.com/ROCm/TransformerEngine.git \
+    && cd TransformerEngine \
+    && git checkout 90c04bcdc3c109505b318f40a39680263af55edf \
+    && git submodule update --init --recursive
+
+ENV NVTE_FRAMEWORK=pytorch
+ENV NVTE_ROCM_ARCH=gfx950
+ENV NVTE_USE_HIPBLASLT=1
+ENV NVTE_USE_ROCM=1
+ENV CMAKE_PREFIX_PATH="/opt/rocm:/opt/rocm/hip:/usr/local:/usr"
+
+RUN cd TransformerEngine && pip install . -v
+
+
+WORKDIR /app
+
+RUN pip install "numpy>=1.21.0,<2.0" --force-reinstall
+
+RUN pip uninstall -y megatron-core || true
+RUN rm -rf Megatron-LM
+RUN git clone https://github.com/NVIDIA/Megatron-LM \
+    && cd Megatron-LM \
+    && git checkout 48406695c4efcf1026a7ed70bb390793918dd97b \
+    && pip install -e .
+
+
+RUN pip install git+https://github.com/ISEEKYAN/mbridge.git --no-deps
+
+
+RUN pip uninstall ray -y || true
+RUN pip install "ray[data,train,tune,serve]==2.47.1"
+
+
+RUN pip install torch_memory_saver
+
+
+WORKDIR /app
+
+RUN pip uninstall -y apex || true
+RUN rm -rf apex
+RUN git clone https://github.com/ROCm/apex.git \
+    && cd apex \
+    && python setup.py install
+
+
+RUN pip install pydra_config==0.0.15
+RUN pip install together
+RUN pip install google-generativeai
+RUN pip install tensorboard
+
+
+ENV HIP_FORCE_DEV_KERNARG=1
+ENV HSA_NO_SCRATCH_RECLAIM=1
+ENV SGLANG_USE_AITER=1
+ENV SGLANG_ALLOW_OVERWRITE_LONGER_CONTEXT_LEN=1
+ENV SGLANG_MOE_PADDING=1
+ENV SGLANG_SET_CPU_AFFINITY=1
+ENV SGLANG_ROCM_FUSED_DECODE_MLA=1
+ENV SGLANG_USE_ROCM700A=1
+ENV NCCL_MIN_NCHANNELS=112
+ENV VLLM_FP8_PADDING=1
+ENV VLLM_FP8_ACT_PADDING=1
+ENV VLLM_FP8_WEIGHT_PADDING=1
+ENV VLLM_FP8_REDUCE_CONV=1
+ENV TORCHINDUCTOR_MAX_AUTOTUNE=1
+ENV TORCHINDUCTOR_MAX_AUTOTUNE_POINTWISE=1
+
+
+WORKDIR /app
+
+RUN pip install IPython orjson python-multipart torchao==0.9.0 pybind11
+
+RUN pip uninstall -y sgl_kernel sglang || true
+RUN rm -rf sglang
+RUN git clone https://github.com/sgl-project/sglang.git \
+    && cd sglang \
+    && git checkout v0.5.6
+
+RUN cd sglang/sgl-kernel \
+    && rm -f pyproject.toml \
+    && mv pyproject_rocm.toml pyproject.toml \
+    && AMDGPU_TARGET=gfx950 python setup_rocm.py install
+
+RUN cd sglang \
+    && rm -rf python/pyproject.toml \
+    && mv python/pyproject_other.toml python/pyproject.toml \
+    && pip install -e "python[all_hip]"
+
+RUN python -c "import sglang; import sgl_kernel; print('SGLang + sgl_kernel: OK')"
+
+RUN python -m pip cache purge
+
+
+
+COPY amd_patch/latest /app/patch
+
+RUN cd /app/Megatron-LM \
+    && git apply /app/patch/amd_megatron_fused_kernels_init.patch \
+    && git apply /app/patch/megatron.patch --3way \
+    && if grep -R -n '^<<<<<<< ' .; then \
+        echo "Patch failed to apply cleanly. Please resolve conflicts." && \
+        exit 1; \
+    fi \
+    && pip install -e . -v
+
+# Apply SGLang patch
+RUN cd /app/sglang \
+    && git apply /app/patch/sglang.patch || echo "Check patch compatibility with v0.5.6" \
+    && if grep -R -n '^<<<<<<< ' .; then \
+        echo "Patch failed to apply cleanly. Please resolve conflicts." && \
+        exit 1; \
+    fi
+
+# Copy MOE configs for gfx950/MI355
+RUN find /app/sglang/python/sglang/srt/layers/quantization/configs/ \
+         /app/sglang/python/sglang/srt/layers/moe/fused_moe_triton/configs/ \
+         -type f -name '*MI300X*' 2>/dev/null | while read f; do \
+    cp "$f" "$(echo $f | sed 's/MI300X/MI300X_VF/')" 2>/dev/null || true; \
+    cp "$f" "$(echo $f | sed 's/MI300X/MI355/')" 2>/dev/null || true; \
+done
+
+
+
+RUN pip install sglang-router --force-reinstall
+
+
+# Fix click/ray incompatibility with Python 3.10
+RUN pip install click==8.2.1
+
+
+WORKDIR /app
+
+CMD ["/usr/bin/bash"]
+

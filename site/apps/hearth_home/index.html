@@ -4,24 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Hearth · Home (mocked GUI env)</title>
-<!--
-  ============================================================================
-  Hearth — a single-file H5 smart-home environment for agent research.
 
-  Same two-block contract as every environment in this repo:
-
-    script#engine  ...  pure state machine. No DOM, no Date.now, no Math.random.
-                        Exports globalThis.GUI_ENGINE and is loaded verbatim by
-                        pipeline/runner.mjs inside a node:vm sandbox.
-    script#ui      ...  renders engine.screen(state) -> DOM, exposes __ENV__.
-
-  What is different here on purpose: a dark dashboard, continuous controls
-  (brightness sliders, thermostat set-points, blind position, volume), a
-  segmented alarm control, a time picker, and a floor plan whose rooms glow
-  according to the live device state — so the picture is an observation, not
-  decoration.
-  ============================================================================
--->
 <style>
 :root{
   --bg:#12141a; --card:#1b1e26; --card2:#232733; --card3:#2b303d;
@@ -42,7 +25,6 @@ body{
   display:flex;align-items:center;justify-content:center;overflow:hidden;
 }
 
-/* ---------------- device frame ---------------- */
 #device{position:relative;width:390px;height:844px;background:#000;border-radius:46px;padding:5px;
   box-shadow:0 30px 70px rgba(0,0,0,.6);flex:0 0 auto}
 #screen{position:relative;width:100%;height:100%;background:var(--bg);border-radius:41px;
@@ -64,7 +46,6 @@ body.bare .n-sheet{animation:none}
 
 #app{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;position:relative}
 
-/* ---------------- chrome ---------------- */
 .n-appbar{flex:0 0 auto;min-height:50px;display:flex;align-items:center;gap:8px;padding:6px 12px;
   background:var(--bg);z-index:20}
 .n-appbar .ab-title{flex:1 1 auto;text-align:center;font:650 17px/1.3 var(--disp);letter-spacing:-.2px;
@@ -80,7 +61,6 @@ body.bare .n-sheet{animation:none}
 .n-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding-bottom:12px}
 .n-scroll::-webkit-scrollbar{width:0}
 
-/* ---------------- type ---------------- */
 .n-text{padding:2px 18px;color:var(--ink2)}
 .n-text.h1{font:700 27px/1.15 var(--disp);color:var(--ink);padding:14px 18px 4px;letter-spacing:-.6px}
 .n-text.h2{font:650 18px/1.3 var(--disp);color:var(--ink);padding:16px 18px 4px}
@@ -95,7 +75,6 @@ body.bare .n-sheet{animation:none}
 .n-space{height:16px}
 .n-divider{height:1px;background:var(--line);margin:10px 18px}
 
-/* ---------------- cards ---------------- */
 .n-card{background:var(--card);border-radius:var(--r);margin:10px 18px;overflow:hidden;
   border:1px solid var(--line)}
 .n-card.pad{padding:16px}
@@ -106,7 +85,6 @@ body.bare .n-sheet{animation:none}
 
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 18px}
 
-/* ---------------- rows ---------------- */
 .n-row{display:flex;align-items:center;gap:13px;padding:14px 16px;background:transparent;
   border-bottom:1px solid var(--line);min-height:56px}
 .n-row:last-child{border-bottom:none}
@@ -125,7 +103,6 @@ body.bare .n-sheet{animation:none}
 .n-row .r-value.accent{color:var(--accent);font-weight:650}
 .n-row .r-arrow{flex:0 0 auto;color:var(--muted);display:flex}
 
-/* ---------------- buttons ---------------- */
 .n-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:46px;padding:0 20px;
   border-radius:14px;font:650 15px/1 var(--disp);background:var(--card2);color:var(--ink);
   border:1px solid var(--line2);cursor:pointer;user-select:none}
@@ -145,7 +122,6 @@ body.bare .n-sheet{animation:none}
 .n-chip.on{background:var(--accent);border-color:var(--accent);color:#1a1207;font-weight:700}
 .n-chip.cool.on{background:var(--cool);border-color:var(--cool);color:#08222b}
 
-/* ---------------- search ---------------- */
 .searchbar{margin:6px 18px 8px;background:var(--card);border:1px solid var(--line);border-radius:14px;
   display:flex;align-items:center;gap:10px;padding:11px 14px}
 .searchbar input{flex:1 1 auto;border:none;outline:none;background:transparent;font-size:14.5px;
@@ -162,7 +138,6 @@ body.bare .n-sheet{animation:none}
   font-family:inherit;color:var(--ink);min-width:0}
 .n-input input::placeholder{color:var(--muted)}
 
-/* ---------------- toggles & controls ---------------- */
 .n-switch{flex:0 0 auto;width:48px;height:28px;border-radius:15px;background:var(--card3);position:relative;
   cursor:pointer;transition:background .16s}
 .n-switch.on{background:var(--good)}
@@ -180,7 +155,6 @@ body.bare .n-sheet{animation:none}
 .n-stepper .st-btn.off{opacity:.32;cursor:not-allowed}
 .n-stepper .st-val{min-width:30px;text-align:center;font:650 16px/1 var(--disp)}
 
-/* segmented control */
 .seg{display:flex;background:var(--card2);border-radius:13px;padding:4px;gap:4px;margin:0 18px}
 .seg .seg-i{flex:1 1 0;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;
   gap:6px;font-size:13.5px;font-weight:600;color:var(--ink2);cursor:pointer}
@@ -189,7 +163,6 @@ body.bare .n-sheet{animation:none}
 .seg .seg-i.on.good{background:var(--good);color:#08251b}
 .seg .seg-i.on.accent{background:var(--accent);color:#1a1207}
 
-/* slider */
 .slider{padding:4px 16px 14px}
 .slider .sl-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px}
 .slider .sl-name{font-size:13px;color:var(--muted)}
@@ -208,14 +181,12 @@ body.bare .n-sheet{animation:none}
   color:var(--ink2);font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .slider .sl-preset.on{background:var(--accent-s);border-color:#4a3a20;color:var(--accent)}
 
-/* tone swatches */
 .tones{display:flex;gap:9px;padding:6px 16px 14px}
 .tones .tone{flex:1 1 0;border-radius:12px;padding:10px 4px;text-align:center;cursor:pointer;
   border:1.6px solid var(--line);font-size:11.5px;font-weight:600;color:var(--ink2)}
 .tones .tone .dot{width:22px;height:22px;border-radius:50%;margin:0 auto 6px;border:1px solid rgba(255,255,255,.14)}
 .tones .tone.on{border-color:var(--accent);color:var(--ink);background:var(--card2)}
 
-/* ---------------- device tile ---------------- */
 .tile{background:var(--card);border:1px solid var(--line);border-radius:var(--r2);padding:13px;
   cursor:pointer;position:relative;overflow:hidden}
 .tile:active{background:var(--card2)}
@@ -231,7 +202,6 @@ body.bare .n-sheet{animation:none}
 .tile .t-dot{width:8px;height:8px;border-radius:50%;background:var(--card3);flex:0 0 auto;margin-top:4px}
 .tile.on .t-dot{background:var(--good);box-shadow:0 0 8px rgba(78,201,160,.7)}
 
-/* ---------------- stat strip ---------------- */
 .stats{display:flex;gap:10px;padding:2px 18px 6px}
 .stat{flex:1 1 0;background:var(--card);border:1px solid var(--line);border-radius:var(--r2);padding:12px}
 .stat .s-k{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px}
@@ -240,7 +210,6 @@ body.bare .n-sheet{animation:none}
 .stat.tap{cursor:pointer}
 .stat.tap:active{background:var(--card2)}
 
-/* ---------------- floor plan ---------------- */
 .plan{margin:8px 18px;border-radius:var(--r);overflow:hidden;background:#0e1015;border:1px solid var(--line)}
 .plan .p-canvas{position:relative}
 .plan svg{width:100%;display:block}
@@ -255,7 +224,6 @@ body.bare .n-sheet{animation:none}
 .plan .p-cap{display:flex;align-items:center;gap:7px;padding:10px 14px;font-size:11.5px;color:var(--muted);
   border-top:1px solid var(--line);background:#12151c}
 
-/* ---------------- room cards & hero ---------------- */
 .roomcard{background:var(--card);border:1px solid var(--line);border-radius:var(--r2);overflow:hidden;cursor:pointer}
 .roomcard:active{filter:brightness(1.15)}
 .roomcard.lit{border-color:#4a3a20}
@@ -272,7 +240,6 @@ body.bare .n-sheet{animation:none}
 .roomhero .rh-name{font:700 24px/1.15 var(--disp);letter-spacing:-.4px}
 .roomhero .rh-sub{font-size:12.5px;color:var(--ink2);margin-top:4px}
 
-/* ---------------- device header ---------------- */
 .devhead{margin:10px 18px;padding:22px 18px;border-radius:var(--r);background:var(--card);
   border:1px solid var(--line);text-align:center}
 .devhead.on{background:linear-gradient(160deg,#2c2317,#1e1d20);border-color:#4a3a20}
@@ -291,7 +258,6 @@ body.bare .n-sheet{animation:none}
 .tile.on .t-open{background:rgba(0,0,0,.22);color:#e6c894}
 .ico svg{display:block}
 
-/* ---------------- energy chart ---------------- */
 .chart{padding:14px 16px 8px}
 .chart .c-bars{display:flex;align-items:flex-end;gap:8px;height:132px}
 .chart .c-col{flex:1 1 0;display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer}
@@ -305,7 +271,6 @@ body.bare .n-sheet{animation:none}
 .bar-row .b-fill{display:block;height:100%;border-radius:4px;background:var(--accent)}
 .bar-row .b-val{flex:0 0 62px;text-align:right;font-size:12.5px;font-weight:650}
 
-/* ---------------- misc ---------------- */
 .pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11.5px;
   font-weight:650;background:var(--card2);color:var(--ink2)}
 .pill.good{background:#15332a;color:var(--good)}
@@ -331,7 +296,6 @@ body.bare .n-sheet{animation:none}
 .n-bar{flex:0 0 auto;background:var(--card);border-top:1px solid var(--line);padding:12px 18px 14px;
   display:flex;align-items:center;gap:14px;z-index:30}
 
-/* overlays */
 .n-mask{position:absolute;inset:0;background:rgba(4,6,10,.66);z-index:70;display:flex;align-items:flex-end}
 .n-sheet{width:100%;max-height:84%;background:var(--card);border-radius:22px 22px 0 0;display:flex;
   flex-direction:column;overflow:hidden;animation:up .18s ease-out;border-top:1px solid var(--line2)}
@@ -347,7 +311,6 @@ body.bare .n-sheet{animation:none}
   max-width:80%;text-align:center}
 .dialog{margin:auto;width:80%;background:var(--card);border:1px solid var(--line2);border-radius:18px;overflow:hidden}
 
-/* dev HUD */
 #hud{position:fixed;top:14px;left:14px;width:310px;max-height:calc(100% - 28px);overflow:auto;
   background:#0a0c10;color:#c9d4d1;border-radius:12px;padding:12px;border:1px solid #222a33;
   font:11.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;z-index:200}
@@ -378,16 +341,12 @@ body.bare .n-sheet{animation:none}
 <div id="hud" class="off"></div>
 
 <script id="engine">
-/* ===========================================================================
- * ENGINE — pure, deterministic, DOM-free.
- * ======================================================================== */
 (function (root) {
 'use strict';
 
 var VERSION = '1.0.0';
 var ENV_ID  = 'hearth_home';
 
-/* ------------------------------------------------------------- catalog */
 var ROOMS = [
   {id:'r_living',  name:'Living Room', art:'living',  icon:'sofa'},
   {id:'r_kitchen', name:'Kitchen',     art:'kitchen', icon:'kettle'},
@@ -397,10 +356,6 @@ var ROOMS = [
   {id:'r_garden',  name:'Garden',      art:'garden',  icon:'tree'}
 ];
 
-/* kind determines which controls a device exposes:
-   light  -> on, brightness, tone      plug/camera -> on
-   speaker-> on, volume                blind -> position
-   lock   -> locked                    thermostat -> mode, target            */
 var DEVICES = [
   {id:'d_ceiling',    room:'r_living',  kind:'light',      name:'Ceiling Light',    watts:42,   icon:'bulb'},
   {id:'d_floorlamp',  room:'r_living',  kind:'light',      name:'Floor Lamp',       watts:18,   icon:'lamp'},
@@ -501,7 +456,6 @@ var ENERGY = {
 var CATALOG = {rooms:ROOMS, devices:DEVICES, tones:TONES, scenes:SCENES,
                automations:AUTOMATIONS, energy:ENERGY};
 
-/* ------------------------------------------------------------- helpers */
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function byId(list, id){ for (var i=0;i<list.length;i++) if (list[i].id===id) return list[i]; return null; }
 function room(id){ return byId(ROOMS, id); }
@@ -538,7 +492,6 @@ function setPath(obj, path, value){
   return obj;
 }
 
-/* --------------------------------------------------------- world clock */
 var CLOCK0 = {h:19, mi:24, s:0};
 var SECONDS_PER_STEP = 5;
 function tick(c, n){
@@ -550,7 +503,6 @@ function tick(c, n){
 function hhmm(h, mi){ return (h<10?'0':'') + h + ':' + (mi<10?'0':'') + mi; }
 function clockStr(c){ return hhmm(c.h, c.mi); }
 
-/* ------------------------------------------------------ initial state */
 function createInitialState(seed){
   seed = seed || 0;
   return {
@@ -582,14 +534,14 @@ function createInitialState(seed){
       d_porch:      {on:false, brightness:70,  tone:'warm'},
       d_garden_cam: {on:true}
     },
-    extraDevices:[],                     /* devices the agent adds at run time */
+    extraDevices:[],
     automations:{
       au_sunset:  {enabled:true},
       au_bedtime: {enabled:true,  h:23, mi:0},
       au_cams:    {enabled:false},
       au_warm:    {enabled:true,  h:6,  mi:30}
     },
-    scenesRun:[],                        /* ids, in the order they were applied */
+    scenesRun:[],
     activity:[
       {id:'ev_1', at:'06:12', icon:'cam',   who:'Garden Camera', what:'detected motion in the garden'},
       {id:'ev_2', at:'06:30', icon:'thermo',who:'Warm up the house', what:'automation ran'},
@@ -603,7 +555,6 @@ function createInitialState(seed){
   };
 }
 
-/* ------------------------------------------------------------ selectors */
 function allDevices(st){ return DEVICES.concat(st.extraDevices || []); }
 function device(st, id){ return byId(allDevices(st), id); }
 function dstate(st, id){ return st.devices[id] || {}; }
@@ -677,7 +628,6 @@ var SELECT = { allDevices:allDevices, device:device, dstate:dstate, roomDevices:
                weekKwh:weekKwh, topRoom:topRoom, searchHits:searchHits, route:route,
                clockStr:clockStr, tone:tone };
 
-/* ------------------------------------------------------------- reducer */
 function push(st, name, params){ st.ui.stack.push({name:name, params:params||{}}); st.ui.sheet=null; }
 function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
 function toast(st, t){ st.ui.toast = t; }
@@ -705,7 +655,6 @@ function reduce(prev, action){
 
   switch (A.type) {
 
-  /* ---- navigation ---- */
   case 'NAV':  push(st, A.to, A.params); break;
   case 'BACK':
     if (st.ui.confirm) st.ui.confirm = null;
@@ -721,7 +670,6 @@ function reduce(prev, action){
     st.ui.sheet = null; st.ui.confirm = null;
     break;
 
-  /* ---- search ---- */
   case 'SET_INPUT': st.ui.inputs[A.field] = A.value; break;
   case 'SUBMIT_SEARCH':
     st.ui.query = String(st.ui.inputs.search || '').trim();
@@ -729,7 +677,6 @@ function reduce(prev, action){
     break;
   case 'CLEAR_SEARCH': st.ui.query = ''; st.ui.inputs.search = ''; toast(st, 'Search cleared'); break;
 
-  /* ---- device control ---- */
   case 'TOGGLE_DEVICE': {
     var d = device(st, A.id); if (!d) break;
     var s = st.devices[A.id] || (st.devices[A.id] = {});
@@ -794,7 +741,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- scenes ---- */
   case 'APPLY_SCENE': {
     var sc = scene(A.id); if (!sc) break;
     sc.actions.forEach(function(a){
@@ -807,7 +753,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- automations ---- */
   case 'TOGGLE_AUTOMATION': {
     var au = st.automations[A.id]; if (!au) break;
     au.enabled = !au.enabled;
@@ -821,7 +766,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- security ---- */
   case 'SET_ALARM':
     if (st.home.alarm !== A.mode) {
       st.home.alarm = A.mode;
@@ -830,7 +774,6 @@ function reduce(prev, action){
     toast(st, 'Alarm set to ' + A.mode);
     break;
 
-  /* ---- adding a device ---- */
   case 'DEVICE_NEW':
     st.ui.inputs.dev_name = '';
     st.ui.inputs.dev_room = 'r_living';
@@ -865,7 +808,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- overlays ---- */
   case 'OPEN_SHEET':  st.ui.sheet = {type:A.sheet, id:A.id || null}; break;
   case 'CLOSE_SHEET': st.ui.sheet = null; break;
   case 'CONFIRM_NO':  st.ui.confirm = null; break;
@@ -876,7 +818,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- settings & misc ---- */
   case 'SET_SETTING':    st.profile.settings[A.key] = A.value; break;
   case 'TOGGLE_SETTING': st.profile.settings[A.key] = !st.profile.settings[A.key]; break;
   case 'SET_ENERGY_DAY': st.ui.energyDay = A.idx; break;
@@ -890,9 +831,6 @@ function reduce(prev, action){
   return st;
 }
 
-/* =======================================================================
- * SCREEN TREE
- * ==================================================================== */
 function N(t, o){ o = o || {}; o.t = t; return o; }
 function appbar(title, o){
   o = o || {};
@@ -956,7 +894,6 @@ function slider(id, name, value, unit, key, devId, o){
     presets:presets});
 }
 
-/* ------------------------------------------------------------- screens */
 function scrHome(st){
   var on = allDevices(st).filter(function(d){ return isOn(st, d.id); });
   var th = dstate(st, 'd_thermostat');
@@ -1425,7 +1362,6 @@ function scrSearch(st){
   ]});
 }
 
-/* ------------------------------------------------------------ overlays */
 var ROUTES = {
   home:scrHome, rooms:scrRooms, room:scrRoom, device:scrDevice,
   scenes:scrScenes, sceneDetail:scrSceneDetail,
@@ -1450,9 +1386,6 @@ function screen(st){
   return rootNode;
 }
 
-/* =======================================================================
- * TRAVERSAL — element index, GUI action interface, text observation
- * ==================================================================== */
 var SKIP_KEYS = {act:1, minus:1, plus:1, go:1, close:1, clear:1, openAct:1, yes:1,
                  params:1, meta:1, set:1};
 
@@ -1521,7 +1454,6 @@ function step(st, a){
   }
 }
 
-/* ------------------------------------------------- text observation (a11y) */
 var ROOM_ALT = {
   living:'Illustration: a sofa, floor lamp and window at night',
   kitchen:'Illustration: a counter with spotlights, a kettle and open shelves',
@@ -1648,7 +1580,6 @@ function walkText(n, d, out, st){
   }
 }
 
-/* --------------------------------------------------------- derived view */
 function derive(st){
   var onDevices = allDevices(st).filter(function(d){ return isOn(st, d.id); });
   var roomOn = {};
@@ -1688,7 +1619,6 @@ function applyPatch(st, patch){
   return st;
 }
 
-/* ------------------------------------------------------------------ export */
 var ENGINE = {
   ENV_ID: ENV_ID, VERSION: VERSION, CATALOG: CATALOG,
   createInitialState: createInitialState,
@@ -1705,13 +1635,6 @@ root.GUI_ENGINE    = ENGINE;
 </script>
 
 <script id="ui">
-/* ===========================================================================
- * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
- *
- * Part 1 of 2: icons and artwork. The floor plan is not decoration — its rooms
- * glow from the live device state, so the picture carries the same information
- * the a11y tree does.
- * ======================================================================== */
 (function(){
 'use strict';
 var E = window.GUI_ENGINE;
@@ -1723,7 +1646,6 @@ function esc(s){
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-/* ---------------------------------------------------------------- icons */
 var SVG = {
   back:    '<path d="M15 4.5 8 12l7 7.5"/>',
   arrow:   '<path d="M9 4.5 16 12l-7 7.5"/>',
@@ -1777,9 +1699,7 @@ function icon(name, size, cls){
     d + '</svg></span>';
 }
 
-/* ------------------------------------------------------------ floor plan */
 var uidSeq = 0;
-/* room rectangles in a 360 x 234 viewBox — also used to place the HTML labels */
 var PLAN = {
   r_bed:     {x:12,  y:10,  w:138, h:82,  label:'Bedroom'},
   r_living:  {x:156, y:10,  w:192, h:102, label:'Living Room'},
@@ -1806,7 +1726,6 @@ function planSvg(rooms){
            +  '<circle cx="' + (g.x + g.w/2) + '" cy="' + (g.y + g.h*0.34) + '" r="11" fill="#f0a24b" opacity=".16"/>';
     }
   });
-  /* front door notch on the hall */
   var h = PLAN.r_hall;
   body += '<rect x="' + (h.x + 8) + '" y="' + (h.y + h.h - 3) + '" width="22" height="5" rx="2.5" fill="#4a5364"/>';
   return '<svg viewBox="0 0 360 234" preserveAspectRatio="xMidYMid meet">'
@@ -1815,7 +1734,6 @@ function planSvg(rooms){
        + body + '</svg>';
 }
 
-/* ------------------------------------------------------------ room scenes */
 function amb(lit){ return lit ? '#241d15' : '#161a21'; }
 function glow(u, lit){
   return lit
@@ -1956,7 +1874,6 @@ function artSvg(scene, lit){
        + fn('a' + (uidSeq++) + '_', lit) + '</svg>';
 }
 
-/* -------------------------------------------------------------- renderer */
 var ACTS = [], TRAJ = [];
 function bind(a){ if (!a) return ''; ACTS.push(a); return ' data-act="' + (ACTS.length-1) + '"'; }
 function bindT(a){ if (!a) return ''; ACTS.push(a); return ' data-actt="' + (ACTS.length-1) + '"'; }
@@ -2169,7 +2086,6 @@ function render(n){
   }
 }
 
-/* ------------------------------------------------------------------ paint */
 var STATE = null;
 function paint(){
   ACTS = []; uidSeq = 0;
@@ -2214,7 +2130,6 @@ app.addEventListener('input', function(ev){
   if (again && again.focus) { again.focus(); try { again.setSelectionRange(pos, pos); } catch(e){} }
 });
 
-/* ---------------------------------------------------------------- dev HUD */
 function paintHud(){
   var d = E.derive(STATE);
   hud.innerHTML = '<h4>__ENV__ · ' + E.ENV_ID + ' v' + E.VERSION + '</h4>'
@@ -2239,7 +2154,6 @@ document.addEventListener('keydown', function(e){
   if (e.key === 'h') { hud.classList.toggle('off'); if (!hud.classList.contains('off')) paintHud(); }
 });
 
-/* ------------------------------------------------------- window.__ENV__ */
 var ENVAPI = {
   ENV_ID: E.ENV_ID, VERSION: E.VERSION,
   reset: function(opts){

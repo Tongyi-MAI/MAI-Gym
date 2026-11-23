@@ -4,26 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Larkspur (mocked GUI env)</title>
-<!--
-  ============================================================================
-  Larkspur — a single-file H5 festival planner for agent research.
 
-  Same two-block contract as every environment here: script#engine is a pure,
-  DOM-free state machine on globalThis.GUI_ENGINE; script#ui renders its screen
-  tree and exposes window.__ENV__.
-
-  What is new: your plan can be wrong in a way the app can prove. Every act is
-  an interval on a stage, and a lineup is a set of them, so two kinds of fault
-  fall straight out of the arithmetic — a clash, where two sets overlap in
-  time, and a tight change, where they do not overlap but the gap between them
-  is shorter than the walk between the two stages. The walk times are a real
-  matrix, so a five minute gap is fine inside the Chapel and hopeless if it
-  means crossing to the Meadow.
-
-  That is what makes 'fix your Friday without dropping the headliner' a task
-  with an answer, and one an agent has to work out rather than look up.
-  ============================================================================
--->
 <style>
 :root{
   --outer:#05070a;
@@ -281,18 +262,12 @@ body.bare .n-sheet{animation:none}
 <div id="hud" class="off"></div>
 
 <script id="engine">
-/* ===========================================================================
- * ENGINE — pure, deterministic, DOM-free.
- * Every act is an interval on a stage. A clash is an overlap; a tight
- * change is a gap shorter than the walk between the two stages.
- * ======================================================================== */
 (function(root){
 'use strict';
 
 var ENV_ID  = 'larkspur_fest';
 var VERSION = '1.0.0';
 
-/* ------------------------------------------------------------- utilities */
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function pad2(n){ return (n < 10 ? '0' : '') + n; }
 function hhmm(m){ m = ((m % 1440) + 1440) % 1440; return pad2(Math.floor(m/60)) + ':' + pad2(m%60); }
@@ -331,7 +306,6 @@ function setPath(o, path, value){
   return o;
 }
 
-/* ------------------------------------------- screen-tree node constructors */
 function N(t, o){ o = o || {}; o.t = t; return o; }
 function txt(s, cls){ return N('text', {text:s, cls:cls || ''}); }
 function row(id, text, o){
@@ -363,8 +337,6 @@ var STAGES = [
   {id:'chapel',  name:'Chapel',  short:'CHP'},
   {id:'sidecar', name:'Sidecar', short:'SID'}
 ];
-/* minutes on foot between stages — the reason a five minute gap is not always
- * a five minute gap */
 var WALK = {
   meadow:{meadow:0, barn:8,  chapel:14, sidecar:20},
   barn:{meadow:8,  barn:0,  chapel:9,  sidecar:12},
@@ -400,7 +372,6 @@ function actOf(id){ for (var i=0;i<ACTS.length;i++) if (ACTS[i].id === id) retur
 function actsOn(day){ return ACTS.filter(function(a){ return a.day === day; })
                         .sort(function(x, y){ return x.start - y.start || x.name.localeCompare(y.name); }); }
 
-/* the two faults, straight out of the intervals */
 function overlaps(a, b){ return a.start < b.end && b.start < a.end; }
 function gapBetween(a, b){
   var first = a.start <= b.start ? a : b, second = first === a ? b : a;
@@ -434,7 +405,6 @@ function problemsIn(st, day){
   return out;
 }
 function clashesFor(st, act){
-  /* what in the lineup this act would fall foul of */
   var out = [];
   lineupActs(st, act.day).forEach(function(b){
     if (b.id === act.id) return;
@@ -462,13 +432,11 @@ function minutesInLineup(st, day){
   return sum(lineupActs(st, day).map(function(a){ return a.end - a.start; }));
 }
 
-/* =========================================================== state */
 function createInitialState(seed){
   seed = seed || 0;
   return {
     meta:{env:ENV_ID, version:VERSION, seed:seed, steps:0, finished:false, answer:null},
     lineup:['a_ash', 'a_marram', 'a_iron'],
-    /* the seed permutes the order the recommendations are offered in */
     picks:shuffled(['a_vellum', 'a_fox', 'a_hollow', 'a_puddle'], seed),
     ui:{tab:'plan', stack:[{name:'plan', params:{}}], sheet:null, confirm:null, inputs:{},
         toast:null, day:'fri', stage:'all', genre:'all'},
@@ -482,7 +450,6 @@ var SELECT = {
   minutesInLineup:minutesInLineup, hhmm:hhmm, route:route
 };
 
-/* =========================================================== reducer */
 function reduce(prev, action){
   var st = clone(prev), A2 = action || {};
   st.ui.toast = null;
@@ -520,7 +487,6 @@ function reduce(prev, action){
   case 'SET_STAGE': st.ui.stage = A2.id; break;
   case 'SET_GENRE': st.ui.genre = A2.id; break;
 
-  /* ---- the lineup ---- */
   case 'ADD': {
     var a = actOf(A2.id);
     if (!a) break;
@@ -564,7 +530,6 @@ function reduce(prev, action){
     break;
   }
   case 'FIX_CLASH': {
-    /* drop whichever of the pair is shorter, which is the app's suggestion */
     var pa = actOf(A2.a), pb = actOf(A2.b);
     if (!pa || !pb) break;
     var drop = (pa.end - pa.start) <= (pb.end - pb.start) ? pa : pb;
@@ -573,7 +538,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- settings ---- */
   case 'SET_TOGGLE': st.settings[A2.key] = !st.settings[A2.key]; break;
 
   default: break;
@@ -581,7 +545,6 @@ function reduce(prev, action){
   return st;
 }
 
-/* =========================================================== screens */
 function tabbar(st){
   var items = [
     {id:'tab_plan',    text:'My plan',  icon:'star',   tab:'plan'},
@@ -840,11 +803,6 @@ function screen(st){
   return rootNode;
 }
 
-/* =======================================================================
- * TRAVERSAL — element index, GUI action interface, text observation.
- * Identical in every environment here: the screen tree is the only thing
- * that differs, and all three readers below walk that same tree.
- * ==================================================================== */
 var SKIP_KEYS = {act:1, minus:1, plus:1, close:1, yes:1, params:1, meta:1, pick:1, fix:1, rows:1};
 
 function labelOf(n){ return n.text || n.title || n.name || n.label || n.main || ''; }
@@ -858,9 +816,6 @@ function collect(n, out){
                                             input:(n.t === 'inputrow')});
   if (n.t === 'mask' && n.close)  out.push({id:n.id, act:n.close, text:'Dismiss overlay', t:'mask'});
   for (var k in n){
-    /* a node may carry extra buttons as a pair of keys: someId holds the
-     * test-id and some holds the action. That is how steppers, sheet close
-     * buttons and per-row buttons all get into the element index. */
     if (k.length > 2 && k.slice(-2) === 'Id' && typeof n[k] === 'string'){
       var sib = n[k.slice(0, -2)];
       if (sib && typeof sib === 'object' && sib.type)
@@ -913,7 +868,6 @@ function step(st, a){
   }
 }
 
-/* ------------------------------------------------- text observation (a11y) */
 function a11y(st){
   var rootNode = screen(st), lines = [], r = route(st);
   lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
@@ -982,8 +936,6 @@ function walkText(n, d, out, st){
     if (v && typeof v === 'object') walkText(v, line !== null ? d+1 : d, out, st);
   }
 }
-/* per-environment nodes: return a string to print, true if already printed,
- * or null to ignore */
 function walkExtra(n, d, out, st){
 
   if (n.t === 'tline'){
@@ -1012,7 +964,6 @@ function walkExtra(n, d, out, st){
   return null;
 }
 
-/* --------------------------------------------------------- derived view */
 function derive(st){
   function names(list){ return list.map(function(a){ return a.name; }).sort(); }
   var fri = problemsIn(st, 'fri'), sat = problemsIn(st, 'sat');
@@ -1065,9 +1016,6 @@ root.GUI_ENGINE = ENGINE;
 </script>
 
 <script id="ui">
-/* ===========================================================================
- * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
- * ======================================================================== */
 (function(){
 'use strict';
 var E = window.GUI_ENGINE;

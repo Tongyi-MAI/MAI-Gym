@@ -31,6 +31,7 @@ class StepRecord:
     format_reward: float
     is_terminal: bool
     rendered_messages: list[dict[str, Any]] = field(default_factory=list)
+    rollout_messages: list[dict[str, Any]] | None = None
     finish_reason: str = ""
     response_token_ids: list[int] = field(default_factory=list)
     response_logprobs: list[float] = field(default_factory=list)
@@ -53,16 +54,12 @@ def _decode_png_size(image_b64: str) -> tuple[int, int] | None:
 def _window_start(step_idx: int, window_size: int, overlap: int) -> int:
     stride = window_size - overlap
     if stride <= 0:
-        raise ValueError(
-            f"window_size - overlap must be > 0 (W={window_size}, OV={overlap})"
-        )
+        raise ValueError(f"window_size - overlap must be > 0 (W={window_size}, OV={overlap})")
     return max(0, stride * ((step_idx - overlap) // stride))
 
 
 def _format_bash_output(observation: dict[str, Any]) -> str:
-    if not any(
-        key in observation for key in ("bash_output", "bash_error", "bash_returncode")
-    ):
+    if not any(key in observation for key in ("bash_output", "bash_error", "bash_returncode")):
         return ""
     output = str(observation.get("bash_output", "") or "")
     error = str(observation.get("bash_error", "") or "")
@@ -93,11 +90,7 @@ def _render_system_prompt(
     range_scale: float | None,
     enable_ask_user: bool,
 ) -> str:
-    prompt_path = (
-        Path(__file__).resolve().parents[1]
-        / "prompts"
-        / "mai_gym_computer_use_system.j2"
-    )
+    prompt_path = Path(__file__).resolve().parents[1] / "prompts" / "mai_gym_computer_use_system.j2"
     prompt = prompt_path.read_text(encoding="utf-8")
     if range_scale is None:
         coordinate_scale = f"raw pixels: x=0..{screen_size[0]}, y=0..{screen_size[1]}"
@@ -123,12 +116,6 @@ def _render_system_prompt(
 
 
 class MAIGymComputerUsePolicy:
-    """Dependency-light MAI-Gym computer-use policy.
-
-    The policy owns prompt rendering, history/window state, parse retries and
-    action records. HTTP transport and action parsing are separate modules.
-    """
-
     NATIVE_ACTION_SPACE = "computer_use"
 
     def __init__(
@@ -139,9 +126,9 @@ class MAIGymComputerUsePolicy:
         password: str = "",
         screen_size: tuple[int, int] = (1920, 1080),
         range_scale: float | None = 1000,
-        keep_n: int = 3,
-        img_interval: int = 10,
         image_retention: int | None = None,
+        keep_n: int | None = None,
+        img_interval: int | None = None,
         enable_ask_user: bool = False,
         window_size: int | None = None,
         overlap: int = 1,
@@ -154,16 +141,22 @@ class MAIGymComputerUsePolicy:
         self._password = password
         self._screen_size = screen_size
         self._range_scale = range_scale
-        self._img_keep_n = max(0, int(image_retention if image_retention is not None else keep_n))
-        self._img_interval = max(0, int(img_interval))
-        self._enable_ask_user = bool(enable_ask_user)
-        self._window_size = int(window_size) if window_size else None
+        self.image_retention = int(image_retention) if image_retention is not None else None
+        if self.image_retention is not None and self.image_retention < 0:
+            raise ValueError("image_retention must be non-negative")
+        self._periodic_images = (
+            image_retention is None or keep_n is not None or img_interval is not None
+        )
+        image_keep_n = self.image_retention if self.image_retention is not None else 3
+        self._img_keep_n = max(0, int(keep_n if keep_n is not None else image_keep_n))
+        self._img_interval = max(0, int(img_interval if img_interval is not None else 10))
+        self._window_size = int(window_size) if window_size is not None else None
         self._overlap = max(0, int(overlap))
         if self._window_size is not None and self._window_size - self._overlap <= 0:
             raise ValueError(
-                f"window_size - overlap must be > 0 "
-                f"(W={self._window_size}, OV={self._overlap})"
+                f"window_size - overlap must be > 0 (W={self._window_size}, OV={self._overlap})"
             )
+        self._enable_ask_user = bool(enable_ask_user)
         self._max_history_turns = max(0, int(max_history_turns))
         self.max_parse_retries = max(0, int(max_parse_retries))
         self.system_prompt = _render_system_prompt(
@@ -212,12 +205,14 @@ class MAIGymComputerUsePolicy:
         return total - trims * (self._img_interval + 1)
 
     def _visible_image_start(self, n_steps: int) -> int:
+        if self.image_retention == 0:
+            return n_steps + 1
         if self._window_size is not None:
             return _window_start(n_steps, self._window_size, self._overlap)
+        if self.image_retention is not None and not self._periodic_images:
+            return max(0, n_steps + 1 - self.image_retention)
         keep_count = self._current_image_keep_count()
-        if keep_count is None:
-            return 0
-        return max(0, n_steps + 1 - keep_count)
+        return max(0, n_steps + 1 - keep_count) if keep_count is not None else 0
 
     def _build_messages(
         self,
@@ -225,20 +220,14 @@ class MAIGymComputerUsePolicy:
         current_bash_block: str,
     ) -> list[dict[str, Any]]:
         n_steps = len(self._actions)
-        history_start = (
-            max(0, n_steps - self._max_history_turns)
-            if self._max_history_turns
-            else 0
-        )
+        history_start = max(0, n_steps - self._max_history_turns) if self._max_history_turns else 0
         image_start = self._visible_image_start(n_steps)
         instruction = (
             "# Task Instruction:\n"
             f"{self._instruction}\n"
             "Complete the task with actions in the system-prompt format."
         )
-        messages: list[dict[str, Any]] = [
-            {"role": "system", "content": self.system_prompt}
-        ]
+        messages: list[dict[str, Any]] = [{"role": "system", "content": self.system_prompt}]
 
         for index in range(history_start, n_steps):
             user_parts: list[dict[str, Any]] = []
@@ -252,9 +241,7 @@ class MAIGymComputerUsePolicy:
                 user_parts.append(
                     {
                         "type": "image_url",
-                        "image_url": {
-                            "url": f"data:image/png;base64,{self._observations[index]}"
-                        },
+                        "image_url": {"url": f"data:image/png;base64,{self._observations[index]}"},
                     }
                 )
             messages.append({"role": "user", "content": user_parts})
@@ -273,12 +260,15 @@ class MAIGymComputerUsePolicy:
             current_parts.append({"type": "text", "text": instruction})
         if current_bash_block:
             current_parts.append({"type": "text", "text": current_bash_block})
-        current_parts.append(
-            {
-                "type": "image_url",
-                "image_url": {"url": f"data:image/png;base64,{current_screenshot_b64}"},
-            }
-        )
+        if self.image_retention != 0:
+            current_parts.append(
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/png;base64,{current_screenshot_b64}"},
+                }
+            )
+        else:
+            current_parts.append({"type": "text", "text": IMAGE_COLLAPSED})
         messages.append({"role": "user", "content": current_parts})
         return messages
 
@@ -370,6 +360,7 @@ class MAIGymComputerUsePolicy:
             format_reward=parsed.format_reward if parsed.is_valid else 0.0,
             is_terminal=parsed.is_done if parsed.is_valid else True,
             rendered_messages=copy.deepcopy(base_messages),
+            rollout_messages=copy.deepcopy(messages),
             finish_reason=str(getattr(result, "finish_reason", "")),
             response_token_ids=list(getattr(result, "output_ids", [])),
             response_logprobs=list(getattr(result, "output_logprobs", [])),

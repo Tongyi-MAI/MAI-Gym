@@ -4,31 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>时钟 (mocked GUI env)</title>
-<!--
-  ============================================================================
-  时钟 Clock — a single-file H5 stock-clock app for agent research.
 
-  Same two-block contract as every environment here: script#engine is a pure,
-  DOM-free state machine on globalThis.GUI_ENGINE; script#ui renders its screen
-  tree and exposes window.__ENV__.
-
-  What is new: nothing on this screen is a stored time. An alarm is a rule —
-  a time plus a set of weekdays — and every figure the app shows is the next
-  moment that rule fires, worked out from a frozen wall clock of Thursday
-  22:47 and sorted against every other alarm. Turning one off, skipping its
-  next ring, or moving it by five minutes re-orders the whole list and changes
-  how long you have left to sleep.
-
-  The seeded state carries the trap this app always has in real life: the
-  earliest-looking alarm, 05:30, is not the one that rings next, because its
-  「跳过下一次」is on. And the world clock is genuine timezone arithmetic —
-  London is on summer time so it is UTC+1 not UTC+0, Delhi is half an hour off
-  the grid, and Sydney has already rolled over into tomorrow.
-
-  Everything is integer minutes inside a 10,080-minute week, so every figure
-  is exact and reproducible.
-  ============================================================================
--->
 <style>
 :root{
   --outer:#05070a;
@@ -306,18 +282,12 @@ body.bare .n-sheet{animation:none}
 <div id="hud" class="off"></div>
 
 <script id="engine">
-/* ===========================================================================
- * ENGINE — pure, deterministic, DOM-free.
- * 一周 10080 分钟，周一 00:00 是 0，墙上的钟停在周四 22:47。
- * 每个闹钟的「下次响」都是从规则现算的，一个都不存。
- * ======================================================================== */
 (function(root){
 'use strict';
 
 var ENV_ID  = 'nightjar_clock';
 var VERSION = '1.0.0';
 
-/* ------------------------------------------------------------- utilities */
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function pad2(n){ return (n < 10 ? '0' : '') + n; }
 function hhmm(m){ m = ((m % 1440) + 1440) % 1440; return pad2(Math.floor(m/60)) + ':' + pad2(m%60); }
@@ -356,7 +326,6 @@ function setPath(o, path, value){
   return o;
 }
 
-/* ------------------------------------------- screen-tree node constructors */
 function N(t, o){ o = o || {}; o.t = t; return o; }
 function txt(s, cls){ return N('text', {text:s, cls:cls || ''}); }
 function row(id, text, o){
@@ -381,12 +350,10 @@ function push(st, name, params){ st.ui.stack.push({name:name, params:params || {
 function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
 function toast(st, t){ st.ui.toast = t; }
 
-/* ------------------------------------------------------------ 一周的分钟
- * 一周 = 10080 分钟，周一 00:00 是 0。墙上的钟停在周四 22:47。 */
 var WEEK = 10080, DAY = 1440;
 var DOW = ['周一','周二','周三','周四','周五','周六','周日'];
 var DOW_S = ['一','二','三','四','五','六','日'];
-var NOW = 3 * DAY + 22 * 60 + 47;          /* 周四 22:47 */
+var NOW = 3 * DAY + 22 * 60 + 47;
 var TODAY_DATE = '8月27日';
 function hhmm(m){
   m = ((m % DAY) + DAY) % DAY;
@@ -405,7 +372,6 @@ function mmss(sec){
   return m + ':' + (s < 10 ? '0' : '') + s;
 }
 
-/* ------------------------------------------------------------ 闹钟 */
 function AL(id, hh, mm, days, label, on, skip, snooze){
   return {id:id, at:hh * 60 + mm, days:days, label:label, on:on, skip:!!skip,
           snooze:snooze === undefined ? true : snooze};
@@ -414,7 +380,6 @@ function alarmOf(st, id){
   for (var i=0;i<st.alarms.length;i++) if (st.alarms[i].id === id) return st.alarms[i];
   return null;
 }
-/* 这条规则下一次落在什么时候。跳过一次就取第二早的那个。 */
 function nextFire(a){
   if (!a.on) return null;
   var days = a.days.length ? a.days : [dowOf(NOW), (dowOf(NOW) + 1) % 7];
@@ -429,7 +394,6 @@ function nextFire(a){
   var uniq = [];
   cands.forEach(function(x){ if (uniq.indexOf(x) < 0) uniq.push(x); });
   if (!a.days.length){
-    /* 单次闹钟只落在指定的那一天 */
     var t2 = a.once * DAY + a.at;
     if (t2 <= NOW) t2 += WEEK;
     uniq = [t2, t2 + WEEK];
@@ -455,8 +419,6 @@ function ringing(st){
 function nextAlarm(st){ var r = ringing(st); return r.length ? r[0] : null; }
 function sleepLeft(st){ var n = nextAlarm(st); return n ? n.in_ : null; }
 
-/* ------------------------------------------------------------ 世界时钟
- * 偏移是相对本地（UTC+8）的分钟数，夏令时已经算进去了。 */
 function CT(id, name, off, zone, dst){ return {id:id, name:name, off:off, zone:zone, dst:!!dst}; }
 var CITIES = [
   CT('c_sh',  '上海',   0,      'UTC+8',    false),
@@ -478,10 +440,8 @@ function dayShift(c){
   return b - a;
 }
 function shiftText(n){ return n === 0 ? '今天' : (n > 0 ? '明天' : '昨天'); }
-/* 本地某个时刻，在某个城市是几点 */
 function convert(localMin, cityId){ return localMin + cityOf(cityId).off; }
 
-/* ------------------------------------------------------------ 计时器 */
 function TM(id, label, total, left, run){
   return {id:id, label:label, total:total, left:left, run:!!run};
 }
@@ -496,7 +456,6 @@ function firstTimer(st){
 }
 var PRESETS = [60, 180, 300, 600, 1800];
 
-/* ------------------------------------------------------------ 就寝 */
 function bedWindow(st){
   var b = st.bedtime;
   var len = b.wake - b.sleep;
@@ -504,7 +463,6 @@ function bedWindow(st){
   return len;
 }
 
-/* =========================================================== state */
 function createInitialState(seed){
   seed = seed || 0;
   var alarms = [
@@ -515,7 +473,7 @@ function createInitialState(seed){
     AL('a_pill', 22,  0, [0,1,2,3,4,5,6], '吃药', true, false, false),
     AL('a_dent',  9, 30, [],          '牙医',  true,  false, true)
   ];
-  alarms[5].once = 6;                    /* 单次：周日 */
+  alarms[5].once = 6;
   return {
     meta:{env:ENV_ID, version:VERSION, seed:seed, steps:0, finished:false, answer:null},
     alarms:alarms,
@@ -524,10 +482,9 @@ function createInitialState(seed){
       TM('t_oven',   '烤箱', 1500, 1120, true),
       TM('t_wash',   '洗衣', 2700, 2700, false)
     ],
-    stopwatch:{running:false, total:2547, laps:[612, 598, 671, 666]},   /* 秒 */
+    stopwatch:{running:false, total:2547, laps:[612, 598, 671, 666]},
     bedtime:{sleep:23 * 60 + 30, wake:6 * 60 + 40, days:[0,1,2,3,4], on:true, goal:480},
     cities:['c_ld', 'c_ny', 'c_sy', 'c_dl'],
-    /* 种子只打乱城市抽屉里备选城市的排列 */
     order:shuffled(CITIES.map(function(c){ return c.id; }), seed),
     ui:{tab:'alarm', stack:[{name:'alarm', params:{}}], sheet:null, confirm:null, inputs:{},
         toast:null},
@@ -542,7 +499,6 @@ var SELECT = {
   cities:CITIES, presets:PRESETS, now:NOW, dow:DOW, route:route
 };
 
-/* =========================================================== reducer */
 function reduce(prev, action){
   var st = clone(prev), A = action || {};
   st.ui.toast = null;
@@ -585,7 +541,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- 闹钟 ---- */
   case 'TOGGLE_ALARM': {
     var a = alarmOf(st, A.id);
     if (!a) break;
@@ -657,7 +612,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- 世界时钟 ---- */
   case 'ADD_CITY': {
     if (st.cities.indexOf(A.id) >= 0) { toast(st, cityOf(A.id).name + '已经在列表里了'); break; }
     st.cities.push(A.id);
@@ -671,7 +625,6 @@ function reduce(prev, action){
     toast(st, cityOf(A.id).name + '已移除');
     break;
 
-  /* ---- 计时器 ---- */
   case 'TIMER_TOGGLE': {
     var t = timerOf(st, A.id);
     if (!t) break;
@@ -709,7 +662,6 @@ function reduce(prev, action){
     toast(st, '已删除');
     break;
 
-  /* ---- 就寝 ---- */
   case 'BED_NUDGE': {
     var b = st.bedtime;
     if (A.which === 'sleep') b.sleep = ((b.sleep + A.by) % DAY + DAY) % DAY;
@@ -730,7 +682,6 @@ function reduce(prev, action){
   return st;
 }
 
-/* =========================================================== screens */
 function tabbar(st){
   var items = [
     {id:'tab_alarm', text:'闹钟', icon:'alarm',  tab:'alarm'},
@@ -896,7 +847,7 @@ function scrCity(st, params){
               {v:c.dst ? '是' : '否', l:'夏令时'}]}),
       N('sec', {text:'上海这几个时刻，' + c.name + '是几点'}),
       N('card', {id:'conv_list', cls:'flush', c: slots.map(function(s){
-        var loc = 4 * DAY + s;                       /* 周五 */
+        var loc = 4 * DAY + s;
         var there = convert(loc, c.id);
         var sh = Math.floor(there / DAY) - Math.floor(loc / DAY);
         return row('cv_' + s, '周五 ' + hhmm(s) + '（上海）',
@@ -1035,11 +986,6 @@ function screen(st){
   return rootNode;
 }
 
-/* =======================================================================
- * TRAVERSAL — element index, GUI action interface, text observation.
- * Identical in every environment here: the screen tree is the only thing
- * that differs, and all three readers below walk that same tree.
- * ==================================================================== */
 var SKIP_KEYS = {act:1, minus:1, plus:1, close:1, yes:1, params:1, meta:1, grid:1, laps:1, deps:1};
 
 function labelOf(n){ return n.text || n.title || n.name || n.label || n.main || ''; }
@@ -1053,9 +999,6 @@ function collect(n, out){
                                             input:(n.t === 'inputrow')});
   if (n.t === 'mask' && n.close)  out.push({id:n.id, act:n.close, text:'Dismiss overlay', t:'mask'});
   for (var k in n){
-    /* a node may carry extra buttons as a pair of keys: someId holds the
-     * test-id and some holds the action. That is how steppers, sheet close
-     * buttons and per-row buttons all get into the element index. */
     if (k.length > 2 && k.slice(-2) === 'Id' && typeof n[k] === 'string'){
       var sib = n[k.slice(0, -2)];
       if (sib && typeof sib === 'object' && sib.type)
@@ -1108,7 +1051,6 @@ function step(st, a){
   }
 }
 
-/* ------------------------------------------------- text observation (a11y) */
 function a11y(st){
   var rootNode = screen(st), lines = [], r = route(st);
   lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
@@ -1173,8 +1115,6 @@ function walkText(n, d, out, st){
     if (v && typeof v === 'object') walkText(v, line !== null ? d+1 : d, out, st);
   }
 }
-/* per-environment nodes: return a string to print, true if already printed,
- * or null to ignore */
 function walkExtra(n, d, out, st){
 
   if (n.t === 'nextup'){
@@ -1217,7 +1157,6 @@ function walkExtra(n, d, out, st){
   return null;
 }
 
-/* --------------------------------------------------------- derived view */
 function derive(st){
   var n = nextAlarm(st), fires = {}, ons = {};
   st.alarms.forEach(function(a){
@@ -1300,9 +1239,6 @@ root.GUI_ENGINE = ENGINE;
 </script>
 
 <script id="ui">
-/* ===========================================================================
- * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
- * ======================================================================== */
 (function(){
 'use strict';
 var E = window.GUI_ENGINE;

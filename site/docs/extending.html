@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Four extension points (harnesses, tasks, adapters, environment specs) and the 5-operation environment contract.">
+  <link rel="canonical" href="https://tongyi-mai.github.io/MAI-Gym/docs/extending.html">
+  <meta property="og:site_name" content="MAI-Gym Docs">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Extending MAI-Gym — MAI-Gym Docs">
+  <meta property="og:description" content="Four extension points (harnesses, tasks, adapters, environment specs) and the 5-operation environment contract.">
+  <meta property="og:url" content="https://tongyi-mai.github.io/MAI-Gym/docs/extending.html">
+  <meta property="og:image" content="https://tongyi-mai.github.io/MAI-Gym/assets/figs/overview.webp">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Extending MAI-Gym — MAI-Gym Docs">
+  <meta name="twitter:description" content="Four extension points (harnesses, tasks, adapters, environment specs) and the 5-operation environment contract.">
+  <meta name="twitter:image" content="https://tongyi-mai.github.io/MAI-Gym/assets/figs/overview.webp">
+  <title>Extending MAI-Gym — MAI-Gym Docs</title>
+  <link rel="icon" type="image/png" href="../assets/favicon.png">
+  <script>
+    (function () {
+      var t;
+      try { t = localStorage.getItem('maigym.theme'); } catch (e) {}
+      document.documentElement.dataset.theme = t === 'day' ? 'day' : 'night';
+    })();
+  </script>
+  <link rel="preload" href="../assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="assets/docs.css">
+  <script>
+    window.MAIGYM_DOCS = {
+      root: "",
+      rawMd: "raw/extending.md",
+      slug: "extending.html"
+    };
+  </script>
+  <script src="assets/docs.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#doc-content">Skip to main content</a>
+
+  <header class="topbar" id="topbar">
+    <div class="topbar-row">
+      <div class="topbar-left">
+        <button class="mobile-nav-btn" id="mobile-nav-btn" type="button" aria-label="Toggle navigation" aria-expanded="false">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 5.5h14M3 10h14M3 14.5h14"/></svg>
+        </button>
+        <a class="brand" href="index.html" aria-label="MAI-Gym Documentation home">
+          <img src="../assets/mark.svg" width="26" height="26" alt="">
+          <span class="brand-name">MAI-<span>Gym</span></span>
+          <span class="brand-pill">Docs</span>
+        </a>
+      </div>
+
+      <button class="search-trigger" id="search-trigger" type="button" aria-label="Search documentation">
+        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="5.2"/><path d="m12 12 3.6 3.6"/></svg>
+        <span>Search docs...</span>
+        <kbd>⌘K</kbd>
+      </button>
+
+      <div class="topbar-right">
+        <a class="top-link" href="../index.html">Project Page</a>
+        <a class="top-link" href="https://arxiv.org/abs/2610.20939" target="_blank" rel="noopener noreferrer">Paper</a>
+        <a class="top-link" href="https://huggingface.co/Tongyi-MAI/MAI-Gym-9B" target="_blank" rel="noopener noreferrer">Model</a>
+        <a class="repo-chip" href="https://github.com/Tongyi-MAI/MAI-Gym" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+          <span>Tongyi-MAI/MAI-Gym</span>
+        </a>
+        <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle color theme" title="Switch light / dark theme">
+          <svg class="i-sun" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="3.6" fill="currentColor"/><path d="M10 1.8v2.1M10 16.1v2.1M1.8 10h2.1M16.1 10h2.1M4.2 4.2l1.5 1.5M14.3 14.3l1.5 1.5M4.2 15.8l1.5-1.5M14.3 5.7l1.5-1.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <svg class="i-moon" viewBox="0 0 20 20" aria-hidden="true"><path d="M16.2 12.6A6.8 6.8 0 0 1 7.4 3.8a6.8 6.8 0 1 0 8.8 8.8z" fill="currentColor"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="drawer-backdrop" id="drawer-backdrop" hidden></div>
+
+  <div class="doc-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Documentation navigation">
+      <div class="side-group"><p class="side-heading">Overview</p><ul><li><a class="side-link" href="index.html">Quickstart</a></li><li><a class="side-link" href="concepts.html">Platform &amp; Core Concepts</a></li><li><a class="side-link" href="mai-gym-9b.html">MAI-Gym-9B</a></li><li><a class="side-link" href="dashboard.html">Trajectory Dashboard</a></li></ul></div><div class="side-group"><p class="side-heading">User Guide</p><ul><li><a class="side-link" href="evaluation.html">Evaluation Guide</a></li><li><a class="side-link" href="training.html">Online RL Training</a></li><li><a class="side-link" href="rollout.html">Rollout CLI</a></li><li><a class="side-link" href="kubernetes.html">Kubernetes Fleets</a></li></ul></div><div class="side-group"><p class="side-heading">Benchmarks &amp; Environments</p><ul><li><a class="side-link" href="environments.html">Benchmarks Overview</a></li><li><a class="side-link" href="mocked-apps.html">Mocked Apps</a></li><li><a class="side-link" href="envs/mobile.html">Mobile Benchmarks</a></li><li><a class="side-link" href="envs/computer.html">Computer Benchmarks</a></li><li><a class="side-link" href="envs/web.html">Web Benchmarks</a></li></ul></div><div class="side-group"><p class="side-heading">Customization</p><ul><li><a class="side-link active" aria-current="page" href="extending.html">Extending MAI-Gym</a></li><li><a class="side-link" href="coding-agents.html">Coding-Agent Setup</a></li><li><a class="side-link" href="development.html">Development &amp; Layout</a></li><li><a class="side-link" href="licensing.html">Licensing &amp; Notices</a></li></ul></div>
+    </aside>
+
+    <main class="doc-main" id="doc-content">
+      <article class="doc-article">
+        <header class="page-header">
+          <div class="page-eyebrow">Customization</div>
+          <div class="page-title-row">
+            <h1>Extending MAI-Gym</h1>
+            <button type="button" class="copy-page-btn" id="copy-page-btn" title="Copy page as Markdown">
+              <svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+              <svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>Copy page</span>
+            </button>
+          </div>
+          <p class="page-lead">Four extension points (harnesses, tasks, adapters, environment specs) and the 5-operation environment contract.</p>
+        </header>
+
+        <div class="prose">
+          <p>MAI-Gym isolates agent logic, task definitions, environment adapters, and deployment specifications behind explicit extension points (Paper §3.1 &amp; Appendix A.2). Extending any one layer automatically works across <code>mai-gym eval</code>, <code>mai-gym rollout</code>, and <code>mai-gym train</code>.</p>
+<hr>
+<h2 id="four-extension-points">Four Extension Points<a class="heading-link" href="#four-extension-points" aria-label="Link to Four Extension Points">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th style="text-align:left">Extension Point</th><th style="text-align:left">What You Implement</th><th style="text-align:left">Where It Lives</th></tr></thead><tbody><tr><td style="text-align:left"><strong>1. Add Agent Harness</strong></td><td style="text-align:left">Context construction, policy invocation, output parsing, and action dispatch. Once registered, all three workloads (<code>eval</code>, <code>rollout</code>, <code>train</code>) use it unchanged.</td><td style="text-align:left"><a href="https://github.com/Tongyi-MAI/MAI-Gym/tree/main/src/mai_gym/agents" target="_blank" rel="noopener noreferrer"><code>src/mai_gym/agents/</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a></td></tr><tr><td style="text-align:left"><strong>2. Add Tasks</strong></td><td style="text-align:left">Instruction, required initial assets, setup/reset logic, and programmatic verifier (or judge rubric) for an existing environment.</td><td style="text-align:left"><a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/examples/mobileworld/open_settings.py" target="_blank" rel="noopener noreferrer"><code>examples/mobileworld/open_settings.py</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a> · <code>POST /register_task_set</code></td></tr><tr><td style="text-align:left"><strong>3. Integrate Environments</strong></td><td style="text-align:left">An environment adapter implementing the 5-operation contract below, preserving the benchmark&#x27;s native initialization, action space, and verifier.</td><td style="text-align:left"><a href="https://github.com/Tongyi-MAI/MAI-Gym/tree/main/src/mai_gym/envs" target="_blank" rel="noopener noreferrer"><code>src/mai_gym/envs/</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a></td></tr><tr><td style="text-align:left"><strong>4. Customize Environments</strong></td><td style="text-align:left">An environment specification listing installed apps, supporting services, and launch/restore settings—reusing an existing adapter and deployment backend.</td><td style="text-align:left">Device YAML (<code>devices[].env_config</code>, <code>launch</code>)</td></tr></tbody></table></div>
+<hr>
+<h2 id="environment-contract--responsibilities">Environment Contract &amp; Responsibilities<a class="heading-link" href="#environment-contract--responsibilities" aria-label="Link to Environment Contract &amp; Responsibilities">#</a></h2>
+<p>Every environment adapter implements five core operations behind the manager API (Paper Appendix A.2):</p>
+<div class="table-wrap"><table><thead><tr><th style="text-align:left">Operation</th><th style="text-align:left">Role</th></tr></thead><tbody><tr><td style="text-align:left"><code>reqEnvs(spec, n)</code></td><td style="text-align:left">Provisions or attaches <code>n</code> environment instances matching <code>spec</code>.</td></tr><tr><td style="text-align:left"><code>observe(h)</code></td><td style="text-align:left">Returns the current observation (screenshot, optional CLI command output, metadata) for session <code>h</code>.</td></tr><tr><td style="text-align:left"><code>reset(h, x)</code></td><td style="text-align:left">Restores session <code>h</code> to the reproducible initial state <code>s_0</code> of task <code>x</code>.</td></tr><tr><td style="text-align:left"><code>step(h, a)</code></td><td style="text-align:left">Applies an action (or action batch) <code>a</code> to session <code>h</code> and returns updated state.</td></tr><tr><td style="text-align:left"><code>eval(h, x)</code></td><td style="text-align:left">Invokes the native task verifier (code verifier and/or VLM judge) for task <code>x</code> on session <code>h</code>.</td></tr></tbody></table></div>
+<p>Above this contract, MAI-Gym implements scheduling, leasing, trajectory persistence, and reward delivery <strong>once</strong> for all platforms:</p>
+<div class="table-wrap"><table><thead><tr><th style="text-align:left">Concern</th><th style="text-align:left">Environment Adapter</th><th style="text-align:left">MAI-Gym Manager &amp; Runner</th></tr></thead><tbody><tr><td style="text-align:left"><strong>Capacity</strong></td><td style="text-align:left">Reports health and available instances</td><td style="text-align:left">Leases sessions, reclaims expired capacity, and assigns attempts</td></tr><tr><td style="text-align:left"><strong>Isolation</strong></td><td style="text-align:left">Initializes task state and isolates concurrent instances</td><td style="text-align:left">Keeps one attempt bound to one session for its entire lifetime</td></tr><tr><td style="text-align:left"><strong>Observation</strong></td><td style="text-align:left">Returns screenshots, command output, and metadata</td><td style="text-align:left">Selects screenshot transport (<code>inline</code> / <code>oss</code>) and records trajectories</td></tr><tr><td style="text-align:left"><strong>Action</strong></td><td style="text-align:left">Executes the declared action vocabulary</td><td style="text-align:left">Parses model outputs, dispatches idempotent actions, and logs results</td></tr><tr><td style="text-align:left"><strong>Task</strong></td><td style="text-align:left">Installs task state and invokes its native verifier</td><td style="text-align:left">Samples tasks, forms rollout groups, and delivers rewards to training</td></tr></tbody></table></div>
+<h3 id="reliability-guarantees">Reliability Guarantees<a class="heading-link" href="#reliability-guarantees" aria-label="Link to Reliability Guarantees">#</a></h3>
+<ul><li><strong>Session leases:</strong> Prevent replaced or timed-out workers from mutating an instance owned by a newer attempt.</li><li><strong>Idempotent actions:</strong> Mutating requests carry caller-supplied action identifiers so network retries apply an action at most once.</li><li><strong>Fault isolation:</strong> Every operation has an explicit deadline, verifiers run in isolated process groups with resource limits, and infrastructure faults are recorded separately from zero rewards.</li></ul>
+<hr>
+<h2 id="adding-a-custom-task">Adding a Custom Task<a class="heading-link" href="#adding-a-custom-task" aria-label="Link to Adding a Custom Task">#</a></h2>
+<h3 id="option-a-live-task-registration-mobileworld">Option A: Live Task Registration (MobileWorld)<a class="heading-link" href="#option-a-live-task-registration-mobileworld" aria-label="Link to Option A: Live Task Registration (MobileWorld)">#</a></h3>
+<p>On the MAI-Gym manager, upload a task ZIP bundle via <code>POST /register_task_set</code> (or <code>POST /task/register</code> on the customized MobileWorld backend image) with a <code>set_id</code> and <code>package</code> archive. Registered tasks become immediately discoverable via <code>GET /tasks</code> without restarting the container.</p>
+<h3 id="option-b-custom-python-task-class">Option B: Custom Python Task Class<a class="heading-link" href="#option-b-custom-python-task-class" aria-label="Link to Option B: Custom Python Task Class">#</a></h3>
+<p>See <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/examples/mobileworld/open_settings.py" target="_blank" rel="noopener noreferrer"><code>examples/mobileworld/open_settings.py</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a> for a minimal task class with a deterministic verifier checking the foreground Android package (<code>com.android.settings</code>). To validate any new task before training, verify the <strong>initial → completed → reset</strong> sequence (<code>0 → 1 → 0</code>): the verifier returns <code>0</code> at initial state <code>s₀</code>, <code>1</code> after task completion, and <code>0</code> again after environment reset.</p>
+<hr>
+<h2 id="adding-an-agent-harness">Adding an Agent Harness<a class="heading-link" href="#adding-an-agent-harness" aria-label="Link to Adding an Agent Harness">#</a></h2>
+<ol><li>Implement a policy class, prompt template (<code>.j2</code>), and action parser under <a href="https://github.com/Tongyi-MAI/MAI-Gym/tree/main/src/mai_gym/agents" target="_blank" rel="noopener noreferrer"><code>src/mai_gym/agents/</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a>.</li><li><p>Register the variant in <code>src/mai_gym/agents/variants.py</code> and verify it appears in:</p><div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"> <span class="tok-cmd">uv</span> run python <span class="tok-flag">-c</span> <span class="tok-string">&#x27;from mai_gym.agents import list_agents; print(*sorted(list_agents()))&#x27;</span></code></pre></div></li><li>Reference the registered name via <code>model.agent_variant</code> in <code>eval.yaml</code> / <code>train.yaml</code> or <code>agent.type</code> in <code>rollout.yaml</code>.</li></ol>
+<p>For a minimal standalone mobile-use harness extraction, see <a href="development.html#minimal-mobile-use-agent-subset">Minimal Mobile-Use Agent Subset</a>.</p>
+<hr>
+<h2 id="adding-a-new-benchmark-environment">Adding a New Benchmark Environment<a class="heading-link" href="#adding-a-new-benchmark-environment" aria-label="Link to Adding a New Benchmark Environment">#</a></h2>
+<ol><li>Implement a backend and strategy under <code>src/mai_gym/envs/&lt;name&gt;/</code> and register its action space (<code>MOBILE_USE</code>, <code>COMPUTER_USE</code>, or <code>WEB_USE</code>) in <code>src/mai_gym/agents/action_space.py</code>.</li><li>Declare its benchmark spec (CLI ID, <code>env_type</code>, default <code>max_steps</code>, native <code>metric</code>) in <code>src/mai_gym/benchmarks.py</code>.</li><li>Provide an immutable profile lock schema and single-task validation guide under <code>skills/envs/&lt;name&gt;.md</code> following <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/skills/envs.md#verification-protocol" target="_blank" rel="noopener noreferrer">Benchmark Setup<svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a>.</li></ol>
+<hr>
+<h2 id="next-steps">Next Steps<a class="heading-link" href="#next-steps" aria-label="Link to Next Steps">#</a></h2>
+<ul><li>Review repository structure and test commands: <a href="development.html">Development &amp; Layout</a></li><li>Read the task &amp; action space definitions: <a href="concepts.html">Core Concepts</a></li><li>Inspect existing benchmark suites and setup guides: <a href="environments.html">Benchmarks Overview</a> · <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/skills/envs.md" target="_blank" rel="noopener noreferrer"><code>skills/envs.md</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a></li></ul>
+        </div>
+
+        <nav class="pagination" aria-label="Pagination">
+          <a class="pag-link prev" href="envs/web.html"><span class="pag-label">Previous</span><span class="pag-title">&larr; Web Benchmarks</span></a>
+          <a class="pag-link next" href="coding-agents.html"><span class="pag-label">Next</span><span class="pag-title">Coding-Agent Setup &rarr;</span></a>
+        </nav>
+
+        <footer class="doc-footer">
+          <div class="doc-footer-links">
+            <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/site/docs/raw/extending.md" target="_blank" rel="noopener noreferrer">Edit this page on GitHub &nearr;</a>
+            <a href="https://github.com/Tongyi-MAI/MAI-Gym/issues/new?title=Docs:%20Extending MAI-Gym" target="_blank" rel="noopener noreferrer">Raise a docs issue &nearr;</a>
+            <a href="llms.txt">llms.txt</a>
+          </div>
+          <p class="doc-footer-meta">MAI-Gym · MIT License · Tongyi-MAI</p>
+        </footer>
+      </article>
+    </main>
+
+    <aside class="toc-rail" aria-label="On this page">
+      <div class="toc-inner">
+        <p class="toc-title">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M2.5 4h11M2.5 8h7M2.5 12h11"/></svg>
+          On this page
+        </p>
+        <ul class="toc-list" id="toc-list"><li><a class="toc-link" href="#four-extension-points">Four Extension Points</a></li><li><a class="toc-link" href="#environment-contract--responsibilities">Environment Contract &amp; Responsibilities</a></li><li><a class="toc-link toc-h3" href="#reliability-guarantees">Reliability Guarantees</a></li><li><a class="toc-link" href="#adding-a-custom-task">Adding a Custom Task</a></li><li><a class="toc-link toc-h3" href="#option-a-live-task-registration-mobileworld">Option A: Live Task Registration (MobileWorld)</a></li><li><a class="toc-link toc-h3" href="#option-b-custom-python-task-class">Option B: Custom Python Task Class</a></li><li><a class="toc-link" href="#adding-an-agent-harness">Adding an Agent Harness</a></li><li><a class="toc-link" href="#adding-a-new-benchmark-environment">Adding a New Benchmark Environment</a></li><li><a class="toc-link" href="#next-steps">Next Steps</a></li></ul>
+        <div class="toc-actions">
+          <a href="#top" class="toc-action-link" id="back-to-top">&uarr; Back to top</a>
+          <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/site/docs/raw/extending.md" class="toc-action-link" target="_blank" rel="noopener noreferrer">View Markdown &nearr;</a>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <dialog class="search-dialog" id="search-dialog" aria-label="Search documentation">
+    <div class="search-box">
+      <div class="search-input-row">
+        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="5.2"/><path d="m12 12 3.6 3.6"/></svg>
+        <input id="search-input" type="search" placeholder="Search documentation, CLI flags, benchmarks..." autocomplete="off" spellcheck="false">
+        <button type="button" class="search-esc" id="search-close">ESC</button>
+      </div>
+      <div class="search-results" id="search-results" role="listbox"></div>
+      <div class="search-foot">
+        <span><kbd>&uarr;</kbd><kbd>&darr;</kbd> navigate</span>
+        <span><kbd>Enter</kbd> open</span>
+        <span><kbd>Esc</kbd> close</span>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="img-dialog" id="img-dialog" aria-label="Image preview">
+    <button type="button" class="img-dialog-close" id="img-dialog-close" aria-label="Close preview">&times;</button>
+    <img id="img-dialog-src" alt="">
+  </dialog>
+</body>
+</html>

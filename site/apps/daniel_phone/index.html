@@ -4,52 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Daniel's iPhone (mocked GUI env)</title>
-<!--
-  ============================================================================
-  Daniel's iPhone — an iOS home screen and Settings app laid over the other
-  forty environments in this directory.
 
-  Same two-block contract as every environment here: script#engine is a pure,
-  DOM-free state machine on globalThis.GUI_ENGINE; script#ui renders its screen
-  tree and exposes window.__ENV__.
-
-  Nothing on the home screen is invented. Every tile's NAME comes from that
-  environment's own manifest, and every tile's COLOUR is the --accent this
-  build read straight out of that environment's index.html — so the mosaic on
-  the home screen is literally the forty brand colours, and the tile you tap is
-  the colour of the app you land in. The app-detail page carries a real <a>
-  link to ../<env>/index.html: click it in a browser and you are in that
-  environment. That link deliberately has no test-id, so elements() and
-  bounds() never see it — a human can click it, an agent cannot, and gate G
-  stays byte-identical.
-
-  The world here is the one piece of arithmetic every iPhone owner gets wrong:
-  DEVICE storage and iCLOUD storage are two different pools, and almost every
-  switch moves exactly one of them.
-
-    · Offload App frees the app's binary and keeps its Documents & Data.
-      Delete App frees both. So offloading is a much weaker lever than it
-      looks: offloading ALL FORTY apps frees 3,620 MB, and the iOS 26.1
-      update needs 3,660 MB more than is free. It cannot be done that way.
-    · Emptying Recently Deleted frees 2,180 MB — and it is the only action on
-      the phone that frees space in BOTH pools at once. After it, the update
-      needs 1,480 MB more, and the four largest app binaries come to 1,490.
-      Four offloads. Three (1,230) is not enough.
-    · Turning off an app's iCloud backup frees iCloud and not one byte of the
-      device. Tonight's backup wants 33,044 MB against 12,600 MB free, so five
-      of them have to go off — or four, if Recently Deleted was emptied first,
-      because that gave iCloud 2,180 MB back too.
-    · Optimise iPhone Storage is already on. Switching to Download and Keep
-      Originals would want the full 135,200 MB library on a 128 GB phone. The
-      switch that looks like the big saving is the one that cannot be flipped.
-
-  The owner is Daniel Okafor, 41, engineering manager at Meridian Labs in
-  London — the Daniel Okafor already sitting in covey_contacts, and the London
-  end of the same company as 张三 over on sam_phone, who is in his contacts as
-  Sam Zhang. Family Sharing carries his partner Ama, and Zoe and Kwame, whose
-  iPad is the 18.2 GB backup nobody has looked at in a year.
-  ============================================================================
--->
 <style>
 :root{
   --outer:#d8dae2;
@@ -245,7 +200,6 @@ body.bare .n-sheet{animation:none}
 .hero .he-s{font-size:13px;margin-top:8px;line-height:1.6;opacity:.9}
 
 
-/* ---------------------------------------------------------- iOS chrome */
 .n-scroll{background:var(--bg)}
 .n-appbar{backdrop-filter:saturate(180%) blur(20px)}
 .n-sec{font-size:13px;letter-spacing:0;text-transform:none;color:#6c6c70;font-weight:400;
@@ -264,7 +218,6 @@ body.bare .n-sheet{animation:none}
 .n-btn.danger{color:var(--bad);background:var(--card)}
 .big{padding:6px 16px 2px;font:700 34px/1.15 var(--disp);letter-spacing:-.8px}
 
-/* ---------------------------------------------------------- home screen */
 .wall{position:absolute;inset:0;z-index:0}
 .wall svg{width:100%;height:100%;display:block}
 .hs{position:relative;z-index:1;display:flex;flex-direction:column;min-height:100%;
@@ -325,7 +278,6 @@ body.bare .n-sheet{animation:none}
   color:#fff;text-align:center;backdrop-filter:blur(18px)}
 .n-input input::placeholder{color:rgba(255,255,255,.72)}
 
-/* ---------------------------------------------------------- storage bar */
 .sbar{margin:14px 16px 0}
 .sbar .track{display:flex;height:22px;border-radius:5px;overflow:hidden;background:#e4e4e9}
 .sbar .track i{display:block;height:100%}
@@ -409,19 +361,12 @@ body.bare .n-sheet{animation:none}
 <div id="hud" class="off"></div>
 
 <script id="engine">
-/* ===========================================================================
- * ENGINE — pure, deterministic, DOM-free.
- * Device storage and iCloud storage are two separate pools measured in whole
- * megabytes (1 GB = 1000 MB, as iOS reports it). Almost every switch here
- * moves exactly one of them; one action moves both.
- * ======================================================================== */
 (function(root){
 'use strict';
 
 var ENV_ID  = 'daniel_phone';
 var VERSION = '1.0.0';
 
-/* ------------------------------------------------------------- utilities */
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function pad2(n){ return (n < 10 ? '0' : '') + n; }
 function hhmm(m){ m = ((m % 1440) + 1440) % 1440; return pad2(Math.floor(m/60)) + ':' + pad2(m%60); }
@@ -460,7 +405,6 @@ function setPath(o, path, value){
   return o;
 }
 
-/* ------------------------------------------- screen-tree node constructors */
 function N(t, o){ o = o || {}; o.t = t; return o; }
 function txt(s, cls){ return N('text', {text:s, cls:cls || ''}); }
 function row(id, text, o){
@@ -485,9 +429,6 @@ function push(st, name, params){ st.ui.stack.push({name:name, params:params || {
 function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
 function toast(st, t){ st.ui.toast = t; }
 
-/* ------------------------------------------------------------- the device
- * Everything is integer megabytes and 1 GB = 1000 MB, the way iOS reports it.
- */
 var CAP = 128000, IOSMB = 9140, PHOTOS_DEV = 42600, TRASH0 = 2180, SYSDATA = 9707;
 var UPDATE_NEED = 6800, UPDATE_DL = 4820, UPDATE_NAME = 'iOS 26.1';
 var ICLOUD_PLAN = 200000, ICLOUD_LIB0 = 135200, ICLOUD_IPAD = 18200,
@@ -572,9 +513,6 @@ function placeName(where){
   return f ? 'the ' + f.name + ' folder' : where;
 }
 
-/* ------------------------------------------------------------ pool 1: device
- * Offload frees the binary and keeps Documents & Data. Delete frees both.
- */
 function appDevice(a){ return a.del ? 0 : (a.off ? a.docs : a.size + a.docs); }
 function appsDevice(st){ return sum(st.apps.map(appDevice)); }
 function usedDevice(st){ return IOSMB + SYSDATA + PHOTOS_DEV + st.trash + appsDevice(st); }
@@ -604,9 +542,6 @@ function catValue(st, k){
   return st.trash;
 }
 
-/* ------------------------------------------------------------ pool 2: iCloud
- * Turning off an app's backup frees iCloud and not one byte of the device.
- */
 function cloudLibrary(st){ return ICLOUD_LIB0 - (TRASH0 - st.trash); }
 function usedCloud(st){ return cloudLibrary(st) + ICLOUD_IPAD + ICLOUD_DRIVE + ICLOUD_CUR; }
 function freeCloud(st){ return ICLOUD_PLAN - usedCloud(st); }
@@ -621,7 +556,6 @@ function nextBackup(st){
 function backupFits(st){ return nextBackup(st) <= freeCloud(st); }
 function backupOver(st){ return Math.max(0, nextBackup(st) - freeCloud(st)); }
 
-/* ------------------------------------------------------------- the owner */
 var OWNER = {
   name:'Daniel Okafor', initial:'DO', device:"Daniel's iPhone",
   email:'daniel.okafor@meridianlabs.co.uk',
@@ -647,7 +581,6 @@ var OWNER = {
   ]
 };
 
-/* =========================================================== state */
 function createInitialState(seed){
   seed = seed || 0;
   return {
@@ -661,7 +594,6 @@ function createInitialState(seed){
     updated:false,
     backupDone:false,
     lastBackup:'Yesterday, 03:14',
-    /* the seed only permutes the widgets on the home screen */
     order:shuffled(['w_storage', 'w_icloud', 'w_update', 'w_backup'], seed),
     ui:{stack:[{name:'home', params:{}}], sheet:null, confirm:null, inputs:{}, toast:null},
     settings:{cellularBackup:false, autoUpdate:true, shared:true}
@@ -677,7 +609,6 @@ var SELECT = {
   route:route
 };
 
-/* =========================================================== reducer */
 function reduce(prev, action){
   var st = clone(prev), A = action || {};
   st.ui.toast = null;
@@ -715,7 +646,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- home screen ---- */
   case 'PAGE': st.page = A.id; st.openFolder = null; break;
   case 'OPEN_FOLDER': st.openFolder = A.id; break;
   case 'CLOSE_FOLDER': st.openFolder = null; break;
@@ -733,7 +663,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- device storage ---- */
   case 'OFFLOAD': {
     var a = appOf(st, A.id);
     if (!a || a.del) break;
@@ -810,7 +739,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- iCloud ---- */
   case 'TOGGLE_BAK': {
     var b = appOf(st, A.id);
     if (!b || b.del) break;
@@ -837,7 +765,6 @@ function reduce(prev, action){
   return st;
 }
 
-/* =========================================================== screens */
 function iconNode(st, a, prefix){
   return N('icon', {id:prefix + a.id, act:(a.settings ? {type:'NAV', to:'settings'}
                                                       : {type:'OPEN_APP', id:a.id}),
@@ -903,7 +830,6 @@ function scrHome(st){
   return [N('home', {c:body, tail:tail, dark:!q})];
 }
 
-/* ---------------------------------------------------------------- Settings */
 function scrSettings(st){
   return [appbar('Settings'),
     N('acct', {name:OWNER.name, initial:OWNER.initial, id:'st_account',
@@ -1180,11 +1106,6 @@ function screen(st){
   return N('screen', {c:out, route:r.name});
 }
 
-/* =======================================================================
- * TRAVERSAL — element index, GUI action interface, text observation.
- * Identical in every environment here: the screen tree is the only thing
- * that differs, and all three readers below walk that same tree.
- * ==================================================================== */
 var SKIP_KEYS = {act:1, minus:1, plus:1, close:1, yes:1, params:1, meta:1, tiles:1, segs:1, bars:1, place:1, family:1, people:1, likes:1};
 
 function labelOf(n){ return n.text || n.title || n.name || n.label || n.main || ''; }
@@ -1198,9 +1119,6 @@ function collect(n, out){
                                             input:(n.t === 'inputrow')});
   if (n.t === 'mask' && n.close)  out.push({id:n.id, act:n.close, text:'Dismiss overlay', t:'mask'});
   for (var k in n){
-    /* a node may carry extra buttons as a pair of keys: someId holds the
-     * test-id and some holds the action. That is how steppers, sheet close
-     * buttons and per-row buttons all get into the element index. */
     if (k.length > 2 && k.slice(-2) === 'Id' && typeof n[k] === 'string'){
       var sib = n[k.slice(0, -2)];
       if (sib && typeof sib === 'object' && sib.type)
@@ -1253,7 +1171,6 @@ function step(st, a){
   }
 }
 
-/* ------------------------------------------------- text observation (a11y) */
 function a11y(st){
   var rootNode = screen(st), lines = [], r = route(st);
   lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
@@ -1320,8 +1237,6 @@ function walkText(n, d, out, st){
     if (v && typeof v === 'object') walkText(v, line !== null ? d+1 : d, out, st);
   }
 }
-/* per-environment nodes: return a string to print, true if already printed,
- * or null to ignore */
 function walkExtra(n, d, out, st){
 
   if (n.t === 'home'){
@@ -1388,7 +1303,6 @@ function walkExtra(n, d, out, st){
   return null;
 }
 
-/* =========================================================== derived */
 function derive(st){
   var place = {}, live = st.apps.filter(function(a){ return !a.del; });
   st.apps.forEach(function(a){ place[a.id] = a.del ? 'deleted' : a.where; });
@@ -1454,9 +1368,6 @@ root.GUI_ENGINE = ENGINE;
 </script>
 
 <script id="ui">
-/* ===========================================================================
- * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
- * ======================================================================== */
 (function(){
 'use strict';
 var E = window.GUI_ENGINE;

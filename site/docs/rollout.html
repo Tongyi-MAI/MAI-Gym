@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Run direct task rollouts for agent debugging, trajectory collection, multi-pass execution, and controlled retries.">
+  <link rel="canonical" href="https://tongyi-mai.github.io/MAI-Gym/docs/rollout.html">
+  <meta property="og:site_name" content="MAI-Gym Docs">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Rollout CLI — MAI-Gym Docs">
+  <meta property="og:description" content="Run direct task rollouts for agent debugging, trajectory collection, multi-pass execution, and controlled retries.">
+  <meta property="og:url" content="https://tongyi-mai.github.io/MAI-Gym/docs/rollout.html">
+  <meta property="og:image" content="https://tongyi-mai.github.io/MAI-Gym/assets/figs/overview.webp">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Rollout CLI — MAI-Gym Docs">
+  <meta name="twitter:description" content="Run direct task rollouts for agent debugging, trajectory collection, multi-pass execution, and controlled retries.">
+  <meta name="twitter:image" content="https://tongyi-mai.github.io/MAI-Gym/assets/figs/overview.webp">
+  <title>Rollout CLI — MAI-Gym Docs</title>
+  <link rel="icon" type="image/png" href="../assets/favicon.png">
+  <script>
+    (function () {
+      var t;
+      try { t = localStorage.getItem('maigym.theme'); } catch (e) {}
+      document.documentElement.dataset.theme = t === 'day' ? 'day' : 'night';
+    })();
+  </script>
+  <link rel="preload" href="../assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="assets/docs.css">
+  <script>
+    window.MAIGYM_DOCS = {
+      root: "",
+      rawMd: "raw/rollout.md",
+      slug: "rollout.html"
+    };
+  </script>
+  <script src="assets/docs.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#doc-content">Skip to main content</a>
+
+  <header class="topbar" id="topbar">
+    <div class="topbar-row">
+      <div class="topbar-left">
+        <button class="mobile-nav-btn" id="mobile-nav-btn" type="button" aria-label="Toggle navigation" aria-expanded="false">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 5.5h14M3 10h14M3 14.5h14"/></svg>
+        </button>
+        <a class="brand" href="index.html" aria-label="MAI-Gym Documentation home">
+          <img src="../assets/mark.svg" width="26" height="26" alt="">
+          <span class="brand-name">MAI-<span>Gym</span></span>
+          <span class="brand-pill">Docs</span>
+        </a>
+      </div>
+
+      <button class="search-trigger" id="search-trigger" type="button" aria-label="Search documentation">
+        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="5.2"/><path d="m12 12 3.6 3.6"/></svg>
+        <span>Search docs...</span>
+        <kbd>⌘K</kbd>
+      </button>
+
+      <div class="topbar-right">
+        <a class="top-link" href="../index.html">Project Page</a>
+        <a class="top-link" href="https://arxiv.org/abs/2610.20939" target="_blank" rel="noopener noreferrer">Paper</a>
+        <a class="top-link" href="https://huggingface.co/Tongyi-MAI/MAI-Gym-9B" target="_blank" rel="noopener noreferrer">Model</a>
+        <a class="repo-chip" href="https://github.com/Tongyi-MAI/MAI-Gym" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+          <span>Tongyi-MAI/MAI-Gym</span>
+        </a>
+        <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle color theme" title="Switch light / dark theme">
+          <svg class="i-sun" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="3.6" fill="currentColor"/><path d="M10 1.8v2.1M10 16.1v2.1M1.8 10h2.1M16.1 10h2.1M4.2 4.2l1.5 1.5M14.3 14.3l1.5 1.5M4.2 15.8l1.5-1.5M14.3 5.7l1.5-1.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <svg class="i-moon" viewBox="0 0 20 20" aria-hidden="true"><path d="M16.2 12.6A6.8 6.8 0 0 1 7.4 3.8a6.8 6.8 0 1 0 8.8 8.8z" fill="currentColor"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="drawer-backdrop" id="drawer-backdrop" hidden></div>
+
+  <div class="doc-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Documentation navigation">
+      <div class="side-group"><p class="side-heading">Overview</p><ul><li><a class="side-link" href="index.html">Quickstart</a></li><li><a class="side-link" href="concepts.html">Platform &amp; Core Concepts</a></li><li><a class="side-link" href="mai-gym-9b.html">MAI-Gym-9B</a></li><li><a class="side-link" href="dashboard.html">Trajectory Dashboard</a></li></ul></div><div class="side-group"><p class="side-heading">User Guide</p><ul><li><a class="side-link" href="evaluation.html">Evaluation Guide</a></li><li><a class="side-link" href="training.html">Online RL Training</a></li><li><a class="side-link active" aria-current="page" href="rollout.html">Rollout CLI</a></li><li><a class="side-link" href="kubernetes.html">Kubernetes Fleets</a></li></ul></div><div class="side-group"><p class="side-heading">Benchmarks &amp; Environments</p><ul><li><a class="side-link" href="environments.html">Benchmarks Overview</a></li><li><a class="side-link" href="mocked-apps.html">Mocked Apps</a></li><li><a class="side-link" href="envs/mobile.html">Mobile Benchmarks</a></li><li><a class="side-link" href="envs/computer.html">Computer Benchmarks</a></li><li><a class="side-link" href="envs/web.html">Web Benchmarks</a></li></ul></div><div class="side-group"><p class="side-heading">Customization</p><ul><li><a class="side-link" href="extending.html">Extending MAI-Gym</a></li><li><a class="side-link" href="coding-agents.html">Coding-Agent Setup</a></li><li><a class="side-link" href="development.html">Development &amp; Layout</a></li><li><a class="side-link" href="licensing.html">Licensing &amp; Notices</a></li></ul></div>
+    </aside>
+
+    <main class="doc-main" id="doc-content">
+      <article class="doc-article">
+        <header class="page-header">
+          <div class="page-eyebrow">User Guide</div>
+          <div class="page-title-row">
+            <h1>Rollout CLI</h1>
+            <button type="button" class="copy-page-btn" id="copy-page-btn" title="Copy page as Markdown">
+              <svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+              <svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>Copy page</span>
+            </button>
+          </div>
+          <p class="page-lead">Run direct task rollouts for agent debugging, trajectory collection, multi-pass execution, and controlled retries.</p>
+        </header>
+
+        <div class="prose">
+          <p><code>mai-gym rollout</code> runs GUI tasks directly for agent debugging, trajectory collection, and controlled multi-pass execution. It records screenshots, actions, and verifier scores on the exact same task runner used by <code>mai-gym eval</code>.</p>
+<h3 id="when-to-use-rollout-vs-eval-vs-train">When to use <code>rollout</code> vs. <code>eval</code> vs. <code>train</code><a class="heading-link" href="#when-to-use-rollout-vs-eval-vs-train" aria-label="Link to When to use rollout vs. eval vs. train">#</a></h3>
+<div class="table-wrap"><table><thead><tr><th style="text-align:left">Command</th><th style="text-align:left">Best for</th></tr></thead><tbody><tr><td style="text-align:left"><code>mai-gym rollout</code></td><td style="text-align:left">Direct single-environment trajectory collection, custom agent debugging, <code>--set</code> overrides, and fine-grained retry/resume control.</td></tr><tr><td style="text-align:left"><code>mai-gym eval</code></td><td style="text-align:left">Standardized single- or multi-benchmark evaluations with native benchmark defaults, auto-served SGLang, and cross-benchmark summaries (<a href="evaluation.html">Evaluation Guide</a>).</td></tr><tr><td style="text-align:left"><code>mai-gym train</code></td><td style="text-align:left">Updating policy weights via online RL with Slime (<a href="training.html">RL Training Guide</a>).</td></tr></tbody></table></div>
+<hr>
+<h2 id="configuration">Configuration<a class="heading-link" href="#configuration" aria-label="Link to Configuration">#</a></h2>
+<p>Prepare the target backend and native verifier using the relevant benchmark guide (<a href="environments.html">Benchmarks Overview</a> · <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/skills/envs.md" target="_blank" rel="noopener noreferrer"><code>skills/envs.md</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a>), then adapt a local copy of <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/configs/rollout.yaml" target="_blank" rel="noopener noreferrer"><code>configs/rollout.yaml</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a>:</p>
+<div class="table-wrap"><table><thead><tr><th style="text-align:left">Section</th><th style="text-align:left">What it configures</th></tr></thead><tbody><tr><td style="text-align:left"><code>agent</code></td><td style="text-align:left">Policy type (<code>type</code>), served model ID (<code>model_name</code>), OpenAI-compatible endpoint (<code>base_url</code>), credential env reference (<code>api_key: env/...</code>), and step budget (<code>max_steps</code>).</td></tr><tr><td style="text-align:left"><code>rollout</code></td><td style="text-align:left">Manager URL (<code>manager_url</code>), <code>env_type</code>, task filters, concurrency (<code>num_envs</code>), evaluation mode (<code>built_in</code>, <code>llm_judge</code>, <code>both</code>), and screenshot transport.</td></tr><tr><td style="text-align:left"><code>manager</code> &amp; <code>devices</code></td><td style="text-align:left">Local manager and device backend definitions used when auto-starting a manager.</td></tr></tbody></table></div>
+<div class="callout callout-important" role="note"><div class="callout-title"><span class="callout-dot" aria-hidden="true"></span>Important</div><div class="callout-body"><p>Keep machine-specific configuration files outside the repository checkout and supply secrets only via runtime environment variables (for example, <code>env/OPENAI_API_KEY</code>).</p></div></div>
+<hr>
+<h2 id="running-rollouts">Running Rollouts<a class="heading-link" href="#running-rollouts" aria-label="Link to Running Rollouts">#</a></h2>
+<p>From the repository root, with your model endpoint and benchmark backend ready:</p>
+<div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"><span class="tok-cmd">uv</span> run mai-gym rollout <span class="tok-flag">--config</span> /absolute/path/to/rollout.yaml</code></pre></div>
+<p>Filter specific registered task IDs and override concurrency:</p>
+<div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"><span class="tok-cmd">uv</span> run mai-gym rollout <span class="tok-flag">--config</span> /absolute/path/to/rollout.yaml \
+  <span class="tok-flag">--tasks</span> your-task-id <span class="tok-flag">--num-envs</span> 1</code></pre></div>
+<div class="callout callout-note" role="note"><div class="callout-title"><span class="callout-dot" aria-hidden="true"></span>Note</div><div class="callout-body"><p>Use <code>--manager-url &lt;URL&gt;</code> (alias: <code>--server</code>) to override the manager URL at runtime. When the resolved manager URL is local and unreachable, <code>mai-gym rollout</code> automatically starts a manager for the lifetime of the run using the supplied YAML configuration.</p></div></div>
+<hr>
+<h2 id="passes-scoring-retries-and-resume">Passes, Scoring, Retries, and Resume<a class="heading-link" href="#passes-scoring-retries-and-resume" aria-label="Link to Passes, Scoring, Retries, and Resume">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th style="text-align:left">Option</th><th style="text-align:left">Behavior</th></tr></thead><tbody><tr><td style="text-align:left"><code>--pass-n N</code></td><td style="text-align:left">Run <code>N</code> independent passes (default: <code>1</code>). Multi-pass runs write aggregate <code>results.json</code> and <code>summary.md</code> reports.</td></tr><tr><td style="text-align:left"><code>--evaluation-mode MODE</code></td><td style="text-align:left">Choose <code>built_in</code> (default native verifier), <code>llm_judge</code>, or <code>both</code> (judge modes require a judge-capable manager).</td></tr><tr><td style="text-align:left"><code>--retry-until-scored</code></td><td style="text-align:left">Re-run only unscored attempts (<code>score is None</code>) caused by environment failures until all cells are scored or <code>--max-retry-rounds</code> is reached.</td></tr><tr><td style="text-align:left"><code>--max-retry-rounds N</code></td><td style="text-align:left">Cap retry rounds (excluding the initial round); <code>0</code> allows unbounded retries when <code>--retry-until-scored</code> is enabled.</td></tr><tr><td style="text-align:left"><code>--exact-train-id</code></td><td style="text-align:left">Use <code>rollout.train_id</code> verbatim without a random suffix. Set it to a prior run&#x27;s printed ID to resume that run.</td></tr><tr><td style="text-align:left"><code>--no-resume</code></td><td style="text-align:left">Re-run every requested task even when a saved <code>result.txt</code> already exists.</td></tr><tr><td style="text-align:left"><code>--tasks-dir PATH --domains DOMAINS</code></td><td style="text-align:left">Discover generated OSWorld-style task files and optionally filter comma-separated domains.</td></tr><tr><td style="text-align:left"><code>--set KEY=VALUE</code></td><td style="text-align:left">Override any YAML field by dotted path (repeatable, e.g., <code>--set agent.model_name=foo</code>). Explicit CLI flags take precedence.</td></tr></tbody></table></div>
+<p>List all available flags and defaults:</p>
+<div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"><span class="tok-cmd">uv</span> run mai-gym rollout <span class="tok-flag">--help</span></code></pre></div>
+<hr>
+<h2 id="output--trajectory-inspection">Output &amp; Trajectory Inspection<a class="heading-link" href="#output--trajectory-inspection" aria-label="Link to Output &amp; Trajectory Inspection">#</a></h2>
+<p>At startup, <code>mai-gym rollout</code> prints the resolved <code>train_id</code> and <code>Run log root</code>.</p>
+<ul><li><strong>Aggregate reports</strong> (multi-pass or <code>--retry-until-scored</code>) distinguish native full success, partial scores, and unscored technical failures.</li><li><strong>Visual replay:</strong> Point the <a href="dashboard.html">Rust trajectory dashboard</a> at the printed trajectory root to inspect screenshots, model reasoning traces, executed actions, and verifier scores.</li></ul>
+        </div>
+
+        <nav class="pagination" aria-label="Pagination">
+          <a class="pag-link prev" href="training.html"><span class="pag-label">Previous</span><span class="pag-title">&larr; Online RL Training</span></a>
+          <a class="pag-link next" href="kubernetes.html"><span class="pag-label">Next</span><span class="pag-title">Kubernetes Fleets &rarr;</span></a>
+        </nav>
+
+        <footer class="doc-footer">
+          <div class="doc-footer-links">
+            <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/site/docs/raw/rollout.md" target="_blank" rel="noopener noreferrer">Edit this page on GitHub &nearr;</a>
+            <a href="https://github.com/Tongyi-MAI/MAI-Gym/issues/new?title=Docs:%20Rollout CLI" target="_blank" rel="noopener noreferrer">Raise a docs issue &nearr;</a>
+            <a href="llms.txt">llms.txt</a>
+          </div>
+          <p class="doc-footer-meta">MAI-Gym · MIT License · Tongyi-MAI</p>
+        </footer>
+      </article>
+    </main>
+
+    <aside class="toc-rail" aria-label="On this page">
+      <div class="toc-inner">
+        <p class="toc-title">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M2.5 4h11M2.5 8h7M2.5 12h11"/></svg>
+          On this page
+        </p>
+        <ul class="toc-list" id="toc-list"><li><a class="toc-link toc-h3" href="#when-to-use-rollout-vs-eval-vs-train">When to use rollout vs. eval vs. train</a></li><li><a class="toc-link" href="#configuration">Configuration</a></li><li><a class="toc-link" href="#running-rollouts">Running Rollouts</a></li><li><a class="toc-link" href="#passes-scoring-retries-and-resume">Passes, Scoring, Retries, and Resume</a></li><li><a class="toc-link" href="#output--trajectory-inspection">Output &amp; Trajectory Inspection</a></li></ul>
+        <div class="toc-actions">
+          <a href="#top" class="toc-action-link" id="back-to-top">&uarr; Back to top</a>
+          <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/site/docs/raw/rollout.md" class="toc-action-link" target="_blank" rel="noopener noreferrer">View Markdown &nearr;</a>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <dialog class="search-dialog" id="search-dialog" aria-label="Search documentation">
+    <div class="search-box">
+      <div class="search-input-row">
+        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="5.2"/><path d="m12 12 3.6 3.6"/></svg>
+        <input id="search-input" type="search" placeholder="Search documentation, CLI flags, benchmarks..." autocomplete="off" spellcheck="false">
+        <button type="button" class="search-esc" id="search-close">ESC</button>
+      </div>
+      <div class="search-results" id="search-results" role="listbox"></div>
+      <div class="search-foot">
+        <span><kbd>&uarr;</kbd><kbd>&darr;</kbd> navigate</span>
+        <span><kbd>Enter</kbd> open</span>
+        <span><kbd>Esc</kbd> close</span>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="img-dialog" id="img-dialog" aria-label="Image preview">
+    <button type="button" class="img-dialog-close" id="img-dialog-close" aria-label="Close preview">&times;</button>
+    <img id="img-dialog-src" alt="">
+  </dialog>
+</body>
+</html>

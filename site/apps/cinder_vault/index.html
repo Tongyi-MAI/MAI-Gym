@@ -4,27 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Cinder (mocked GUI env)</title>
-<!--
-  ============================================================================
-  Cinder — a single-file H5 password vault for agent research.
 
-  Same two-block contract as every environment here: script#engine is a pure,
-  DOM-free state machine on globalThis.GUI_ENGINE; script#ui renders its screen
-  tree and exposes window.__ENV__.
-
-  What is new: a number that is entirely a function of the data. The health
-  score is not stored anywhere — it is a hundred, minus eight for every weak
-  password, six for every password used twice, three for every one older than a
-  year and two for every account without a second factor. Strength is read off
-  the string itself: length, character classes, and a short list of words that
-  no amount of dressing up rescues, so Passw0rd! scores as badly as password.
-
-  Every fix therefore moves the score by a knowable amount, and changing a
-  password resets its age at the same time, which is why fixing a weak one can
-  be worth eleven points rather than eight. The generator is a counter, not a
-  dice: the same tap always produces the same passphrase.
-  ============================================================================
--->
 <style>
 :root{
   --outer:#05070a;
@@ -275,18 +255,12 @@ body.bare .n-sheet{animation:none}
 <div id="hud" class="off"></div>
 
 <script id="engine">
-/* ===========================================================================
- * ENGINE — pure, deterministic, DOM-free.
- * The health score is not a field. It is a hundred minus the penalties for
- * what the vault currently holds, recomputed on every read.
- * ======================================================================== */
 (function(root){
 'use strict';
 
 var ENV_ID  = 'cinder_vault';
 var VERSION = '1.0.0';
 
-/* ------------------------------------------------------------- utilities */
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function pad2(n){ return (n < 10 ? '0' : '') + n; }
 function hhmm(m){ m = ((m % 1440) + 1440) % 1440; return pad2(Math.floor(m/60)) + ':' + pad2(m%60); }
@@ -325,7 +299,6 @@ function setPath(o, path, value){
   return o;
 }
 
-/* ------------------------------------------- screen-tree node constructors */
 function N(t, o){ o = o || {}; o.t = t; return o; }
 function txt(s, cls){ return N('text', {text:s, cls:cls || ''}); }
 function row(id, text, o){
@@ -350,13 +323,10 @@ function push(st, name, params){ st.ui.stack.push({name:name, params:params || {
 function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
 function toast(st, t){ st.ui.toast = t; }
 
-/* --------------------------------------------------------- the scoring */
 var COMMON = ['password', 'qwerty', 'hunter', 'sunshine', 'letmein', 'welcome', 'admin', 'iloveyou'];
 var PENALTY = {weak:8, reused:6, old:3, no2fa:2};
 var OLD_DAYS = 365;
 
-/* undo the obvious substitutions before looking for a common word, so that
- * Passw0rd! is recognised for what it is */
 function stripped(pw){
   return String(pw).toLowerCase()
     .replace(/0/g, 'o').replace(/1/g, 'i').replace(/3/g, 'e').replace(/4/g, 'a')
@@ -368,7 +338,6 @@ function isCommon(pw){
   for (var i=0;i<COMMON.length;i++) if (s.indexOf(COMMON[i]) >= 0) return true;
   return false;
 }
-/* strength is read off the string, not stored against it */
 function strengthOf(pw){
   if (!pw) return 0;
   if (isCommon(pw)) return pw.length >= 10 ? 1 : 0;
@@ -406,7 +375,6 @@ function issuesOf(st, e){
 function countIssue(st, kind){
   return st.entries.filter(function(e){ return issuesOf(st, e).indexOf(kind) >= 0; }).length;
 }
-/* the number the whole app is about */
 function healthScore(st){
   var n = 100;
   ['weak', 'reused', 'old', 'no2fa'].forEach(function(k){
@@ -419,12 +387,10 @@ function scoreWord(n){
        : n >= 40 ? 'Needs work' : 'In a bad way';
 }
 
-/* --------------------------------------------------- the generator */
 var WORDS_A = ['amber','copper','harbour','lantern','marsh','pewter','quarry','thistle'];
 var WORDS_B = ['crossing','ferry','gable','hollow','kettle','ladder','meadow','signal'];
 var WORDS_C = ['brisk','clear','damp','eager','frost','glad','hush','ivory'];
 var SYMS = ['!','-','#','+','&','?'];
-/* a counter, not a dice: the same tap always gives the same passphrase */
 function generate(st){
   var i = st.genCount, s = st.gen;
   var parts = [WORDS_A[i % WORDS_A.length], WORDS_B[(i * 3 + 1) % WORDS_B.length]];
@@ -464,12 +430,10 @@ function visibleEntries(st){
   });
 }
 
-/* =========================================================== state */
 function createInitialState(seed){
   seed = seed || 0;
   return {
     meta:{env:ENV_ID, version:VERSION, seed:seed, steps:0, finished:false, answer:null},
-    /* the seed permutes the order the vault is listed in */
     entries:shuffled(clone(ENTRIES0), seed),
     gen:{length:16, symbols:true, numbers:true, capitals:false},
     genCount:0,
@@ -485,7 +449,6 @@ var SELECT = {
   entryOf:entryOf, visibleEntries:visibleEntries, route:route
 };
 
-/* =========================================================== reducer */
 function reduce(prev, action){
   var st = clone(prev), A = action || {};
   st.ui.toast = null;
@@ -524,7 +487,6 @@ function reduce(prev, action){
   case 'SET_CAT': st.ui.cat = A.id; break;
   case 'REVEAL': st.ui.revealed = st.ui.revealed === A.id ? null : A.id; break;
 
-  /* ---- fixing things ---- */
   case 'GENERATE':
     st.genCount += 1;
     st.lastGenerated = generate(st);
@@ -544,7 +506,6 @@ function reduce(prev, action){
     break;
   }
   case 'NEW_PASSWORD': {
-    /* generate and apply in one move, which is what the button on an entry does */
     var e2 = entryOf(st, A.id);
     if (!e2) break;
     st.genCount += 1;
@@ -589,7 +550,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- settings ---- */
   case 'SET_LOCK': st.settings.autoLock = A.n; break;
   case 'SET_TOGGLE': st.settings[A.key] = !st.settings[A.key]; break;
 
@@ -598,7 +558,6 @@ function reduce(prev, action){
   return st;
 }
 
-/* =========================================================== screens */
 function tabbar(st){
   var items = [
     {id:'tab_vault',    text:'Vault',    icon:'lock',   tab:'vault'},
@@ -809,11 +768,6 @@ function screen(st){
   return rootNode;
 }
 
-/* =======================================================================
- * TRAVERSAL — element index, GUI action interface, text observation.
- * Identical in every environment here: the screen tree is the only thing
- * that differs, and all three readers below walk that same tree.
- * ==================================================================== */
 var SKIP_KEYS = {act:1, minus:1, plus:1, close:1, yes:1, params:1, meta:1, reveal:1};
 
 function labelOf(n){ return n.text || n.title || n.name || n.label || n.main || ''; }
@@ -827,9 +781,6 @@ function collect(n, out){
                                             input:(n.t === 'inputrow')});
   if (n.t === 'mask' && n.close)  out.push({id:n.id, act:n.close, text:'Dismiss overlay', t:'mask'});
   for (var k in n){
-    /* a node may carry extra buttons as a pair of keys: someId holds the
-     * test-id and some holds the action. That is how steppers, sheet close
-     * buttons and per-row buttons all get into the element index. */
     if (k.length > 2 && k.slice(-2) === 'Id' && typeof n[k] === 'string'){
       var sib = n[k.slice(0, -2)];
       if (sib && typeof sib === 'object' && sib.type)
@@ -882,7 +833,6 @@ function step(st, a){
   }
 }
 
-/* ------------------------------------------------- text observation (a11y) */
 function a11y(st){
   var rootNode = screen(st), lines = [], r = route(st);
   lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
@@ -949,8 +899,6 @@ function walkText(n, d, out, st){
     if (v && typeof v === 'object') walkText(v, line !== null ? d+1 : d, out, st);
   }
 }
-/* per-environment nodes: return a string to print, true if already printed,
- * or null to ignore */
 function walkExtra(n, d, out, st){
 
   if (n.t === 'score'){
@@ -968,7 +916,6 @@ function walkExtra(n, d, out, st){
   return null;
 }
 
-/* --------------------------------------------------------- derived view */
 function derive(st){
   var strength = {}, issues = {}, twofa = {}, ages = {}, pws = {};
   st.entries.forEach(function(e){
@@ -1025,9 +972,6 @@ root.GUI_ENGINE = ENGINE;
 </script>
 
 <script id="ui">
-/* ===========================================================================
- * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
- * ======================================================================== */
 (function(){
 'use strict';
 var E = window.GUI_ENGINE;

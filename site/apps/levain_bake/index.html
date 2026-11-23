@@ -4,32 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Levain (mocked GUI env)</title>
-<!--
-  ============================================================================
-  Levain — a single-file H5 bake planner for agent research.
 
-  Same two-block contract as every environment here: script#engine is a pure,
-  DOM-free state machine on globalThis.GUI_ENGINE; script#ui renders its screen
-  tree and exposes window.__ENV__.
-
-  What is new: the schedule runs backwards. You pick the hour the bread has to
-  be cool and ready, and every step before it is placed by subtracting its
-  length from the one after — so changing the kitchen temperature, or where
-  the cold retard goes, or whether the starter needs feeding, moves the start
-  time and every clock time in between.
-
-  Two things then judge the plan. It has to be startable: the first step
-  cannot fall before the clock on the wall, which is Friday 18:00. And it has
-  to be liveable: the four steps that need your hands — feeding, mixing,
-  shaping and baking — should not land between midnight and six in the
-  morning. The seeded plan is startable and puts two of them at one in the
-  morning, and getting all four out of the small hours takes three levers
-  moved together, not one.
-
-  Every duration is an integer number of minutes and the clock is frozen, so
-  the whole plan is reproducible.
-  ============================================================================
--->
 <style>
 :root{
   --outer:#05070a;
@@ -296,18 +271,12 @@ body.bare .n-sheet{animation:none}
 <div id="hud" class="off"></div>
 
 <script id="engine">
-/* ===========================================================================
- * ENGINE — pure, deterministic, DOM-free.
- * Every duration is an integer number of minutes and the wall clock is
- * frozen at Friday 18:00, so the plan is reproducible to the minute.
- * ======================================================================== */
 (function(root){
 'use strict';
 
 var ENV_ID  = 'levain_bake';
 var VERSION = '1.0.0';
 
-/* ------------------------------------------------------------- utilities */
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function pad2(n){ return (n < 10 ? '0' : '') + n; }
 function hhmm(m){ m = ((m % 1440) + 1440) % 1440; return pad2(Math.floor(m/60)) + ':' + pad2(m%60); }
@@ -346,7 +315,6 @@ function setPath(o, path, value){
   return o;
 }
 
-/* ------------------------------------------- screen-tree node constructors */
 function N(t, o){ o = o || {}; o.t = t; return o; }
 function txt(s, cls){ return N('text', {text:s, cls:cls || ''}); }
 function row(id, text, o){
@@ -371,8 +339,6 @@ function push(st, name, params){ st.ui.stack.push({name:name, params:params || {
 function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
 function toast(st, t){ st.ui.toast = t; }
 
-/* ------------------------------------------------------------- the clock
- * minutes from Friday 00:00. The wall clock is frozen at Friday 18:00. */
 var NOW = 18 * 60;
 var DAYS = ['Fri', 'Sat', 'Sun'];
 function clock(m){
@@ -390,8 +356,6 @@ function smallHours(m){
   return t >= 0 && t < 6 * 60;
 }
 
-/* --------------------------------------------------- how long things take
- * fermentation is read off a table by kitchen temperature, 18 to 28 degrees */
 var TEMPS = [18,19,20,21,22,23,24,25,26,27,28];
 var FEED  = [360,330,300,270,240,220,200,185,170,155,140];
 var BULK  = [480,440,400,360,330,300,240,220,200,185,170];
@@ -407,7 +371,6 @@ var WHERE = [
 ];
 function whereOf(id){ for (var i=0;i<WHERE.length;i++) if (WHERE[i].id === id) return WHERE[i]; return WHERE[0]; }
 
-/* the steps, in order, with the two cold options folded in */
 function steps(st){
   var i = ti(st.temp), out = [];
   var cold = st.retard > 0 && st.where !== 'none' ? st.retard * 60 : 0;
@@ -439,7 +402,6 @@ function steps(st){
     note:'Cutting it hot is the one mistake you cannot undo.'});
   return out;
 }
-/* place every step by subtracting backwards from the deadline */
 function plan(st){
   var s = steps(st), total = sum(s.map(function(x){ return x.mins; }));
   var start = st.deadline - total, at = start, out = [];
@@ -468,7 +430,6 @@ function planWith(st, o){
 var SLOTS = [];
 for (var _s = 1440 + 6 * 60; _s <= 1440 + 20 * 60; _s += 60) SLOTS.push(_s);
 
-/* =========================================================== state */
 function createInitialState(seed){
   seed = seed || 0;
   return {
@@ -477,8 +438,7 @@ function createInitialState(seed){
     retard:0,
     where:'none',
     starterReady:false,
-    deadline:1440 + 10 * 60,          /* Saturday 10:00 */
-    /* the seed permutes the order the shortcuts are offered in, nothing else */
+    deadline:1440 + 10 * 60,
     order:shuffled(['warm', 'late', 'ripe', 'coldbulk', 'coldproof'], seed),
     ui:{tab:'plan', stack:[{name:'plan', params:{}}], sheet:null, confirm:null, inputs:{},
         toast:null},
@@ -491,7 +451,6 @@ var SELECT = {
   route:route
 };
 
-/* =========================================================== reducer */
 function reduce(prev, action){
   var st = clone(prev), A = action || {};
   st.ui.toast = null;
@@ -538,7 +497,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- the levers ---- */
   case 'TEMP':
     if (TEMPS.indexOf(A.n) < 0) break;
     if (A.n === st.temp) { toast(st, 'Already ' + A.n + '°'); break; }
@@ -590,7 +548,6 @@ function reduce(prev, action){
   return st;
 }
 
-/* =========================================================== screens */
 function tabbar(st){
   var items = [
     {id:'tab_plan',     text:'Plan',   icon:'clock', tab:'plan'},
@@ -867,11 +824,6 @@ function screen(st){
   return rootNode;
 }
 
-/* =======================================================================
- * TRAVERSAL — element index, GUI action interface, text observation.
- * Identical in every environment here: the screen tree is the only thing
- * that differs, and all three readers below walk that same tree.
- * ==================================================================== */
 var SKIP_KEYS = {act:1, minus:1, plus:1, close:1, yes:1, params:1, meta:1, grid:1, deps:1};
 
 function labelOf(n){ return n.text || n.title || n.name || n.label || n.main || ''; }
@@ -885,9 +837,6 @@ function collect(n, out){
                                             input:(n.t === 'inputrow')});
   if (n.t === 'mask' && n.close)  out.push({id:n.id, act:n.close, text:'Dismiss overlay', t:'mask'});
   for (var k in n){
-    /* a node may carry extra buttons as a pair of keys: someId holds the
-     * test-id and some holds the action. That is how steppers, sheet close
-     * buttons and per-row buttons all get into the element index. */
     if (k.length > 2 && k.slice(-2) === 'Id' && typeof n[k] === 'string'){
       var sib = n[k.slice(0, -2)];
       if (sib && typeof sib === 'object' && sib.type)
@@ -940,7 +889,6 @@ function step(st, a){
   }
 }
 
-/* ------------------------------------------------- text observation (a11y) */
 function a11y(st){
   var rootNode = screen(st), lines = [], r = route(st);
   lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
@@ -1005,8 +953,6 @@ function walkText(n, d, out, st){
     if (v && typeof v === 'object') walkText(v, line !== null ? d+1 : d, out, st);
   }
 }
-/* per-environment nodes: return a string to print, true if already printed,
- * or null to ignore */
 function walkExtra(n, d, out, st){
 
   if (n.t === 'verdict'){
@@ -1044,7 +990,6 @@ function walkExtra(n, d, out, st){
   return null;
 }
 
-/* --------------------------------------------------------- derived view */
 function derive(st){
   var p = plan(st);
   var at = {};
@@ -1098,9 +1043,6 @@ root.GUI_ENGINE = ENGINE;
 </script>
 
 <script id="ui">
-/* ===========================================================================
- * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
- * ======================================================================== */
 (function(){
 'use strict';
 var E = window.GUI_ENGINE;

@@ -1,0 +1,402 @@
+{
+  "env": "umber_photos",
+  "note": "Golden action sequences replayed by CI.",
+  "solutions": {
+    "T01_settings": [
+      {
+        "action": "tap",
+        "id": "open_settings"
+      },
+      {
+        "action": "tap",
+        "id": "cols_3"
+      },
+      {
+        "action": "tap",
+        "id": "set_showEdited"
+      }
+    ],
+    "T02_query_edited": [
+      {
+        "action": "tap",
+        "id": "f_edited"
+      },
+      {
+        "action": "finish",
+        "answer": "2"
+      }
+    ],
+    "T03_favourite": [
+      {
+        "action": "tap",
+        "id": "cell_ph_12"
+      },
+      {
+        "action": "tap",
+        "id": "fav_toggle"
+      }
+    ],
+    "T04_adjust": [
+      {
+        "action": "tap",
+        "id": "cell_ph_03"
+      },
+      {
+        "action": "tap",
+        "id": "do_edit"
+      },
+      {
+        "action": "tap",
+        "id": "adj_up"
+      },
+      {
+        "action": "tap",
+        "id": "adj_up"
+      },
+      {
+        "action": "tap",
+        "id": "tool_warmth"
+      },
+      {
+        "action": "tap",
+        "id": "adj_up"
+      }
+    ],
+    "T05_filter_crop": [
+      {
+        "action": "tap",
+        "id": "cell_ph_08"
+      },
+      {
+        "action": "tap",
+        "id": "do_edit"
+      },
+      {
+        "action": "tap",
+        "id": "filt_noir"
+      },
+      {
+        "action": "tap",
+        "id": "crop_square"
+      }
+    ],
+    "T06_undo": [
+      {
+        "action": "tap",
+        "id": "cell_ph_01"
+      },
+      {
+        "action": "tap",
+        "id": "do_edit"
+      },
+      {
+        "action": "tap",
+        "id": "adj_up"
+      },
+      {
+        "action": "tap",
+        "id": "adj_up"
+      },
+      {
+        "action": "tap",
+        "id": "adj_up"
+      },
+      {
+        "action": "tap",
+        "id": "undo"
+      }
+    ],
+    "T07_reset": [
+      {
+        "action": "tap",
+        "id": "cell_ph_06"
+      },
+      {
+        "action": "tap",
+        "id": "do_edit"
+      },
+      {
+        "action": "tap",
+        "id": "reset"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      }
+    ],
+    "T08_copy_paste": [
+      {
+        "action": "tap",
+        "id": "cell_ph_06"
+      },
+      {
+        "action": "tap",
+        "id": "do_copy"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_ph_07"
+      },
+      {
+        "action": "tap",
+        "id": "do_paste"
+      }
+    ],
+    "T09_bulk_fav": [
+      {
+        "action": "tap",
+        "id": "start_select"
+      },
+      {
+        "action": "tap",
+        "id": "cell_ph_02"
+      },
+      {
+        "action": "tap",
+        "id": "cell_ph_04"
+      },
+      {
+        "action": "tap",
+        "id": "bulk_fav"
+      }
+    ],
+    "T10_album": [
+      {
+        "action": "tap",
+        "id": "cell_ph_05"
+      },
+      {
+        "action": "tap",
+        "id": "do_album"
+      },
+      {
+        "action": "tap",
+        "id": "pick_al_home"
+      }
+    ],
+    "T11_bin": [
+      {
+        "action": "tap",
+        "id": "cell_ph_04"
+      },
+      {
+        "action": "tap",
+        "id": "do_delete"
+      }
+    ],
+    "T12_restore": [
+      {
+        "action": "tap",
+        "id": "cell_ph_11"
+      },
+      {
+        "action": "tap",
+        "id": "do_delete"
+      },
+      {
+        "action": "tap",
+        "id": "tab_bin"
+      },
+      {
+        "action": "tap",
+        "id": "restore_ph_11"
+      }
+    ],
+    "T13_query_most": [
+      {
+        "action": "tap",
+        "id": "f_edited"
+      },
+      {
+        "action": "finish",
+        "answer": "Bridge, blue hour — it has two"
+      }
+    ],
+    "T14_flagship": [
+      {
+        "action": "tap",
+        "id": "cell_ph_06"
+      },
+      {
+        "action": "tap",
+        "id": "do_copy"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "start_select"
+      },
+      {
+        "action": "tap",
+        "id": "cell_ph_07"
+      },
+      {
+        "action": "tap",
+        "id": "cell_ph_08"
+      },
+      {
+        "action": "tap",
+        "id": "bulk_paste"
+      }
+    ],
+    "T15_compare": [
+      {
+        "action": "tap",
+        "id": "cell_ph_02"
+      },
+      {
+        "action": "tap",
+        "id": "do_edit"
+      },
+      {
+        "action": "tap",
+        "id": "filt_fade"
+      },
+      {
+        "action": "tap",
+        "id": "compare"
+      }
+    ],
+    "T16_empty_bin": [
+      {
+        "action": "tap",
+        "id": "cell_ph_11"
+      },
+      {
+        "action": "tap",
+        "id": "do_delete"
+      },
+      {
+        "action": "tap",
+        "id": "cell_ph_09"
+      },
+      {
+        "action": "tap",
+        "id": "do_delete"
+      },
+      {
+        "action": "tap",
+        "id": "tab_bin"
+      },
+      {
+        "action": "tap",
+        "id": "empty_bin"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      }
+    ],
+    "T17_free_look": [
+      {
+        "action": "tap",
+        "id": "cell_ph_12"
+      },
+      {
+        "action": "tap",
+        "id": "do_edit"
+      },
+      {
+        "action": "tap",
+        "id": "adj_up"
+      },
+      {
+        "action": "tap",
+        "id": "adj_up"
+      },
+      {
+        "action": "tap",
+        "id": "adj_up"
+      },
+      {
+        "action": "tap",
+        "id": "filt_vivid"
+      }
+    ],
+    "T18_filter_view": [
+      {
+        "action": "tap",
+        "id": "f_unsorted"
+      },
+      {
+        "action": "tap",
+        "id": "cell_ph_12"
+      }
+    ],
+    "T19_three_chores": [
+      {
+        "action": "tap",
+        "id": "cell_ph_06"
+      },
+      {
+        "action": "tap",
+        "id": "do_edit"
+      },
+      {
+        "action": "tap",
+        "id": "reset"
+      },
+      {
+        "action": "tap",
+        "id": "confirm_ok"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_ph_02"
+      },
+      {
+        "action": "tap",
+        "id": "do_edit"
+      },
+      {
+        "action": "tap",
+        "id": "filt_sepia"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "nav_back"
+      },
+      {
+        "action": "tap",
+        "id": "cell_ph_12"
+      },
+      {
+        "action": "tap",
+        "id": "do_album"
+      },
+      {
+        "action": "tap",
+        "id": "pick_al_coast"
+      }
+    ],
+    "T20_query_stack": [
+      {
+        "action": "tap",
+        "id": "cell_ph_06"
+      },
+      {
+        "action": "finish",
+        "answer": "The Vivid filter — it is the last entry on the stack"
+      }
+    ]
+  }
+}

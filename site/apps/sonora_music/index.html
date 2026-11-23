@@ -4,21 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Sonora (mocked GUI env)</title>
-<!--
-  ============================================================================
-  Sonora — a single-file H5 music player for agent research.
 
-  Same two-block contract as every environment here (script#engine is a pure,
-  DOM-free state machine exported as globalThis.GUI_ENGINE; script#ui renders
-  engine.screen(state) and exposes __ENV__).
-
-  What is new here: there is no browse-and-buy loop at all. The world is a
-  transport — something is always playing or paused at a position — plus a
-  mutable queue. That gives a seek bar, a queue you reorder in place, tri-state
-  repeat, shuffle, a persistent mini player that follows you across screens,
-  and album art generated deterministically from each album id.
-  ============================================================================
--->
 <style>
 :root{
   --bg:#0d0b12; --card:#17141f; --card2:#201c2b; --card3:#2a2537;
@@ -137,11 +123,9 @@ body.bare .n-sheet{animation:none}
   transition:transform .16s;box-shadow:0 1px 3px rgba(0,0,0,.4)}
 .n-switch.on i{transform:translateX(20px)}
 
-/* ---------------- album art ---------------- */
 .art{border-radius:var(--r2);overflow:hidden;background:var(--card2);flex:0 0 auto}
 .art svg{width:100%;height:100%;display:block}
 
-/* ---------------- song row ---------------- */
 .song{display:flex;align-items:center;gap:13px;padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--line)}
 .song:last-child{border-bottom:none}
 .song:active{background:var(--card2)}
@@ -168,7 +152,6 @@ body.bare .n-sheet{animation:none}
 .hero .h-sub{font-size:13.5px;color:var(--ink2);margin-top:6px}
 .hero .h-meta{font-size:12px;color:var(--muted);margin-top:8px}
 
-/* ---------------- transport ---------------- */
 .seek{padding:6px 18px 0}
 .seek .sk-track{position:relative;height:6px;border-radius:3px;background:var(--card3);overflow:hidden;cursor:pointer}
 .seek .sk-fill{position:absolute;left:0;top:0;bottom:0;border-radius:3px;
@@ -185,7 +168,6 @@ body.bare .n-sheet{animation:none}
 .transport .tb.small{width:42px;height:42px;color:var(--ink2)}
 .transport .tb .rep1{position:absolute;font-size:9px;font-weight:800;margin-top:15px;margin-left:1px}
 
-/* ---------------- mini player ---------------- */
 .mini{flex:0 0 auto;margin:0 10px 6px;background:var(--card2);border:1px solid var(--line2);
   border-radius:var(--r2);display:flex;align-items:center;gap:12px;padding:9px 12px;cursor:pointer;z-index:30;
   position:relative;overflow:hidden}
@@ -247,16 +229,12 @@ body.bare .n-sheet{animation:none}
 <div id="hud" class="off"></div>
 
 <script id="engine">
-/* ===========================================================================
- * ENGINE — pure, deterministic, DOM-free.
- * ======================================================================== */
 (function (root) {
 'use strict';
 
 var VERSION = '1.0.0';
 var ENV_ID  = 'sonora_music';
 
-/* ------------------------------------------------------------- catalog */
 var ALBUMS = [
   {id:'a_lantern', title:'Paper Lantern',  artist:'Mira Voss',        year:2024, genre:'Indie folk',
    palette:['#f9a8d4','#c084fc','#4c1d95'], style:'orbit'},
@@ -328,7 +306,6 @@ var REPEAT_ORDER = ['off','all','one'];
 
 var CATALOG = {albums:ALBUMS, tracks:TRACKS, playlists:SEED_PLAYLISTS, quality:QUALITY, sleep:SLEEP};
 
-/* ------------------------------------------------------------- helpers */
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function album(id){ for (var i=0;i<ALBUMS.length;i++) if (ALBUMS[i].id===id) return ALBUMS[i]; return null; }
 function track(id){ for (var i=0;i<TRACKS.length;i++) if (TRACKS[i].id===id) return TRACKS[i]; return null; }
@@ -371,7 +348,6 @@ function setPath(obj, path, value){
   return obj;
 }
 
-/* --------------------------------------------------------- world clock */
 var CLOCK0 = {h:22, mi:7, s:0};
 var SECONDS_PER_STEP = 3;
 function tick(c, n){
@@ -382,7 +358,6 @@ function tick(c, n){
 }
 function clockStr(c){ return (c.h<10?'0':'')+c.h+':'+(c.mi<10?'0':'')+c.mi; }
 
-/* ------------------------------------------------------ initial state */
 function createInitialState(seed){
   seed = seed || 0;
   return {
@@ -401,7 +376,6 @@ function createInitialState(seed){
   };
 }
 
-/* ------------------------------------------------------------ selectors */
 function nowTrack(st){ return track(st.player.trackId); }
 function nowAlbum(st){ var t = nowTrack(st); return t ? album(t.album) : null; }
 function isLiked(st, id){ return st.liked.indexOf(id) >= 0; }
@@ -455,7 +429,6 @@ var SELECT = { album:album, track:track, albumTracks:albumTracks, artists:artist
                totalDur:totalDur, durLabel:durLabel, mmss:mmss, searchHits:searchHits,
                visibleTracks:visibleTracks, route:route, clockStr:clockStr };
 
-/* ------------------------------------------------------------- reducer */
 function push(st, name, params){ st.ui.stack.push({name:name, params:params||{}}); st.ui.sheet=null; }
 function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
 function toast(st, t){ st.ui.toast = t; }
@@ -501,7 +474,6 @@ function reduce(prev, action){
   case 'CLEAR_SEARCH': st.ui.query=''; st.ui.inputs.search=''; toast(st, 'Search cleared'); break;
   case 'SET_LIBRARY_TAB': st.ui.libraryTab = A.key; break;
 
-  /* ---- transport ---- */
   case 'PLAY_TRACK': {
     var ctx = A.context && A.context.length ? A.context : [A.id];
     startContext(st, ctx, A.id);
@@ -555,16 +527,14 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- likes ---- */
   case 'TOGGLE_LIKE': {
     var id = A.id || st.player.trackId, k = st.liked.indexOf(id);
     if (k >= 0) { st.liked.splice(k, 1); toast(st, 'Removed from Liked Songs'); }
     else { st.liked.push(id); toast(st, 'Added to Liked Songs'); }
-    st.ui.sheet = null;          /* liking from a track menu dismisses the menu */
+    st.ui.sheet = null;
     break;
   }
 
-  /* ---- queue ---- */
   case 'QUEUE_ADD':
     st.queue.push(A.id);
     toast(st, '"' + (track(A.id) || {}).title + '" added to the queue');
@@ -586,7 +556,6 @@ function reduce(prev, action){
     break;
   case 'QUEUE_CLEAR': st.queue = []; toast(st, 'Queue cleared'); break;
 
-  /* ---- playlists ---- */
   case 'PLAYLIST_NEW':
     st.ui.inputs.pl_name = '';
     push(st, 'playlistNew', {});
@@ -633,7 +602,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- downloads & settings ---- */
   case 'TOGGLE_DOWNLOAD': {
     var k3 = st.downloads.indexOf(A.album);
     if (k3 >= 0) { st.downloads.splice(k3, 1); toast(st, 'Download removed'); }
@@ -644,7 +612,6 @@ function reduce(prev, action){
   case 'TOGGLE_SETTING': st.settings[A.key] = !st.settings[A.key]; break;
   case 'CROSSFADE': st.settings.crossfade = Math.max(0, Math.min(12, st.settings.crossfade + A.dir)); break;
 
-  /* ---- overlays ---- */
   case 'OPEN_SHEET':  st.ui.sheet = {type:A.sheet, id:A.id || null}; break;
   case 'CLOSE_SHEET': st.ui.sheet = null; break;
   case 'CONFIRM_NO':  st.ui.confirm = null; break;
@@ -665,9 +632,6 @@ function reduce(prev, action){
   return st;
 }
 
-/* =======================================================================
- * SCREEN TREE
- * ==================================================================== */
 function N(t, o){ o = o || {}; o.t = t; return o; }
 function appbar(title, o){
   o = o || {};
@@ -721,10 +685,7 @@ function songRow(st, id, o){
   });
 }
 
-/* ------------------------------------------------------------- screens */
 function scrHome(st){
-  /* seed permutes the four shown, it must not change *which* four — otherwise a seed
-     would alter the reachable element set rather than just its grounding */
   var recent = shuffled(ALBUMS.slice(0, 4), st.meta.seed);
   var liked = st.liked.slice(0, 3);
   return N('screen', {id:'scr_home', name:'home', c:[
@@ -1025,7 +986,6 @@ function scrSettings(st){
   ]});
 }
 
-/* ------------------------------------------------------------ overlays */
 function sheetTrack(st){
   var id = st.ui.sheet.id, t = track(id); if (!t) return null;
   var a = album(t.album);
@@ -1076,9 +1036,6 @@ function screen(st){
   return rootNode;
 }
 
-/* =======================================================================
- * TRAVERSAL — element index, GUI action interface, text observation
- * ==================================================================== */
 var SKIP_KEYS = {act:1, menuAct:1, up:1, down:1, del:1, go:1, close:1, clear:1, play:1, prev:1,
                  next:1, shuffle:1, repeat:1, back:1, fwd:1, playAct:1, nextAct:1, yes:1,
                  params:1, meta:1, palette:1};
@@ -1163,7 +1120,6 @@ function step(st, a){
   }
 }
 
-/* ------------------------------------------------- text observation (a11y) */
 function a11y(st){
   var rootNode = screen(st), lines = [], r = route(st);
   var t = nowTrack(st), a = nowAlbum(st);
@@ -1266,7 +1222,6 @@ function walkText(n, d, out, st){
   }
 }
 
-/* --------------------------------------------------------- derived view */
 function titles(ids){ return ids.map(function(id){ var t = track(id); return t ? t.title : id; }); }
 function derive(st){
   var t = nowTrack(st), a = nowAlbum(st);
@@ -1328,11 +1283,6 @@ root.GUI_ENGINE    = ENGINE;
 </script>
 
 <script id="ui">
-/* ===========================================================================
- * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
- * Album covers are generated from each album's palette and style, so the
- * artwork is deterministic and needs no image files.
- * ======================================================================== */
 (function(){
 'use strict';
 var E = window.GUI_ENGINE;
@@ -1385,7 +1335,6 @@ function icon(name, size, cls){
     d + '</svg></span>';
 }
 
-/* ------------------------------------------------------------ album art */
 var uidSeq = 0;
 function coverSvg(art){
   if (!art) {

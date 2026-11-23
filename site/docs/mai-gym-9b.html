@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Open 9B GUI agent trained with joint mobile–computer online RL: benchmark results, clone-to-real transfer highlights, and quick evaluation setup.">
+  <link rel="canonical" href="https://tongyi-mai.github.io/MAI-Gym/docs/mai-gym-9b.html">
+  <meta property="og:site_name" content="MAI-Gym Docs">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="MAI-Gym-9B — MAI-Gym Docs">
+  <meta property="og:description" content="Open 9B GUI agent trained with joint mobile–computer online RL: benchmark results, clone-to-real transfer highlights, and quick evaluation setup.">
+  <meta property="og:url" content="https://tongyi-mai.github.io/MAI-Gym/docs/mai-gym-9b.html">
+  <meta property="og:image" content="https://tongyi-mai.github.io/MAI-Gym/assets/figs/overview.webp">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="MAI-Gym-9B — MAI-Gym Docs">
+  <meta name="twitter:description" content="Open 9B GUI agent trained with joint mobile–computer online RL: benchmark results, clone-to-real transfer highlights, and quick evaluation setup.">
+  <meta name="twitter:image" content="https://tongyi-mai.github.io/MAI-Gym/assets/figs/overview.webp">
+  <title>MAI-Gym-9B — MAI-Gym Docs</title>
+  <link rel="icon" type="image/png" href="../assets/favicon.png">
+  <script>
+    (function () {
+      var t;
+      try { t = localStorage.getItem('maigym.theme'); } catch (e) {}
+      document.documentElement.dataset.theme = t === 'day' ? 'day' : 'night';
+    })();
+  </script>
+  <link rel="preload" href="../assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="assets/docs.css">
+  <script>
+    window.MAIGYM_DOCS = {
+      root: "",
+      rawMd: "raw/mai-gym-9b.md",
+      slug: "mai-gym-9b.html"
+    };
+  </script>
+  <script src="assets/docs.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#doc-content">Skip to main content</a>
+
+  <header class="topbar" id="topbar">
+    <div class="topbar-row">
+      <div class="topbar-left">
+        <button class="mobile-nav-btn" id="mobile-nav-btn" type="button" aria-label="Toggle navigation" aria-expanded="false">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 5.5h14M3 10h14M3 14.5h14"/></svg>
+        </button>
+        <a class="brand" href="index.html" aria-label="MAI-Gym Documentation home">
+          <img src="../assets/mark.svg" width="26" height="26" alt="">
+          <span class="brand-name">MAI-<span>Gym</span></span>
+          <span class="brand-pill">Docs</span>
+        </a>
+      </div>
+
+      <button class="search-trigger" id="search-trigger" type="button" aria-label="Search documentation">
+        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="5.2"/><path d="m12 12 3.6 3.6"/></svg>
+        <span>Search docs...</span>
+        <kbd>⌘K</kbd>
+      </button>
+
+      <div class="topbar-right">
+        <a class="top-link" href="../index.html">Project Page</a>
+        <a class="top-link" href="https://arxiv.org/abs/2610.20939" target="_blank" rel="noopener noreferrer">Paper</a>
+        <a class="top-link" href="https://huggingface.co/Tongyi-MAI/MAI-Gym-9B" target="_blank" rel="noopener noreferrer">Model</a>
+        <a class="repo-chip" href="https://github.com/Tongyi-MAI/MAI-Gym" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+          <span>Tongyi-MAI/MAI-Gym</span>
+        </a>
+        <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle color theme" title="Switch light / dark theme">
+          <svg class="i-sun" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="3.6" fill="currentColor"/><path d="M10 1.8v2.1M10 16.1v2.1M1.8 10h2.1M16.1 10h2.1M4.2 4.2l1.5 1.5M14.3 14.3l1.5 1.5M4.2 15.8l1.5-1.5M14.3 5.7l1.5-1.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <svg class="i-moon" viewBox="0 0 20 20" aria-hidden="true"><path d="M16.2 12.6A6.8 6.8 0 0 1 7.4 3.8a6.8 6.8 0 1 0 8.8 8.8z" fill="currentColor"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="drawer-backdrop" id="drawer-backdrop" hidden></div>
+
+  <div class="doc-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Documentation navigation">
+      <div class="side-group"><p class="side-heading">Overview</p><ul><li><a class="side-link" href="index.html">Quickstart</a></li><li><a class="side-link" href="concepts.html">Platform &amp; Core Concepts</a></li><li><a class="side-link active" aria-current="page" href="mai-gym-9b.html">MAI-Gym-9B</a></li><li><a class="side-link" href="dashboard.html">Trajectory Dashboard</a></li></ul></div><div class="side-group"><p class="side-heading">User Guide</p><ul><li><a class="side-link" href="evaluation.html">Evaluation Guide</a></li><li><a class="side-link" href="training.html">Online RL Training</a></li><li><a class="side-link" href="rollout.html">Rollout CLI</a></li><li><a class="side-link" href="kubernetes.html">Kubernetes Fleets</a></li></ul></div><div class="side-group"><p class="side-heading">Benchmarks &amp; Environments</p><ul><li><a class="side-link" href="environments.html">Benchmarks Overview</a></li><li><a class="side-link" href="mocked-apps.html">Mocked Apps</a></li><li><a class="side-link" href="envs/mobile.html">Mobile Benchmarks</a></li><li><a class="side-link" href="envs/computer.html">Computer Benchmarks</a></li><li><a class="side-link" href="envs/web.html">Web Benchmarks</a></li></ul></div><div class="side-group"><p class="side-heading">Customization</p><ul><li><a class="side-link" href="extending.html">Extending MAI-Gym</a></li><li><a class="side-link" href="coding-agents.html">Coding-Agent Setup</a></li><li><a class="side-link" href="development.html">Development &amp; Layout</a></li><li><a class="side-link" href="licensing.html">Licensing &amp; Notices</a></li></ul></div>
+    </aside>
+
+    <main class="doc-main" id="doc-content">
+      <article class="doc-article">
+        <header class="page-header">
+          <div class="page-eyebrow">Overview</div>
+          <div class="page-title-row">
+            <h1>MAI-Gym-9B</h1>
+            <button type="button" class="copy-page-btn" id="copy-page-btn" title="Copy page as Markdown">
+              <svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+              <svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>Copy page</span>
+            </button>
+          </div>
+          <p class="page-lead">Open 9B GUI agent trained with joint mobile–computer online RL: benchmark results, clone-to-real transfer highlights, and quick evaluation setup.</p>
+        </header>
+
+        <div class="prose">
+          <p><strong>MAI-Gym-9B</strong> is an open 9B-parameter GUI agent trained end to end with MAI-Gym. Initialized from <strong>Qwen3.5-9B</strong> with a mixed mobile–computer SFT warm-up followed by a single joint online reinforcement learning run (<strong>GRPO</strong>) on synthesized MobileWorld and OSWorld tasks, MAI-Gym-9B achieves state-of-the-art performance among open GUI agents under 10B parameters across mobile and desktop benchmarks.</p>
+<ul><li><strong>Hugging Face Checkpoint:</strong> <a href="https://huggingface.co/Tongyi-MAI/MAI-Gym-9B" target="_blank" rel="noopener noreferrer"><code>Tongyi-MAI/MAI-Gym-9B</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a></li><li><strong>Technical Report:</strong> <a href="https://arxiv.org/abs/2610.20939" target="_blank" rel="noopener noreferrer"><code>arXiv:2610.20939</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a></li><li><strong>Starter RL Config:</strong> <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/configs/mai-gym-9b.yaml" target="_blank" rel="noopener noreferrer"><code>configs/mai-gym-9b.yaml</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a></li></ul>
+<hr>
+<h2 id="benchmark-performance">Benchmark Performance<a class="heading-link" href="#benchmark-performance" aria-label="Link to Benchmark Performance">#</a></h2>
+<p>All results below report native benchmark metrics (%) from <strong>Section 4</strong> of the <a href="https://arxiv.org/abs/2610.20939" target="_blank" rel="noopener noreferrer">technical report<svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a>, evaluated through the shared MAI-Gym harness (<code>temperature=0.0</code>). Gains show absolute percentage-point improvements over the base <strong>Qwen3.5-9B</strong> model.</p>
+<figure class="doc-figure"><img src="../assets/mai-gym-9b-performance.png" alt="MAI-Gym-9B benchmark comparison across Mobile and Computer GUI benchmarks" loading="lazy" data-zoomable><figcaption>MAI-Gym-9B benchmark comparison across Mobile and Computer GUI benchmarks</figcaption></figure>
+<div class="table-wrap"><table><thead><tr><th style="text-align:left">Domain</th><th style="text-align:left">Generalization</th><th style="text-align:left">Benchmark</th><th style="text-align:right">Qwen3.5-9B (Base)</th><th style="text-align:right"><strong>MAI-Gym-9B</strong></th><th style="text-align:right">Gain</th></tr></thead><tbody><tr><td style="text-align:left"><strong>Mobile</strong></td><td style="text-align:left">Task OOD</td><td style="text-align:left">MobileWorld (GUI-only)</td><td style="text-align:right">18.0</td><td style="text-align:right"><strong>78.4</strong></td><td style="text-align:right"><strong>+60.4</strong></td></tr><tr><td style="text-align:left"><strong>Mobile</strong></td><td style="text-align:left">Env OOD</td><td style="text-align:left">AndroidWorld</td><td style="text-align:right">57.8</td><td style="text-align:right"><strong>75.9</strong></td><td style="text-align:right"><strong>+18.1</strong></td></tr><tr><td style="text-align:left"><strong>Mobile</strong></td><td style="text-align:left">Env OOD</td><td style="text-align:left">MobileGym <em>(partial)</em></td><td style="text-align:right">9.0</td><td style="text-align:right"><strong>46.5</strong></td><td style="text-align:right"><strong>+37.5</strong></td></tr><tr><td style="text-align:left"><strong>Computer</strong></td><td style="text-align:left">Task OOD</td><td style="text-align:left">OSWorld-Verified</td><td style="text-align:right">41.8</td><td style="text-align:right"><strong>76.2</strong></td><td style="text-align:right"><strong>+34.4</strong></td></tr><tr><td style="text-align:left"><strong>Computer</strong></td><td style="text-align:left">Env OOD</td><td style="text-align:left">OSWorld 2.0 <em>(binary / partial)</em></td><td style="text-align:right">0.0 / 2.5</td><td style="text-align:right"><strong>3.7 / 11.3</strong></td><td style="text-align:right"><strong>+3.7 / +8.8</strong></td></tr><tr><td style="text-align:left"><strong>Computer</strong></td><td style="text-align:left">Env OOD</td><td style="text-align:left">MacAgentBench</td><td style="text-align:right">20.7</td><td style="text-align:right"><strong>41.3</strong></td><td style="text-align:right"><strong>+20.6</strong></td></tr><tr><td style="text-align:left"><strong>Computer</strong></td><td style="text-align:left">Env OOD</td><td style="text-align:left">MyPCBench</td><td style="text-align:right">6.5</td><td style="text-align:right"><strong>15.2</strong></td><td style="text-align:right"><strong>+8.7</strong></td></tr></tbody></table></div>
+<hr>
+<h2 id="key-empirical-highlights">Key Empirical Highlights<a class="heading-link" href="#key-empirical-highlights" aria-label="Link to Key Empirical Highlights">#</a></h2>
+<ul><li><strong>Single Joint Policy Across Mobile &amp; Computer:</strong> A single online RL run across mobile and desktop environments generalizes strongly not only to unseen tasks (<em>Task OOD</em>: <strong>78.4%</strong> on MobileWorld, <strong>76.2%</strong> on OSWorld-Verified), but also to unseen operating systems and benchmark suites (<em>Env OOD</em>: AndroidWorld, MobileGym, OSWorld 2.0, MacAgentBench, and MyPCBench).</li><li><strong>Clone-to-Real Transfer (Mocked Apps → Physical Phone):</strong> Training with online RL inside the resettable Railway12306 <strong>Real-World Clone</strong> transfers directly to the real production Railway12306 app on a physical smartphone, raising task success from <strong>28.8% → 48.1%</strong> without live production side effects during training.</li><li><strong>Novel-App Adaptation (42 Novel Mocked Apps):</strong> On previously unseen browser-based <strong>Novel Apps</strong> (<a href="https://tongyi-mai.github.io/MAI-Gym/#apps" target="_blank" rel="noopener noreferrer">Mocked Apps gallery<svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a>), online RL adapts rapidly to unfamiliar layouts and workflows from verifier reward alone.</li></ul>
+<div class="callout callout-note" role="note"><div class="callout-title"><span class="callout-dot" aria-hidden="true"></span>Note</div><div class="callout-body"><p>For complete frontier &amp; open-model baseline comparisons, SFT-vs-RL ablations, infrastructure scaling up to 20,000 concurrent environments, joint RL vs. model merging, and task-scaling curves, see <strong>Section 4</strong> of the <a href="https://arxiv.org/abs/2610.20939" target="_blank" rel="noopener noreferrer">technical report<svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a>.</p></div></div>
+<hr>
+<h2 id="running-mai-gym-9b">Running MAI-Gym-9B<a class="heading-link" href="#running-mai-gym-9b" aria-label="Link to Running MAI-Gym-9B">#</a></h2>
+<h3 id="download-and-evaluate-locally-auto-served-sglang">Download and Evaluate Locally (Auto-Served SGLang)<a class="heading-link" href="#download-and-evaluate-locally-auto-served-sglang" aria-label="Link to Download and Evaluate Locally (Auto-Served SGLang)">#</a></h3>
+<p>Download the checkpoint from Hugging Face and let <code>mai-gym eval</code> launch and tear down SGLang automatically:</p>
+<div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"><span class="tok-cmd">uvx</span> <span class="tok-flag">--from</span> huggingface-hub hf download Tongyi-MAI/MAI-Gym-9B <span class="tok-flag">--local-dir</span> <span class="tok-string">&quot;<span class="tok-var">$HOME</span>/mai-gym-data/hf-model&quot;</span>
+
+<span class="tok-cmd">uv</span> run <span class="tok-flag">--with</span> sglang mai-gym eval <span class="tok-flag">--config</span> <span class="tok-string">&quot;<span class="tok-var">$HOME</span>/mai-gym-eval/eval.yaml&quot;</span> \
+  <span class="tok-flag">--model</span> <span class="tok-string">&quot;<span class="tok-var">$HOME</span>/mai-gym-data/hf-model&quot;</span> <span class="tok-flag">--benchmarks</span> mobileworld <span class="tok-flag">--trials</span> 1</code></pre></div>
+<h3 id="evaluate-against-an-openai-compatible-endpoint">Evaluate Against an OpenAI-Compatible Endpoint<a class="heading-link" href="#evaluate-against-an-openai-compatible-endpoint" aria-label="Link to Evaluate Against an OpenAI-Compatible Endpoint">#</a></h3>
+<p>If <code>Tongyi-MAI/MAI-Gym-9B</code> is already served (e.g., via SGLang or vLLM):</p>
+<div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"><span class="tok-cmd">uv</span> run mai-gym eval <span class="tok-flag">--config</span> <span class="tok-string">&quot;<span class="tok-var">$HOME</span>/mai-gym-eval/eval.yaml&quot;</span> \
+  <span class="tok-flag">--model</span> http://127.0.0.1:8000/v1 <span class="tok-flag">--model-name</span> Tongyi-MAI/MAI-Gym-9B \
+  <span class="tok-flag">--benchmarks</span> mobileworld osworld-verified <span class="tok-flag">--trials</span> 1</code></pre></div>
+<h3 id="training-reference">Training Reference<a class="heading-link" href="#training-reference" aria-label="Link to Training Reference">#</a></h3>
+<p>Use <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/configs/mai-gym-9b.yaml" target="_blank" rel="noopener noreferrer"><code>configs/mai-gym-9b.yaml</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a> as a starting point for joint mobile and computer GRPO training. The <a href="training.html#prerequisites--presets">Online RL Training guide</a> explains how to prepare task pools and run the preset with the prebuilt Slime image.</p>
+<hr>
+<h2 id="next-steps">Next Steps<a class="heading-link" href="#next-steps" aria-label="Link to Next Steps">#</a></h2>
+<ul><li>Run your first verified trial in minutes: <a href="index.html">Quickstart</a></li><li>Configure all 10 benchmarks and native metrics: <a href="evaluation.html">Evaluation Guide</a></li><li>Explore Mocked Apps: <a href="mocked-apps.html">Mocked Apps</a></li><li>Replay model predictions and verifier outcomes: <a href="dashboard.html">Trajectory Dashboard</a></li></ul>
+        </div>
+
+        <nav class="pagination" aria-label="Pagination">
+          <a class="pag-link prev" href="concepts.html"><span class="pag-label">Previous</span><span class="pag-title">&larr; Platform &amp; Core Concepts</span></a>
+          <a class="pag-link next" href="dashboard.html"><span class="pag-label">Next</span><span class="pag-title">Trajectory Dashboard &rarr;</span></a>
+        </nav>
+
+        <footer class="doc-footer">
+          <div class="doc-footer-links">
+            <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/site/docs/raw/mai-gym-9b.md" target="_blank" rel="noopener noreferrer">Edit this page on GitHub &nearr;</a>
+            <a href="https://github.com/Tongyi-MAI/MAI-Gym/issues/new?title=Docs:%20MAI-Gym-9B" target="_blank" rel="noopener noreferrer">Raise a docs issue &nearr;</a>
+            <a href="llms.txt">llms.txt</a>
+          </div>
+          <p class="doc-footer-meta">MAI-Gym · MIT License · Tongyi-MAI</p>
+        </footer>
+      </article>
+    </main>
+
+    <aside class="toc-rail" aria-label="On this page">
+      <div class="toc-inner">
+        <p class="toc-title">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M2.5 4h11M2.5 8h7M2.5 12h11"/></svg>
+          On this page
+        </p>
+        <ul class="toc-list" id="toc-list"><li><a class="toc-link" href="#benchmark-performance">Benchmark Performance</a></li><li><a class="toc-link" href="#key-empirical-highlights">Key Empirical Highlights</a></li><li><a class="toc-link" href="#running-mai-gym-9b">Running MAI-Gym-9B</a></li><li><a class="toc-link toc-h3" href="#download-and-evaluate-locally-auto-served-sglang">Download and Evaluate Locally (Auto-Served SGLang)</a></li><li><a class="toc-link toc-h3" href="#evaluate-against-an-openai-compatible-endpoint">Evaluate Against an OpenAI-Compatible Endpoint</a></li><li><a class="toc-link toc-h3" href="#training-reference">Training Reference</a></li><li><a class="toc-link" href="#next-steps">Next Steps</a></li></ul>
+        <div class="toc-actions">
+          <a href="#top" class="toc-action-link" id="back-to-top">&uarr; Back to top</a>
+          <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/site/docs/raw/mai-gym-9b.md" class="toc-action-link" target="_blank" rel="noopener noreferrer">View Markdown &nearr;</a>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <dialog class="search-dialog" id="search-dialog" aria-label="Search documentation">
+    <div class="search-box">
+      <div class="search-input-row">
+        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="5.2"/><path d="m12 12 3.6 3.6"/></svg>
+        <input id="search-input" type="search" placeholder="Search documentation, CLI flags, benchmarks..." autocomplete="off" spellcheck="false">
+        <button type="button" class="search-esc" id="search-close">ESC</button>
+      </div>
+      <div class="search-results" id="search-results" role="listbox"></div>
+      <div class="search-foot">
+        <span><kbd>&uarr;</kbd><kbd>&darr;</kbd> navigate</span>
+        <span><kbd>Enter</kbd> open</span>
+        <span><kbd>Esc</kbd> close</span>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="img-dialog" id="img-dialog" aria-label="Image preview">
+    <button type="button" class="img-dialog-close" id="img-dialog-close" aria-label="Close preview">&times;</button>
+    <img id="img-dialog-src" alt="">
+  </dialog>
+</body>
+</html>

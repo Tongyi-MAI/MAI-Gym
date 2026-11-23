@@ -4,30 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>屏幕使用时间 (mocked GUI env)</title>
-<!--
-  ============================================================================
-  Screen Time — a single-file H5 stock usage-limits screen for agent research.
 
-  Same two-block contract as every environment here: script#engine is a pure,
-  DOM-free state machine on globalThis.GUI_ENGINE; script#ui renders its screen
-  tree and exposes window.__ENV__.
-
-  What is new: how much time an app has left is a minimum over several limits
-  that do not belong to it. There is the app's own allowance, the allowance for
-  its whole category — shared with every sibling — and the wall of downtime at
-  22:00 that stops everything not on the allowlist. Whichever bites first is
-  the answer.
-
-  So the app can be right and still look broken: Reels has a ninety-minute
-  allowance of its own and fourteen of them unused, and it still says nought,
-  because Chatter has already eaten the social category. And Slate Docs has no
-  limit at all and still says eighty-five, because that is how long there is
-  until downtime. Raising the wrong number changes nothing, which is the whole
-  point.
-
-  Everything is integer minutes on a clock frozen at 20:35.
-  ============================================================================
--->
 <style>
 :root{
   --outer:#e3e6ee;
@@ -294,18 +271,12 @@ body.bare .n-sheet{animation:none}
 <div id="hud" class="off"></div>
 
 <script id="engine">
-/* ===========================================================================
- * ENGINE — pure, deterministic, DOM-free.
- * 可用时间 = min(App 自己的限额剩余, 类别限额剩余, 离停用时间的距离)。
- * 类别限额是同类共用的，所以卡住一个 App 的往往不是它自己的那条。
- * ======================================================================== */
 (function(root){
 'use strict';
 
 var ENV_ID  = 'tideline_screen';
 var VERSION = '1.0.0';
 
-/* ------------------------------------------------------------- utilities */
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function pad2(n){ return (n < 10 ? '0' : '') + n; }
 function hhmm(m){ m = ((m % 1440) + 1440) % 1440; return pad2(Math.floor(m/60)) + ':' + pad2(m%60); }
@@ -344,7 +315,6 @@ function setPath(o, path, value){
   return o;
 }
 
-/* ------------------------------------------- screen-tree node constructors */
 function N(t, o){ o = o || {}; o.t = t; return o; }
 function txt(s, cls){ return N('text', {text:s, cls:cls || ''}); }
 function row(id, text, o){
@@ -369,8 +339,7 @@ function push(st, name, params){ st.ui.stack.push({name:name, params:params || {
 function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
 function toast(st, t){ st.ui.toast = t; }
 
-/* ------------------------------------------------------------- 时钟与类别 */
-var NOW = 20 * 60 + 35;              /* 20:35 */
+var NOW = 20 * 60 + 35;
 function hhmm(m){
   m = ((m % 1440) + 1440) % 1440;
   var h = Math.floor(m / 60), mi = m % 60;
@@ -413,7 +382,6 @@ function catUsed(cat){ return sum(appsIn(cat).map(function(a){ return a.used; })
 function totalUsed(){ return sum(APPS.map(function(a){ return a.used; })); }
 function totalPickups(){ return sum(APPS.map(function(a){ return a.pickups; })); }
 
-/* ------------------------------------------------------- 三种限额取最小 */
 function appLimit(st, id){
   var v = st.appLimits[id];
   return (v === undefined || v === null) ? null : v;
@@ -428,7 +396,6 @@ function untilDowntime(st, id){
   var left = st.downtime.from - NOW;
   return left > 0 ? left : 0;
 }
-/* 每一条限额还剩多少，以及是谁咬得最紧 */
 function budgets(st, id){
   var a = appOf(id), out = [];
   var own = appLimit(st, id);
@@ -464,7 +431,6 @@ function overCat(st, cat){
 }
 function catStep(){ return 15; }
 
-/* =========================================================== state */
 function createInitialState(seed){
   seed = seed || 0;
   return {
@@ -472,8 +438,7 @@ function createInitialState(seed){
     appLimits:{a_reels:90, a_streamly:120, a_questa:90},
     catLimits:{c_social:150, c_video:180, c_games:90},
     downtime:{on:true, from:22 * 60, to:7 * 60, allow:['a_mailbox', 'a_pages']},
-    extra:{},                     /* 今天临时加的分钟 */
-    /* 种子只打乱类别快捷条的排列 */
+    extra:{},
     order:shuffled(CATS.map(function(c){ return c.id; }), seed),
     ui:{tab:'today', stack:[{name:'today', params:{}}], sheet:null, confirm:null,
         inputs:{}, toast:null},
@@ -488,7 +453,6 @@ var SELECT = {
   apps:APPS, cats:CATS, now:NOW, route:route
 };
 
-/* =========================================================== reducer */
 function reduce(prev, action){
   var st = clone(prev), A = action || {};
   st.ui.toast = null;
@@ -532,7 +496,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- 限额 ---- */
   case 'APP_LIMIT': {
     var cur = appLimit(st, A.id);
     var v = (cur === null ? 0 : cur) + A.by;
@@ -575,7 +538,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- 停用时间 ---- */
   case 'DOWNTIME': {
     st.downtime.on = !st.downtime.on;
     toast(st, st.downtime.on ? '停用时间已开，' + hhmm(st.downtime.from) + ' 起'
@@ -602,7 +564,6 @@ function reduce(prev, action){
   return st;
 }
 
-/* =========================================================== screens */
 function tabbar(st){
   var items = [
     {id:'tab_today',    text:'今日', icon:'chart', tab:'today'},
@@ -832,11 +793,6 @@ function screen(st){
   return rootNode;
 }
 
-/* =======================================================================
- * TRAVERSAL — element index, GUI action interface, text observation.
- * Identical in every environment here: the screen tree is the only thing
- * that differs, and all three readers below walk that same tree.
- * ==================================================================== */
 var SKIP_KEYS = {act:1, minus:1, plus:1, off:1, close:1, yes:1, params:1, meta:1, bars:1, legend:1, lines:1, deps:1};
 
 function labelOf(n){ return n.text || n.title || n.name || n.label || n.main || ''; }
@@ -850,9 +806,6 @@ function collect(n, out){
                                             input:(n.t === 'inputrow')});
   if (n.t === 'mask' && n.close)  out.push({id:n.id, act:n.close, text:'Dismiss overlay', t:'mask'});
   for (var k in n){
-    /* a node may carry extra buttons as a pair of keys: someId holds the
-     * test-id and some holds the action. That is how steppers, sheet close
-     * buttons and per-row buttons all get into the element index. */
     if (k.length > 2 && k.slice(-2) === 'Id' && typeof n[k] === 'string'){
       var sib = n[k.slice(0, -2)];
       if (sib && typeof sib === 'object' && sib.type)
@@ -905,7 +858,6 @@ function step(st, a){
   }
 }
 
-/* ------------------------------------------------- text observation (a11y) */
 function a11y(st){
   var rootNode = screen(st), lines = [], r = route(st);
   lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
@@ -970,8 +922,6 @@ function walkText(n, d, out, st){
     if (v && typeof v === 'object') walkText(v, line !== null ? d+1 : d, out, st);
   }
 }
-/* per-environment nodes: return a string to print, true if already printed,
- * or null to ignore */
 function walkExtra(n, d, out, st){
 
   if (n.t === 'total'){
@@ -1005,7 +955,6 @@ function walkExtra(n, d, out, st){
   return null;
 }
 
-/* --------------------------------------------------------- derived view */
 function derive(st){
   var left = {}, bindKind = {}, cats = {}, catLim = {}, appLim = {};
   APPS.forEach(function(a){
@@ -1069,9 +1018,6 @@ root.GUI_ENGINE = ENGINE;
 </script>
 
 <script id="ui">
-/* ===========================================================================
- * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
- * ======================================================================== */
 (function(){
 'use strict';
 var E = window.GUI_ENGINE;

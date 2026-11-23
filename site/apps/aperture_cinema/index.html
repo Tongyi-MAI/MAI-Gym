@@ -4,19 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Aperture Cinema (mocked GUI env)</title>
-<!--
-  ============================================================================
-  Aperture Cinema — a single-file H5 cinema booking app for agent research.
 
-  Same two-block contract as every environment here.
-
-  What is new: a 2D seat map. Choosing seats is spatial selection on a grid
-  with aisles, occupied seats, accessible spaces and premium rows — not a list
-  pick. On top of that sits a cross-field constraint the agent has to satisfy:
-  the ticket-type counts must add up to exactly the number of seats chosen, or
-  checkout stays closed.
-  ============================================================================
--->
 <style>
 :root{
   --bg:#0b1020; --card:#141a2e; --card2:#1c2440; --card3:#26304f;
@@ -139,7 +127,6 @@ body.bare .n-sheet{animation:none}
 .n-stepper .st-btn.off{opacity:.32;cursor:not-allowed}
 .n-stepper .st-val{min-width:22px;text-align:center;font:650 16px/1 var(--disp)}
 
-/* ---------------- poster ---------------- */
 .poster{border-radius:var(--r2);overflow:hidden;background:var(--card2);flex:0 0 auto}
 .poster svg{width:100%;height:100%;display:block}
 .filmgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:4px 18px}
@@ -163,7 +150,6 @@ body.bare .n-sheet{animation:none}
 .pill.cool{background:#132a44;color:var(--cool)}
 .pill.bad{background:#331a1a;color:var(--red)}
 
-/* ---------------- seat map ---------------- */
 .screenbar{margin:6px 24px 18px;text-align:center}
 .screenbar .sb-arc{height:26px;border-radius:100% 100% 0 0 / 100% 100% 0 0;
   background:linear-gradient(180deg,rgba(245,196,81,.5),rgba(245,196,81,0));border-top:2px solid var(--accent)}
@@ -248,16 +234,12 @@ body.bare .n-sheet{animation:none}
 <div id="hud" class="off"></div>
 
 <script id="engine">
-/* ===========================================================================
- * ENGINE — pure, deterministic, DOM-free.
- * ======================================================================== */
 (function (root) {
 'use strict';
 
 var VERSION = '1.0.0';
 var ENV_ID  = 'aperture_cinema';
 
-/* ------------------------------------------------------------- catalog */
 var FILMS = [
   {id:'f_lighthouse', title:'The Lighthouse Keeper', cert:'12A', mins:118, genre:'Drama',
    palette:['#f5c451','#7c3aed','#0b1020'], style:'beam',
@@ -285,8 +267,6 @@ var AUDITORIA = [
   {id:'s3', name:'Screen 3',  kind:'Deluxe recliners', surcharge:250}
 ];
 
-/* rows A..F, ten seats each, aisles after 2 and 8. Occupancy is hand-authored
-   per showing so the map is identical on every run. */
 var ROWS = ['A','B','C','D','E','F'];
 var SEATS_PER_ROW = 10;
 var AISLE_AFTER = [2, 8];
@@ -318,14 +298,13 @@ var SHOWINGS = [
    taken:['A9','A10','B10']}
 ];
 
-/* prices in pence so every total is exact integer arithmetic */
 var TICKETS = [
   {key:'adult',   label:'Adult',   price:1250},
   {key:'child',   label:'Child',   price:800},
   {key:'senior',  label:'Senior',  price:950},
   {key:'student', label:'Student', price:900}
 ];
-var PREMIUM_SURCHARGE = 200;   /* per seat in rows D and E */
+var PREMIUM_SURCHARGE = 200;
 
 var EXTRAS = [
   {key:'popcorn', label:'Sweet popcorn, large', price:650},
@@ -343,7 +322,6 @@ var PAYMENTS = [
 var CATALOG = {films:FILMS, auditoria:AUDITORIA, showings:SHOWINGS, tickets:TICKETS,
                extras:EXTRAS, payments:PAYMENTS, rows:ROWS, seatsPerRow:SEATS_PER_ROW};
 
-/* ------------------------------------------------------------- helpers */
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function film(id){ for (var i=0;i<FILMS.length;i++) if (FILMS[i].id===id) return FILMS[i]; return null; }
 function showing(id){ for (var i=0;i<SHOWINGS.length;i++) if (SHOWINGS[i].id===id) return SHOWINGS[i]; return null; }
@@ -389,7 +367,6 @@ function setPath(obj, path, value){
   return obj;
 }
 
-/* --------------------------------------------------------- world clock */
 var CLOCK0 = {h:18, mi:5, s:0};
 var SECONDS_PER_STEP = 5;
 function tick(c, n){
@@ -400,14 +377,11 @@ function tick(c, n){
 }
 function clockStr(c){ return (c.h<10?'0':'')+c.h+':'+(c.mi<10?'0':'')+c.mi; }
 
-/* ------------------------------------------------------ initial state */
 function createInitialState(seed){
   seed = seed || 0;
   return {
     meta:{ env:ENV_ID, version:VERSION, seed:seed, clock:clone(CLOCK0), steps:0,
            bookingSeq:1, answer:null, finished:false },
-    /* occupancy is state, not catalog — booking and cancelling must not leak
-       between episodes, so the seed lists are copied in here at reset */
     taken:(function(){ var o = {}; SHOWINGS.forEach(function(s){ o[s.id] = s.taken.slice(); }); return o; })(),
     ui:{ stack:[{name:'films', params:{}}], tab:'films', sheet:null, confirm:null, toast:null,
          inputs:{}, query:'', dayFilter:'all' },
@@ -423,7 +397,6 @@ function createInitialState(seed){
   };
 }
 
-/* ------------------------------------------------------------ pricing */
 function seatList(){
   var out = [];
   ROWS.forEach(function(r){
@@ -474,7 +447,6 @@ var SELECT = { film:film, showing:showing, auditorium:auditorium, showingsFor:sh
                isWheel:isWheel, searchFilms:searchFilms, route:route, clockStr:clockStr,
                seatCmp:seatCmp, sortSeats:sortSeats };
 
-/* ------------------------------------------------------------- reducer */
 function push(st, name, params){ st.ui.stack.push({name:name, params:params||{}}); st.ui.sheet=null; }
 function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
 function toast(st, t){ st.ui.toast = t; }
@@ -510,7 +482,6 @@ function reduce(prev, action){
   case 'CLEAR_SEARCH': st.ui.query=''; st.ui.inputs.search=''; toast(st, 'Search cleared'); break;
   case 'SET_DAY': st.ui.dayFilter = A.day; break;
 
-  /* ---- booking flow ---- */
   case 'PICK_SHOWING': {
     var sw = showing(A.id); if (!sw) break;
     st.draft = {showing:A.id, seats:[], tickets:{adult:0, child:0, senior:0, student:0},
@@ -576,7 +547,6 @@ function reduce(prev, action){
                       tickets:clone(d2.tickets), extras:d2.extras.slice(),
                       total:q.total, code:code, status:'upcoming', payment:d2.payment,
                       pointsUsed:q.discount});
-    /* the seats are now taken for everyone */
     var tk = st.taken[d2.showing] || (st.taken[d2.showing] = []);
     d2.seats.forEach(function(s){ if (tk.indexOf(s) < 0) tk.push(s); });
     sortSeats(tk);
@@ -588,7 +558,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- bookings ---- */
   case 'CANCEL_BOOKING': {
     var b = null;
     st.bookings.forEach(function(x){ if (x.id === A.id) b = x; });
@@ -611,7 +580,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- settings ---- */
   case 'SET_SETTING':    st.settings[A.key] = A.value; break;
   case 'TOGGLE_SETTING': st.settings[A.key] = !st.settings[A.key]; break;
 
@@ -635,9 +603,6 @@ function reduce(prev, action){
   return st;
 }
 
-/* =======================================================================
- * SCREEN TREE
- * ==================================================================== */
 function N(t, o){ o = o || {}; o.t = t; return o; }
 function appbar(title, o){
   o = o || {};
@@ -671,7 +636,6 @@ function showLabel(sw){
   return sw.day + ' ' + sw.time + ' · ' + a.name + ' · ' + sw.format;
 }
 
-/* ------------------------------------------------------------- screens */
 function scrFilms(st){
   var days = ['all','Today','Tomorrow'];
   var list = shuffled(FILMS.slice(0, 6), st.meta.seed).filter(function(f){
@@ -1043,9 +1007,6 @@ function screen(st){
   return rootNode;
 }
 
-/* =======================================================================
- * TRAVERSAL — element index, GUI action interface, text observation
- * ==================================================================== */
 var SKIP_KEYS = {act:1, minus:1, plus:1, go:1, close:1, clear:1, yes:1, params:1, meta:1,
                  palette:1, taken:1, tickets:1};
 
@@ -1113,7 +1074,6 @@ function step(st, a){
   }
 }
 
-/* ------------------------------------------------- text observation (a11y) */
 function a11y(st){
   var rootNode = screen(st), lines = [], r = route(st);
   lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
@@ -1215,7 +1175,6 @@ function walkText(n, d, out, st){
   }
 }
 
-/* --------------------------------------------------------- derived view */
 function derive(st){
   var last = st.bookings.length ? st.bookings[st.bookings.length-1] : null;
   var lastShow = last ? showing(last.showing) : null;
@@ -1274,11 +1233,6 @@ root.GUI_ENGINE      = ENGINE;
 </script>
 
 <script id="ui">
-/* ===========================================================================
- * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
- * Posters are generated from each film's palette and style; the seat map is
- * a real grid of tappable cells with aisles.
- * ======================================================================== */
 (function(){
 'use strict';
 var E = window.GUI_ENGINE;
@@ -1311,7 +1265,6 @@ function icon(name, size, cls){
     'stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg></span>';
 }
 
-/* ------------------------------------------------------------- posters */
 var uidSeq = 0;
 function posterSvg(a){
   if (!a) return '<svg viewBox="0 0 200 300"><rect width="200" height="300" fill="#1c2440"/></svg>';

@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Overview of OSWorld-Verified, OSWorld 2.0, MacAgentBench, and MyPCBench: desktop VM suites, Hybrid Action Space (GUI + CLI), and evaluation protocols.">
+  <link rel="canonical" href="https://tongyi-mai.github.io/MAI-Gym/docs/envs/computer.html">
+  <meta property="og:site_name" content="MAI-Gym Docs">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Computer Benchmarks — MAI-Gym Docs">
+  <meta property="og:description" content="Overview of OSWorld-Verified, OSWorld 2.0, MacAgentBench, and MyPCBench: desktop VM suites, Hybrid Action Space (GUI + CLI), and evaluation protocols.">
+  <meta property="og:url" content="https://tongyi-mai.github.io/MAI-Gym/docs/envs/computer.html">
+  <meta property="og:image" content="https://tongyi-mai.github.io/MAI-Gym/assets/figs/overview.webp">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Computer Benchmarks — MAI-Gym Docs">
+  <meta name="twitter:description" content="Overview of OSWorld-Verified, OSWorld 2.0, MacAgentBench, and MyPCBench: desktop VM suites, Hybrid Action Space (GUI + CLI), and evaluation protocols.">
+  <meta name="twitter:image" content="https://tongyi-mai.github.io/MAI-Gym/assets/figs/overview.webp">
+  <title>Computer Benchmarks — MAI-Gym Docs</title>
+  <link rel="icon" type="image/png" href="../../assets/favicon.png">
+  <script>
+    (function () {
+      var t;
+      try { t = localStorage.getItem('maigym.theme'); } catch (e) {}
+      document.documentElement.dataset.theme = t === 'day' ? 'day' : 'night';
+    })();
+  </script>
+  <link rel="preload" href="../../assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="../assets/docs.css">
+  <script>
+    window.MAIGYM_DOCS = {
+      root: "../",
+      rawMd: "../raw/envs/computer.md",
+      slug: "envs/computer.html"
+    };
+  </script>
+  <script src="../assets/docs.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#doc-content">Skip to main content</a>
+
+  <header class="topbar" id="topbar">
+    <div class="topbar-row">
+      <div class="topbar-left">
+        <button class="mobile-nav-btn" id="mobile-nav-btn" type="button" aria-label="Toggle navigation" aria-expanded="false">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 5.5h14M3 10h14M3 14.5h14"/></svg>
+        </button>
+        <a class="brand" href="../index.html" aria-label="MAI-Gym Documentation home">
+          <img src="../../assets/mark.svg" width="26" height="26" alt="">
+          <span class="brand-name">MAI-<span>Gym</span></span>
+          <span class="brand-pill">Docs</span>
+        </a>
+      </div>
+
+      <button class="search-trigger" id="search-trigger" type="button" aria-label="Search documentation">
+        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="5.2"/><path d="m12 12 3.6 3.6"/></svg>
+        <span>Search docs...</span>
+        <kbd>⌘K</kbd>
+      </button>
+
+      <div class="topbar-right">
+        <a class="top-link" href="../../index.html">Project Page</a>
+        <a class="top-link" href="https://arxiv.org/abs/2610.20939" target="_blank" rel="noopener noreferrer">Paper</a>
+        <a class="top-link" href="https://huggingface.co/Tongyi-MAI/MAI-Gym-9B" target="_blank" rel="noopener noreferrer">Model</a>
+        <a class="repo-chip" href="https://github.com/Tongyi-MAI/MAI-Gym" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+          <span>Tongyi-MAI/MAI-Gym</span>
+        </a>
+        <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle color theme" title="Switch light / dark theme">
+          <svg class="i-sun" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="3.6" fill="currentColor"/><path d="M10 1.8v2.1M10 16.1v2.1M1.8 10h2.1M16.1 10h2.1M4.2 4.2l1.5 1.5M14.3 14.3l1.5 1.5M4.2 15.8l1.5-1.5M14.3 5.7l1.5-1.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <svg class="i-moon" viewBox="0 0 20 20" aria-hidden="true"><path d="M16.2 12.6A6.8 6.8 0 0 1 7.4 3.8a6.8 6.8 0 1 0 8.8 8.8z" fill="currentColor"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="drawer-backdrop" id="drawer-backdrop" hidden></div>
+
+  <div class="doc-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Documentation navigation">
+      <div class="side-group"><p class="side-heading">Overview</p><ul><li><a class="side-link" href="../index.html">Quickstart</a></li><li><a class="side-link" href="../concepts.html">Platform &amp; Core Concepts</a></li><li><a class="side-link" href="../mai-gym-9b.html">MAI-Gym-9B</a></li><li><a class="side-link" href="../dashboard.html">Trajectory Dashboard</a></li></ul></div><div class="side-group"><p class="side-heading">User Guide</p><ul><li><a class="side-link" href="../evaluation.html">Evaluation Guide</a></li><li><a class="side-link" href="../training.html">Online RL Training</a></li><li><a class="side-link" href="../rollout.html">Rollout CLI</a></li><li><a class="side-link" href="../kubernetes.html">Kubernetes Fleets</a></li></ul></div><div class="side-group"><p class="side-heading">Benchmarks &amp; Environments</p><ul><li><a class="side-link" href="../environments.html">Benchmarks Overview</a></li><li><a class="side-link" href="../mocked-apps.html">Mocked Apps</a></li><li><a class="side-link" href="mobile.html">Mobile Benchmarks</a></li><li><a class="side-link active" aria-current="page" href="computer.html">Computer Benchmarks</a></li><li><a class="side-link" href="web.html">Web Benchmarks</a></li></ul></div><div class="side-group"><p class="side-heading">Customization</p><ul><li><a class="side-link" href="../extending.html">Extending MAI-Gym</a></li><li><a class="side-link" href="../coding-agents.html">Coding-Agent Setup</a></li><li><a class="side-link" href="../development.html">Development &amp; Layout</a></li><li><a class="side-link" href="../licensing.html">Licensing &amp; Notices</a></li></ul></div>
+    </aside>
+
+    <main class="doc-main" id="doc-content">
+      <article class="doc-article">
+        <header class="page-header">
+          <div class="page-eyebrow">Benchmarks &amp; Environments</div>
+          <div class="page-title-row">
+            <h1>Computer Benchmarks</h1>
+            <button type="button" class="copy-page-btn" id="copy-page-btn" title="Copy page as Markdown">
+              <svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+              <svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>Copy page</span>
+            </button>
+          </div>
+          <p class="page-lead">Overview of OSWorld-Verified, OSWorld 2.0, MacAgentBench, and MyPCBench: desktop VM suites, Hybrid Action Space (GUI + CLI), and evaluation protocols.</p>
+        </header>
+
+        <div class="prose">
+          <p>MAI-Gym integrates four desktop operating system benchmarks—<strong>OSWorld-Verified</strong>, <strong>OSWorld 2.0</strong>, <strong>MacAgentBench</strong>, and <strong>MyPCBench</strong>—covering Ubuntu Linux and macOS environments across office suites, browsers, IDEs, file systems, media tools, and multi-service developer workflows. On all computer benchmarks, MAI-Gym enables its <strong>Hybrid Action Space (GUI + CLI)</strong>, allowing agents to seamlessly combine <code>pyautogui</code> visual interactions with direct <code>&lt;bash&gt;</code> shell execution.</p>
+<div class="callout callout-tip" role="note"><div class="callout-title"><span class="callout-dot" aria-hidden="true"></span>Tip</div><div class="callout-body"><p>Looking for detailed VM/image pinning, immutable profile lock JSONs, or coding-agent bring-up prompts? Each benchmark below links directly to its full setup skill under <a href="https://github.com/Tongyi-MAI/MAI-Gym/tree/main/skills/envs" target="_blank" rel="noopener noreferrer"><code>skills/envs/</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a> and <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/skills/envs.md" target="_blank" rel="noopener noreferrer"><code>skills/envs.md</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a>.</p></div></div>
+<hr>
+<h2 id="osworld-verified">OSWorld-Verified<a class="heading-link" href="#osworld-verified" aria-label="Link to OSWorld-Verified">#</a></h2>
+<p><strong>OSWorld-Verified</strong> (<a href="https://github.com/xlang-ai/OSWorld" target="_blank" rel="noopener noreferrer">upstream repository<svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a>) is the standard verified benchmark for open-ended Ubuntu desktop computer use, spanning LibreOffice (Calc, Writer, Impress), Chrome, GIMP, VS Code, Thunderbird, VLC, OS file management, and multi-app workflows. Each task boots from a reproducible Ubuntu VM snapshot and is graded deterministically by native Python evaluators inspecting application files, settings, and outputs.</p>
+<div class="table-wrap"><table><thead><tr><th style="text-align:left">Property</th><th style="text-align:left">Value</th></tr></thead><tbody><tr><td style="text-align:left"><strong>CLI ID (<code>--benchmarks</code>)</strong></td><td style="text-align:left"><code>osworld-verified</code></td></tr><tr><td style="text-align:left"><strong>Tasks &amp; Scope</strong></td><td style="text-align:left">361 verified Ubuntu desktop tasks across productivity, creative, web, and OS apps</td></tr><tr><td style="text-align:left"><strong>Step Budget</strong></td><td style="text-align:left">100 interaction steps</td></tr><tr><td style="text-align:left"><strong>Action Space</strong></td><td style="text-align:left">Hybrid GUI (<code>pyautogui</code>) + CLI (<code>&lt;bash&gt;</code>)</td></tr><tr><td style="text-align:left"><strong>Verification &amp; Metric</strong></td><td style="text-align:left">Native programmatic state evaluator · <code>success_rate</code></td></tr><tr><td style="text-align:left"><strong>Runtime Stack</strong></td><td style="text-align:left">Ubuntu desktop VM (Docker/KVM with pinned QCOW2 base + disposable overlays)</td></tr><tr><td style="text-align:left"><strong>MAI-Gym-9B Result</strong></td><td style="text-align:left"><strong>76.2%</strong> <em>(+34.4 over Qwen3.5-9B base · Task OOD)</em></td></tr></tbody></table></div>
+<h3 id="running-in-mai-gym">Running in MAI-Gym<a class="heading-link" href="#running-in-mai-gym" aria-label="Link to Running in MAI-Gym">#</a></h3>
+<p>Start an OSWorld-Verified manager (<code>mai-gym serve</code>) and evaluate directly—or pair it with MobileWorld in a single command (see <a href="../evaluation.html#4-add-osworld-verified">Add OSWorld-Verified</a>):</p>
+<div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"><span class="tok-cmd">uv</span> run mai-gym eval <span class="tok-flag">--config</span> <span class="tok-string">&quot;<span class="tok-var">$HOME</span>/mai-gym-eval/eval.yaml&quot;</span> \
+  <span class="tok-flag">--benchmarks</span> osworld-verified <span class="tok-flag">--trials</span> 1</code></pre></div>
+<ul><li><strong>Host requirements:</strong> Linux <code>x86_64</code>, Docker, KVM, RAM for an Ubuntu desktop VM, and disk space for the base QCOW2 + private overlays.</li><li><strong>Detailed setup &amp; agent skill:</strong> <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/skills/envs/osworld.md" target="_blank" rel="noopener noreferrer"><code>skills/envs/osworld.md</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a> · <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/src/mai_gym/envs/osworld/release.json" target="_blank" rel="noopener noreferrer"><code>release.json</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a></li></ul>
+<hr>
+<h2 id="osworld-20">OSWorld 2.0<a class="heading-link" href="#osworld-20" aria-label="Link to OSWorld 2.0">#</a></h2>
+<p><strong>OSWorld 2.0</strong> (<a href="https://github.com/xlang-ai/OSWorld-V2" target="_blank" rel="noopener noreferrer">upstream repository<svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a>, v2.1 profile) raises the difficulty bar with long-horizon, multi-step professional desktop workflows backed by supporting local websites and GitLab services. Tasks allow up to <strong>500 steps</strong> and grade multi-criterion progress via both strict full-completion binary indicators and weighted partial scores.</p>
+<div class="table-wrap"><table><thead><tr><th style="text-align:left">Property</th><th style="text-align:left">Value</th></tr></thead><tbody><tr><td style="text-align:left"><strong>CLI ID (<code>--benchmarks</code>)</strong></td><td style="text-align:left"><code>osworld-2</code></td></tr><tr><td style="text-align:left"><strong>Tasks &amp; Scope</strong></td><td style="text-align:left">108 long-horizon desktop + multi-service tasks (Ubuntu VM + local web/GitLab services)</td></tr><tr><td style="text-align:left"><strong>Step Budget</strong></td><td style="text-align:left">500 interaction steps</td></tr><tr><td style="text-align:left"><strong>Action Space</strong></td><td style="text-align:left">Hybrid GUI (<code>pyautogui</code>) + CLI (<code>&lt;bash&gt;</code>)</td></tr><tr><td style="text-align:left"><strong>Verification &amp; Metric</strong></td><td style="text-align:left">Native programmatic class evaluators · <code>binary_and_partial</code></td></tr><tr><td style="text-align:left"><strong>Runtime Stack</strong></td><td style="text-align:left">Ubuntu desktop VM (Docker/KVM) + pinned supporting web &amp; GitLab services</td></tr><tr><td style="text-align:left"><strong>MAI-Gym-9B Result</strong></td><td style="text-align:left"><strong>3.7% binary / 11.3% partial</strong> <em>(+3.7 / +8.8 over Qwen3.5-9B base · Env OOD)</em></td></tr></tbody></table></div>
+<h3 id="running-in-mai-gym-1">Running in MAI-Gym<a class="heading-link" href="#running-in-mai-gym-1" aria-label="Link to Running in MAI-Gym">#</a></h3>
+<div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"><span class="tok-cmd">uv</span> run mai-gym eval <span class="tok-flag">--config</span> /opt/profiles/eval.yaml \
+  <span class="tok-flag">--benchmarks</span> osworld-2 <span class="tok-flag">--trials</span> 1</code></pre></div>
+<ul><li><strong>Host requirements:</strong> Linux <code>x86_64</code>, Docker/KVM, Ubuntu guest QCOW2, and dedicated ports for matching task/web/GitLab services.</li><li><strong>Detailed setup &amp; agent skill:</strong> <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/skills/envs/osworld_2.md" target="_blank" rel="noopener noreferrer"><code>skills/envs/osworld_2.md</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a> · <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/src/mai_gym/envs/osworld_2/release.json" target="_blank" rel="noopener noreferrer"><code>release.json</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a></li></ul>
+<hr>
+<h2 id="macagentbench">MacAgentBench<a class="heading-link" href="#macagentbench" aria-label="Link to MacAgentBench">#</a></h2>
+<p><strong>MacAgentBench</strong> (<a href="https://github.com/JetAstra/MacAgentBench" target="_blank" rel="noopener noreferrer">upstream repository<svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a>) evaluates desktop GUI agents in a <strong>macOS</strong> environment, testing cross-OS generalization beyond Linux desktops (Finder, macOS system settings, native macOS apps, shortcuts, and workflows). Tasks are verified via native macOS checkpoint evaluators executed over isolated guest sessions.</p>
+<div class="table-wrap"><table><thead><tr><th style="text-align:left">Property</th><th style="text-align:left">Value</th></tr></thead><tbody><tr><td style="text-align:left"><strong>CLI ID (<code>--benchmarks</code>)</strong></td><td style="text-align:left"><code>macagentbench</code></td></tr><tr><td style="text-align:left"><strong>Tasks &amp; Scope</strong></td><td style="text-align:left">676 macOS desktop tasks across native apps and system workflows</td></tr><tr><td style="text-align:left"><strong>Step Budget</strong></td><td style="text-align:left">50 interaction steps</td></tr><tr><td style="text-align:left"><strong>Action Space</strong></td><td style="text-align:left">Hybrid GUI + CLI</td></tr><tr><td style="text-align:left"><strong>Verification &amp; Metric</strong></td><td style="text-align:left">Native macOS checkpoint evaluators · <code>success_rate</code></td></tr><tr><td style="text-align:left"><strong>Runtime Stack</strong></td><td style="text-align:left">KVM-hosted macOS guest VM with per-episode QCOW2 overlays and SSH control</td></tr><tr><td style="text-align:left"><strong>MAI-Gym-9B Result</strong></td><td style="text-align:left"><strong>41.3%</strong> <em>(+20.6 over Qwen3.5-9B base · Env OOD)</em></td></tr></tbody></table></div>
+<h3 id="running-in-mai-gym-2">Running in MAI-Gym<a class="heading-link" href="#running-in-mai-gym-2" aria-label="Link to Running in MAI-Gym">#</a></h3>
+<div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"><span class="tok-cmd">uv</span> run mai-gym eval <span class="tok-flag">--config</span> /opt/profiles/eval.yaml \
+  <span class="tok-flag">--benchmarks</span> macagentbench <span class="tok-flag">--trials</span> 1</code></pre></div>
+<ul><li><strong>Host requirements:</strong> KVM-capable VM host, pinned macOS disk &amp; BaseSystem images, SSH access to the guest, and memory/disk headroom for writable overlays.</li><li><strong>Detailed setup &amp; agent skill:</strong> <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/skills/envs/macagentbench.md" target="_blank" rel="noopener noreferrer"><code>skills/envs/macagentbench.md</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a> · <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/src/mai_gym/envs/macagentbench/release.json" target="_blank" rel="noopener noreferrer"><code>release.json</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a></li></ul>
+<hr>
+<h2 id="mypcbench">MyPCBench<a class="heading-link" href="#mypcbench" aria-label="Link to MyPCBench">#</a></h2>
+<p><strong>MyPCBench</strong> (<a href="https://github.com/ljang0/MyPCBench" target="_blank" rel="noopener noreferrer">upstream repository<svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a>) evaluates practical everyday desktop computer tasks on a clean <strong>Ubuntu desktop VM</strong> managed directly through QEMU and OVMF UEFI firmware. Unlike purely programmatic suites, MyPCBench constructs native rubric bundles and grades completed episodes via offline full-trajectory VLM rubric evaluation, reporting the <code>perfect_task_rate</code> metric.</p>
+<div class="table-wrap"><table><thead><tr><th style="text-align:left">Property</th><th style="text-align:left">Value</th></tr></thead><tbody><tr><td style="text-align:left"><strong>CLI ID (<code>--benchmarks</code>)</strong></td><td style="text-align:left"><code>mypcbench</code></td></tr><tr><td style="text-align:left"><strong>Tasks &amp; Scope</strong></td><td style="text-align:left">184 personal-computer desktop tasks with inlined grading rubrics</td></tr><tr><td style="text-align:left"><strong>Step Budget</strong></td><td style="text-align:left">100 interaction steps</td></tr><tr><td style="text-align:left"><strong>Action Space</strong></td><td style="text-align:left">Hybrid GUI + CLI</td></tr><tr><td style="text-align:left"><strong>Verification &amp; Metric</strong></td><td style="text-align:left">Native rubric-based VLM trajectory grading · <code>perfect_task_rate</code></td></tr><tr><td style="text-align:left"><strong>Runtime Stack</strong></td><td style="text-align:left">Ubuntu desktop VM via QEMU (<code>qemu-system-x86_64</code>) + OVMF firmware (Linux KVM, no GPU required)</td></tr><tr><td style="text-align:left"><strong>MAI-Gym-9B Result</strong></td><td style="text-align:left"><strong>15.2%</strong> <em>(+8.7 over Qwen3.5-9B base · Env OOD)</em></td></tr></tbody></table></div>
+<h3 id="running-in-mai-gym-3">Running in MAI-Gym<a class="heading-link" href="#running-in-mai-gym-3" aria-label="Link to Running in MAI-Gym">#</a></h3>
+<p>Configure both the QEMU worker and your rubric judge endpoint (<code>JUDGE_API_KEY</code>) in the worker settings, then run:</p>
+<div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"><span class="tok-cmd">uv</span> run mai-gym eval <span class="tok-flag">--config</span> /opt/profiles/eval.yaml \
+  <span class="tok-flag">--benchmarks</span> mypcbench <span class="tok-flag">--trials</span> 1</code></pre></div>
+<ul><li><strong>Host requirements:</strong> Linux <code>x86_64</code>, KVM, <code>qemu-system-x86_64</code>, <code>qemu-img</code>, OVMF firmware, Ubuntu base QCOW2, and a judge API endpoint.</li><li><strong>Detailed setup &amp; agent skill:</strong> <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/skills/envs/mypcbench.md" target="_blank" rel="noopener noreferrer"><code>skills/envs/mypcbench.md</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a> · <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/src/mai_gym/envs/mypcbench/release.json" target="_blank" rel="noopener noreferrer"><code>release.json</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a></li></ul>
+<hr>
+<h2 id="next-steps">Next Steps<a class="heading-link" href="#next-steps" aria-label="Link to Next Steps">#</a></h2>
+<ul><li>Learn how the Hybrid Action Space combines GUI and <code>&lt;bash&gt;</code> CLI: <a href="../concepts.html#hybrid-action-space">Platform &amp; Core Concepts</a></li><li>Compare across all benchmarks: <a href="../environments.html">Benchmarks Overview</a></li><li>Explore browser benchmarks: <a href="web.html">Web Benchmarks</a></li></ul>
+        </div>
+
+        <nav class="pagination" aria-label="Pagination">
+          <a class="pag-link prev" href="mobile.html"><span class="pag-label">Previous</span><span class="pag-title">&larr; Mobile Benchmarks</span></a>
+          <a class="pag-link next" href="web.html"><span class="pag-label">Next</span><span class="pag-title">Web Benchmarks &rarr;</span></a>
+        </nav>
+
+        <footer class="doc-footer">
+          <div class="doc-footer-links">
+            <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/site/docs/raw/envs/computer.md" target="_blank" rel="noopener noreferrer">Edit this page on GitHub &nearr;</a>
+            <a href="https://github.com/Tongyi-MAI/MAI-Gym/issues/new?title=Docs:%20Computer Benchmarks" target="_blank" rel="noopener noreferrer">Raise a docs issue &nearr;</a>
+            <a href="../llms.txt">llms.txt</a>
+          </div>
+          <p class="doc-footer-meta">MAI-Gym · MIT License · Tongyi-MAI</p>
+        </footer>
+      </article>
+    </main>
+
+    <aside class="toc-rail" aria-label="On this page">
+      <div class="toc-inner">
+        <p class="toc-title">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M2.5 4h11M2.5 8h7M2.5 12h11"/></svg>
+          On this page
+        </p>
+        <ul class="toc-list" id="toc-list"><li><a class="toc-link" href="#osworld-verified">OSWorld-Verified</a></li><li><a class="toc-link toc-h3" href="#running-in-mai-gym">Running in MAI-Gym</a></li><li><a class="toc-link" href="#osworld-20">OSWorld 2.0</a></li><li><a class="toc-link toc-h3" href="#running-in-mai-gym-1">Running in MAI-Gym</a></li><li><a class="toc-link" href="#macagentbench">MacAgentBench</a></li><li><a class="toc-link toc-h3" href="#running-in-mai-gym-2">Running in MAI-Gym</a></li><li><a class="toc-link" href="#mypcbench">MyPCBench</a></li><li><a class="toc-link toc-h3" href="#running-in-mai-gym-3">Running in MAI-Gym</a></li><li><a class="toc-link" href="#next-steps">Next Steps</a></li></ul>
+        <div class="toc-actions">
+          <a href="#top" class="toc-action-link" id="back-to-top">&uarr; Back to top</a>
+          <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/site/docs/raw/envs/computer.md" class="toc-action-link" target="_blank" rel="noopener noreferrer">View Markdown &nearr;</a>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <dialog class="search-dialog" id="search-dialog" aria-label="Search documentation">
+    <div class="search-box">
+      <div class="search-input-row">
+        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="5.2"/><path d="m12 12 3.6 3.6"/></svg>
+        <input id="search-input" type="search" placeholder="Search documentation, CLI flags, benchmarks..." autocomplete="off" spellcheck="false">
+        <button type="button" class="search-esc" id="search-close">ESC</button>
+      </div>
+      <div class="search-results" id="search-results" role="listbox"></div>
+      <div class="search-foot">
+        <span><kbd>&uarr;</kbd><kbd>&darr;</kbd> navigate</span>
+        <span><kbd>Enter</kbd> open</span>
+        <span><kbd>Esc</kbd> close</span>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="img-dialog" id="img-dialog" aria-label="Image preview">
+    <button type="button" class="img-dialog-close" id="img-dialog-close" aria-label="Close preview">&times;</button>
+    <img id="img-dialog-src" alt="">
+  </dialog>
+</body>
+</html>

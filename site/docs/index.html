@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Install the MAI-Gym CLI and run your first verified GUI agent evaluation—locally on Mocked Apps (no Docker/KVM) or on MobileWorld—plus visual replay and optional online RL.">
+  <link rel="canonical" href="https://tongyi-mai.github.io/MAI-Gym/docs/">
+  <meta property="og:site_name" content="MAI-Gym Docs">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Quickstart — MAI-Gym Docs">
+  <meta property="og:description" content="Install the MAI-Gym CLI and run your first verified GUI agent evaluation—locally on Mocked Apps (no Docker/KVM) or on MobileWorld—plus visual replay and optional online RL.">
+  <meta property="og:url" content="https://tongyi-mai.github.io/MAI-Gym/docs/">
+  <meta property="og:image" content="https://tongyi-mai.github.io/MAI-Gym/assets/figs/overview.webp">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Quickstart — MAI-Gym Docs">
+  <meta name="twitter:description" content="Install the MAI-Gym CLI and run your first verified GUI agent evaluation—locally on Mocked Apps (no Docker/KVM) or on MobileWorld—plus visual replay and optional online RL.">
+  <meta name="twitter:image" content="https://tongyi-mai.github.io/MAI-Gym/assets/figs/overview.webp">
+  <title>Quickstart — MAI-Gym Docs</title>
+  <link rel="icon" type="image/png" href="../assets/favicon.png">
+  <script>
+    (function () {
+      var t;
+      try { t = localStorage.getItem('maigym.theme'); } catch (e) {}
+      document.documentElement.dataset.theme = t === 'day' ? 'day' : 'night';
+    })();
+  </script>
+  <link rel="preload" href="../assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="assets/docs.css">
+  <script>
+    window.MAIGYM_DOCS = {
+      root: "",
+      rawMd: "raw/index.md",
+      slug: "index.html"
+    };
+  </script>
+  <script src="assets/docs.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#doc-content">Skip to main content</a>
+
+  <header class="topbar" id="topbar">
+    <div class="topbar-row">
+      <div class="topbar-left">
+        <button class="mobile-nav-btn" id="mobile-nav-btn" type="button" aria-label="Toggle navigation" aria-expanded="false">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 5.5h14M3 10h14M3 14.5h14"/></svg>
+        </button>
+        <a class="brand" href="index.html" aria-label="MAI-Gym Documentation home">
+          <img src="../assets/mark.svg" width="26" height="26" alt="">
+          <span class="brand-name">MAI-<span>Gym</span></span>
+          <span class="brand-pill">Docs</span>
+        </a>
+      </div>
+
+      <button class="search-trigger" id="search-trigger" type="button" aria-label="Search documentation">
+        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="5.2"/><path d="m12 12 3.6 3.6"/></svg>
+        <span>Search docs...</span>
+        <kbd>⌘K</kbd>
+      </button>
+
+      <div class="topbar-right">
+        <a class="top-link" href="../index.html">Project Page</a>
+        <a class="top-link" href="https://arxiv.org/abs/2610.20939" target="_blank" rel="noopener noreferrer">Paper</a>
+        <a class="top-link" href="https://huggingface.co/Tongyi-MAI/MAI-Gym-9B" target="_blank" rel="noopener noreferrer">Model</a>
+        <a class="repo-chip" href="https://github.com/Tongyi-MAI/MAI-Gym" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+          <span>Tongyi-MAI/MAI-Gym</span>
+        </a>
+        <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle color theme" title="Switch light / dark theme">
+          <svg class="i-sun" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="3.6" fill="currentColor"/><path d="M10 1.8v2.1M10 16.1v2.1M1.8 10h2.1M16.1 10h2.1M4.2 4.2l1.5 1.5M14.3 14.3l1.5 1.5M4.2 15.8l1.5-1.5M14.3 5.7l1.5-1.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <svg class="i-moon" viewBox="0 0 20 20" aria-hidden="true"><path d="M16.2 12.6A6.8 6.8 0 0 1 7.4 3.8a6.8 6.8 0 1 0 8.8 8.8z" fill="currentColor"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="drawer-backdrop" id="drawer-backdrop" hidden></div>
+
+  <div class="doc-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Documentation navigation">
+      <div class="side-group"><p class="side-heading">Overview</p><ul><li><a class="side-link active" aria-current="page" href="index.html">Quickstart</a></li><li><a class="side-link" href="concepts.html">Platform &amp; Core Concepts</a></li><li><a class="side-link" href="mai-gym-9b.html">MAI-Gym-9B</a></li><li><a class="side-link" href="dashboard.html">Trajectory Dashboard</a></li></ul></div><div class="side-group"><p class="side-heading">User Guide</p><ul><li><a class="side-link" href="evaluation.html">Evaluation Guide</a></li><li><a class="side-link" href="training.html">Online RL Training</a></li><li><a class="side-link" href="rollout.html">Rollout CLI</a></li><li><a class="side-link" href="kubernetes.html">Kubernetes Fleets</a></li></ul></div><div class="side-group"><p class="side-heading">Benchmarks &amp; Environments</p><ul><li><a class="side-link" href="environments.html">Benchmarks Overview</a></li><li><a class="side-link" href="mocked-apps.html">Mocked Apps</a></li><li><a class="side-link" href="envs/mobile.html">Mobile Benchmarks</a></li><li><a class="side-link" href="envs/computer.html">Computer Benchmarks</a></li><li><a class="side-link" href="envs/web.html">Web Benchmarks</a></li></ul></div><div class="side-group"><p class="side-heading">Customization</p><ul><li><a class="side-link" href="extending.html">Extending MAI-Gym</a></li><li><a class="side-link" href="coding-agents.html">Coding-Agent Setup</a></li><li><a class="side-link" href="development.html">Development &amp; Layout</a></li><li><a class="side-link" href="licensing.html">Licensing &amp; Notices</a></li></ul></div>
+    </aside>
+
+    <main class="doc-main" id="doc-content">
+      <article class="doc-article">
+        <header class="page-header">
+          <div class="page-eyebrow">Overview</div>
+          <div class="page-title-row">
+            <h1>Quickstart</h1>
+            <button type="button" class="copy-page-btn" id="copy-page-btn" title="Copy page as Markdown">
+              <svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+              <svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>Copy page</span>
+            </button>
+          </div>
+          <p class="page-lead">Install the MAI-Gym CLI and run your first verified GUI agent evaluation—locally on Mocked Apps (no Docker/KVM) or on MobileWorld—plus visual replay and optional online RL.</p>
+        </header>
+
+        <div class="prose">
+          <p><strong>MAI-Gym</strong> is an open, all-in-one platform for evaluating GUI agents (<code>mai-gym eval</code>), collecting interaction trajectories (<code>mai-gym rollout</code>), and running online reinforcement learning (<code>mai-gym train</code>) across <strong>Mobile</strong>, <strong>Computer</strong>, and <strong>Web</strong> environments—scaling from a single local browser or emulator to <strong>20,000+ concurrent cloud instances</strong>.</p>
+<p>Follow the steps below to go from a clean checkout to your first verified GUI agent evaluation. Choose <strong>Option A</strong> for a zero-Docker local tryout with <strong>Mocked Apps</strong>, or <strong>Option B</strong> for a full Android emulator evaluation on <strong>MobileWorld</strong> and optional online RL training.</p>
+<div class="callout callout-tip" role="note"><div class="callout-title"><span class="callout-dot" aria-hidden="true"></span>Tip</div><div class="callout-body"><p><strong>Using a coding agent (Claude Code, Codex, Cursor)?</strong> Agent-readable setup guides live under <a href="coding-agents.html"><code>skills/README.md</code></a>. Open this repository in your coding agent to automate benchmark preparation, reset checks, evaluation, and training bring-up.</p></div></div>
+<hr>
+<span id="install-the-cli" class="doc-anchor"></span><h2 id="1-install-the-cli">1. Install the CLI<a class="heading-link" href="#1-install-the-cli" aria-label="Link to 1. Install the CLI">#</a></h2>
+<p>Requires <strong>Python 3.12+</strong> and <a href="https://docs.astral.sh/uv/getting-started/installation/" target="_blank" rel="noopener noreferrer"><code>uv</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a> (<code>curl -LsSf https://astral.sh/uv/install.sh | sh</code> on Linux/macOS). From the repository root:</p>
+<div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"><span class="tok-cmd">git</span> clone https://github.com/Tongyi-MAI/MAI-Gym.git
+<span class="tok-cmd">cd</span> MAI-Gym
+<span class="tok-cmd">uv</span> sync <span class="tok-flag">--locked</span> <span class="tok-flag">--python</span> 3.12
+<span class="tok-cmd">uv</span> run mai-gym <span class="tok-flag">--help</span></code></pre></div>
+<p>Confirm that the help output lists <code>serve</code>, <code>eval</code>, <code>rollout</code>, and <code>train</code>.</p>
+<div class="callout callout-note" role="note"><div class="callout-title"><span class="callout-dot" aria-hidden="true"></span>Note</div><div class="callout-body"><p>If an existing environment reports <code>Failed to spawn: mai-gym</code>, restore the CLI entry point with:</p>
+<div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"><span class="tok-cmd">uv</span> sync <span class="tok-flag">--locked</span> <span class="tok-flag">--python</span> 3.12 <span class="tok-flag">--reinstall-package</span> mai-gym</code></pre></div></div></div>
+<hr>
+<span id="try-mocked-apps-locally" class="doc-anchor"></span><h2 id="2-option-a--fast-local-tryout-mocked-apps-no-docker-or-kvm">2. Option A — Fast Local Tryout: Mocked Apps (No Docker or KVM)<a class="heading-link" href="#2-option-a--fast-local-tryout-mocked-apps-no-docker-or-kvm" aria-label="Link to 2. Option A — Fast Local Tryout: Mocked Apps (No Docker or KVM)">#</a></h2>
+<p>This repository bundles <strong>42 browser-based Novel Apps</strong> (837 verified tasks with deterministic verifiers and reference oracle trajectories) under <a href="https://github.com/Tongyi-MAI/MAI-Gym/tree/main/resources/novel-apps" target="_blank" rel="noopener noreferrer"><code>resources/novel-apps/</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a>. Run an end-to-end evaluation on macOS or Linux using only Chromium and an OpenAI-compatible vision model endpoint:</p>
+<div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"><span class="tok-cmd">uv</span> run playwright install chromium
+
+<span class="tok-cmd">export</span> MODEL_URL=<span class="tok-string">&quot;http://127.0.0.1:8000/v1&quot;</span>
+<span class="tok-cmd">export</span> MODEL_NAME=<span class="tok-string">&quot;Tongyi-MAI/MAI-Gym-9B&quot;</span>
+<span class="tok-cmd">export</span> OPENAI_API_KEY=<span class="tok-string">&quot;your-api-key&quot;</span><span class="tok-comment"> # if required</span>
+
+<span class="tok-cmd">uv</span> run mai-gym eval <span class="tok-flag">--config</span> configs/mocked-apps.yaml <span class="tok-flag">--benchmarks</span> mocked-apps \
+  <span class="tok-flag">--model</span> <span class="tok-string">&quot;<span class="tok-var">$MODEL_URL</span>&quot;</span> <span class="tok-flag">--model-name</span> <span class="tok-string">&quot;<span class="tok-var">$MODEL_NAME</span>&quot;</span> <span class="tok-flag">--trials</span> 1</code></pre></div>
+<p><a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/configs/mocked-apps.yaml" target="_blank" rel="noopener noreferrer"><code>configs/mocked-apps.yaml</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a> launches a local web backend and manager, executes <code>kestrel_bank/T01_freeze</code> in headless Chromium, verifies the final app state, and writes the full-success outcome and weighted partial score to the printed <code>results.json</code>. See <a href="mocked-apps.html">Mocked Apps</a> to select other apps/tasks or run all 837 tasks.</p>
+<hr>
+<span id="prepare-a-mobileworld-environment" class="doc-anchor"></span><h2 id="3-option-b--mobileworld-evaluation-android-emulator">3. Option B — MobileWorld Evaluation (Android Emulator)<a class="heading-link" href="#3-option-b--mobileworld-evaluation-android-emulator" aria-label="Link to 3. Option B — MobileWorld Evaluation (Android Emulator)">#</a></h2>
+<h3 id="start-a-mobileworld-backend">Start a MobileWorld backend<a class="heading-link" href="#start-a-mobileworld-backend" aria-label="Link to Start a MobileWorld backend">#</a></h3>
+<div class="callout callout-note" role="note"><div class="callout-title"><span class="callout-dot" aria-hidden="true"></span>Note</div><div class="callout-body"><p>Deploying across multiple nodes? Follow the <a href="kubernetes.html">Kubernetes Fleets</a> guide and pass the fleet manager URL in <code>eval.yaml</code>.</p></div></div>
+<p>On a Linux <code>x86_64</code> host with Docker and KVM enabled, launch a single Android emulator backend (skip to the <code>curl</code> checks if you already have a running backend):</p>
+<div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"><span class="tok-var">MW_SRC</span>=<span class="tok-string">&quot;<span class="tok-var">$HOME</span>/MobileWorld&quot;</span>
+<span class="tok-cmd">git</span> clone <span class="tok-flag">--depth</span> 1 https://github.com/Tongyi-MAI/MobileWorld.git <span class="tok-string">&quot;<span class="tok-var">$MW_SRC</span>&quot;</span>
+<span class="tok-cmd">cp</span> <span class="tok-flag">-i</span> <span class="tok-string">&quot;<span class="tok-var">$MW_SRC</span>/.env.example&quot;</span> <span class="tok-string">&quot;<span class="tok-var">$MW_SRC</span>/.env&quot;</span>
+<span class="tok-cmd">uv</span> run <span class="tok-flag">--directory</span> <span class="tok-string">&quot;<span class="tok-var">$HOME</span>&quot;</span> <span class="tok-flag">--project</span> <span class="tok-string">&quot;<span class="tok-var">$MW_SRC</span>&quot;</span> <span class="tok-flag">--python</span> 3.12 mw env run <span class="tok-flag">--count</span> 1 \
+  <span class="tok-flag">--name-prefix</span> mai-gym-quickstart <span class="tok-flag">--backend-start-port</span> 6800 \
+  <span class="tok-flag">--image</span> ghcr.io/tongyi-mai/mobile_world:v1 <span class="tok-flag">--env-file</span> <span class="tok-string">&quot;<span class="tok-var">$MW_SRC</span>/.env&quot;</span></code></pre></div>
+<p>Initialize the emulator and verify that <code>SetAlarmTask</code> is registered:</p>
+<div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"><span class="tok-var">MOBILEWORLD_URL</span>=http://127.0.0.1:6800
+<span class="tok-cmd">curl</span> <span class="tok-flag">-fsS</span> <span class="tok-string">&quot;<span class="tok-var">$MOBILEWORLD_URL</span>/init?device=emulator-5554&quot;</span>
+<span class="tok-cmd">curl</span> <span class="tok-flag">-fsS</span> <span class="tok-string">&quot;<span class="tok-var">$MOBILEWORLD_URL</span>/health&quot;</span>
+<span class="tok-cmd">curl</span> <span class="tok-flag">-fsS</span> <span class="tok-string">&quot;<span class="tok-var">$MOBILEWORLD_URL</span>/task/list&quot;</span> | uv run python <span class="tok-flag">-m</span> json.tool</code></pre></div>
+<p>If your task profile differs, pick any GUI-only task ID from the returned list and use it consistently below. See <a href="envs/mobile.html#mobileworld">Mobile Benchmarks</a> for an overview or <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/skills/envs/mobileworld.md" target="_blank" rel="noopener noreferrer"><code>skills/envs/mobileworld.md</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a> for immutable profile lock setup.</p>
+<span id="run-a-mobileworld-evaluation" class="doc-anchor"></span><h3 id="configure-and-evaluate-mai-gym-9b">Configure and evaluate <code>MAI-Gym-9B</code><a class="heading-link" href="#configure-and-evaluate-mai-gym-9b" aria-label="Link to Configure and evaluate MAI-Gym-9B">#</a></h3>
+<p>Download <a href="https://huggingface.co/Tongyi-MAI/MAI-Gym-9B" target="_blank" rel="noopener noreferrer"><code>Tongyi-MAI/MAI-Gym-9B</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a> and copy the sample configurations into a working directory outside the checkout:</p>
+<div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"><span class="tok-var">EVAL_DIR</span>=<span class="tok-string">&quot;<span class="tok-var">$HOME</span>/mai-gym-eval&quot;</span>
+<span class="tok-var">DATA_DIR</span>=<span class="tok-string">&quot;<span class="tok-var">$HOME</span>/mai-gym-data&quot;</span>
+<span class="tok-cmd">mkdir</span> <span class="tok-flag">-p</span> <span class="tok-string">&quot;<span class="tok-var">$EVAL_DIR</span>&quot;</span> <span class="tok-string">&quot;<span class="tok-var">$DATA_DIR</span>&quot;</span>
+
+<span class="tok-cmd">uvx</span> <span class="tok-flag">--from</span> huggingface-hub hf download Tongyi-MAI/MAI-Gym-9B <span class="tok-flag">--local-dir</span> <span class="tok-string">&quot;<span class="tok-var">$DATA_DIR</span>/hf-model&quot;</span>
+<span class="tok-cmd">cp</span> <span class="tok-flag">-i</span> configs/eval.yaml configs/mobileworld.yaml <span class="tok-string">&quot;<span class="tok-var">$EVAL_DIR</span>/&quot;</span></code></pre></div>
+<p>Configure <code>$EVAL_DIR/eval.yaml</code> to run <code>SetAlarmTask</code>:</p>
+<div class="code-block" data-lang="yaml"><div class="code-head"><span class="code-lang">yaml</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-yaml"><span class="tok-key">model</span>:
+  <span class="tok-key">name</span>: <span class="tok-string">Tongyi-MAI/MAI-Gym-9B</span>
+<span class="tok-key">benchmarks</span>:
+  <span class="tok-key">mobileworld</span>:
+    <span class="tok-key">manager_config</span>: <span class="tok-string">mobileworld.yaml</span>
+    <span class="tok-key">num_envs</span>: <span class="tok-num">1</span>
+    <span class="tok-key">tasks</span>: <span class="tok-string">[SetAlarmTask]</span></code></pre></div>
+<p>Ensure <code>$EVAL_DIR/mobileworld.yaml</code> points to your backend URL (<code>http://127.0.0.1:6800</code>):</p>
+<div class="code-block" data-lang="yaml"><div class="code-head"><span class="code-lang">yaml</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-yaml"><span class="tok-key">devices</span>:
+  - <span class="tok-key">name</span>: <span class="tok-string">local-mobileworld</span>
+    <span class="tok-key">env_type</span>: <span class="tok-string">mobileworld</span>
+    <span class="tok-key">connection</span>:
+      <span class="tok-key">attach</span>:
+        <span class="tok-key">backends</span>:
+          - <span class="tok-key">url</span>: <span class="tok-string">http://127.0.0.1:6800</span>
+<span class="tok-key">manager</span>:
+  <span class="tok-key">port</span>: <span class="tok-num">8090</span></code></pre></div>
+<p>Run a 1-trial evaluation (the CLI automatically launches and tears down SGLang for local Hugging Face checkpoints):</p>
+<div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"><span class="tok-cmd">uv</span> run <span class="tok-flag">--with</span> sglang mai-gym eval <span class="tok-flag">--config</span> <span class="tok-string">&quot;<span class="tok-var">$EVAL_DIR</span>/eval.yaml&quot;</span> \
+  <span class="tok-flag">--model</span> <span class="tok-string">&quot;<span class="tok-var">$DATA_DIR</span>/hf-model&quot;</span> <span class="tok-flag">--benchmarks</span> mobileworld <span class="tok-flag">--trials</span> 1 \
+  <span class="tok-flag">--output</span> <span class="tok-string">&quot;<span class="tok-var">$EVAL_DIR</span>/runs&quot;</span></code></pre></div>
+<div class="callout callout-tip" role="note"><div class="callout-title"><span class="callout-dot" aria-hidden="true"></span>Tip</div><div class="callout-body"><p><strong>Using an existing OpenAI-compatible API endpoint instead of local SGLang?</strong> Skip the checkpoint download and pass the API base URL and model ID directly:</p>
+<div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"><span class="tok-cmd">export</span> OPENAI_API_KEY=<span class="tok-string">&quot;your-api-key&quot;</span><span class="tok-comment"> # if required</span>
+<span class="tok-cmd">uv</span> run mai-gym eval <span class="tok-flag">--config</span> <span class="tok-string">&quot;<span class="tok-var">$EVAL_DIR</span>/eval.yaml&quot;</span> \
+  <span class="tok-flag">--model</span> http://127.0.0.1:8000/v1 <span class="tok-flag">--model-name</span> Tongyi-MAI/MAI-Gym-9B \
+  <span class="tok-flag">--benchmarks</span> mobileworld <span class="tok-flag">--trials</span> 1 <span class="tok-flag">--output</span> <span class="tok-string">&quot;<span class="tok-var">$EVAL_DIR</span>/runs&quot;</span></code></pre></div></div></div>
+<p>Check the printed <code>results.json</code> (<code>success_rate: 1.0</code> and <code>unscored_trials: 0</code> indicate native success).</p>
+<hr>
+<h2 id="4-inspect-results-visually-in-the-control-room-dashboard">4. Inspect Results Visually in the Control Room Dashboard<a class="heading-link" href="#4-inspect-results-visually-in-the-control-room-dashboard" aria-label="Link to 4. Inspect Results Visually in the Control Room Dashboard">#</a></h2>
+<p>Every benchmark score and RL rollout batch traces back to live fleet telemetry and step-by-step screenshots in the embedded <a href="dashboard.html">Rust Trajectory Dashboard</a>. Launch the dashboard against your trajectory root to monitor active sessions, compare checkpoints, and inspect drawn click/drag overlays alongside model reasoning traces and deterministic verifier criteria:</p>
+<div class="figure-grid"><figure class="doc-figure"><img src="../assets/figs/dash_trajectory.webp" alt="Trajectory Replay — Step-by-step screenshots with drawn click/drag overlays, model reasoning traces, tool calls, and verifier criteria" loading="lazy" data-zoomable><figcaption>Trajectory Replay — Step-by-step screenshots with drawn click/drag overlays, model reasoning traces, tool calls, and verifier criteria</figcaption></figure><figure class="doc-figure"><img src="../assets/figs/dash_fleet.webp" alt="Fleet Overview — Real-time capacity snapshot, active session leases, steps/sec throughput timeline, and session inventory" loading="lazy" data-zoomable><figcaption>Fleet Overview — Real-time capacity snapshot, active session leases, steps/sec throughput timeline, and session inventory</figcaption></figure></div>
+<p>See <a href="dashboard.html">Trajectory Dashboard</a> for all four views (<strong>Trajectory Replay</strong>, <strong>Run Explorer</strong>, <strong>Fleet Overview</strong>, <strong>Benchmark Matrix</strong>), build steps, and the HTTP diagnosis API.</p>
+<hr>
+<h2 id="5-train-a-gui-agent-with-online-rl-optional">5. Train a GUI Agent with Online RL (Optional)<a class="heading-link" href="#5-train-a-gui-agent-with-online-rl-optional" aria-label="Link to 5. Train a GUI Agent with Online RL (Optional)">#</a></h2>
+<p>To verify end-to-end online RL (GRPO) on a single MobileWorld task (<code>QuickstartOpenSettings</code>, using <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/examples/mobileworld/open_settings.py" target="_blank" rel="noopener noreferrer"><code>examples/mobileworld/open_settings.py</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a>):</p>
+<ol><li><p><strong>Register the custom task</strong> in your MobileWorld container (or via live <code>POST /task/register</code> on the customized MobileWorld image):</p><div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"> <span class="tok-var">MW_CONTAINER</span>=mai-gym-quickstart_0
+ <span class="tok-var">MOBILEWORLD_URL</span>=http://127.0.0.1:6800
+
+ <span class="tok-cmd">docker</span> cp examples/mobileworld/open_settings.py \
+   <span class="tok-string">&quot;<span class="tok-var">$MW_CONTAINER</span>:/app/service/src/mobile_world/tasks/definitions/quickstart_open_settings.py&quot;</span>
+ <span class="tok-cmd">docker</span> restart <span class="tok-string">&quot;<span class="tok-var">$MW_CONTAINER</span>&quot;</span>
+ <span class="tok-cmd">curl</span> <span class="tok-flag">-fsS</span> <span class="tok-flag">--retry</span> 60 <span class="tok-flag">--retry-all-errors</span> <span class="tok-flag">--retry-delay</span> 2 <span class="tok-string">&quot;<span class="tok-var">$MOBILEWORLD_URL</span>/init?device=emulator-5554&quot;</span>
+ <span class="tok-cmd">curl</span> <span class="tok-flag">-fsS</span> <span class="tok-string">&quot;<span class="tok-var">$MOBILEWORLD_URL</span>/task/goal?task_name=QuickstartOpenSettings&quot;</span></code></pre></div></li><li><p><strong>Start a persistent environment manager</strong> in a separate terminal:</p><div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"> <span class="tok-cmd">uv</span> run mai-gym serve <span class="tok-flag">--config</span> <span class="tok-string">&quot;<span class="tok-var">$HOME</span>/mai-gym-eval/mobileworld.yaml&quot;</span></code></pre></div></li><li><p><strong>Prepare the task pool and starter config</strong> (reusing <code>$HOME/mai-gym-data/hf-model</code> from Step 3):</p><div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"> <span class="tok-var">TRAIN_DIR</span>=<span class="tok-string">&quot;<span class="tok-var">$HOME</span>/mai-gym-data&quot;</span>
+ <span class="tok-cmd">mkdir</span> <span class="tok-flag">-p</span> <span class="tok-string">&quot;<span class="tok-var">$TRAIN_DIR</span>/runs&quot;</span>
+ <span class="tok-cmd">cp</span> <span class="tok-flag">-i</span> configs/train-quickstart.yaml <span class="tok-string">&quot;<span class="tok-var">$TRAIN_DIR</span>/train.yaml&quot;</span>
+
+ <span class="tok-cmd">printf</span> <span class="tok-string">&#x27;%s\n&#x27;</span> &#x27;{<span class="tok-string">&quot;prompt&quot;</span>:<span class="tok-string">&quot;Open the Android Settings app and leave it in the foreground.&quot;</span>,<span class="tok-string">&quot;label&quot;</span>:<span class="tok-string">&quot;&quot;</span>,<span class="tok-string">&quot;metadata&quot;</span>:{<span class="tok-string">&quot;task_id&quot;</span>:<span class="tok-string">&quot;QuickstartOpenSettings&quot;</span>,<span class="tok-string">&quot;env_type&quot;</span>:<span class="tok-string">&quot;mobileworld&quot;</span>}}&#x27; \
+   &gt; <span class="tok-string">&quot;<span class="tok-var">$TRAIN_DIR</span>/mobileworld.jsonl&quot;</span></code></pre></div></li><li><p><strong>Launch training inside the prebuilt Slime container</strong> on a 4-GPU Linux host:</p><div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"> <span class="tok-cmd">docker</span> run <span class="tok-flag">--rm</span> <span class="tok-flag">-it</span> <span class="tok-flag">--gpus</span> all <span class="tok-flag">--ipc</span>=host <span class="tok-flag">--network</span>=host \
+   <span class="tok-flag">-v</span> <span class="tok-string">&quot;<span class="tok-var">$PWD</span>:/workspace/MAI-Gym&quot;</span> <span class="tok-flag">-w</span> /workspace/MAI-Gym <span class="tok-flag">-e</span> MAI_GYM_ROOT=/workspace/MAI-Gym \
+   <span class="tok-flag">-v</span> <span class="tok-string">&quot;<span class="tok-var">$TRAIN_DIR</span>:/data:ro&quot;</span> <span class="tok-flag">-v</span> <span class="tok-string">&quot;<span class="tok-var">$TRAIN_DIR</span>/runs:/runs&quot;</span> \
+   ghcr.io/tongyi-mai/mai_gym_slime:v1 bash</code></pre></div>
+<p>Inside the container:</p>
+<div class="code-block" data-lang="bash"><div class="code-head"><span class="code-lang">bash</span><button type="button" class="copy-btn" data-copy-code aria-label="Copy code"><svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy</span></button></div><pre tabindex="0"><code class="lang-bash"> <span class="tok-cmd">python</span> <span class="tok-flag">-m</span> pip install <span class="tok-flag">--no-deps</span> <span class="tok-flag">-e</span> .
+ <span class="tok-cmd">ray</span> start <span class="tok-flag">--head</span>
+ <span class="tok-cmd">mai-gym</span> train <span class="tok-flag">--config</span> /data/train.yaml</code></pre></div></li></ol>
+<p>After round 1 finishes, the exported Hugging Face checkpoint is saved on the host under <code>$TRAIN_DIR/runs/first-run/hf/</code>.</p>
+<hr>
+<h2 id="cli-at-a-glance">CLI at a Glance<a class="heading-link" href="#cli-at-a-glance" aria-label="Link to CLI at a Glance">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th style="text-align:left">Command</th><th style="text-align:left">Purpose</th><th style="text-align:left">Primary Guide</th></tr></thead><tbody><tr><td style="text-align:left"><code>mai-gym serve</code></td><td style="text-align:left">Start a persistent environment manager serving local, Docker, SSH, or Kubernetes backends</td><td style="text-align:left"><a href="kubernetes.html">Kubernetes Fleets</a> · <a href="environments.html">Benchmarks Overview</a></td></tr><tr><td style="text-align:left"><code>mai-gym eval</code></td><td style="text-align:left">Run single- or multi-benchmark evaluations with native metrics and <code>pass@N</code> reports</td><td style="text-align:left"><a href="evaluation.html">Evaluation Guide</a></td></tr><tr><td style="text-align:left"><code>mai-gym rollout</code></td><td style="text-align:left">Execute tasks directly for agent debugging, trajectory collection, and controlled retries</td><td style="text-align:left"><a href="rollout.html">Rollout CLI</a></td></tr><tr><td style="text-align:left"><code>mai-gym train</code></td><td style="text-align:left">Launch online RL training (GRPO, DAPO, GSPO, REINFORCE++, SAO, PPO) via Slime</td><td style="text-align:left"><a href="training.html">Online RL Training</a></td></tr></tbody></table></div>
+        </div>
+
+        <nav class="pagination" aria-label="Pagination">
+          <span class="pag-spacer"></span>
+          <a class="pag-link next" href="concepts.html"><span class="pag-label">Next</span><span class="pag-title">Platform &amp; Core Concepts &rarr;</span></a>
+        </nav>
+
+        <footer class="doc-footer">
+          <div class="doc-footer-links">
+            <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/site/docs/raw/index.md" target="_blank" rel="noopener noreferrer">Edit this page on GitHub &nearr;</a>
+            <a href="https://github.com/Tongyi-MAI/MAI-Gym/issues/new?title=Docs:%20Quickstart" target="_blank" rel="noopener noreferrer">Raise a docs issue &nearr;</a>
+            <a href="llms.txt">llms.txt</a>
+          </div>
+          <p class="doc-footer-meta">MAI-Gym · MIT License · Tongyi-MAI</p>
+        </footer>
+      </article>
+    </main>
+
+    <aside class="toc-rail" aria-label="On this page">
+      <div class="toc-inner">
+        <p class="toc-title">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M2.5 4h11M2.5 8h7M2.5 12h11"/></svg>
+          On this page
+        </p>
+        <ul class="toc-list" id="toc-list"><li><a class="toc-link" href="#1-install-the-cli">1. Install the CLI</a></li><li><a class="toc-link" href="#2-option-a--fast-local-tryout-mocked-apps-no-docker-or-kvm">2. Option A — Fast Local Tryout: Mocked Apps (No Docker or KVM)</a></li><li><a class="toc-link" href="#3-option-b--mobileworld-evaluation-android-emulator">3. Option B — MobileWorld Evaluation (Android Emulator)</a></li><li><a class="toc-link toc-h3" href="#start-a-mobileworld-backend">Start a MobileWorld backend</a></li><li><a class="toc-link toc-h3" href="#configure-and-evaluate-mai-gym-9b">Configure and evaluate MAI-Gym-9B</a></li><li><a class="toc-link" href="#4-inspect-results-visually-in-the-control-room-dashboard">4. Inspect Results Visually in the Control Room Dashboard</a></li><li><a class="toc-link" href="#5-train-a-gui-agent-with-online-rl-optional">5. Train a GUI Agent with Online RL (Optional)</a></li><li><a class="toc-link" href="#cli-at-a-glance">CLI at a Glance</a></li></ul>
+        <div class="toc-actions">
+          <a href="#top" class="toc-action-link" id="back-to-top">&uarr; Back to top</a>
+          <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/site/docs/raw/index.md" class="toc-action-link" target="_blank" rel="noopener noreferrer">View Markdown &nearr;</a>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <dialog class="search-dialog" id="search-dialog" aria-label="Search documentation">
+    <div class="search-box">
+      <div class="search-input-row">
+        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="5.2"/><path d="m12 12 3.6 3.6"/></svg>
+        <input id="search-input" type="search" placeholder="Search documentation, CLI flags, benchmarks..." autocomplete="off" spellcheck="false">
+        <button type="button" class="search-esc" id="search-close">ESC</button>
+      </div>
+      <div class="search-results" id="search-results" role="listbox"></div>
+      <div class="search-foot">
+        <span><kbd>&uarr;</kbd><kbd>&darr;</kbd> navigate</span>
+        <span><kbd>Enter</kbd> open</span>
+        <span><kbd>Esc</kbd> close</span>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="img-dialog" id="img-dialog" aria-label="Image preview">
+    <button type="button" class="img-dialog-close" id="img-dialog-close" aria-label="Close preview">&times;</button>
+    <img id="img-dialog-src" alt="">
+  </dialog>
+</body>
+</html>

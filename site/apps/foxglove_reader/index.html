@@ -4,26 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Foxglove (mocked GUI env)</title>
-<!--
-  ============================================================================
-  Foxglove — a single-file H5 e-reader for agent research.
 
-  Same two-block contract as every environment here: script#engine is a pure,
-  DOM-free state machine on globalThis.GUI_ENGINE; script#ui renders its screen
-  tree and exposes window.__ENV__.
-
-  What is new: there are no pages in the data. A book is one long string, and
-  the pages are worked out on the spot from how many characters fit — which
-  depends on the type size and the margins you have chosen. Make the type
-  bigger and the book gets longer: the same words, more pages. Every page break
-  is snapped back to the last space, so the walk is exact and repeatable.
-
-  That is why your place is kept as a character offset rather than a page
-  number, and why bookmarks and highlights are stored as offsets too. Change
-  the type size and a bookmark lands on a different page number but on exactly
-  the same sentence, which is the property the tasks here are really about.
-  ============================================================================
--->
 <style>
 :root{
   --outer:#e3e6ee;
@@ -270,18 +251,12 @@ body.bare .n-sheet{animation:none}
 <div id="hud" class="off"></div>
 
 <script id="engine">
-/* ===========================================================================
- * ENGINE — pure, deterministic, DOM-free.
- * Pages do not exist in the data. They are walked out of one long string
- * using however many characters fit, and every break snaps to a space.
- * ======================================================================== */
 (function(root){
 'use strict';
 
 var ENV_ID  = 'foxglove_reader';
 var VERSION = '1.0.0';
 
-/* ------------------------------------------------------------- utilities */
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function pad2(n){ return (n < 10 ? '0' : '') + n; }
 function hhmm(m){ m = ((m % 1440) + 1440) % 1440; return pad2(Math.floor(m/60)) + ':' + pad2(m%60); }
@@ -320,7 +295,6 @@ function setPath(o, path, value){
   return o;
 }
 
-/* ------------------------------------------- screen-tree node constructors */
 function N(t, o){ o = o || {}; o.t = t; return o; }
 function txt(s, cls){ return N('text', {text:s, cls:cls || ''}); }
 function row(id, text, o){
@@ -351,8 +325,6 @@ var BOOKS = [
   {id:'bk_bread', title:'Bread, Salt, Water', author:'S. Quay', blurb:'Three things and what people have done with them for six thousand years.', palette:['#7a4a24', '#c58f4e', '#f2e3cb'], chapters:[{title:'Chapter one', text:'Chapter one\n\nSalt is the only rock we eat. That sentence has been in every book on the subject for a century, and it is still the best place to start.'}]}
 ];
 
-/* how many characters fit on a page: a function of the type size and the
- * margins, and nothing else */
 var FONTS = [
   {id:'s',  label:'Small',  px:15, chars:1000},
   {id:'m',  label:'Medium', px:17, chars:800},
@@ -385,8 +357,6 @@ function chapterStarts(b){
 function charsPerPage(st){
   return Math.round(fontOf(st.settings.font).chars * marginOf(st.settings.margin).factor / 100);
 }
-/* the walk: take up to cpp characters, then back off to the last space, so a
- * page never breaks a word. Deterministic, and the whole point of the app. */
 function pageBreaks(text, cpp){
   var out = [], at = 0, n = text.length;
   while (at < n){
@@ -436,12 +406,10 @@ function marksOf(st, kind){
   return st.marks.filter(function(m){ return m.kind === kind && m.book === st.reading.book; });
 }
 
-/* =========================================================== state */
 function createInitialState(seed){
   seed = seed || 0;
   return {
     meta:{env:ENV_ID, version:VERSION, seed:seed, steps:0, finished:false, answer:null},
-    /* the seed permutes the order the shelf is arranged in */
     shelf:shuffled(BOOKS.map(function(b){ return b.id; }), seed),
     reading:{book:'bk_keeper', offset:0},
     progress:{bk_keeper:0, bk_orchard:0, bk_transit:0, bk_bread:0},
@@ -458,7 +426,6 @@ var SELECT = {
   searchBook:searchBook, marksOf:marksOf, fontOf:fontOf, marginOf:marginOf, route:route
 };
 
-/* =========================================================== reducer */
 function setOffset(st, off){
   var b = readingBook(st), t = fullText(b).length;
   st.reading.offset = clamp(off, 0, Math.max(0, t - 1));
@@ -500,7 +467,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- reading ---- */
   case 'OPEN_BOOK': push(st, 'book', {id:A.id}); break;
   case 'READ': {
     st.reading.book = A.id;
@@ -547,7 +513,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- marks: stored as offsets, never as page numbers ---- */
   case 'BOOKMARK': {
     var b5 = readingBook(st), off = offsetOf(st);
     var had = st.marks.filter(function(m){
@@ -578,7 +543,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- how it looks ---- */
   case 'SET_FONT': st.settings.font = A.id;
     toast(st, fontOf(A.id).label + ' type — ' + pagesOf(st, readingBook(st)).length + ' pages now');
     break;
@@ -591,7 +555,6 @@ function reduce(prev, action){
   return st;
 }
 
-/* =========================================================== screens */
 function tabbar(st){
   var items = [
     {id:'tab_library',  text:'Shelf',    icon:'book',   tab:'library'},
@@ -822,11 +785,6 @@ function screen(st){
   return rootNode;
 }
 
-/* =======================================================================
- * TRAVERSAL — element index, GUI action interface, text observation.
- * Identical in every environment here: the screen tree is the only thing
- * that differs, and all three readers below walk that same tree.
- * ==================================================================== */
 var SKIP_KEYS = {act:1, minus:1, plus:1, close:1, yes:1, params:1, meta:1, palette:1, marks:1, chapters:1};
 
 function labelOf(n){ return n.text || n.title || n.name || n.label || n.main || ''; }
@@ -840,9 +798,6 @@ function collect(n, out){
                                             input:(n.t === 'inputrow')});
   if (n.t === 'mask' && n.close)  out.push({id:n.id, act:n.close, text:'Dismiss overlay', t:'mask'});
   for (var k in n){
-    /* a node may carry extra buttons as a pair of keys: someId holds the
-     * test-id and some holds the action. That is how steppers, sheet close
-     * buttons and per-row buttons all get into the element index. */
     if (k.length > 2 && k.slice(-2) === 'Id' && typeof n[k] === 'string'){
       var sib = n[k.slice(0, -2)];
       if (sib && typeof sib === 'object' && sib.type)
@@ -895,7 +850,6 @@ function step(st, a){
   }
 }
 
-/* ------------------------------------------------- text observation (a11y) */
 function a11y(st){
   var rootNode = screen(st), lines = [], r = route(st);
   lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
@@ -963,8 +917,6 @@ function walkText(n, d, out, st){
     if (v && typeof v === 'object') walkText(v, line !== null ? d+1 : d, out, st);
   }
 }
-/* per-environment nodes: return a string to print, true if already printed,
- * or null to ignore */
 function walkExtra(n, d, out, st){
 
   if (n.t === 'div') return null;
@@ -990,7 +942,6 @@ function walkExtra(n, d, out, st){
   return null;
 }
 
-/* --------------------------------------------------------- derived view */
 function derive(st){
   var b = readingBook(st), pages = pagesOf(st, b);
   var i = pageAt(pages, offsetOf(st));
@@ -1046,9 +997,6 @@ root.GUI_ENGINE = ENGINE;
 </script>
 
 <script id="ui">
-/* ===========================================================================
- * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
- * ======================================================================== */
 (function(){
 'use strict';
 var E = window.GUI_ENGINE;

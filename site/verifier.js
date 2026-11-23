@@ -1,6 +1,3 @@
-/* In-browser port of mocked_envs/pipeline/verifier.py and jsonpath.py.
-   Scores a finished attempt against a task's goal criteria, exactly as the
-   training pipeline does, so visitors see the reward an agent would get. */
 (function () {
   'use strict';
   const MISSING = Symbol('missing');
@@ -140,7 +137,6 @@
     throw new Error(`unimplemented op: ${op}`);
   }
 
-  // Python's (?i) inline flag is the only construct the task files use that JS lacks.
   function pyRegex(src) {
     return src.startsWith('(?i)') ? new RegExp(src.slice(4), 'i') : src;
   }

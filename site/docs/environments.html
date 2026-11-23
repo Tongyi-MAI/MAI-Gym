@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Overview of all 10 supported GUI benchmarks across Mobile, Computer, and Web alongside Mocked Apps, native metrics, and reproducible setup skills.">
+  <link rel="canonical" href="https://tongyi-mai.github.io/MAI-Gym/docs/environments.html">
+  <meta property="og:site_name" content="MAI-Gym Docs">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Benchmarks Overview — MAI-Gym Docs">
+  <meta property="og:description" content="Overview of all 10 supported GUI benchmarks across Mobile, Computer, and Web alongside Mocked Apps, native metrics, and reproducible setup skills.">
+  <meta property="og:url" content="https://tongyi-mai.github.io/MAI-Gym/docs/environments.html">
+  <meta property="og:image" content="https://tongyi-mai.github.io/MAI-Gym/assets/figs/overview.webp">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Benchmarks Overview — MAI-Gym Docs">
+  <meta name="twitter:description" content="Overview of all 10 supported GUI benchmarks across Mobile, Computer, and Web alongside Mocked Apps, native metrics, and reproducible setup skills.">
+  <meta name="twitter:image" content="https://tongyi-mai.github.io/MAI-Gym/assets/figs/overview.webp">
+  <title>Benchmarks Overview — MAI-Gym Docs</title>
+  <link rel="icon" type="image/png" href="../assets/favicon.png">
+  <script>
+    (function () {
+      var t;
+      try { t = localStorage.getItem('maigym.theme'); } catch (e) {}
+      document.documentElement.dataset.theme = t === 'day' ? 'day' : 'night';
+    })();
+  </script>
+  <link rel="preload" href="../assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="assets/docs.css">
+  <script>
+    window.MAIGYM_DOCS = {
+      root: "",
+      rawMd: "raw/environments.md",
+      slug: "environments.html"
+    };
+  </script>
+  <script src="assets/docs.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#doc-content">Skip to main content</a>
+
+  <header class="topbar" id="topbar">
+    <div class="topbar-row">
+      <div class="topbar-left">
+        <button class="mobile-nav-btn" id="mobile-nav-btn" type="button" aria-label="Toggle navigation" aria-expanded="false">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 5.5h14M3 10h14M3 14.5h14"/></svg>
+        </button>
+        <a class="brand" href="index.html" aria-label="MAI-Gym Documentation home">
+          <img src="../assets/mark.svg" width="26" height="26" alt="">
+          <span class="brand-name">MAI-<span>Gym</span></span>
+          <span class="brand-pill">Docs</span>
+        </a>
+      </div>
+
+      <button class="search-trigger" id="search-trigger" type="button" aria-label="Search documentation">
+        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="5.2"/><path d="m12 12 3.6 3.6"/></svg>
+        <span>Search docs...</span>
+        <kbd>⌘K</kbd>
+      </button>
+
+      <div class="topbar-right">
+        <a class="top-link" href="../index.html">Project Page</a>
+        <a class="top-link" href="https://arxiv.org/abs/2610.20939" target="_blank" rel="noopener noreferrer">Paper</a>
+        <a class="top-link" href="https://huggingface.co/Tongyi-MAI/MAI-Gym-9B" target="_blank" rel="noopener noreferrer">Model</a>
+        <a class="repo-chip" href="https://github.com/Tongyi-MAI/MAI-Gym" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+          <span>Tongyi-MAI/MAI-Gym</span>
+        </a>
+        <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle color theme" title="Switch light / dark theme">
+          <svg class="i-sun" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="3.6" fill="currentColor"/><path d="M10 1.8v2.1M10 16.1v2.1M1.8 10h2.1M16.1 10h2.1M4.2 4.2l1.5 1.5M14.3 14.3l1.5 1.5M4.2 15.8l1.5-1.5M14.3 5.7l1.5-1.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <svg class="i-moon" viewBox="0 0 20 20" aria-hidden="true"><path d="M16.2 12.6A6.8 6.8 0 0 1 7.4 3.8a6.8 6.8 0 1 0 8.8 8.8z" fill="currentColor"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="drawer-backdrop" id="drawer-backdrop" hidden></div>
+
+  <div class="doc-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Documentation navigation">
+      <div class="side-group"><p class="side-heading">Overview</p><ul><li><a class="side-link" href="index.html">Quickstart</a></li><li><a class="side-link" href="concepts.html">Platform &amp; Core Concepts</a></li><li><a class="side-link" href="mai-gym-9b.html">MAI-Gym-9B</a></li><li><a class="side-link" href="dashboard.html">Trajectory Dashboard</a></li></ul></div><div class="side-group"><p class="side-heading">User Guide</p><ul><li><a class="side-link" href="evaluation.html">Evaluation Guide</a></li><li><a class="side-link" href="training.html">Online RL Training</a></li><li><a class="side-link" href="rollout.html">Rollout CLI</a></li><li><a class="side-link" href="kubernetes.html">Kubernetes Fleets</a></li></ul></div><div class="side-group"><p class="side-heading">Benchmarks &amp; Environments</p><ul><li><a class="side-link active" aria-current="page" href="environments.html">Benchmarks Overview</a></li><li><a class="side-link" href="mocked-apps.html">Mocked Apps</a></li><li><a class="side-link" href="envs/mobile.html">Mobile Benchmarks</a></li><li><a class="side-link" href="envs/computer.html">Computer Benchmarks</a></li><li><a class="side-link" href="envs/web.html">Web Benchmarks</a></li></ul></div><div class="side-group"><p class="side-heading">Customization</p><ul><li><a class="side-link" href="extending.html">Extending MAI-Gym</a></li><li><a class="side-link" href="coding-agents.html">Coding-Agent Setup</a></li><li><a class="side-link" href="development.html">Development &amp; Layout</a></li><li><a class="side-link" href="licensing.html">Licensing &amp; Notices</a></li></ul></div>
+    </aside>
+
+    <main class="doc-main" id="doc-content">
+      <article class="doc-article">
+        <header class="page-header">
+          <div class="page-eyebrow">Benchmarks &amp; Environments</div>
+          <div class="page-title-row">
+            <h1>Benchmarks Overview</h1>
+            <button type="button" class="copy-page-btn" id="copy-page-btn" title="Copy page as Markdown">
+              <svg class="i-copy" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 10.5h-1a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+              <svg class="i-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4 6.5 11.7 13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>Copy page</span>
+            </button>
+          </div>
+          <p class="page-lead">Overview of all 10 supported GUI benchmarks across Mobile, Computer, and Web alongside Mocked Apps, native metrics, and reproducible setup skills.</p>
+        </header>
+
+        <div class="prose">
+          <p>MAI-Gym integrates <strong>10 standard GUI benchmarks</strong> spanning <strong>Mobile</strong>, <strong>Computer</strong>, and <strong>Web</strong> environments alongside <strong>Mocked Apps</strong> (<em>Real-World Clones</em> and <em>42 bundled browser-based Novel Apps</em>). Every environment is exposed behind the same <code>EnvClient</code> interface and evaluated with the exact harness used for training, while preserving each benchmark&#x27;s native step budget, action semantics, and verifier.</p>
+<hr>
+<h2 id="supported-suites-at-a-glance">Supported Suites at a Glance<a class="heading-link" href="#supported-suites-at-a-glance" aria-label="Link to Supported Suites at a Glance">#</a></h2>
+<p>Use the <strong>CLI ID</strong> in <code>eval.yaml</code> under <code>benchmarks:</code> and on the command line via <code>mai-gym eval --benchmarks &lt;id&gt;</code>.</p>
+<div class="table-wrap"><table><thead><tr><th style="text-align:left">Domain</th><th style="text-align:left">Benchmark / Suite</th><th style="text-align:left">CLI ID</th><th style="text-align:right">Tasks</th><th style="text-align:left">Max Steps</th><th style="text-align:left">Verifier Type</th><th style="text-align:left">Native Metric</th><th style="text-align:left">Guide</th><th style="text-align:left">Setup Skill</th></tr></thead><tbody><tr><td style="text-align:left"><strong>Mobile</strong></td><td style="text-align:left"><a href="envs/mobile.html#mobileworld">MobileWorld</a></td><td style="text-align:left"><code>mobileworld</code></td><td style="text-align:right">117</td><td style="text-align:left">100</td><td style="text-align:left">Programmatic state</td><td style="text-align:left"><code>success_rate</code></td><td style="text-align:left"><a href="envs/mobile.html">Mobile</a></td><td style="text-align:left"><a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/skills/envs/mobileworld.md" target="_blank" rel="noopener noreferrer"><code>mobileworld.md</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a></td></tr><tr><td style="text-align:left"><strong>Mobile</strong></td><td style="text-align:left"><a href="envs/mobile.html#androidworld">AndroidWorld</a></td><td style="text-align:left"><code>androidworld</code></td><td style="text-align:right">116</td><td style="text-align:left">Task-dependent</td><td style="text-align:left">Programmatic state</td><td style="text-align:left"><code>success_rate</code></td><td style="text-align:left"><a href="envs/mobile.html">Mobile</a></td><td style="text-align:left"><a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/skills/envs/androidworld.md" target="_blank" rel="noopener noreferrer"><code>androidworld.md</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a></td></tr><tr><td style="text-align:left"><strong>Mobile</strong></td><td style="text-align:left"><a href="envs/mobile.html#mobilegym">MobileGym</a></td><td style="text-align:left"><code>mobilegym</code></td><td style="text-align:right">256</td><td style="text-align:left">100</td><td style="text-align:left">Programmatic state</td><td style="text-align:left"><code>partial_score</code> <em>(binary + partial)</em></td><td style="text-align:left"><a href="envs/mobile.html">Mobile</a></td><td style="text-align:left"><a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/skills/envs/mobilegym.md" target="_blank" rel="noopener noreferrer"><code>mobilegym.md</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a></td></tr><tr><td style="text-align:left"><strong>Computer</strong></td><td style="text-align:left"><a href="envs/computer.html#osworld-verified">OSWorld-Verified</a></td><td style="text-align:left"><code>osworld-verified</code></td><td style="text-align:right">361</td><td style="text-align:left">100</td><td style="text-align:left">Programmatic state</td><td style="text-align:left"><code>success_rate</code></td><td style="text-align:left"><a href="envs/computer.html">Computer</a></td><td style="text-align:left"><a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/skills/envs/osworld.md" target="_blank" rel="noopener noreferrer"><code>osworld.md</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a></td></tr><tr><td style="text-align:left"><strong>Computer</strong></td><td style="text-align:left"><a href="envs/computer.html#osworld-20">OSWorld 2.0</a></td><td style="text-align:left"><code>osworld-2</code></td><td style="text-align:right">108</td><td style="text-align:left">500</td><td style="text-align:left">Programmatic state</td><td style="text-align:left"><code>binary_and_partial</code></td><td style="text-align:left"><a href="envs/computer.html">Computer</a></td><td style="text-align:left"><a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/skills/envs/osworld_2.md" target="_blank" rel="noopener noreferrer"><code>osworld_2.md</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a></td></tr><tr><td style="text-align:left"><strong>Computer</strong></td><td style="text-align:left"><a href="envs/computer.html#macagentbench">MacAgentBench</a></td><td style="text-align:left"><code>macagentbench</code></td><td style="text-align:right">676</td><td style="text-align:left">50</td><td style="text-align:left">Programmatic checkpoints</td><td style="text-align:left"><code>success_rate</code></td><td style="text-align:left"><a href="envs/computer.html">Computer</a></td><td style="text-align:left"><a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/skills/envs/macagentbench.md" target="_blank" rel="noopener noreferrer"><code>macagentbench.md</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a></td></tr><tr><td style="text-align:left"><strong>Computer</strong></td><td style="text-align:left"><a href="envs/computer.html#mypcbench">MyPCBench</a></td><td style="text-align:left"><code>mypcbench</code></td><td style="text-align:right">184</td><td style="text-align:left">100</td><td style="text-align:left">Rubric VLM judge</td><td style="text-align:left"><code>perfect_task_rate</code></td><td style="text-align:left"><a href="envs/computer.html">Computer</a></td><td style="text-align:left"><a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/skills/envs/mypcbench.md" target="_blank" rel="noopener noreferrer"><code>mypcbench.md</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a></td></tr><tr><td style="text-align:left"><strong>Web</strong></td><td style="text-align:left"><a href="envs/web.html#webvoyager">WebVoyager</a></td><td style="text-align:left"><code>webvoyager</code></td><td style="text-align:right">643</td><td style="text-align:left">15</td><td style="text-align:left">VLM trajectory judge</td><td style="text-align:left"><code>success_rate</code></td><td style="text-align:left"><a href="envs/web.html">Web</a></td><td style="text-align:left"><a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/skills/envs/webvoyager.md" target="_blank" rel="noopener noreferrer"><code>webvoyager.md</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a></td></tr><tr><td style="text-align:left"><strong>Web</strong></td><td style="text-align:left"><a href="envs/web.html#online-mind2web">Online-Mind2Web</a></td><td style="text-align:left"><code>onlinemind2web</code></td><td style="text-align:right">123</td><td style="text-align:left">50</td><td style="text-align:left">VLM judge (<code>WebJudge</code>)</td><td style="text-align:left"><code>success_rate</code></td><td style="text-align:left"><a href="envs/web.html">Web</a></td><td style="text-align:left"><a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/skills/envs/onlinemind2web.md" target="_blank" rel="noopener noreferrer"><code>onlinemind2web.md</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a></td></tr><tr><td style="text-align:left"><strong>Web</strong></td><td style="text-align:left"><a href="envs/web.html#webarena">WebArena</a></td><td style="text-align:left"><code>webarena</code></td><td style="text-align:right">812</td><td style="text-align:left">30</td><td style="text-align:left">Programmatic state</td><td style="text-align:left"><code>success_rate</code></td><td style="text-align:left"><a href="envs/web.html">Web</a></td><td style="text-align:left"><a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/skills/envs/webarena.md" target="_blank" rel="noopener noreferrer"><code>webarena.md</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a></td></tr><tr><td style="text-align:left"><strong>Web</strong></td><td style="text-align:left"><a href="mocked-apps.html">Mocked Apps</a> <em>(bundled)</em></td><td style="text-align:left"><code>mocked-apps</code></td><td style="text-align:right">837</td><td style="text-align:left">Task-dependent</td><td style="text-align:left">Programmatic state</td><td style="text-align:left"><code>binary_and_partial</code></td><td style="text-align:left"><a href="mocked-apps.html">Mocked Apps</a></td><td style="text-align:left"><a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/configs/mocked-apps.yaml" target="_blank" rel="noopener noreferrer"><code>configs/mocked-apps.yaml</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a></td></tr></tbody></table></div>
+<hr>
+<h2 id="domain-guides">Domain Guides<a class="heading-link" href="#domain-guides" aria-label="Link to Domain Guides">#</a></h2>
+<ul><li><strong><a href="mocked-apps.html">Mocked Apps</a></strong> — Resettable <strong>Real-World Clones</strong> and <strong>42 bundled browser-based Novel Apps</strong> (837 tasks with native verifiers and reference oracle trajectories). The fastest way to evaluate or train locally with zero Docker/KVM setup.</li><li><strong><a href="envs/mobile.html">Mobile Benchmarks</a></strong> — <strong>MobileWorld</strong>, <strong>AndroidWorld</strong>, and <strong>MobileGym</strong>: Android container/emulator and mobile-viewport suites covering cross-app workflows, system settings, and Chinese/English touch UIs.</li><li><strong><a href="envs/computer.html">Computer Benchmarks</a></strong> — <strong>OSWorld-Verified</strong>, <strong>OSWorld 2.0</strong>, <strong>MacAgentBench</strong>, and <strong>MyPCBench</strong>: Ubuntu and macOS desktop VM suites utilizing MAI-Gym&#x27;s <strong>Hybrid Action Space (GUI + CLI)</strong>.</li><li><strong><a href="envs/web.html">Web Benchmarks</a></strong> — <strong>WebVoyager</strong>, <strong>Online-Mind2Web</strong>, and <strong>WebArena</strong>: live-web and self-hosted multi-site browser benchmarks with native VLM judges and programmatic web evaluators.</li></ul>
+<hr>
+<h2 id="reproducible-setup--coding-agent-skills">Reproducible Setup &amp; Coding-Agent Skills<a class="heading-link" href="#reproducible-setup--coding-agent-skills" aria-label="Link to Reproducible Setup &amp; Coding-Agent Skills">#</a></h2>
+<p>GUI benchmarks are sensitive to upstream source revisions, OS images, application snapshots, and task manifests. MAI-Gym separates <strong>benchmark runtime isolation</strong> (each benchmark runs in its own worker process/interpreter or container with pinned assets) from the shared <code>mai-gym</code> runner and manager:</p>
+<ul><li><strong>Immutable profile locks:</strong> Native workers verify source commits, task manifest SHA-256 hashes, Docker image digests, and VM/browser asset checksums before provisioning.</li><li><strong>Single-task reset validation:</strong> Before scaling to a full benchmark or RL fleet, validate one real manifest task end to end—confirming full native success, clean episode reset, and absence of residual state.</li><li><strong>Judge isolation:</strong> Benchmarks that require a VLM trajectory judge (<code>MyPCBench</code>, <code>WebVoyager</code>, <code>Online-Mind2Web</code>) configure the judge endpoint and API key environment variable independently from the evaluated agent model.</li></ul>
+<div class="callout callout-tip" role="note"><div class="callout-title"><span class="callout-dot" aria-hidden="true"></span>Tip</div><div class="callout-body"><p><strong>Full preparation instructions &amp; coding-agent skills:</strong> Detailed host checklists, JSON profile lock schemas, worker templates, and reset verification protocols live in <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/skills/envs.md" target="_blank" rel="noopener noreferrer"><code>skills/envs.md</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a> and the per-benchmark guides under <a href="https://github.com/Tongyi-MAI/MAI-Gym/tree/main/skills/envs" target="_blank" rel="noopener noreferrer"><code>skills/envs/</code><svg class="ext-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3h5.5v5.5M9 3 3 9" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></a>. You can read them directly or point Claude Code, Codex, or Cursor at <a href="coding-agents.html"><code>skills/README.md</code></a> to automate setup.</p></div></div>
+<hr>
+<h2 id="next-steps">Next Steps<a class="heading-link" href="#next-steps" aria-label="Link to Next Steps">#</a></h2>
+<ul><li>Run a single- or multi-benchmark evaluation: <a href="evaluation.html">Evaluation Guide</a></li><li>Try the zero-Docker local suite first: <a href="mocked-apps.html">Mocked Apps</a></li><li>Scale Android fleets across Kubernetes: <a href="kubernetes.html">Kubernetes Fleets</a></li><li>Integrate a new benchmark adapter: <a href="extending.html">Extending MAI-Gym</a></li></ul>
+        </div>
+
+        <nav class="pagination" aria-label="Pagination">
+          <a class="pag-link prev" href="kubernetes.html"><span class="pag-label">Previous</span><span class="pag-title">&larr; Kubernetes Fleets</span></a>
+          <a class="pag-link next" href="mocked-apps.html"><span class="pag-label">Next</span><span class="pag-title">Mocked Apps &rarr;</span></a>
+        </nav>
+
+        <footer class="doc-footer">
+          <div class="doc-footer-links">
+            <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/site/docs/raw/environments.md" target="_blank" rel="noopener noreferrer">Edit this page on GitHub &nearr;</a>
+            <a href="https://github.com/Tongyi-MAI/MAI-Gym/issues/new?title=Docs:%20Benchmarks Overview" target="_blank" rel="noopener noreferrer">Raise a docs issue &nearr;</a>
+            <a href="llms.txt">llms.txt</a>
+          </div>
+          <p class="doc-footer-meta">MAI-Gym · MIT License · Tongyi-MAI</p>
+        </footer>
+      </article>
+    </main>
+
+    <aside class="toc-rail" aria-label="On this page">
+      <div class="toc-inner">
+        <p class="toc-title">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M2.5 4h11M2.5 8h7M2.5 12h11"/></svg>
+          On this page
+        </p>
+        <ul class="toc-list" id="toc-list"><li><a class="toc-link" href="#supported-suites-at-a-glance">Supported Suites at a Glance</a></li><li><a class="toc-link" href="#domain-guides">Domain Guides</a></li><li><a class="toc-link" href="#reproducible-setup--coding-agent-skills">Reproducible Setup &amp; Coding-Agent Skills</a></li><li><a class="toc-link" href="#next-steps">Next Steps</a></li></ul>
+        <div class="toc-actions">
+          <a href="#top" class="toc-action-link" id="back-to-top">&uarr; Back to top</a>
+          <a href="https://github.com/Tongyi-MAI/MAI-Gym/blob/main/site/docs/raw/environments.md" class="toc-action-link" target="_blank" rel="noopener noreferrer">View Markdown &nearr;</a>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <dialog class="search-dialog" id="search-dialog" aria-label="Search documentation">
+    <div class="search-box">
+      <div class="search-input-row">
+        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="5.2"/><path d="m12 12 3.6 3.6"/></svg>
+        <input id="search-input" type="search" placeholder="Search documentation, CLI flags, benchmarks..." autocomplete="off" spellcheck="false">
+        <button type="button" class="search-esc" id="search-close">ESC</button>
+      </div>
+      <div class="search-results" id="search-results" role="listbox"></div>
+      <div class="search-foot">
+        <span><kbd>&uarr;</kbd><kbd>&darr;</kbd> navigate</span>
+        <span><kbd>Enter</kbd> open</span>
+        <span><kbd>Esc</kbd> close</span>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="img-dialog" id="img-dialog" aria-label="Image preview">
+    <button type="button" class="img-dialog-close" id="img-dialog-close" aria-label="Close preview">&times;</button>
+    <img id="img-dialog-src" alt="">
+  </dialog>
+</body>
+</html>

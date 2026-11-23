@@ -4,31 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>信息 (mocked GUI env)</title>
-<!--
-  ============================================================================
-  短信 Messages — a single-file H5 stock SMS app for agent research.
 
-  Same two-block contract as every environment here: script#engine is a pure,
-  DOM-free state machine on globalThis.GUI_ENGINE; script#ui renders its screen
-  tree and exposes window.__ENV__.
-
-  What is new: the world is a character encoder. A short message is not one
-  message — it is however many 「段」the network cuts it into, and the cut
-  depends on which alphabet the text needs. All-Latin text encodes as GSM-7 and
-  fits 160 characters in one segment; the moment a single character falls
-  outside that alphabet — one Chinese character, one emoji — the whole message
-  switches to UCS-2, where a segment holds 70, and a multi-segment message
-  holds only 67 each because seven bytes go to the header.
-
-  So the seeded draft of 150 Latin characters is one segment and costs nothing,
-  and adding a single 「谢」makes it three. Appending the seven Latin characters
-  「 Thanks」instead adds nothing at all. That difference, and the monthly
-  allowance sitting two segments from its ceiling, is the whole environment.
-
-  Everything is integer segments and integer 分, and the clock is frozen at
-  周三 21:14, so the figures reproduce exactly.
-  ============================================================================
--->
 <style>
 :root{
   --outer:#e3e6ee;
@@ -296,18 +272,12 @@ body.bare .n-sheet{animation:none}
 <div id="hud" class="off"></div>
 
 <script id="engine">
-/* ===========================================================================
- * ENGINE — pure, deterministic, DOM-free.
- * 编码按 GSM 03.38 判：全在基本表里就是 GSM-7（160/153），
- * 只要有一个字符不在就整条转 UCS-2（70/67）。段数和钱都是现算的。
- * ======================================================================== */
 (function(root){
 'use strict';
 
 var ENV_ID  = 'quill_messages';
 var VERSION = '1.0.0';
 
-/* ------------------------------------------------------------- utilities */
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function pad2(n){ return (n < 10 ? '0' : '') + n; }
 function hhmm(m){ m = ((m % 1440) + 1440) % 1440; return pad2(Math.floor(m/60)) + ':' + pad2(m%60); }
@@ -346,7 +316,6 @@ function setPath(o, path, value){
   return o;
 }
 
-/* ------------------------------------------- screen-tree node constructors */
 function N(t, o){ o = o || {}; o.t = t; return o; }
 function txt(s, cls){ return N('text', {text:s, cls:cls || ''}); }
 function row(id, text, o){
@@ -371,9 +340,6 @@ function push(st, name, params){ st.ui.stack.push({name:name, params:params || {
 function pop(st){ if (st.ui.stack.length > 1) st.ui.stack.pop(); }
 function toast(st, t){ st.ui.toast = t; }
 
-/* ---------------------------------------------------------- 编码与分段
- * GSM 03.38 基本表能装的，一段 160 个字符；多段时每段 153（七个字节给了头）。
- * 只要有一个字符不在表里，整条转成 UCS-2：一段 70，多段每段 67。 */
 var GSM = "@£$¥èéùìòÇ\nØø\rÅå"
   + "Δ_ΦΓΛΩΠΨΣΘΞÆæßÉ"
   + " !\"#¤%&'()*+,-./0123456789:;<=>?"
@@ -391,7 +357,7 @@ function unitsOf(t){
     for (var i = 0; i < t.length; i++) n += (GSM_EXT.indexOf(t.charAt(i)) >= 0 ? 2 : 1);
     return n;
   }
-  return t.length;                 /* UTF-16 码元，一个表情占两个 */
+  return t.length;
 }
 function capSingle(t){ return encodingOf(t) === 'GSM-7' ? 160 : 70; }
 function capMulti(t){ return encodingOf(t) === 'GSM-7' ? 153 : 67; }
@@ -405,13 +371,11 @@ function roomLeft(t){
   if (s <= 1) return capSingle(t) - u;
   return s * capMulti(t) - u;
 }
-/* 第一个不在 GSM 表里的字符是哪个——出问题时要说得出来 */
 function firstNonGsm(t){
   for (var i = 0; i < t.length; i++) if (!isGsm(t.charAt(i))) return t.charAt(i);
   return null;
 }
 
-/* ---------------------------------------------------------- 套餐 */
 var PLAN_SEGS = 200, OVER_FEN = 15;
 function usedSegs(st){ return st.usedSegments; }
 function overSegs(st){ return Math.max(0, st.usedSegments - PLAN_SEGS); }
@@ -427,9 +391,8 @@ function yuan(fen){
          + (fen % 100 < 10 ? '0' : '') + (fen % 100);
 }
 
-/* ---------------------------------------------------------- 会话 */
-var NOW = 21 * 60 + 14;            /* 周三 21:14 */
-var TOMORROW = 1440;               /* 明天（周四）从这里开始 */
+var NOW = 21 * 60 + 14;
+var TOMORROW = 1440;
 function hhmm(m){
   m = ((m % 1440) + 1440) % 1440;
   var h = Math.floor(m / 60), mi = m % 60;
@@ -453,7 +416,6 @@ function pending(st){
 }
 function due(st){ return st.scheduled.filter(function(s){ return s.at <= NOW && !s.sent; }); }
 
-/* 常用短语：既能一键加中文，也能一键加纯英文 */
 var SNIPPETS = [
   {id:'thanks_en', text:' Thanks', label:'加「 Thanks」', hint:'七个拉丁字母'},
   {id:'xie',       text:'谢',      label:'加一个「谢」', hint:'一个汉字'},
@@ -464,11 +426,9 @@ var SNIPPETS = [
 var FILTERS = {all:'全部', unread:'未读', sms:'短信', blocked:'已拦截', draft:'有草稿'};
 function snippetOf(id){ for (var i=0;i<SNIPPETS.length;i++) if (SNIPPETS[i].id === id) return SNIPPETS[i]; return null; }
 
-/* =========================================================== state */
 function M(from, text, at, read, sms){
   return {from:from, text:text, at:at, read:read !== false, sms:!!sms};
 }
-/* 150 个拉丁字符的行程草稿：正好在一段（160）里面，一分钱不用多花 */
 var DRAFT_150 =
   'Flight CA1837 dep PVG 08:25 arr PEK 11:05 gate C21 seat 32A conf ABCDEF. '
   + 'Car will meet you at door 3. Call me when you land, I will be up late tonig';
@@ -500,7 +460,6 @@ function createInitialState(seed){
       {id:'s_2', to:'t_mum',   text:'妈我下周三回去吃饭', at:1440 + 9 * 60,  sent:false}
     ],
     usedSegments:198,
-    /* 种子只打乱筛选条的排列 */
     order:shuffled(['all', 'unread', 'sms', 'blocked', 'draft'], seed),
     filter:'all',
     ui:{tab:'chats', stack:[{name:'chats', params:{}}], sheet:null, confirm:null,
@@ -517,7 +476,6 @@ var SELECT = {
   snippets:SNIPPETS, planSegs:PLAN_SEGS, overFen:OVER_FEN, now:NOW, route:route
 };
 
-/* =========================================================== reducer */
 function reduce(prev, action){
   var st = clone(prev), A = action || {};
   st.ui.toast = null;
@@ -559,7 +517,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- 会话 ---- */
   case 'OPEN_THREAD': {
     var t = threadOf(st, A.id);
     if (!t) break;
@@ -619,7 +576,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- 定时 ---- */
   case 'SCHEDULE': {
     var t3 = threadOf(st, A.thread);
     var text2 = draftOf(st, A.thread);
@@ -649,7 +605,6 @@ function reduce(prev, action){
     break;
   }
 
-  /* ---- 拦截 ---- */
   case 'TOGGLE_BLOCK': {
     var t5 = threadOf(st, A.id);
     if (!t5) break;
@@ -678,7 +633,6 @@ function reduce(prev, action){
   return st;
 }
 
-/* =========================================================== screens */
 function tabbar(st){
   var items = [
     {id:'tab_chats',    text:'信息', icon:'chat',  tab:'chats'},
@@ -903,11 +857,6 @@ function screen(st){
   return rootNode;
 }
 
-/* =======================================================================
- * TRAVERSAL — element index, GUI action interface, text observation.
- * Identical in every environment here: the screen tree is the only thing
- * that differs, and all three readers below walk that same tree.
- * ==================================================================== */
 var SKIP_KEYS = {act:1, minus:1, plus:1, close:1, yes:1, params:1, meta:1, bars:1, msgs:1, deps:1};
 
 function labelOf(n){ return n.text || n.title || n.name || n.label || n.main || ''; }
@@ -921,9 +870,6 @@ function collect(n, out){
                                             input:(n.t === 'inputrow')});
   if (n.t === 'mask' && n.close)  out.push({id:n.id, act:n.close, text:'Dismiss overlay', t:'mask'});
   for (var k in n){
-    /* a node may carry extra buttons as a pair of keys: someId holds the
-     * test-id and some holds the action. That is how steppers, sheet close
-     * buttons and per-row buttons all get into the element index. */
     if (k.length > 2 && k.slice(-2) === 'Id' && typeof n[k] === 'string'){
       var sib = n[k.slice(0, -2)];
       if (sib && typeof sib === 'object' && sib.type)
@@ -976,7 +922,6 @@ function step(st, a){
   }
 }
 
-/* ------------------------------------------------- text observation (a11y) */
 function a11y(st){
   var rootNode = screen(st), lines = [], r = route(st);
   lines.push('# Screen route=' + r.name + (r.params && r.params.id ? '(' + r.params.id + ')' : '') +
@@ -1041,8 +986,6 @@ function walkText(n, d, out, st){
     if (v && typeof v === 'object') walkText(v, line !== null ? d+1 : d, out, st);
   }
 }
-/* per-environment nodes: return a string to print, true if already printed,
- * or null to ignore */
 function walkExtra(n, d, out, st){
 
   if (n.t === 'plan'){
@@ -1069,7 +1012,6 @@ function walkExtra(n, d, out, st){
   return null;
 }
 
-/* --------------------------------------------------------- derived view */
 function derive(st){
   var r = route(st);
   var tid2 = (r.params || {}).id || null;
@@ -1149,9 +1091,6 @@ root.GUI_ENGINE = ENGINE;
 </script>
 
 <script id="ui">
-/* ===========================================================================
- * UI — renders GUI_ENGINE.screen(state) into DOM and exposes window.__ENV__.
- * ======================================================================== */
 (function(){
 'use strict';
 var E = window.GUI_ENGINE;

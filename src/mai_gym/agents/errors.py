@@ -1,0 +1,2 @@
+class AgentAPIError(RuntimeError):
+    pass

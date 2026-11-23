@@ -1,0 +1,23 @@
+# MAI-Gym Documentation
+
+> An open all-in-one platform for GUI agent evaluation and online RL training across mobile, computer, and web environments.
+
+## Pages
+
+- [Quickstart](raw/index.md): Install the MAI-Gym CLI and run your first verified GUI agent evaluation—locally on Mocked Apps (no Docker/KVM) or on MobileWorld—plus visual replay and optional online RL.
+- [Platform & Core Concepts](raw/concepts.md): System architecture, executable task model, shared rollout harness, EnvClient lifecycle, Hybrid Action Space (GUI + CLI), and the evaluate–diagnose–synthesize–retrain loop.
+- [MAI-Gym-9B](raw/mai-gym-9b.md): Open 9B GUI agent trained with joint mobile–computer online RL: benchmark results, clone-to-real transfer highlights, and quick evaluation setup.
+- [Trajectory Dashboard](raw/dashboard.md): Visual Control Room tour plus setup for the embedded Rust/SQLite dashboard server, indexer, and HTTP diagnosis API.
+- [Evaluation Guide](raw/evaluation.md): Run single- and multi-benchmark GUI agent evaluations with native verifiers, pass@N metrics, and automatic SGLang serving.
+- [Online RL Training](raw/training.md): Train GUI agents with online RL (GRPO, DAPO, GSPO, REINFORCE++, SAO, PPO) using policy-adaptive sampling and window-wise packing.
+- [Rollout CLI](raw/rollout.md): Run direct task rollouts for agent debugging, trajectory collection, multi-pass execution, and controlled retries.
+- [Kubernetes Fleets](raw/kubernetes.md): Scale MobileWorld environments across Kubernetes nodes with SandboxSet warm pools, session leasing, and demand autoscaling.
+- [Benchmarks Overview](raw/environments.md): Overview of all 10 supported GUI benchmarks across Mobile, Computer, and Web alongside Mocked Apps, native metrics, and reproducible setup skills.
+- [Mocked Apps](raw/mocked-apps.md): Self-contained, resettable Real-World Clones and 42 bundled Novel Apps (837 tasks) runnable via --benchmarks mocked-apps with native programmatic verifiers.
+- [Mobile Benchmarks](raw/envs/mobile.md): Overview of MobileWorld, AndroidWorld, and MobileGym: task scope, Android/mobile runtimes, verification protocols, and MAI-Gym-9B results.
+- [Computer Benchmarks](raw/envs/computer.md): Overview of OSWorld-Verified, OSWorld 2.0, MacAgentBench, and MyPCBench: desktop VM suites, Hybrid Action Space (GUI + CLI), and evaluation protocols.
+- [Web Benchmarks](raw/envs/web.md): Overview of WebVoyager, Online-Mind2Web, and WebArena: live-web and self-hosted multi-site browser benchmarks with VLM judges and programmatic evaluators.
+- [Extending MAI-Gym](raw/extending.md): Four extension points (harnesses, tasks, adapters, environment specs) and the 5-operation environment contract.
+- [Coding-Agent Setup](raw/coding-agents.md): Reusable setup prompts for Claude Code, Codex, and Cursor to automate benchmark preparation, evaluation, and training.
+- [Development & Layout](raw/development.md): Repository layout, minimal mobile-agent extraction subset, and local development commands.
+- [Licensing & Notices](raw/licensing.md): MIT project license and third-party notices for Slime (Apache-2.0), TileLang, and uPlot.

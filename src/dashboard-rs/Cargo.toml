@@ -1,0 +1,40 @@
+[workspace]
+members = ["."]
+resolver = "2"
+
+[package]
+name = "mai-dashboard"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+
+[dependencies]
+anyhow = "1"
+axum = "0.8"
+bytes = "1"
+chrono = { version = "0.4", features = ["serde"] }
+clap = { version = "4", features = ["derive", "env"] }
+flate2 = "1"
+futures = "0.3"
+fs2 = "0.4"
+moka = { version = "0.12", features = ["future"] }
+opendal = { version = "0.57", default-features = false, features = ["reqwest-rustls-no-provider-tls", "services-oss", "services-fs", "services-memory"] }
+regex = "1"
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
+rusqlite = { version = "0.37", features = ["bundled", "serde_json"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_yaml = "0.9"
+sha2 = "0.10"
+tokio = { version = "1", features = ["full"] }
+tower-http = { version = "0.6", features = ["compression-gzip", "trace"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[dev-dependencies]
+tempfile = "3"
+tower = { version = "0.5", features = ["util"] }
+
+[profile.release]
+lto = "thin"
