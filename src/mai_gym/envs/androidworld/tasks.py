@@ -15,8 +15,11 @@ def load_tasks(profile: dict[str, Any]) -> list[dict[str, Any]]:
             raise PreparationError(
                 f"AndroidWorld manifest requires a native task class and recorded params/instance seed: {task['task_id']}"
             )
+        raw_params = task.get("params")
         native = suite_utils._instantiate_task(
-            classes[name], params=task.get("params"), seed=task.get("seed")
+            classes[name],
+            params=dict(raw_params) if isinstance(raw_params, dict) else raw_params,
+            seed=task.get("seed"),
         )
         budget = suite_utils._allocate_step_budget(native.complexity)
         if task.get("max_steps", budget) != budget:
