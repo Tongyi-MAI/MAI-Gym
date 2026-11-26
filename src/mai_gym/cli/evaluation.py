@@ -194,6 +194,8 @@ def benchmark_config(
             overlap=workload.history.overlap,
             image_retention=workload.history.image_retention,
         )
+        if "max_new_tokens" not in runtime and "max_response_len" not in runtime:
+            runtime["max_new_tokens"] = workload.rollout.max_response_length
     runtime["temperature"] = 0.0
     runtime["device_type"] = identity(settings.env_type or spec.env_type).device_type
     variant = settings.agent_variant or model.agent_variant
@@ -203,6 +205,10 @@ def benchmark_config(
         from mai_gym.envs.mobilegym.agent import configure_agent
 
         variant = configure_agent(settings.agent_variant, runtime)
+    if name == "androidworld":
+        from mai_gym.envs.androidworld.agent import configure_agent as configure_androidworld_agent
+
+        variant = configure_androidworld_agent(variant, runtime)
     if variant == "unified" and name in {
         "webvoyager",
         "onlinemind2web",
